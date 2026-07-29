@@ -8,11 +8,24 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { api } from "@/lib/api";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
+import BlockRenderer from "@/components/landing/BlockRenderer";
+
+interface BlockData {
+  id: number;
+  block_type: string;
+  content: Record<string, any>;
+  styles: Record<string, any>;
+  layout: Record<string, any>;
+  animation: Record<string, any>;
+  is_active: boolean;
+  order: number;
+}
 
 interface PageData {
   id: number;
   slug: string;
   translations: Record<string, Record<string, string>>;
+  blocks: BlockData[];
   template: string;
   is_published: boolean;
   layout_config: Record<string, string>;
@@ -40,6 +53,7 @@ export default function ChatPage() {
   const [pageLoading, setPageLoading] = useState(true);
   const [pageDisabled, setPageDisabled] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const modelRef = useRef<HTMLDivElement>(null);
 
@@ -55,7 +69,8 @@ export default function ChatPage() {
   }, [user, loadConversations, loadModels]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const container = messagesContainerRef.current;
+    if (container) container.scrollTop = container.scrollHeight;
   }, [streamingContent, activeId, messages]);
 
   useEffect(() => {
@@ -84,6 +99,11 @@ export default function ChatPage() {
   const handleSelectConv = (id: number) => {
     setActive(id);
     if (window.innerWidth < 768) setShowSidebar(false);
+    setTimeout(() => {
+      const container = messagesContainerRef.current;
+      if (container) container.scrollTop = container.scrollHeight;
+      inputRef.current?.focus();
+    }, 100);
   };
 
   const currentModel = models.find((m) => m.model_id === selectedModel);
@@ -155,9 +175,9 @@ export default function ChatPage() {
   if (pageData?.layout_config?.background) layoutStyle.background = pageData.layout_config.background;
 
   return (
-    <div className="h-screen flex" style={{ backgroundColor: "var(--color-background)", ...layoutStyle }}>
+    <div className="h-[calc(100dvh-3.5rem)] sm:h-[calc(100dvh-4rem)] relative flex overflow-hidden" style={{ backgroundColor: "var(--color-background)", ...layoutStyle }}>
       {/* Sidebar */}
-      <div className={`${showSidebar ? "translate-x-0" : "-translate-x-full"} md:translate-x-0 fixed md:relative z-30 w-72 h-full transition-transform duration-200 flex flex-col`}
+      <div className={`${showSidebar ? "max-md:flex" : "max-md:hidden"} md:flex max-md:absolute md:relative z-30 w-72 max-md:inset-y-0 flex-col`}
         style={{ backgroundColor: "var(--color-surface)", borderLeft: "1px solid var(--color-border)" }}
       >
         <div className="p-3 border-b" style={{ borderColor: "var(--color-border)" }}>
@@ -171,7 +191,7 @@ export default function ChatPage() {
             {t("chat.newChat") || "محادثة جديدة"}
           </button>
         </div>
-        <div className="flex-1 overflow-y-auto p-2 space-y-1">
+        <div className="flex-1 overflow-y-auto p-2 space-y-1 max-md:pb-60">
           {conversations.length === 0 && (
             <p className="text-center text-sm py-8" style={{ color: "var(--color-text-muted)" }}>
               {t("chat.noConversations") || "لا توجد محادثات"}
@@ -238,7 +258,7 @@ export default function ChatPage() {
                 : pageTitle}
             </h2>
             <p className="text-xs" style={{ color: "var(--color-text-muted)" }}>
-              {currentModel ? currentModel.name_ar : (isStreaming ? "يكتب..." : "متصل")}
+              {currentModel ? (currentModel.name?.[locale] || currentModel.name_ar) : (isStreaming ? "يكتب..." : "متصل")}
             </p>
           </div>
 
@@ -254,11 +274,11 @@ export default function ChatPage() {
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
               </svg>
-              <span className="hidden sm:inline">{currentModel?.name_ar || "اختر النموذج"}</span>
+              <span className="hidden sm:inline">{currentModel?.name?.[locale] || currentModel?.name_ar || "اختر النموذج"}</span>
             </button>
             {showModels && (
-              <div className="absolute top-full left-0 mt-2 w-64 rounded-xl shadow-2xl overflow-hidden z-50 py-1"
-                style={{ backgroundColor: "var(--color-surface)", border: "1px solid var(--color-border)" }}
+              <div className="absolute top-full left-0 mt-2 w-64 rounded-xl shadow-2xl overflow-y-auto z-50 py-1"
+                style={{ backgroundColor: "var(--color-surface)", border: "1px solid var(--color-border)", maxHeight: "60vh" }}
               >
                 {models.map((m) => (
                   <button key={m.id} onClick={() => { setSelectedModel(m.model_id); setShowModels(false); }}
@@ -270,10 +290,10 @@ export default function ChatPage() {
                     onMouseEnter={(e) => { if (m.model_id !== selectedModel) e.currentTarget.style.backgroundColor = "var(--color-muted)"; }}
                     onMouseLeave={(e) => { if (m.model_id !== selectedModel) e.currentTarget.style.backgroundColor = "transparent"; }}
                   >
-                    <div className="font-medium">{m.name_ar}</div>
+                    <div className="font-medium">{m.name?.[locale] || m.name_ar}</div>
                     <div className="text-xs opacity-70" style={{ color: "var(--color-text-muted)" }}>{m.name_en}</div>
-                    {m.description_ar && (
-                      <div className="text-xs mt-0.5 opacity-60" style={{ color: "var(--color-text-muted)" }}>{m.description_ar}</div>
+                    {(m.description?.[locale] || m.description_ar) && (
+                      <div className="text-xs mt-0.5 opacity-60" style={{ color: "var(--color-text-muted)" }}>{m.description?.[locale] || m.description_ar}</div>
                     )}
                   </button>
                 ))}
@@ -294,9 +314,14 @@ export default function ChatPage() {
         </div>
 
         {/* Messages — scrollable area */}
-        <div className="flex-1 overflow-y-auto">
+        <div ref={messagesContainerRef} className="flex-1 overflow-y-auto">
+          {/* Page blocks — full width when no active conversation */}
+          {!activeId && pageData?.blocks?.length ? (
+            <BlockRenderer blocks={pageData.blocks} />
+          ) : null}
+
           <div className="max-w-3xl mx-auto p-4 space-y-4">
-            {!activeId && (
+            {!activeId && !pageData?.blocks?.length && (
               <div className="flex flex-col items-center justify-center py-20 text-center">
                 <div className="w-20 h-20 rounded-3xl flex items-center justify-center mb-6"
                   style={{ background: "linear-gradient(135deg, var(--color-primary), var(--color-secondary))" }}
@@ -308,7 +333,7 @@ export default function ChatPage() {
                 <h1 className="text-2xl font-bold mb-2" style={{ color: "var(--color-text)" }}>
                   {t("chat.greeting") || "كيف يمكنني مساعدتك؟"}
                 </h1>
-                <p className="text-sm mb-8 max-w-md" style={{ color: "var(--color-text-muted)" }}>
+                <p className="text-sm mb-[30px] max-w-md" style={{ color: "var(--color-text-muted)" }}>
                   {pageDescription || t("chat.subtitle") || "اسألني عن أي شيء — التعليم، التقنية، أو مساعدتك في مهامك اليومية"}
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-lg">

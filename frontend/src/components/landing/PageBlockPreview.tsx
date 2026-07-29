@@ -32,6 +32,20 @@ const BLOCK_COMPONENTS: Record<string, React.ComponentType<any>> = {
   subjects_grid: dynamic(() => import("@/components/landing/SubjectsGrid"), { ssr: false }),
   partners: dynamic(() => import("@/components/landing/PartnersBar"), { ssr: false }),
   portfolio: dynamic(() => import("@/components/landing/PortfolioShowcase"), { ssr: false }),
+  accordion: dynamic(() => import("@/components/landing/AccordionSection"), { ssr: false }),
+  tabs: dynamic(() => import("@/components/landing/TabsSection"), { ssr: false }),
+  timeline: dynamic(() => import("@/components/landing/TimelineSection"), { ssr: false }),
+  countdown: dynamic(() => import("@/components/landing/CountdownSection"), { ssr: false }),
+  newsletter: dynamic(() => import("@/components/landing/NewsletterSection"), { ssr: false }),
+  map: dynamic(() => import("@/components/landing/MapSection"), { ssr: false }),
+  table: dynamic(() => import("@/components/landing/TableSection"), { ssr: false }),
+  icon_list: dynamic(() => import("@/components/landing/IconListSection"), { ssr: false }),
+  logo_carousel: dynamic(() => import("@/components/landing/LogoCarouselSection"), { ssr: false }),
+  download: dynamic(() => import("@/components/landing/DownloadSection"), { ssr: false }),
+  code: dynamic(() => import("@/components/landing/CodeSection"), { ssr: false }),
+  blog_list: dynamic(() => import("@/components/landing/BlogListBlock"), { ssr: false }),
+  contact: dynamic(() => import("@/components/landing/ContactSection"), { ssr: false }),
+  chat_greeting: dynamic(() => import("@/components/landing/ChatGreeting"), { ssr: false }),
 };
 
 function BlockLoadingPlaceholder() {

@@ -3,9 +3,12 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useChatStore } from "@/store/chat";
 import { useAuthStore } from "@/store/auth";
+import { usePathname } from "next/navigation";
 import MarkdownRenderer from "./MarkdownRenderer";
 
 export default function ChatWidget() {
+  const pathname = usePathname();
+  const locale = pathname.split("/")[1] || "en";
   const {
     isOpen, toggleOpen, conversations, activeId, messages, streamingContent,
     isStreaming, error, loadConversations, sendMessage, deleteConversation,
@@ -139,7 +142,7 @@ export default function ChatWidget() {
                 <button
                   onClick={() => setShowModels(!showModels)}
                   className="p-1 rounded-lg hover:bg-white/20 transition-colors text-xs"
-                  title={currentModel?.name_ar || "اختر النموذج"}
+                  title={currentModel?.name?.[locale] || currentModel?.name_ar || "اختر النموذج"}
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
@@ -147,10 +150,11 @@ export default function ChatWidget() {
                 </button>
                 {showModels && (
                   <div
-                    className="absolute bottom-full right-0 mb-2 w-52 rounded-xl shadow-2xl overflow-hidden z-50 py-1"
+                    className="absolute bottom-full right-0 mb-2 w-52 rounded-xl shadow-2xl overflow-y-auto z-50 py-1"
                     style={{
                       backgroundColor: "var(--color-surface)",
                       border: "1px solid var(--color-border)",
+                      maxHeight: "40vh",
                     }}
                   >
                     {models.map((m) => (
@@ -165,7 +169,7 @@ export default function ChatWidget() {
                         onMouseEnter={(e) => { if (m.model_id !== selectedModel) e.currentTarget.style.backgroundColor = "var(--color-muted)"; }}
                         onMouseLeave={(e) => { if (m.model_id !== selectedModel) e.currentTarget.style.backgroundColor = "transparent"; }}
                       >
-                        <div className="font-medium">{m.name_ar}</div>
+                        <div className="font-medium">{m.name?.[locale] || m.name_ar}</div>
                         <div className="text-xs opacity-70">{m.name_en}</div>
                       </button>
                     ))}

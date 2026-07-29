@@ -5,7 +5,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework import generics, permissions, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
-from .models import Conversation, Message, AIRun, AIModel
+from .models import Conversation, Message, AIRun, AIModel, AIProvider, ProviderType
 from .serializers import (
     ConversationSerializer,
     ConversationDetailSerializer,
@@ -13,6 +13,8 @@ from .serializers import (
     ChatInputSerializer,
     AIModelSerializer,
     AIModelPublicSerializer,
+    AIProviderSerializer,
+    ProviderTypeSerializer,
 )
 from .services import chat_stream
 
@@ -164,3 +166,206 @@ class AIModelPublicListView(generics.ListAPIView):
     serializer_class = AIModelPublicSerializer
     permission_classes = [permissions.AllowAny]
     pagination_class = None
+
+
+import google.generativeai as genai
+from django.conf import settings
+
+
+# --- ProviderType management ---
+
+class ProviderTypeListView(generics.ListAPIView):
+    queryset = ProviderType.objects.filter(is_active=True)
+    serializer_class = ProviderTypeSerializer
+    permission_classes = [permissions.IsAdminUser]
+    pagination_class = None
+
+
+# --- AIProvider management ---
+
+class AIProviderListCreateView(generics.ListCreateAPIView):
+    queryset = AIProvider.objects.select_related('provider_type').all()
+    serializer_class = AIProviderSerializer
+    permission_classes = [permissions.IsAdminUser]
+
+
+class AIProviderDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = AIProvider.objects.select_related('provider_type').all()
+    serializer_class = AIProviderSerializer
+    permission_classes = [permissions.IsAdminUser]
+
+
+def _resolve_provider_and_key(request):
+    provider_id = request.data.get('provider_id')
+    api_key = request.data.get('api_key', '')
+    provider_type_code = 'google'
+    base_url = ''
+    if provider_id:
+        provider = get_object_or_404(AIProvider.objects.select_related('provider_type'), id=provider_id)
+        api_key = provider.get_api_key()
+        provider_type_code = provider.provider_type.code
+        base_url = provider.base_url
+    else:
+        provider_type_code = request.data.get('provider_type', 'google')
+        base_url = request.data.get('base_url', '')
+    if not api_key and provider_type_code == 'google':
+        api_key = settings.GEMINI_API_KEY
+    return provider_type_code, api_key, base_url
+
+
+def _fetch_google_models(api_key):
+    import google.generativeai as genai
+    genai.configure(api_key=api_key)
+    models = genai.list_models()
+    result = []
+    for m in models:
+        if 'generateContent' in m.supported_generation_methods:
+            name = m.name.replace('models/', '')
+            result.append({
+                'model_id': name,
+                'display_name': m.display_name,
+                'description': m.description,
+                'input_token_limit': m.input_token_limit,
+                'output_token_limit': m.output_token_limit,
+            })
+    genai.configure(api_key=settings.GEMINI_API_KEY)
+    return result
+
+
+def _fetch_openai_models(api_key):
+    from openai import OpenAI
+    client = OpenAI(api_key=api_key)
+    models = client.models.list()
+    result = []
+    for m in models:
+        if m.id.startswith('gpt-') or m.id.startswith('o'):
+            result.append({
+                'model_id': m.id,
+                'display_name': m.id,
+                'description': '',
+                'input_token_limit': 0,
+                'output_token_limit': 0,
+            })
+    return result
+
+
+def _fetch_ollama_models(base_url, api_key=''):
+    import requests
+    url = (base_url or 'http://localhost:11434').rstrip('/') + '/api/tags'
+    headers = {}
+    if api_key:
+        headers['Authorization'] = f'Bearer {api_key}'
+    resp = requests.get(url, headers=headers, timeout=10)
+    resp.raise_for_status()
+    data = resp.json()
+    result = []
+    for m in data.get('models', []):
+        name = m.get('name', '')
+        result.append({
+            'model_id': name,
+            'display_name': name,
+            'description': m.get('details', {}).get('family', ''),
+            'input_token_limit': 0,
+            'output_token_limit': 0,
+        })
+    return result
+
+
+def _fetch_openai_compatible_models(base_url, api_key=''):
+    from openai import OpenAI
+    client = OpenAI(api_key=api_key or 'sk-placeholder', base_url=base_url.rstrip('/') + '/v1')
+    models = client.models.list()
+    result = []
+    for m in models:
+        result.append({
+            'model_id': m.id,
+            'display_name': m.id,
+            'description': '',
+            'input_token_limit': 0,
+            'output_token_limit': 0,
+        })
+    return result
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAdminUser])
+def test_provider_connection(request):
+    provider_type, api_key, base_url = _resolve_provider_and_key(request)
+    try:
+        if provider_type == 'google':
+            import google.generativeai as genai
+            genai.configure(api_key=api_key)
+            genai.list_models()
+            genai.configure(api_key=settings.GEMINI_API_KEY)
+        elif provider_type == 'openai':
+            from openai import OpenAI
+            OpenAI(api_key=api_key).models.list()
+        elif provider_type == 'anthropic':
+            return Response({'error': 'Anthropic not yet supported'}, status=status.HTTP_400_BAD_REQUEST)
+        elif provider_type == 'ollama':
+            _fetch_ollama_models(base_url, api_key)
+        elif provider_type == 'openai_compatible':
+            _fetch_openai_compatible_models(base_url, api_key)
+        return Response({'status': 'ok'})
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAdminUser])
+def fetch_provider_models(request):
+    provider_type, api_key, base_url = _resolve_provider_and_key(request)
+    try:
+        if provider_type == 'google':
+            if not api_key:
+                return Response({'error': 'API key is required'}, status=status.HTTP_400_BAD_REQUEST)
+            result = _fetch_google_models(api_key)
+        elif provider_type == 'openai':
+            if not api_key:
+                return Response({'error': 'API key is required'}, status=status.HTTP_400_BAD_REQUEST)
+            result = _fetch_openai_models(api_key)
+        elif provider_type == 'anthropic':
+            return Response({'error': 'Anthropic model listing not yet supported'}, status=status.HTTP_400_BAD_REQUEST)
+        elif provider_type == 'ollama':
+            result = _fetch_ollama_models(base_url, api_key)
+        elif provider_type == 'openai_compatible':
+            result = _fetch_openai_compatible_models(base_url, api_key)
+        else:
+            return Response({'error': f'Unknown provider: {provider_type}'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'models': result})
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAdminUser])
+def import_provider_models(request):
+    items = request.data.get('models', [])
+    if not items:
+        return Response({'error': 'No models provided'}, status=status.HTTP_400_BAD_REQUEST)
+    created = []
+    for item in items:
+        model_id = item.get('model_id')
+        if not model_id:
+            continue
+        display_name = item.get('display_name', model_id)
+        lang = item.get('lang', 'en')
+        name = {lang: display_name}
+        description = {lang: item.get('description', '')}
+        obj, was_created = AIModel.objects.update_or_create(
+            model_id=model_id,
+            defaults={
+                'provider': item.get('provider', 'google'),
+                'name_ar': display_name,
+                'name_en': display_name,
+                'description_ar': item.get('description', ''),
+                'description_en': item.get('description', ''),
+                'name': name,
+                'description': description,
+                'max_tokens': item.get('max_tokens', item.get('output_token_limit', 4096)),
+                'is_active': True,
+                'sort_order': AIModel.objects.count() + 1,
+            },
+        )
+        created.append({'model_id': model_id, 'created': was_created})
+    return Response({'imported': created})

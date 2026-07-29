@@ -550,6 +550,30 @@ function renderContentFields(block: Block, updateContent: (k: string, v: any) =>
         </Section>
       );
 
+    case "chat_greeting":
+      return (
+        <>
+          <Section title={t("العنوان الرئيسي", "Main Heading")}>
+            <FieldWrap label={t("العنوان", "Heading")} value={lf("heading")} onChange={(v: string) => updateLocaleField("heading", contentLocale, v)} />
+          </Section>
+          <Section title={t("النص الفرعي", "Subtitle")}>
+            <FieldWrap label={t("النص الفرعي", "Subtitle")} value={lf("subtitle")} onChange={(v: string) => updateLocaleField("subtitle", contentLocale, v)} />
+          </Section>
+          <Section title={t("الاقتراحات", "Suggestions")} defaultOpen>
+            {(c.items || [{}, {}, {}, {}]).map((item: any, i: number) => (
+              <div key={i} className="p-3 rounded-xl border mb-2" style={{ borderColor: "var(--color-border)" }}>
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs font-bold" style={{ color: "var(--color-primary)" }}>{t("اقتراح", "Suggestion")} {i + 1}</p>
+                  <button type="button" onClick={() => { const it = [...(c.items || [])]; it.splice(i, 1); updateContent("items", it); }} className="text-xs" style={{ color: "var(--color-error)" }}>✕</button>
+                </div>
+                <FieldWrap label={t("النص", "Text")} value={lfItem("items", i, "text")} onChange={(v: string) => updateListItemLocale("items", i, "text", contentLocale, v)} />
+              </div>
+            ))}
+            <button type="button" onClick={() => updateContent("items", [...(c.items || []), {}])} className="w-full py-2 rounded-xl border border-dashed text-sm font-bold" style={{ borderColor: "var(--color-primary)", color: "var(--color-primary)" }}>+ {t("إضافة اقتراح", "Add Suggestion")}</button>
+          </Section>
+        </>
+      );
+
     default:
       return (
         <Section title={t("البيانات", "Data")} defaultOpen>
@@ -662,6 +686,7 @@ export default function BlockEditorModal({
     accordion: { label: "أقسام قابلة للطي", icon: "🔽" },
     tabs: { label: "تبويبات", icon: "📑" },
     blog_list: { label: "قائمة المدونة", icon: "📝" },
+    chat_greeting: { label: "ترحيب المساعد الذكي", icon: "🤖" },
   };
 
   return (

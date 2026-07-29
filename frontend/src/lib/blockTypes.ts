@@ -39,6 +39,7 @@ export const BLOCK_TYPES: Record<string, { i18nKey: string; icon: string }> = {
   code: { i18nKey: "admin.blockCode", icon: "💻" },
   custom_html: { i18nKey: "admin.blockCustomHtml", icon: "💻" },
   blog_list: { i18nKey: "admin.blockBlogList", icon: "📝" },
+  chat_greeting: { i18nKey: "admin.blockChatGreeting", icon: "🤖" },
 };
 
 export const TEMPLATE_ICONS: Record<string, string> = {

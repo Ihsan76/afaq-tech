@@ -44,6 +44,7 @@ const BLOCK_COMPONENTS: Record<string, React.ComponentType<any>> = {
   code: dynamic(() => import("@/components/landing/CodeSection"), { ssr: false }),
   blog_list: dynamic(() => import("@/components/landing/BlogListBlock"), { ssr: false }),
   contact: dynamic(() => import("@/components/landing/ContactSection"), { ssr: false }),
+  chat_greeting: dynamic(() => import("@/components/landing/ChatGreeting"), { ssr: false }),
 };
 
 function applyStyles(block: BlockData): React.CSSProperties {

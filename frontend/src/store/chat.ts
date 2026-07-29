@@ -23,8 +23,12 @@ interface AIModel {
   id: number;
   provider: string;
   model_id: string;
+  name?: Record<string, string>;
+  description?: Record<string, string>;
   name_ar: string;
   name_en: string;
+  description_ar: string;
+  description_en: string;
   is_default: boolean;
   max_tokens: number;
 }

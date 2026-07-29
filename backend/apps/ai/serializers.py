@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Conversation, Message, AIModel
+from .models import Conversation, Message, AIModel, AIProvider, ProviderType
 
 
 class MessageSerializer(serializers.ModelSerializer):
@@ -39,13 +39,60 @@ class AIModelSerializer(serializers.ModelSerializer):
     class Meta:
         model = AIModel
         fields = '__all__'
-        read_only_fields = ['created_at', 'updated_at']
+        read_only_fields = ['created_at', 'updated_at', 'name_ar', 'name_en', 'description_ar', 'description_en']
 
 
 class AIModelPublicSerializer(serializers.ModelSerializer):
     class Meta:
         model = AIModel
-        fields = ['id', 'provider', 'model_id', 'name_ar', 'name_en', 'is_default', 'max_tokens']
+        fields = ['id', 'provider', 'model_id', 'name', 'description', 'name_ar', 'name_en', 'description_ar', 'description_en', 'is_default', 'max_tokens']
+
+
+class ProviderTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProviderType
+        fields = ['code', 'name_ar', 'name_en', 'needs_base_url', 'default_base_url', 'needs_api_key', 'supports_fetching', 'sort_order', 'is_active']
+
+
+class AIProviderSerializer(serializers.ModelSerializer):
+    api_key = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    api_key_configured = serializers.SerializerMethodField()
+    api_key_masked = serializers.SerializerMethodField()
+    provider_type = serializers.SlugRelatedField(slug_field='code', queryset=ProviderType.objects.all())
+    provider_type_display = ProviderTypeSerializer(source='provider_type', read_only=True)
+
+    class Meta:
+        model = AIProvider
+        fields = ['id', 'name', 'provider_type', 'provider_type_display', 'base_url', 'api_key', 'api_key_configured', 'api_key_masked', 'is_active', 'created_at', 'updated_at']
+        read_only_fields = ['created_at', 'updated_at']
+
+    def get_api_key_configured(self, obj):
+        return bool(obj.encrypted_api_key)
+
+    def get_api_key_masked(self, obj):
+        raw = obj.get_api_key()
+        if not raw:
+            return ""
+        if len(raw) <= 4:
+            return raw
+        return raw[:4] + "*" * (len(raw) - 4)
+
+    def create(self, validated_data):
+        api_key = validated_data.pop('api_key', '')
+        instance = AIProvider(**validated_data)
+        if api_key:
+            instance.set_api_key(api_key)
+        instance.save()
+        return instance
+
+    def update(self, instance, validated_data):
+        api_key = validated_data.pop('api_key', None)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        if api_key is not None:
+            instance.set_api_key(api_key)
+        instance.save()
+        return instance
 
 
 class ChatInputSerializer(serializers.Serializer):

@@ -28,7 +28,7 @@ class PageListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Page
-        fields = ['id', 'slug', 'title', 'description', 'template', 'is_published',
+        fields = ['id', 'slug', 'title', 'description', 'translations', 'template', 'is_published',
                   'is_homepage', 'show_in_nav', 'nav_order', 'nav_icon', 'blocks_count',
                   'created_at', 'updated_at']
 

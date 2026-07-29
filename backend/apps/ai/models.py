@@ -64,16 +64,62 @@ class Message(models.Model):
         return f"{self.role}: {self.content[:50]}"
 
 
-class AIModel(models.Model):
-    class Provider(models.TextChoices):
-        GOOGLE = 'google', 'Google Gemini'
-
-    provider = models.CharField('المزود', max_length=50, choices=Provider.choices, default=Provider.GOOGLE)
-    model_id = models.CharField('معرف النموذج', max_length=100, help_text='e.g. gemini-3.6-flash')
+class ProviderType(models.Model):
+    code = models.CharField('الرمز', max_length=50, unique=True, help_text='e.g. google, openai, ollama')
     name_ar = models.CharField('الاسم (عربي)', max_length=100)
     name_en = models.CharField('الاسم (إنجليزي)', max_length=100)
+    needs_base_url = models.BooleanField('يتطلب رابط API', default=False)
+    default_base_url = models.CharField('الرابط الافتراضي', max_length=500, blank=True, default='')
+    needs_api_key = models.BooleanField('يتطلب مفتاح API', default=True)
+    supports_fetching = models.BooleanField('يدعم جلب النماذج', default=True)
+    sort_order = models.IntegerField('ترتيب', default=0)
+    is_active = models.BooleanField('مفعل', default=True)
+    created_at = models.DateTimeField('تاريخ الإنشاء', auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'نوع المزود'
+        verbose_name_plural = 'أنواع المزودين'
+        ordering = ['sort_order', 'name_ar']
+
+    def __str__(self):
+        return self.name_ar
+
+
+class AIProvider(models.Model):
+    name = models.CharField('الاسم', max_length=100)
+    provider_type = models.ForeignKey(ProviderType, on_delete=models.PROTECT, verbose_name='نوع المزود', related_name='providers', null=True)
+    base_url = models.CharField('رابط API', max_length=500, blank=True, default='')
+    encrypted_api_key = models.TextField('مفتاح API مشفر', blank=True, default='')
+    is_active = models.BooleanField('مفعل', default=True)
+    created_at = models.DateTimeField('تاريخ الإنشاء', auto_now_add=True)
+    updated_at = models.DateTimeField('تاريخ التحديث', auto_now=True)
+
+    class Meta:
+        verbose_name = 'مزود AI'
+        verbose_name_plural = 'مزودو AI'
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
+    def set_api_key(self, raw_key: str):
+        from .utils import encrypt_api_key
+        self.encrypted_api_key = encrypt_api_key(raw_key)
+
+    def get_api_key(self) -> str:
+        from .utils import decrypt_api_key
+        return decrypt_api_key(self.encrypted_api_key)
+
+
+class AIModel(models.Model):
+    provider = models.CharField('المزود', max_length=50, db_index=True)
+    model_id = models.CharField('معرف النموذج', max_length=100, help_text='e.g. gemini-3.6-flash')
+    name_ar = models.CharField('الاسم (عربي)', max_length=100, blank=True, default='')
+    name_en = models.CharField('الاسم (إنجليزي)', max_length=100, blank=True, default='')
     description_ar = models.TextField('الوصف (عربي)', blank=True, default='')
     description_en = models.TextField('الوصف (إنجليزي)', blank=True, default='')
+    name = models.JSONField('الاسم (متعدد اللغات)', default=dict, blank=True)
+    description = models.JSONField('الوصف (متعدد اللغات)', default=dict, blank=True)
     is_active = models.BooleanField('مفعل', default=True)
     is_default = models.BooleanField('افتراضي', default=False)
     max_tokens = models.IntegerField('الحد الأقصى للرموز', default=4096)
@@ -84,10 +130,10 @@ class AIModel(models.Model):
     class Meta:
         verbose_name = 'نموذج AI'
         verbose_name_plural = 'نماذج AI'
-        ordering = ['sort_order', 'name_ar']
+        ordering = ['sort_order']
 
     def __str__(self):
-        return f"{self.name_ar} ({self.model_id})"
+        return f"{self.name.get('ar', self.name_ar)} ({self.model_id})"
 
     def save(self, *args, **kwargs):
         if self.is_default:
