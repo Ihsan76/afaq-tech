@@ -1,0 +1,112 @@
+import os
+import sys
+import django
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings.base')
+django.setup()
+
+from apps.themes.models import Theme
+
+THEMES = [
+    {
+        "name": "Afaq Classic", "icon": "🎨",
+        "translations": {
+            "en": {"name": "Afaq Classic", "display_name": "Afaq Classic", "display_description": "Clean blue-indigo gradient, professional and modern"},
+            "ar": {"name": "آفاق كلاسيكي", "display_name": "آفاق كلاسيكي", "display_description": "تدرج أزرق-نيلي أنيق وعصري"},
+        },
+        "is_default": True, "order": 0,
+        "primary": "#4F46E5", "secondary": "#7C3AED", "accent": "#6366F1",
+        "success": "#10B981", "error": "#EF4444", "warning": "#F59E0B",
+        "background": "#F8FAFC", "surface": "#FFFFFF", "surface_alt": "#F1F5F9",
+        "text_color": "#0F172A", "text_secondary": "#475569", "text_muted": "#94A3B8",
+        "border_color": "#E2E8F0", "border_light": "#F1F5F9", "muted": "#F1F5F9",
+        "btn_shape": "rounded", "btn_size": "md", "btn_shadow": "md", "btn_hover": "scale",
+        "card_radius": "lg", "card_border": "thin", "card_shadow": "md", "card_glass": True,
+    },
+    {
+        "name": "Afaq Night", "icon": "🌙",
+        "translations": {
+            "en": {"name": "Afaq Night", "display_name": "Afaq Night", "display_description": "Deep purple-indigo dark theme, easy on the eyes"},
+            "ar": {"name": "آفاق مسائي", "display_name": "آفاق مسائي", "display_description": "ثيم داكن بنفسجي-نيلي مريح للعينين"},
+        },
+        "order": 1,
+        "primary": "#818CF8", "secondary": "#A78BFA", "accent": "#C084FC",
+        "success": "#34D399", "error": "#F87171", "warning": "#FBBF24",
+        "background": "#0F0D1A", "surface": "#1A1726", "surface_alt": "#231F33",
+        "text_color": "#F1F0F5", "text_secondary": "#A09BB0", "text_muted": "#6B6580",
+        "border_color": "#2D2842", "border_light": "#231F33", "muted": "#1A1726",
+        "btn_shape": "rounded", "btn_size": "md", "btn_shadow": "lg", "btn_hover": "glow",
+        "card_radius": "lg", "card_border": "thin", "card_shadow": "lg", "card_glass": True,
+    },
+    {
+        "name": "Afaq Light", "icon": "☀️",
+        "translations": {
+            "en": {"name": "Afaq Light", "display_name": "Afaq Light", "display_description": "Warm emerald-green light theme, fresh and vibrant"},
+            "ar": {"name": "آفاق فاتح", "display_name": "آفاق فاتح", "display_description": "ثيم فاتح بلون الزمرد الدافئ، منعش وحيوي"},
+        },
+        "order": 2,
+        "primary": "#059669", "secondary": "#10B981", "accent": "#34D399",
+        "success": "#22C55E", "error": "#DC2626", "warning": "#D97706",
+        "background": "#FAFDF9", "surface": "#FFFFFF", "surface_alt": "#F0FDF4",
+        "text_color": "#14532D", "text_secondary": "#166534", "text_muted": "#86EFAC",
+        "border_color": "#BBF7D0", "border_light": "#DCFCE7", "muted": "#F0FDF4",
+        "btn_shape": "pill", "btn_size": "md", "btn_shadow": "sm", "btn_hover": "shadow",
+        "card_radius": "lg", "card_border": "thin", "card_shadow": "sm", "card_glass": False,
+    },
+    {
+        "name": "Afaq Neutral", "icon": "⚪",
+        "translations": {
+            "en": {"name": "Afaq Neutral", "display_name": "Afaq Neutral", "display_description": "Minimal gray theme, clean and distraction-free"},
+            "ar": {"name": "آفاق محايد", "display_name": "آفاق محايد", "display_description": "ثيم رمادي بسيط، نظيف وبدون تشتيت"},
+        },
+        "order": 3,
+        "primary": "#374151", "secondary": "#6B7280", "accent": "#9CA3AF",
+        "success": "#059669", "error": "#DC2626", "warning": "#D97706",
+        "background": "#F9FAFB", "surface": "#FFFFFF", "surface_alt": "#F3F4F6",
+        "text_color": "#111827", "text_secondary": "#4B5563", "text_muted": "#9CA3AF",
+        "border_color": "#E5E7EB", "border_light": "#F3F4F6", "muted": "#F3F4F6",
+        "btn_shape": "rounded", "btn_size": "md", "btn_shadow": "sm", "btn_hover": "scale",
+        "card_radius": "md", "card_border": "thin", "card_shadow": "sm", "card_glass": False,
+    },
+    {
+        "name": "Afaq School", "icon": "🌈",
+        "translations": {
+            "en": {"name": "Afaq School", "display_name": "Afaq School", "display_description": "Vibrant multi-color theme, fun and engaging for students"},
+            "ar": {"name": "آفاق مدرسي", "display_name": "آفاق مدرسي", "display_description": "ثيم ملون ممتع وجذاب للطلاب"},
+        },
+        "order": 4,
+        "primary": "#EC4899", "secondary": "#8B5CF6", "accent": "#F59E0B",
+        "success": "#10B981", "error": "#EF4444", "warning": "#F97316",
+        "background": "#FFF7ED", "surface": "#FFFFFF", "surface_alt": "#FFFBEB",
+        "text_color": "#1C1917", "text_secondary": "#57534E", "text_muted": "#A8A29E",
+        "border_color": "#E7E5E4", "border_light": "#F5F5F4", "muted": "#FFF7ED",
+        "btn_shape": "pill", "btn_size": "lg", "btn_shadow": "md", "btn_hover": "glow",
+        "card_radius": "full", "card_border": "thin", "card_shadow": "md", "card_glass": True,
+    },
+    {
+        "name": "Afaq Ocean", "icon": "🌊",
+        "translations": {
+            "en": {"name": "Afaq Ocean", "display_name": "Afaq Ocean", "display_description": "Calm teal-cyan theme, soothing and focused"},
+            "ar": {"name": "آفاق محيطي", "display_name": "آفاق محيطي", "display_description": "ثيم هادئ بلون الأزرق السماوي، مريح ومركّز"},
+        },
+        "order": 5,
+        "primary": "#0891B2", "secondary": "#06B6D4", "accent": "#22D3EE",
+        "success": "#10B981", "error": "#EF4444", "warning": "#F59E0B",
+        "background": "#ECFEFF", "surface": "#FFFFFF", "surface_alt": "#CFFAFE",
+        "text_color": "#164E63", "text_secondary": "#0E7490", "text_muted": "#67E8F9",
+        "border_color": "#A5F3FC", "border_light": "#CFFAFE", "muted": "#ECFEFF",
+        "btn_shape": "rounded", "btn_size": "md", "btn_shadow": "md", "btn_hover": "scale",
+        "card_radius": "lg", "card_border": "thin", "card_shadow": "md", "card_glass": True,
+    },
+]
+
+for data in THEMES:
+    obj, created = Theme.objects.update_or_create(
+        name=data["name"],
+        defaults=data,
+    )
+    status = "created" if created else "updated"
+    print(f"  {data['icon']} {data['name']} — {status}")
+
+print(f"\nDone: {Theme.objects.count()} themes in database.")

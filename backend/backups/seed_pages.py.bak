@@ -1,0 +1,1032 @@
+"""
+Seed script — creates the three main pages with their blocks.
+Run: python seed_pages.py
+"""
+import os
+import sys
+import django
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings.base')
+django.setup()
+
+from apps.pages.models import Page, PageBlock
+
+# ════════════════════════════════════════════════════════════════
+# Page definitions
+# ════════════════════════════════════════════════════════════════
+
+PAGES = [
+    {
+        "slug": "homepage",
+        "title_en": "Afaq Tech Platform",
+        "title_ar": "منصة آفاق تكنولوجي",
+        "description_en": "Digital services and education platform",
+        "description_ar": "منصة الخدمات الرقمية والتعليم",
+        "template": "landing",
+        "is_homepage": True,
+        "show_in_nav": True,
+        "nav_order": 0,
+        "nav_icon": "🏠",
+        "meta_title_en": "Afaq Tech — Digital Services & Education Platform",
+        "meta_title_ar": "آفاق تكنولوجي — منصة الخدمات الرقمية والتعليم",
+        "blocks": [
+            {"block_type": "platform_hero", "order": 0, "content": {
+                "heading_en": "Smart Digital Solutions for Your Business Success",
+                "heading_ar": "آفاق تكنولوجي",
+                "subtitle_en": "We turn your ideas into innovative digital reality with AI tools",
+                "subtitle_ar": "افتح آفاق جديدة لأعمالك — حلول رقمية ذكية تمدّك بالرؤية والإمكانات التي تنقلك إلى آفاق أوسع من النجاح والنمو",
+                "cta_text_en": "Get Started Free",
+                "cta_text_ar": "ابدأ رحلتك نحو الآفاق",
+                "cta_link_en": "/register",
+                "cta_link_ar": "/register",
+                "secondary_cta_en": "Explore Services",
+                "secondary_cta_ar": "استكشف ما نقدمه",
+                "secondary_cta_link_en": "#services",
+                "secondary_cta_link_ar": "#services",
+                "show_particles": True,
+                "badges": [
+                    {"text_en": "Completely Free", "text_ar": "مجاني تماماً", "icon": "✓"},
+                    {"text_en": "Free Consultation", "text_ar": "استشارة مجانية", "icon": "✓"},
+                    {"text_en": "24/7 Support", "text_ar": "دعم فني 24/7", "icon": "✓"}
+                ]
+            }},
+            {"block_type": "platform_stats", "order": 1, "content": {
+                "items": [
+                    {"value": "150+", "label_en": "Projects Completed", "label_ar": "مشروع منجز"},
+                    {"value": "500+", "label_en": "Happy Clients", "label_ar": "عميل سعيد"},
+                    {"value": "8", "label_en": "Specialized Services", "label_ar": "خدمات متخصصة"},
+                    {"value": "5+", "label_en": "Years Experience", "label_ar": "سنوات خبرة"}
+                ]
+            }},
+            {"block_type": "services_showcase", "order": 2, "content": {
+                "title_en": "Our Services",
+                "title_ar": "حلولنا التي تفتح آفاق النمو",
+                "subtitle_en": "A comprehensive range of digital services",
+                "subtitle_ar": "خدمات رقمية شاملة توسّع آفاق أعمالك وتقودك إلى نتائج لم تكن تتوقعها",
+                "columns": 4,
+                "services": [
+                    {"icon": "🌐", "title_en": "Web Design", "title_ar": "تصميم المواقع", "desc_en": "Professional responsive websites with latest technologies", "desc_ar": "مواقع إلكترونية تفتح آفاقاً جديدة لعلامتك التجارية — تصاميم تجذب الزوار وتحوّلهم إلى عملاء دائمين", "url": "/services/web-design"},
+                    {"icon": "📱", "title_en": "Social Media Management", "title_ar": "إدارة التواصل الاجتماعي", "desc_en": "Professional social media account management", "desc_ar": "نوسّع آفاق حضورك الرقمي ونحوّل منصات التواصل إلى مصدر حقيقي للمبيعات والنمو المستدام", "url": "/services/social-media"},
+                    {"icon": "🚀", "title_en": "Landing Pages", "title_ar": "صفحات الهبوط", "desc_en": "High-converting landing pages", "desc_ar": "صفحات مصممة بعناية فتح آفاق التحويل العالية — كل زائر فرصة جديدة لنجاحك", "url": "/services/landing-pages"},
+                    {"icon": "📝", "title_en": "Electronic Forms", "title_ar": "النماذج الإلكترونية", "desc_en": "Smart and integrated data collection forms", "desc_ar": "نماذج ذكية تفتح آفاق جمع البيانات بكفاءة — وفّر وقتك وجهدك وركّز على ما يهم", "url": "/services/forms"},
+                    {"icon": "📚", "title_en": "E-Books", "title_ar": "الكتب الإلكترونية", "desc_en": "Professional digital book production", "desc_ar": "نحوّل خبراتك إلى كتب إلكترونية تفتح لك آفاقاً جديدة في عالم المحتوى والريادة", "url": "/services/ebooks"},
+                    {"icon": "🎓", "title_en": "Education Platform", "title_ar": "المنصة التعليمية", "desc_en": "AI-powered integrated education platform", "desc_ar": "منصة تعليمية تفتح آفاقاً جديدة في طريقة التدريس بقوة الذكاء الاصطناعي", "url": "/services/education-platform"},
+                    {"icon": "📢", "title_en": "Ad Campaigns", "title_ar": "الحملات الإعلانية", "desc_en": "Effective and measurable advertising campaigns", "desc_ar": "حملات تفتح لك آفاقاً واسعة من الزوار والعملاء المستهدفين بأقل تكلفة وأعلى عائد", "url": "/services/ad-campaigns"},
+                    {"icon": "💼", "title_en": "Brand Identity", "title_ar": "الهوية البصرية والاستشارات", "desc_en": "Consulting and complete brand identity", "desc_ar": "نبتكر هوية تفتح لك آفاق التميّز عن المنافسين مع استشارات تضعك على خارطة النجاح", "url": "/services/brand-identity"}
+                ]
+            }},
+            {"block_type": "portfolio", "order": 3, "content": {
+                "title_en": "Our Work",
+                "title_ar": "أعمالنا",
+                "subtitle_en": "Samples from our successful projects",
+                "subtitle_ar": "نماذج من مشاريعنا الناجحة",
+                "columns": 3,
+                "items": [
+                    {"title_en": "E-Commerce Store", "title_ar": "متجر إلكتروني", "category_en": "Web Design", "category_ar": "تصميم مواقع", "image": ""},
+                    {"title_en": "Educational App", "title_ar": "تطبيق تعليمي", "category_en": "App Development", "category_ar": "تطوير تطبيقات", "image": ""},
+                    {"title_en": "Ad Campaign", "title_ar": "حملة إعلانية", "category_en": "Marketing", "category_ar": "إدارة تسويق", "image": ""}
+                ]
+            }},
+            {"block_type": "platform_how_it_works", "order": 4, "content": {
+                "title_en": "How It Works",
+                "title_ar": "كيف تصل بنا إلى آفاق جديدة؟",
+                "subtitle_en": "Three simple steps to get started",
+                "subtitle_ar": "ثلاث خطوات بسيطة تأخذك من الفكرة إلى تحقيق نتائج تفوق توقعاتك",
+                "steps": [
+                    {"number": "1", "title_en": "Choose Your Service", "title_ar": "استشارة مجانية وتحليل احتياجاتك", "desc_en": "Browse our services and pick what suits you", "desc_ar": "أخبرنا عن تحدياتك وأهدافك. نحلّل احتياجاتك بدقة ونقترح الحل الأمثل الذي يناسب ميزانيتك.", "icon": "🎯"},
+                    {"number": "2", "title_en": "Pick a Plan", "title_ar": "تصميم وتطوير بأحدث التقنيات", "desc_en": "Choose the plan that fits your budget", "desc_ar": "فريقنا المتخصص يصمم ويطور مشروعك بأحدث التقنيات وأفضل الممارسات العالمية.", "icon": "📋"},
+                    {"number": "3", "title_en": "Start Immediately", "title_ar": "إطلاق مضمون ودعم مستمر", "desc_en": "Start using the service right away", "desc_ar": "نطلق مشروعك بضمان الأداء المثالي ونبقى بجانبك بدعم فني متواصل على مدار الساعة.", "icon": "🚀"}
+                ]
+            }},
+            {"block_type": "testimonials", "order": 5, "content": {
+                "title_en": "What Our Clients Say",
+                "title_ar": "عملاؤنا شهدوا آفاقاً جديدة للنجاح",
+                "subtitle_en": "Our clients' feedback speaks about our service quality",
+                "subtitle_ar": "انضم إلى منفتحو آفاقهم معنا — آلاف المستخدمين يحققون نتائج حقيقية",
+                "columns": 3,
+                "items": [
+                    {"name_en": "Ahmed Mohammed", "name_ar": "أحمد محمد", "role_en": "Company Manager", "role_ar": "مدير شركة", "text_en": "Excellent service with stunning results", "text_ar": "خدمة ممتازة ونتائج مبهرة فتحت لي آفاقاً جديدة", "rating": 5},
+                    {"name_en": "Sara Al-Ali", "name_ar": "سارة العلي", "role_en": "Startup Founder", "role_ar": "مؤسسة مشروع", "text_en": "Highly recommend working with them", "text_ar": "أنصح بالتعامل معهم — آفاق النجاح لم تكن بهذا الوضوح من قبل", "rating": 5},
+                    {"name_en": "Khaled Al-Hassan", "name_ar": "خالد الحسن", "role_en": "Entrepreneur", "role_ar": "رائد أعمال", "text_en": "The best platform I've ever used", "text_ar": "أفضل منصة تعاملت معها — فتحت لي آفاقاً رقمية لم أكن أتخيلها", "rating": 5}
+                ]
+            }},
+            {"block_type": "pricing", "order": 6, "content": {
+                "title_en": "Our Plans",
+                "title_ar": "خططنا",
+                "subtitle_en": "Choose the plan that fits your needs",
+                "subtitle_ar": "اختر الخطة المناسبة لاحتياجاتك وافتح آفاق النمو لمشروعك",
+                "columns": 3,
+                "show_badge": True,
+                "plans": [
+                    {"name_en": "Basic", "name_ar": "أساسي", "price": "49", "period_en": "/month", "period_ar": "/شهرياً", "badge": "", "features": ["5 pages", "Responsive design", "Tech support"], "cta_en": "Start Now", "cta_ar": "ابدأ الآن", "highlighted": False},
+                    {"name_en": "Pro", "name_ar": "احترافي", "price": "99", "period_en": "/month", "period_ar": "/شهرياً", "badge": "Most Popular", "features": ["Unlimited pages", "Advanced SEO", "Priority support", "Analytics"], "cta_en": "Start Now", "cta_ar": "ابدأ الآن", "highlighted": True},
+                    {"name_en": "Enterprise", "name_ar": "مؤسسات", "price": "299", "period_en": "/month", "period_ar": "/شهرياً", "badge": "", "features": ["All Pro features", "Custom API", "Account manager", "SLA"], "cta_en": "Contact Us", "cta_ar": "تواصل معنا", "highlighted": False}
+                ]
+            }},
+            {"block_type": "faq", "order": 7, "content": {
+                "title_en": "Frequently Asked Questions",
+                "title_ar": "الأسئلة الشائعة",
+                "items": [
+                    {"q_en": "Is the service free?", "q_ar": "هل الخدمة مجانية؟", "a_en": "Yes, we offer a free plan with basic features", "a_ar": "نعم، نوفر خطة مجانية مع مزايا أساسية"},
+                    {"q_en": "How do I get started?", "q_ar": "كيف أبدأ؟", "a_en": "Create a free account and start right away", "a_ar": "سجل حساباً مجانياً وابدأ فوراً"},
+                    {"q_en": "Can I cancel anytime?", "q_ar": "هل يمكنني الإلغاء؟", "a_en": "Yes, you can cancel your subscription at any time", "a_ar": "نعم، يمكنك الإلغاء في أي وقت"},
+                    {"q_en": "Do you support Arabic?", "q_ar": "هل تدعمون العربية؟", "a_en": "Yes, the platform fully supports Arabic", "a_ar": "نعم، المنصة تدعم العربية بالكامل"},
+                    {"q_en": "Is there technical support?", "q_ar": "هل يوجد دعم فني؟", "a_en": "Yes, 24/7 technical support is available", "a_ar": "نعم، دعم فني على مدار الساعة"}
+                ]
+            }},
+            {"block_type": "cta", "order": 8, "content": {
+                "title_en": "Ready to Get Started?",
+                "title_ar": "لا تضيّع فرصة فتح آفاق جديدة لأعمالك",
+                "subtitle_en": "Join hundreds of satisfied clients",
+                "subtitle_ar": "عملاؤنا شاهدوا آفاقاً جديدة للنمو والنجاح بعد استخدام خدماتنا. حان دورك لتشهد الآفاق التي تستحقها.",
+                "cta_text_en": "Sign Up Free Now",
+                "cta_text_ar": "افتح آفاق نجاحك مجاناً",
+                "cta_link_en": "/register",
+                "cta_link_ar": "/register"
+            }}
+        ]
+    },
+    {
+        "slug": "academy",
+        "title_en": "Afaq Academy",
+        "title_ar": "أكاديمية آفاق",
+        "description_en": "Non-formal education platform with AI-powered learning",
+        "description_ar": "منصة التعليم غير الرسمي بالذكاء الاصطناعي",
+        "template": "landing",
+        "is_homepage": False,
+        "show_in_nav": True,
+        "nav_order": 1,
+        "nav_icon": "🎓",
+        "meta_title_en": "Afaq Academy — Learn with AI",
+        "meta_title_ar": "أكاديمية آفاق — تعلم بالذكاء الاصطناعي",
+        "blocks": [
+            {"block_type": "hero", "order": 0, "content": {
+                "heading_en": "Learn Smart with Afaq Academy",
+                "heading_ar": "آفاق معرفية لا حدود لها",
+                "subtitle_en": "An AI-powered education platform",
+                "subtitle_ar": "استكشف آفاق المعرفة مع مكتبة شاملة تضم المواد والمناهج والمحتوى التعليمي لكل المراحل الدراسية",
+                "cta_text_en": "Start Learning",
+                "cta_text_ar": "ابدأ التعلم",
+                "cta_link_en": "/register",
+                "cta_link_ar": "/register",
+                "badges": [
+                    {"text_en": "Free Content", "text_ar": "محتوى مجاني", "icon": "✓"},
+                    {"text_en": "Certified Courses", "text_ar": "شهادات معتمدة", "icon": "✓"},
+                    {"text_en": "Learn at Your Pace", "text_ar": "تعلم بالسرعة", "icon": "✓"}
+                ]
+            }},
+            {"block_type": "stats", "order": 1, "content": {
+                "items": [
+                    {"value": "50+", "label_en": "Courses", "label_ar": "دورة تعليمية"},
+                    {"value": "1000+", "label_en": "Students", "label_ar": "طالب"},
+                    {"value": "20+", "label_en": "Expert Instructors", "label_ar": "مدرس خبير"},
+                    {"value": "95%", "label_en": "Satisfaction Rate", "label_ar": "نسبة الرضا"}
+                ]
+            }},
+            {"block_type": "features", "order": 2, "content": {
+                "title_en": "Why Afaq Academy?",
+                "title_ar": "لماذا آفاق تكنولوجي تفتح لك آفاقاً مختلفة؟",
+                "subtitle_en": "Features that make learning unique",
+                "subtitle_ar": "لأننا لا نقدم مجرد خدمات — نفتح أمامك آفاقاً جديدة للنمو والتميز والنجاح المستدام",
+                "columns": 3,
+                "items": [
+                    {"icon": "🤖", "title_en": "AI-Powered Learning", "title_ar": "تعلم بالذكاء الاصطناعي", "desc_en": "Smart assistant that learns your style", "desc_ar": "مساعد ذكي يتعلم أسلوبك ويفتح لك آفاقاً مخصصة لتعلمك", "link": "/blog/ai-education-arab-world", "points": [{"text_en": "Curricula aligned with official systems", "text_ar": "مناهج متوافقة مع المناهج الرسمية"}, {"text_en": "Content organized by subject & level", "text_ar": "محتوى منظم حسب المادة والمستوى"}, {"text_en": "Updated by expert teachers", "text_ar": "محتوى محدّث من معلمين متخصصين"}]},
+                    {"icon": "📊", "title_en": "Progress Tracking", "title_ar": "تتبع التقدم", "desc_en": "Track your progress with analytics tools", "desc_ar": "تابع تقدمك بأدوات تحليلية تفتح آفاقاً واضحة لأدائك", "link": "/blog/ai-education-arab-world", "points": [{"text_en": "Generate lesson plans in 30 seconds", "text_ar": "توليد خطة درس في 30 ثانية"}, {"text_en": "Customized to your style & curriculum", "text_ar": "مخصصة حسب أسلوبك ومنهجك"}, {"text_en": "Instant export & sharing", "text_ar": "تصدير فوري ومشاركة سريعة"}]},
+                    {"icon": "🎯", "title_en": "Custom Paths", "title_ar": "مسارات مخصصة", "desc_en": "Learning paths designed for you", "desc_ar": "مسارات تعلم مصممة لك تفتح آفاق التعلم المخصص", "link": "/blog/ai-education-arab-world", "points": [{"text_en": "Instant answers to any question", "text_ar": "إجابة فورية لأي سؤال"}, {"text_en": "Strategy suggestions for your style", "text_ar": "اقتراحات استراتيجية لأسلوبك"}, {"text_en": "Supports 9 languages including Arabic", "text_ar": "يدعم 9 لغات بالعربية"}]},
+                    {"icon": "🏆", "title_en": "Certificates", "title_ar": "شهادات", "desc_en": "Get certified upon completion", "desc_ar": "احصل على شهادات معتمدة تفتح آفاقاً جديدة لمسارك المهني"},
+                    {"icon": "📱", "title_en": "Learn Anywhere", "title_ar": "تعلم في أي مكان", "desc_en": "Fully integrated mobile app", "desc_ar": "تطبيق متكامل للهاتف يفتح لك آفاق التعلم في أي مكان"},
+                    {"icon": "💬", "title_en": "Interactive Community", "title_ar": "مجتمع تفاعلي", "desc_en": "Engage with fellow learners", "desc_ar": "تفاعل مع المتعلمين وافتح آفاقاً جديدة من التعاون والمعرفة"}
+                ]
+            }},
+            {"block_type": "how_it_works", "order": 3, "content": {
+                "title_en": "How to Start?",
+                "title_ar": "كيف تبدأ في 3 خطوات؟",
+                "subtitle_en": "Three steps to begin your learning journey",
+                "subtitle_ar": "لا تحتاج لخبرة تقنية — فقط اتبع الخطوات واترك الباقي علينا",
+                "steps": [
+                    {"number": "1", "title_en": "Sign Up Free", "title_ar": "اختر المادة والمنهج", "desc_en": "Create your account in seconds", "desc_ar": "حدد الصف والمادة والمنهج المناسبين لاحتياجاتك — سهولة تامة بدون تعقيد", "icon": "📝"},
+                    {"number": "2", "title_en": "Choose Your Path", "title_ar": "اكتب وصف الدرس باختصار", "desc_en": "Pick the subject or path that suits you", "desc_ar": "أدخل موضوع الدرس والأهداف التعليمية — دقائق معدودة تفصّل لك كل شيء", "icon": "🎯"},
+                    {"number": "3", "title_en": "Start Learning", "title_ar": "استلم خطتك الاحترافية", "desc_en": "Explore the educational content", "desc_ar": "يولّد الذكاء الاصطناعي خطة درس كاملة ومفصلة جاهزة للتطبيق في الفصل فوراً", "icon": "🚀"}
+                ]
+            }},
+            {"block_type": "demo", "order": 4, "content": {
+                "title_en": "Tour the Academy",
+                "title_ar": "جولة في الأكاديمية",
+                "subtitle_en": "Discover how our education platform works",
+                "subtitle_ar": "اكتشف كيف تعمل منصتنا التعليمية",
+                "show_browser_frame": True
+            }},
+            {"block_type": "testimonials", "order": 5, "content": {
+                "title_en": "Student Success Stories",
+                "title_ar": "عملاؤنا شهدوا آفاقاً جديدة للنجاح",
+                "subtitle_en": "Real experiences from students who learned with us",
+                "subtitle_ar": "انضم إلى منفتحو آفاقهم معنا — آلاف المستخدمين يحققون نتائج حقيقية",
+                "columns": 3,
+                "items": [
+                    {"name_en": "Nora Al-Khatib", "name_ar": "محمد الراشد", "role_en": "Engineering Student", "role_ar": "معلم رياضيات", "text_en": "The academy completely changed the way I learn", "text_ar": "وفّرت علي المنصة ساعات من التحضير. الذكاء الاصطناعي يولّد خطط دروس مفصلة وإبداعية ومتوافقة تماماً مع المنهج.", "rating": 5},
+                    {"name_en": "Omar Al-Saeed", "name_ar": "عائشة عبدالله", "role_en": "Software Developer", "role_ar": "معلمة علوم", "text_en": "Outstanding content and clear explanations", "text_ar": "الأكاديمية شاملة ومنظمة بشكل رائع. طلابي يحبون النهج المنسق وأنا أحب سهولة العثور على المواد.", "rating": 5},
+                    {"name_en": "Reem Abdulrahman", "name_ar": "فاطمة الحربي", "role_en": "Designer", "role_ar": "مديرة مدرسة", "text_en": "The best education platform I've used", "text_ar": "كمديرة مدرسة، حسابات المعلمين المتعددة وتقارير الأداء كانت نقطة تحول لإدارتنا.", "rating": 5}
+                ]
+            }},
+            {"block_type": "pricing", "order": 6, "content": {
+                "title_en": "Subscription Plans",
+                "title_ar": "خطط الاشتراك",
+                "subtitle_en": "Choose the plan that suits your learning",
+                "subtitle_ar": "اختر الخطة المناسبة لتعلمك",
+                "columns": 3,
+                "show_badge": True,
+                "plans": [
+                    {"name_en": "Free", "name_ar": "مجاني", "price": "0", "period_en": "/month", "period_ar": "/شهرياً", "badge": "", "features": ["3 courses", "Basic content", "Community"], "cta_en": "Start Free", "cta_ar": "ابدأ مجاناً", "highlighted": False},
+                    {"name_en": "Student", "name_ar": "طالب", "price": "29", "period_en": "/month", "period_ar": "/شهرياً", "badge": "Most Popular", "features": ["Unlimited courses", "AI assistant", "Certificates", "Support"], "cta_en": "Subscribe Now", "cta_ar": "اشترك الآن", "highlighted": True},
+                    {"name_en": "Pro", "name_ar": "احترافي", "price": "79", "period_en": "/month", "period_ar": "/شهرياً", "badge": "", "features": ["All Student features", "Exclusive content", "Live sessions", "Custom paths"], "cta_en": "Subscribe Now", "cta_ar": "اشترك الآن", "highlighted": False}
+                ]
+            }},
+            {"block_type": "faq", "order": 7, "content": {
+                "title_en": "Frequently Asked Questions",
+                "title_ar": "الأسئلة الشائعة",
+                "items": [
+                    {"q_en": "Are the courses free?", "q_ar": "هل الدورات مجانية؟", "a_en": "Yes, there are free and paid courses", "a_ar": "نعم، هناك دورات مجانية ودورات مدفوعة"},
+                    {"q_en": "Will I get a certificate?", "q_ar": "هل أحصل على شهادة؟", "a_en": "Yes, certified certificates upon course completion", "a_ar": "نعم، شهادات معتمدة بعد إتمام الدورة"},
+                    {"q_en": "Can I learn on mobile?", "q_ar": "هل يمكنني التعلم من الهاتف؟", "a_en": "Yes, the platform is compatible with all devices", "a_ar": "نعم، المنصة متوافقة مع جميع الأجهزة"},
+                    {"q_en": "Is there technical support?", "q_ar": "هل يوجد دعم فني؟", "a_en": "Yes, 24/7 technical support is available", "a_ar": "نعم، دعم فني على مدار الساعة"},
+                    {"q_en": "How does AI work?", "q_ar": "كيف يعمل الذكاء الاصطناعي؟", "a_en": "It learns your style and recommends suitable content", "a_ar": "يتعلم أسلوبك ويوصي بالمحتوى المناسب"}
+                ]
+            }},
+            {"block_type": "cta", "order": 8, "content": {
+                "title_en": "Start Your Learning Journey Today",
+                "title_ar": "لا تضيّع فرصة فتح آفاق معرفية جديدة",
+                "subtitle_en": "Sign up free and get instant access to courses",
+                "subtitle_ar": "عملاؤنا شاهدوا آفاقاً جديدة للنمو والنجاح بعد استخدام خدماتنا. حان دورك لتشهد الآفاق التي تستحقها.",
+                "cta_text_en": "Sign Up Free Now",
+                "cta_text_ar": "افتح آفاق نجاحك مجاناً",
+                "cta_link_en": "/register",
+                "cta_link_ar": "/register"
+            }}
+        ]
+    },
+    {
+        "slug": "curriculum",
+        "title_en": "Academic Curriculum",
+        "title_ar": "المنهاج الدراسي",
+        "description_en": "School and university curriculum support",
+        "description_ar": "دعم المناهج الدراسية المدرسية والجامعية",
+        "template": "landing",
+        "is_homepage": False,
+        "show_in_nav": True,
+        "nav_order": 2,
+        "nav_icon": "📚",
+        "meta_title_en": "Academic Curriculum — School & University Support",
+        "meta_title_ar": "المنهاج الدراسي — دعم المنهج المدرسي والجامعي",
+        "blocks": [
+            {"block_type": "hero", "order": 0, "content": {
+                "heading_en": "Academic Curriculum at Every Level",
+                "heading_ar": "آفاق المعرفة بكل مراحلها",
+                "subtitle_en": "From primary to university, we have everything you need",
+                "subtitle_ar": "من الابتدائي إلى الجامعي، نفتح لك آفاقاً شاملة من المناهج والمحتوى التعليمي بكل ما تحتاجه",
+                "cta_text_en": "Browse Curricula",
+                "cta_text_ar": "استكشف آفاق المناهج",
+                "cta_link_en": "#grades",
+                "cta_link_ar": "#grades",
+                "badges": [
+                    {"text_en": "All Levels", "text_ar": "جميع المراحل", "icon": "✓"},
+                    {"text_en": "Simplified Explanations", "text_ar": "شرح مبسّط", "icon": "✓"},
+                    {"text_en": "Interactive Exercises", "text_ar": "تدريبات تفاعلية", "icon": "✓"}
+                ]
+            }},
+            {"block_type": "grade_showcase", "order": 1, "content": {
+                "title_en": "Academic Levels",
+                "title_ar": "آفاق المراحل الدراسية",
+                "subtitle_en": "Choose your academic level",
+                "subtitle_ar": "اختر مرحلتك الدراسية وافتح آفاق التعلم المتخصص",
+                "columns": 3,
+                "grades": [
+                    {"name_en": "Primary School", "name_ar": "المرحلة الابتدائية", "icon": "📖", "desc_en": "From 1st to 6th grade", "desc_ar": "من الصف الأول إلى السادس — آفاق المعرفة تبدأ هنا", "count": 6},
+                    {"name_en": "Middle School", "name_ar": "المرحلة الإعدادية", "icon": "📘", "desc_en": "From 7th to 9th grade", "desc_ar": "من الصف السابع إلى التاسع — توسع آفاقك نحو التخصص", "count": 3},
+                    {"name_en": "High School", "name_ar": "المرحلة الثانوية", "icon": "🎓", "desc_en": "From 10th to 12th grade", "desc_ar": "من الصف العاشر إلى الثاني عشر — افتح آفاق التميز الأكاديمي", "count": 3}
+                ]
+            }},
+            {"block_type": "subjects_grid", "order": 2, "content": {
+                "title_en": "Subjects",
+                "title_ar": "آفاق المواد الدراسية",
+                "subtitle_en": "Diverse subjects covering all disciplines",
+                "subtitle_ar": "مواد متنوعة تغطي جميع التخصصات وتفتح آفاق المعرفة الشاملة",
+                "columns": 4,
+                "subjects": [
+                    {"name_en": "Mathematics", "name_ar": "الرياضيات", "icon": "🔢"},
+                    {"name_en": "Science", "name_ar": "العلوم", "icon": "🔬"},
+                    {"name_en": "Arabic Language", "name_ar": "اللغة العربية", "icon": "📖"},
+                    {"name_en": "English Language", "name_ar": "اللغة الإنجليزية", "icon": "🌐"},
+                    {"name_en": "Physics", "name_ar": "الفيزياء", "icon": "⚛️"},
+                    {"name_en": "Chemistry", "name_ar": "الكيمياء", "icon": "🧪"},
+                    {"name_en": "History", "name_ar": "التاريخ", "icon": "📜"},
+                    {"name_en": "Geography", "name_ar": "الجغرافيا", "icon": "🌍"}
+                ]
+            }},
+            {"block_type": "partners", "order": 3, "content": {
+                "title_en": "Our Education Partners",
+                "title_ar": "شركاؤنا يفتحون معنا آفاق التعليم",
+                "partners": [
+                    {"name_en": "Ministry of Education", "name_ar": "وزارة التعليم", "logo": ""},
+                    {"name_en": "King Saud University", "name_ar": "جامعة الملك سعود", "logo": ""},
+                    {"name_en": "MIT Academy", "name_ar": "أكاديمية MIT", "logo": ""},
+                    {"name_en": "UNESCO", "name_ar": "اليونسكو", "logo": ""}
+                ]
+            }}
+        ]
+    },
+    # ════════════════════════════════════════════════════════════
+    # About Us
+    # ════════════════════════════════════════════════════════════
+    {
+        "slug": "about",
+        "title_en": "About Afaq Tech",
+        "title_ar": "عن آفاق تكنولوجي",
+        "description_en": "Learn about our mission and vision",
+        "description_ar": "تعرّف على رؤيتنا ورسالتنا",
+        "template": "landing",
+        "is_homepage": False,
+        "show_in_nav": True,
+        "nav_order": 3,
+        "nav_icon": "ℹ️",
+        "meta_title_en": "About Us — Afaq Tech Platform",
+        "meta_title_ar": "من نحن — منصة آفاق تكنولوجي",
+        "blocks": [
+            {"block_type": "hero", "order": 0, "content": {
+                "heading_en": "We Open New Horizons for Your Business",
+                "heading_ar": "نفتح آفاقاً جديدة لأعمالك",
+                "subtitle_en": "Afaq Tech is a digital platform that provides smart solutions and education to help you succeed",
+                "subtitle_ar": "آفاق تكنولوجي منصة رقمية تقدّم حلولاً ذكية وتعليم متخصص لفتح آفاق النجاح والتميز لأعمالك",
+                "cta_text_en": "Get Started",
+                "cta_text_ar": "ابدأ الآن",
+                "cta_link_en": "/register",
+                "cta_link_ar": "/register",
+                "badges": [
+                    {"text_en": "Trusted Platform", "text_ar": "منصة موثوقة", "icon": "✓"},
+                    {"text_en": "9 Languages", "text_ar": "9 لغات", "icon": "✓"},
+                    {"text_en": "24/7 Support", "text_ar": "دعم مستمر", "icon": "✓"}
+                ]
+            }},
+            {"block_type": "stats", "order": 1, "content": {
+                "items": [
+                    {"value": "150+", "label_en": "Projects Completed", "label_ar": "مشروع منجز"},
+                    {"value": "500+", "label_en": "Happy Clients", "label_ar": "عميل سعيد"},
+                    {"value": "8", "label_en": "Specialized Services", "label_ar": "خدمة متخصصة"},
+                    {"value": "9", "label_en": "Languages Supported", "label_ar": "لغة مدعومة"}
+                ]
+            }},
+            {"block_type": "features", "order": 2, "content": {
+                "title_en": "Why Choose Afaq Tech?",
+                "title_ar": "لماذا تختار آفاق تكنولوجي؟",
+                "subtitle_en": "We don't just provide services — we open new horizons for your success",
+                "subtitle_ar": "لا نقدم مجرد خدمات — نفتح أمامك آفاقاً جديدة للنمو والتميز والنجاح المستدام",
+                "columns": 3,
+                "items": [
+                    {"icon": "🎯", "title_en": "Strategic Vision", "title_ar": "رؤية استراتيجية", "desc_en": "We analyze your needs and craft tailored strategies", "desc_ar": "نحلّل احتياجاتك ونصمم استراتيجيات مخصصة تفتح آفاق النمو لمشروعك"},
+                    {"icon": "💡", "title_en": "Innovation First", "title_ar": "الابتكار أولاً", "desc_en": "We use the latest technologies and best practices", "desc_ar": "نستخدم أحدث التقنيات وأفضل الممارسات لفتح آفاق رقمية مبتكرة"},
+                    {"icon": "🤝", "title_en": "Trusted Partnership", "title_ar": "شراكة موثوقة", "desc_en": "We build long-term relationships with our clients", "desc_ar": "نبني علاقات طويلة المدى مع عملائنا ونرافقهم في رحلة فتح آفاق جديدة"}
+                ]
+            }},
+            {"block_type": "partners", "order": 3, "content": {
+                "title_en": "Trusted By Leading Brands",
+                "title_ar": "موثوق به من قبل العلامات التجارية الرائدة",
+                "partners": [
+                    {"name_en": "Saudi Telecom", "name_ar": "الاتصالات السعودية", "logo": ""},
+                    {"name_en": "Al Rajhi Bank", "name_ar": "مصرف الراجحي", "logo": ""},
+                    {"name_en": "SABIC", "name_ar": "سابك", "logo": ""},
+                    {"name_en": "NEOM", "name_ar": "نيوم", "logo": ""},
+                    {"name_en": "STC", "name_ar": "اس تي سي", "logo": ""}
+                ]
+            }},
+            {"block_type": "cta", "order": 4, "content": {
+                "title_en": "Ready to Open New Horizons?",
+                "title_ar": "جاهز لفتح آفاق جديدة لأعمالك؟",
+                "subtitle_en": "Join hundreds of clients who trust Afaq Tech",
+                "subtitle_ar": "انضم لمئات العملاء الذين يثقون بآفاق تكنولوجي في فتح آفاق النجاح",
+                "cta_text_en": "Start Free Now",
+                "cta_text_ar": "افتح آفاق نجاحك مجاناً",
+                "cta_link_en": "/register",
+                "cta_link_ar": "/register"
+            }}
+        ]
+    },
+    # ════════════════════════════════════════════════════════════
+    # Contact
+    # ════════════════════════════════════════════════════════════
+    {
+        "slug": "contact",
+        "title_en": "Contact Us",
+        "title_ar": "تواصل معنا",
+        "description_en": "Get in touch with our team",
+        "description_ar": "تواصل مع فريقنا لنفتح معاً آفاق جديدة لأعمالك",
+        "template": "landing",
+        "is_homepage": False,
+        "show_in_nav": True,
+        "nav_order": 4,
+        "nav_icon": "📞",
+        "meta_title_en": "Contact Us — Afaq Tech",
+        "meta_title_ar": "تواصل معنا — آفاق تكنولوجي",
+        "blocks": [
+            {"block_type": "hero", "order": 0, "content": {
+                "heading_en": "Let's Talk About Your Project",
+                "heading_ar": "دعنا نتحدث عن مشروعك",
+                "subtitle_en": "We're here to help you open new horizons for your business",
+                "subtitle_ar": "نحن هنا لمساعدتك في فتح آفاق جديدة لأعمالك — تواصل معنا اليوم",
+                "cta_text_en": "Send Email",
+                "cta_text_ar": "أرسل إيميل",
+                "cta_link_en": "mailto:info@afaq-tech.com",
+                "cta_link_ar": "mailto:info@afaq-tech.com",
+                "badges": [
+                    {"text_en": "Free Consultation", "text_ar": "استشارة مجانية", "icon": "✓"},
+                    {"text_en": "Response Within 24h", "text_ar": "رد خلال 24 ساعة", "icon": "✓"},
+                    {"text_en": "9 Countries", "text_ar": "9 دول", "icon": "✓"}
+                ]
+            }},
+            {"block_type": "features", "order": 1, "content": {
+                "title_en": "How to Reach Us",
+                "title_ar": "كيف تصل إلينا؟",
+                "subtitle_en": "Multiple ways to connect with our team",
+                "subtitle_ar": "طرق متعددة للتواصل مع فريقنا وفتح آفاق التعاون",
+                "columns": 3,
+                "items": [
+                    {"icon": "📧", "title_en": "Email Us", "title_ar": "أرسل لنا إيميل", "desc_en": "info@afaq-tech.com", "desc_ar": "info@afaq-tech.com — نرد خلال 24 ساعة"},
+                    {"icon": "📱", "title_en": "WhatsApp", "title_ar": "واتساب", "desc_en": "+966 50 000 0000", "desc_ar": "+966 50 000 0000 — تواصل فوري"},
+                    {"icon": "📍", "title_en": "Our Office", "title_ar": "مكتبنا", "desc_en": "Riyadh, Saudi Arabia", "desc_ar": "الرياض، المملكة العربية السعودية"}
+                ]
+            }},
+            {"block_type": "cta", "order": 2, "content": {
+                "title_en": "Ready to Start Your Journey?",
+                "title_ar": "جاهز لبدء رحلتك نحو آفاق جديدة؟",
+                "subtitle_en": "Book a free consultation and discover how we can help",
+                "subtitle_ar": "احجز استشارة مجانية واكتشف كيف يمكننا مساعدتك في فتح آفاق النجاح",
+                "cta_text_en": "Book Free Consultation",
+                "cta_text_ar": "احجز استشارة مجانية",
+                "cta_link_en": "/register",
+                "cta_link_ar": "/register"
+            }}
+        ]
+    },
+    # ════════════════════════════════════════════════════════════
+    # Privacy Policy
+    # ════════════════════════════════════════════════════════════
+    {
+        "slug": "privacy",
+        "title_en": "Privacy Policy",
+        "title_ar": "سياسة الخصوصية",
+        "description_en": "How we protect your data",
+        "description_ar": "كيف نحمي بياناتك ونحافظ على خصوصيتك",
+        "template": "landing",
+        "is_homepage": False,
+        "show_in_nav": False,
+        "nav_order": 10,
+        "meta_title_en": "Privacy Policy — Afaq Tech",
+        "meta_title_ar": "سياسة الخصوصية — آفاق تكنولوجي",
+        "blocks": [
+            {"block_type": "hero", "order": 0, "content": {
+                "heading_en": "Privacy Policy",
+                "heading_ar": "سياسة الخصوصية",
+                "subtitle_en": "Your privacy is important to us",
+                "subtitle_ar": "خصوصيتك مهمة لنا — نلتزم بحماية بياناتك وفتح آفاق الأمان الرقمي",
+                "cta_text_en": "Contact Us",
+                "cta_text_ar": "تواصل معنا",
+                "cta_link_en": "/contact",
+                "cta_link_ar": "/contact"
+            }},
+            {"block_type": "accordion", "order": 1, "content": {
+                "title_en": "Our Privacy Commitments",
+                "title_ar": "التزاماتنا في حماية خصوصيتك",
+                "items": [
+                    {"title_en": "Data Collection", "title_ar": "جمع البيانات", "content_en": "We only collect data necessary to provide our services. This includes your name, email, and usage data.", "content_ar": "نجمع فقط البيانات الضرورية لتقديم خدماتنا. يشمل ذلك اسمك وعنوان بريدك الإلكتروني وبيانات الاستخدام. نلتزم بفتح آفاق الشفافية في التعامل مع بياناتك."},
+                    {"title_en": "Data Usage", "title_ar": "استخدام البيانات", "content_en": "Your data is used solely to improve your experience and deliver our services. We never sell your data to third parties.", "content_ar": "تُستخدم بياناتك فقط لتحسين تجربتك وتقديم خدماتنا. لا نبيع بياناتك أبداً لجهات خارجية. نفتح آفاق الثقة من خلال الحفاظ على سرية بياناتك."},
+                    {"title_en": "Data Protection", "title_ar": "حماية البيانات", "content_en": "We use industry-standard encryption and security measures to protect your data from unauthorized access.", "content_ar": "نستخدم تشفيراً ومعايير أمان بمعايير الصناعة لحماية بياناتك من الوصول غير المصرح به. نفتح آفاق الأمان الرقمي لبياناتك."},
+                    {"title_en": "Cookies", "title_ar": "ملفات تعريف الارتباط", "content_en": "We use cookies to enhance your browsing experience. You can control cookie settings through your browser.", "content_ar": "نستخدم ملفات تعريف الارتباط لتحسين تجربة التصفح. يمكنك التحكم في إعدادات الكوكيز من خلال متصفحك."},
+                    {"title_en": "Your Rights", "title_ar": "حقوقك", "content_en": "You have the right to access, modify, or delete your personal data at any time by contacting us.", "content_ar": "لك الحق في الوصول إلى بياناتك الشخصية أو تعديلها أو حذفها في أي وقت عن طريق التواصل معنا. نفتح آفاق التحكم الكامل في بياناتك."},
+                    {"title_en": "Contact for Privacy Concerns", "title_ar": "التواصل بخصوص الخصوصية", "content_en": "For any privacy-related questions, please email privacy@afaq-tech.com", "content_ar": " لأي استفسارات تتعلق بالخصوصية، يرجى التواصل على privacy@afaq-tech.com"}
+                ]
+            }},
+            {"block_type": "cta", "order": 2, "content": {
+                "title_en": "Questions About Privacy?",
+                "title_ar": "لديك أسئلة حول الخصوصية؟",
+                "subtitle_en": "Our team is here to address any concerns",
+                "subtitle_ar": "فريقنا هنا للإجابة على أي استفسارات وفتح آفاق الثقة معك",
+                "cta_text_en": "Contact Us",
+                "cta_text_ar": "تواصل معنا",
+                "cta_link_en": "/contact",
+                "cta_link_ar": "/contact"
+            }}
+        ]
+    },
+    # ════════════════════════════════════════════════════════════
+    # Terms of Service
+    # ════════════════════════════════════════════════════════════
+    {
+        "slug": "terms",
+        "title_en": "Terms of Service",
+        "title_ar": "شروط الخدمة",
+        "description_en": "Terms and conditions for using our platform",
+        "description_ar": "الشروط والأحكام لاستخدام منصتنا",
+        "template": "landing",
+        "is_homepage": False,
+        "show_in_nav": False,
+        "nav_order": 11,
+        "meta_title_en": "Terms of Service — Afaq Tech",
+        "meta_title_ar": "شروط الخدمة — آفاق تكنولوجي",
+        "blocks": [
+            {"block_type": "hero", "order": 0, "content": {
+                "heading_en": "Terms of Service",
+                "heading_ar": "شروط الخدمة",
+                "subtitle_en": "Please read these terms carefully before using our platform",
+                "subtitle_ar": "يرجى قراءة هذه الشروط بعناية قبل استخدام منصتنا — نفتح آفاق الشفافية والوضوح",
+                "cta_text_en": "Contact Us",
+                "cta_text_ar": "تواصل معنا",
+                "cta_link_en": "/contact",
+                "cta_link_ar": "/contact"
+            }},
+            {"block_type": "accordion", "order": 1, "content": {
+                "title_en": "Terms and Conditions",
+                "title_ar": "الشروط والأحكام",
+                "items": [
+                    {"title_en": "Acceptance of Terms", "title_ar": "قبول الشروط", "content_en": "By using Afaq Tech platform, you agree to these terms and conditions. If you do not agree, please do not use our services.", "content_ar": "باستخدام منصة آفاق تكنولوجي، أنت توافق على هذه الشروط والأحكام. إذا كنت لا توافق، يرجى عدم استخدام خدماتنا."},
+                    {"title_en": "Service Description", "title_ar": "وصف الخدمة", "content_en": "Afaq Tech provides digital services including web design, social media management, landing pages, and educational content.", "content_ar": "توفر آفاق تكنولوجي خدمات رقمية تشمل تصميم المواقع وإدارة التواصل الاجتماعي وصفحات الهبوط والمحتوى التعليمي. نفتح آفاقاً رقمية متكاملة لعملائك."},
+                    {"title_en": "User Responsibilities", "title_ar": "مسؤوليات المستخدم", "content_en": "Users are responsible for maintaining the confidentiality of their accounts and for all activities under their accounts.", "content_ar": "المستخدمون مسؤولون عن الحفاظ على سرية حساباتهم وجميع الأنشطة التي تحدث تحت حساباتهم."},
+                    {"title_en": "Payment Terms", "title_ar": "شروط الدفع", "content_en": "Paid services require upfront payment. Refund policies vary by service type and are detailed in each service agreement.", "content_ar": "الخدمات المدفوعة تتطلب الدفع مقدماً. تختلف سياسات الاسترداد حسب نوع الخدمة وdetail في كل اتفاقية خدمة."},
+                    {"title_en": "Intellectual Property", "title_ar": "حقوق الملكية الفكرية", "content_en": "All content, designs, and materials created by Afaq Tech remain our intellectual property unless otherwise agreed.", "content_ar": "جميع المحتويات والتصاميم والمواد التي создаها آفاق تكنولوجي تظل ملكاً لنا إلا إذا اتفقنا على خلاف ذلك."},
+                    {"title_en": "Limitation of Liability", "title_ar": "حدود المسؤولية", "content_en": "Afaq Tech shall not be liable for any indirect, incidental, or consequential damages arising from service use.", "content_ar": "لا تتحمل آفاق تكنولوجي المسؤولية عن أي أضرار غير مباشرة أو عرضية أو تبعية ناتجة عن استخدام الخدمات."}
+                ]
+            }},
+            {"block_type": "cta", "order": 2, "content": {
+                "title_en": "Need Help Understanding Our Terms?",
+                "title_ar": "تحتاج مساعدة في فهم شروطنا؟",
+                "subtitle_en": "Our support team is ready to answer your questions",
+                "subtitle_ar": "فريق الدعم جاهز للإجابة على أسئلتك وفتح آفاق التعاون معك",
+                "cta_text_en": "Contact Support",
+                "cta_text_ar": "تواصل مع الدعم",
+                "cta_link_en": "/contact",
+                "cta_link_ar": "/contact"
+            }}
+        ]
+    },
+    # ════════════════════════════════════════════════════════════
+    # Service: Web Design
+    # ════════════════════════════════════════════════════════════
+    {
+        "slug": "services/web-design",
+        "title_en": "Web Design",
+        "title_ar": "تصميم المواقع",
+        "description_en": "Professional website design services",
+        "description_ar": "خدمات تصميم مواقع احترافية تفتح آفاقاً جديدة لعلامتك التجارية",
+        "template": "landing",
+        "is_homepage": False,
+        "show_in_nav": False,
+        "nav_order": 20,
+        "meta_title_en": "Web Design — Afaq Tech",
+        "meta_title_ar": "تصميم المواقع — آفاق تكنولوجي",
+        "blocks": [
+            {"block_type": "hero", "order": 0, "content": {
+                "heading_en": "Professional Web Design",
+                "heading_ar": "تصميم مواقع يفتح آفاقاً جديدة لعلامتك",
+                "subtitle_en": "We create stunning, responsive websites that convert visitors into customers",
+                "subtitle_ar": "نصمم مواقع إلكترونية مذهلة ومتجاوبة تفتح آفاق التحويل العالية وتحوّل الزوار إلى عملاء دائمين",
+                "cta_text_en": "Get a Quote",
+                "cta_text_ar": "احصل على عرض سعر",
+                "cta_link_en": "/contact",
+                "cta_link_ar": "/contact",
+                "badges": [
+                    {"text_en": "Custom Design", "text_ar": "تصميم مخصص", "icon": "✓"},
+                    {"text_en": "SEO Optimized", "text_ar": "محسّن للبحث", "icon": "✓"},
+                    {"text_en": "Mobile First", "text_ar": "مصمم للهاتف أولاً", "icon": "✓"}
+                ]
+            }},
+            {"block_type": "features", "order": 1, "content": {
+                "title_en": "What We Offer",
+                "title_ar": "ما نقدمه في تصميم المواقع",
+                "subtitle_en": "Complete web design solutions that open new horizons",
+                "subtitle_ar": "حلول تصميم مواقع شاملة تفتح آفاقاً رقمية جديدة لعلامتك",
+                "columns": 3,
+                "items": [
+                    {"icon": "🎨", "title_en": "Custom Design", "title_ar": "تصميم مخصص بالكامل", "desc_en": "Unique designs tailored to your brand identity", "desc_ar": "تصاميم فريدة مصممة خصيصاً لهويتك التجارية وتفتح آفاق التميّز", "link": "/blog/web-design-trends-2026", "points": [{"text_en": "Unique brand-aligned visuals", "text_ar": "تصاميم فريدة متوافقة مع هويتك"}, {"text_en": "Wireframes & mockups included", "text_ar": "خطط أولية ونماذج تجريبية"}, {"text_en": "Unlimited revisions", "text_ar": "تعديلات غير محدودة"}]},
+                    {"icon": "📱", "title_en": "Responsive", "title_ar": "متجاوب مع كل الأجهزة", "desc_en": "Looks perfect on desktop, tablet, and mobile", "desc_ar": "يظهر بشكل مثالي على الكمبيوتر والتابلت والهاتف — آفاق الوصول لجميع المستخدمين", "link": "/blog/responsive-website-2026", "points": [{"text_en": "Mobile-first approach", "text_ar": "منهجية الهاتف أولاً"}, {"text_en": "Tested on all browsers", "text_ar": "اختبار على جميع المتصفحات"}, {"text_en": "Pixel-perfect rendering", "text_ar": "عرض دقيق بالبكسل"}]},
+                    {"icon": "⚡", "title_en": "Fast Performance", "title_ar": "سرعة فائقة", "desc_en": "Optimized loading speed for better user experience", "desc_ar": "سرعة تحميل محسّنة لتجربة مستخدم أفضل وفتح آفاق التفاعل", "link": "/blog/web-design-trends-2026", "points": [{"text_en": "Core Web Vitals optimized", "text_ar": "محسّن لمؤشرات الويب الأساسية"}, {"text_en": "Image optimization included", "text_ar": "تحسين الصور م شامل"}, {"text_en": "CDN & caching setup", "text_ar": "إعداد الشبكات المؤقتة"}]}
+                ]
+            }},
+            {"block_type": "platform_how_it_works", "order": 2, "content": {
+                "title_en": "How We Work",
+                "title_ar": "كيف نفتح لك آفاق التصميم؟",
+                "subtitle_en": "Our proven process for delivering exceptional websites",
+                "subtitle_ar": "عمليتنا المُجرّبة لتقديم مواقع استثنائية تفوق توقعاتك",
+                "steps": [
+                    {"number": "1", "title_en": "Discovery & Planning", "title_ar": "الاكتشاف والتخطيط", "desc_en": "We understand your goals, audience, and requirements", "desc_ar": "نفهم أهدافك وجماهيرك ومتطلباتك لنرسم آفاق المشروع بدقة", "icon": "🔍"},
+                    {"number": "2", "title_en": "Design & Development", "title_ar": "التصميم والتطوير", "desc_en": "Our team creates a stunning, functional website", "desc_ar": "فريقنا يصمم ويطور موقعك بأحدث التقنيات وأفضل الممارسات", "icon": "🛠️"},
+                    {"number": "3", "title_en": "Launch & Support", "title_ar": "الإطلاق والدعم", "desc_en": "We launch your site and provide ongoing support", "desc_ar": "نطلق موقعك ونقدم دعم مستمر لضمان بقاء آفاق أداء موقعك مشرقة", "icon": "🚀"}
+                ]
+            }},
+            {"block_type": "testimonials", "order": 3, "content": {
+                "title_en": "What Our Clients Say",
+                "title_ar": "عملاؤنا شهدوا آفاقاً جديدة مع تصاميمنا",
+                "subtitle_en": "Real feedback from businesses we've helped",
+                "subtitle_ar": "آراء حقيقية من أعمال ساعدناها في فتح آفاق رقمية جديدة",
+                "columns": 2,
+                "items": [
+                    {"name_en": "Ahmed Al-Rashid", "name_ar": "أحمد الراشد", "role_en": "CEO, TechStore", "role_ar": "مدير تنفيذي، متجر تك", "text_en": "Our new website increased conversions by 200%", "text_ar": "موقعنا الجديد زاد التحويلات بنسبة 200% — فتحوا لنا آفاقاً إيرادية لم نكن نتخيلها", "rating": 5},
+                    {"name_en": "Sara Al-Ali", "name_ar": "سارة العلي", "role_en": "Founder, EduStart", "role_ar": "مؤسسة، إديوستارت", "text_en": "Beautiful design that perfectly represents our brand", "text_ar": "تصميم جميل يمثّل هويتنا بشكل مثالي — آفاق التميّز واضحة تماماً", "rating": 5}
+                ]
+            }},
+            {"block_type": "cta", "order": 4, "content": {
+                "title_en": "Ready to Transform Your Online Presence?",
+                "title_ar": "جاهز لتحويل حضورك الرقمي وفتح آفاق جديدة؟",
+                "subtitle_en": "Let's create a website that opens new horizons for your business",
+                "subtitle_ar": "دعنا نصمم لك موقعًا يفتح آفاقاً جديدة لعلامتك التجارية ويعزز نجاحك",
+                "cta_text_en": "Start Your Project",
+                "cta_text_ar": "ابدأ مشروعك الآن",
+                "cta_link_en": "/contact",
+                "cta_link_ar": "/contact"
+            }}
+        ]
+    },
+    # ════════════════════════════════════════════════════════════
+    # Service: Social Media Management
+    # ════════════════════════════════════════════════════════════
+    {
+        "slug": "services/social-media",
+        "title_en": "Social Media Management",
+        "title_ar": "إدارة التواصل الاجتماعي",
+        "description_en": "Professional social media management",
+        "description_ar": "إدارة احترافية لوسائل التواصل توسّع آفاق حضورك الرقمي",
+        "template": "landing",
+        "is_homepage": False,
+        "show_in_nav": False,
+        "nav_order": 21,
+        "meta_title_en": "Social Media Management — Afaq Tech",
+        "meta_title_ar": "إدارة التواصل الاجتماعي — آفاق تكنولوجي",
+        "blocks": [
+            {"block_type": "hero", "order": 0, "content": {
+                "heading_en": "Social Media That Opens New Horizons",
+                "heading_ar": "تواصل اجتماعي يفتح آفاقاً جديدة لأعمالك",
+                "subtitle_en": "We manage your social media presence to drive real results and growth",
+                "subtitle_ar": "نوسّع آفاق حضورك الرقمي ونحوّل منصات التواصل إلى مصدر حقيقي للمبيعات والنمو المستدام",
+                "cta_text_en": "Get Started",
+                "cta_text_ar": "ابدأ الآن",
+                "cta_link_en": "/contact",
+                "cta_link_ar": "/contact",
+                "badges": [
+                    {"text_en": "Content Strategy", "text_ar": "استراتيجية محتوى", "icon": "✓"},
+                    {"text_en": "Growth Guaranteed", "text_ar": "نمو مضمون", "icon": "✓"},
+                    {"text_en": "Analytics Reports", "text_ar": "تقارير تحليلية", "icon": "✓"}
+                ]
+            }},
+            {"block_type": "features", "order": 1, "content": {
+                "title_en": "Our Services Include",
+                "title_ar": "خدماتنا تفتح آفاق التواصل",
+                "subtitle_en": "Comprehensive social media management solutions",
+                "subtitle_ar": "حلول شاملة لإدارة التواصل الاجتماعي توسّع آفاق حضورك",
+                "columns": 3,
+                "items": [
+                    {"icon": "📊", "title_en": "Content Planning", "title_ar": "التخطيط الاستراتيجي", "desc_en": "Strategic content calendars aligned with your goals", "desc_ar": "تقويمات محتوى استراتيجية متوافقة مع أهدافك لفتح آفاق النمو", "link": "/blog/social-media-strategy", "points": [{"text_en": "Monthly content calendar", "text_ar": "تقويم محتوى شهري"}, {"text_en": "Hashtag research", "text_ar": "بحث عن الهاشتاقات"}, {"text_en": "Competitor analysis", "text_ar": "تحليل المنافسين"}]},
+                    {"icon": "✍️", "title_en": "Content Creation", "title_ar": "إنشاء المحتوى", "desc_en": "Professional posts, stories, and reels", "desc_ar": "منشورات وقصص وريلز احترافية تجذب الجمهور وتفتح آفاق التفاعل", "link": "/blog/social-media-strategy", "points": [{"text_en": "Professional copywriting", "text_ar": "كتابة احترافية"}, {"text_en": "Custom graphics & videos", "text_ar": "رسومات وفيديوهات مخصصة"}, {"text_en": "A/B testing for content", "text_ar": "اختبار المحتوى"}]},
+                    {"icon": "📈", "title_en": "Growth & Analytics", "title_ar": "النمو والتحليل", "desc_en": "Track growth and optimize performance", "desc_ar": "تتبع النمو وأداء الحملات لضمان فتح آفاق النجاح المستدام", "link": "/blog/social-media-strategy", "points": [{"text_en": "Weekly performance reports", "text_ar": "تقارير أداء أسبوعية"}, {"text_en": "Audience insights", "text_ar": "رؤى الجمهور"}, {"text_en": "ROI tracking", "text_ar": "تتبع العائد على الاستثمار"}]}
+                ]
+            }},
+            {"block_type": "platform_how_it_works", "order": 2, "content": {
+                "title_en": "Our Process",
+                "title_ar": "كيف نوسّع آفاق حضورك؟",
+                "subtitle_en": "A systematic approach to social media success",
+                "subtitle_ar": "منهجية منظمة لتحقيق النجاح في التواصل الاجتماعي",
+                "steps": [
+                    {"number": "1", "title_en": "Audit & Strategy", "title_ar": "التدقيق والاستراتيجية", "desc_en": "We analyze your current presence and create a plan", "desc_ar": "نحلّل حضورك الحالي ونصمم خطة تفتح آفاق النمو", "icon": "🔍"},
+                    {"number": "2", "title_en": "Create & Publish", "title_ar": "الإنشاء والنشر", "desc_en": "Our team creates and publishes engaging content", "desc_ar": "فريقنا ينشئ وينشر محتوى جذاباً يفتح آفاق التفاعل", "icon": "✍️"},
+                    {"number": "3", "title_en": "Analyze & Optimize", "title_ar": "التحليل والتحسين", "desc_en": "We measure results and continuously optimize", "desc_ar": "نقيس النتائج ونحسّن باستمرار لضمان بقاء آفاق الأداء مشرقة", "icon": "📈"}
+                ]
+            }},
+            {"block_type": "cta", "order": 3, "content": {
+                "title_en": "Ready to Dominate Social Media?",
+                "title_ar": "جاهز لتغليب آفاق التواصل الاجتماعي؟",
+                "subtitle_en": "Let us manage your social media and drive real results",
+                "subtitle_ar": "دعنا ندير وسائل التواصل ونفتح لك آفاقاً واسعة من الزوار والعملاء",
+                "cta_text_en": "Start Now",
+                "cta_text_ar": "ابدأ الآن",
+                "cta_link_en": "/contact",
+                "cta_link_ar": "/contact"
+            }}
+        ]
+    },
+    # ════════════════════════════════════════════════════════════
+    # Service: Landing Pages
+    # ════════════════════════════════════════════════════════════
+    {
+        "slug": "services/landing-pages",
+        "title_en": "Landing Pages",
+        "title_ar": "صفحات الهبوط",
+        "description_en": "High-converting landing pages",
+        "description_ar": "صفحات هبوط تفتح آفاق التحويل العالية",
+        "template": "landing",
+        "is_homepage": False,
+        "show_in_nav": False,
+        "nav_order": 22,
+        "meta_title_en": "Landing Pages — Afaq Tech",
+        "meta_title_ar": "صفحات الهبوط — آفاق تكنولوجي",
+        "blocks": [
+            {"block_type": "hero", "order": 0, "content": {
+                "heading_en": "Landing Pages That Convert",
+                "heading_ar": "صفحات هبوط تفتح آفاق التحويل العالية",
+                "subtitle_en": "Every visitor is a new opportunity — we design pages that turn clicks into customers",
+                "subtitle_ar": "كل زائر فرصة جديدة لنجاحك — نصمم صفحات تفتح آفاق التحويل وتحوّل الزوار إلى عملاء دائمين",
+                "cta_text_en": "Build My Page",
+                "cta_text_ar": "ابنِ صفحتي الآن",
+                "cta_link_en": "/contact",
+                "cta_link_ar": "/contact",
+                "badges": [
+                    {"text_en": "A/B Testing", "text_ar": "اختبار A/B", "icon": "✓"},
+                    {"text_en": "Conversion Focused", "text_ar": "مصممة للتحويل", "icon": "✓"},
+                    {"text_en": "Fast Delivery", "text_ar": "تسليم سريع", "icon": "✓"}
+                ]
+            }},
+            {"block_type": "features", "order": 1, "content": {
+                "title_en": "Why Our Landing Pages Work",
+                "title_ar": "لماذا صفحاتنا تفتح آفاق التحويل؟",
+                "subtitle_en": "Designed with conversion psychology and data-driven approach",
+                "subtitle_ar": "مصممة بعلم التحويل ومنهجية مبنية على البيانات لضمان فتح آفاق النجاح",
+                "columns": 3,
+                "items": [
+                    {"icon": "🎯", "title_en": "Targeted Design", "title_ar": "تصميم مستهدف", "desc_en": "Each page is designed for a specific audience and goal", "desc_ar": "كل صفحة مصممة لجمهور وهدف محدد لفتح آفاق التحويل الأعلى", "link": "/blog/landing-page-optimization", "points": [{"text_en": "Audience persona research", "text_ar": "بحث في شخصية الجمهور"}, {"text_en": "Competitor page analysis", "text_ar": "تحليل صفحات المنافسين"}, {"text_en": "Conversion funnel mapping", "text_ar": "رسم خريطة قمع التحويل"}]},
+                    {"icon": "🧪", "title_en": "A/B Testing", "title_ar": "اختبارات مستمرة", "desc_en": "We test different versions to maximize conversions", "desc_ar": "نختبر نسخ مختلفة لتعظيم التحويلات وفتح آفاق الأداء الأفضل", "link": "/blog/landing-page-optimization", "points": [{"text_en": "Headline & CTA variations", "text_ar": "تنويعات العناوين والأزرار"}, {"text_en": "Layout split testing", "text_ar": "اختبار التخطيط"}, {"text_en": "Continuous optimization", "text_ar": "تحسين مستمر"}]},
+                    {"icon": "📊", "title_en": "Analytics Driven", "title_ar": "مبنية على البيانات", "desc_en": "Data-driven decisions for better results", "desc_ar": "قرارات مبنية على بيانات حقيقية لضمان فتح آفاق النتائج الأفضل", "link": "/blog/landing-page-optimization", "points": [{"text_en": "Heatmap tracking", "text_ar": "تتبع خرائط الحرارة"}, {"text_en": "Conversion rate monitoring", "text_ar": "مراقبة معدل التحويل"}, {"text_en": "Monthly performance reports", "text_ar": "تقارير أداء شهرية"}]}
+                ]
+            }},
+            {"block_type": "testimonials", "order": 2, "content": {
+                "title_en": "Results That Speak",
+                "title_ar": "نتائج تتحدث عن فتح آفاق جديدة",
+                "subtitle_en": "See the impact of our landing pages",
+                "subtitle_ar": "شاهد تأثير صفحاتنا في فتح آفاق التحويل",
+                "columns": 2,
+                "items": [
+                    {"name_en": "Mohammed Khaled", "name_ar": "محمد خالد", "role_en": "Marketing Director", "role_ar": "مدير تسويق", "text_en": "Conversion rate increased by 350% with their landing pages", "text_ar": "معدل التحويل زاد بنسبة 350% — فتحوا لنا آفاقاً إيرادية لم نكن نتخيلها", "rating": 5},
+                    {"name_en": "Fatima Hassan", "name_ar": "فاطمة حسن", "role_en": "E-commerce Owner", "role_ar": "صاحبة متجر إلكتروني", "text_en": "Best investment in our online marketing", "text_ar": "أفضل استثمار في تسويقنا الإلكتروني — آفاق النجاح واضحة تماماً", "rating": 5}
+                ]
+            }},
+            {"block_type": "cta", "order": 3, "content": {
+                "title_en": "Need a High-Converting Landing Page?",
+                "title_ar": "تحتاج صفحة هبوط تفتح آفاق التحويل؟",
+                "subtitle_en": "Let us design a page that turns visitors into customers",
+                "subtitle_ar": "دعنا نصمم لك صفحة تحوّل الزوار إلى عملاء وتفتح آفاق النجاح",
+                "cta_text_en": "Get Started",
+                "cta_text_ar": "ابدأ الآن",
+                "cta_link_en": "/contact",
+                "cta_link_ar": "/contact"
+            }}
+        ]
+    },
+    # ════════════════════════════════════════════════════════════
+    # Service: Electronic Forms
+    # ════════════════════════════════════════════════════════════
+    {
+        "slug": "services/forms",
+        "title_en": "Electronic Forms",
+        "title_ar": "النماذج الإلكترونية",
+        "description_en": "Smart data collection forms",
+        "description_ar": "نماذج ذكية تفتح آفاق جمع البيانات بكفاءة",
+        "template": "landing",
+        "is_homepage": False,
+        "show_in_nav": False,
+        "nav_order": 23,
+        "meta_title_en": "Electronic Forms — Afaq Tech",
+        "meta_title_ar": "النماذج الإلكترونية — آفاق تكنولوجي",
+        "blocks": [
+            {"block_type": "hero", "order": 0, "content": {
+                "heading_en": "Smart Electronic Forms",
+                "heading_ar": "نماذج إلكترونية ذكية تفتح آفاق جمع البيانات",
+                "subtitle_en": "Collect data efficiently with forms designed for conversion",
+                "subtitle_ar": "اجمع بياناتك بكفاءة مع نماذج مصممة لفتح آفاق التفاعل وزيادة التحويل",
+                "cta_text_en": "Build My Form",
+                "cta_text_ar": "ابنِ نموذجي",
+                "cta_link_en": "/contact",
+                "cta_link_ar": "/contact",
+                "badges": [
+                    {"text_en": "Smart Logic", "text_ar": "منطق ذكي", "icon": "✓"},
+                    {"text_en": "Easy Integration", "text_ar": "تكامل سهل", "icon": "✓"},
+                    {"text_en": "Mobile Friendly", "text_ar": "متوافق مع الهاتف", "icon": "✓"}
+                ]
+            }},
+            {"block_type": "features", "order": 1, "content": {
+                "title_en": "Form Features",
+                "title_ar": "مميزات النماذج التي تفتح آفاق جديدة",
+                "subtitle_en": "Everything you need for efficient data collection",
+                "subtitle_ar": "كل ما تحتاجه لجمع البيانات بكفاءة وفتح آفاق التحليل",
+                "columns": 3,
+                "items": [
+                    {"icon": "🧠", "title_en": "Smart Logic", "title_ar": "منطق شرطي ذكي", "desc_en": "Conditional fields that adapt to user input", "desc_ar": "حقول شرطية تتكيف مع إدخال المستخدم لفتح آفاق جمع البيانات الذكية", "link": "/blog/welcome-afaq-tech", "points": [{"text_en": "Multi-step forms", "text_ar": "نماذج متعددة المراحل"}, {"text_en": "Conditional visibility rules", "text_ar": "قواعد ظهور شرطية"}, {"text_en": "File upload support", "text_ar": "دعم رفع الملفات"}]},
+                    {"icon": "🔗", "title_en": "Integrations", "title_ar": "تكامل مع الأدوات", "desc_en": "Connect with CRM, email, and other tools", "desc_ar": "تكامل مع أنظمة CRM والبريد الإلكتروني والأدوات الأخرى لتوسيع آفاق البيانات", "link": "/blog/welcome-afaq-tech", "points": [{"text_en": "Zapier & Make.com integration", "text_ar": "تكامل مع زابير وميك.كوم"}, {"text_en": "Google Sheets sync", "text_ar": "مزامنة مع جوجل شيت"}, {"text_en": "Email notifications", "text_ar": "إشعارات بريد إلكتروني"}]},
+                    {"icon": "📊", "title_en": "Analytics", "title_ar": "تحليلات متقدمة", "desc_en": "Track submissions and analyze responses", "desc_ar": "تتبع التسليمات وتحليل الاستجابات لفتح آفاق فهم جمهورك", "link": "/blog/welcome-afaq-tech", "points": [{"text_en": "Submission tracking dashboard", "text_ar": "لوحة تتبع التسليمات"}, {"text_en": "Response rate analytics", "text_ar": "تحليل معدلات الاستجابة"}, {"text_en": "Export to CSV/Excel", "text_ar": "تصدير لـ CSV/إكسل"}]}
+                ]
+            }},
+            {"block_type": "cta", "order": 2, "content": {
+                "title_en": "Ready to Collect Data Smarter?",
+                "title_ar": "جاهز لجمع بياناتك بذكاء أكبر؟",
+                "subtitle_en": "Let us build forms that open new horizons for your data",
+                "subtitle_ar": "دعنا نبني لك نماذج تفتح آفاقاً جديدة في جمع البيانات وتحليلها",
+                "cta_text_en": "Get Started",
+                "cta_text_ar": "ابدأ الآن",
+                "cta_link_en": "/contact",
+                "cta_link_ar": "/contact"
+            }}
+        ]
+    },
+    # ════════════════════════════════════════════════════════════
+    # Service: E-Books
+    # ════════════════════════════════════════════════════════════
+    {
+        "slug": "services/ebooks",
+        "title_en": "E-Books",
+        "title_ar": "الكتب الإلكترونية",
+        "description_en": "Professional digital book production",
+        "description_ar": "إنتاج كتب رقمية يفتح لك آفاقاً جديدة في عالم المحتوى والريادة",
+        "template": "landing",
+        "is_homepage": False,
+        "show_in_nav": False,
+        "nav_order": 24,
+        "meta_title_en": "E-Books — Afaq Tech",
+        "meta_title_ar": "الكتب الإلكترونية — آفاق تكنولوجي",
+        "blocks": [
+            {"block_type": "hero", "order": 0, "content": {
+                "heading_en": "Professional E-Books",
+                "heading_ar": "كتب إلكترونية تفتح آفاقاً جديدة لمحتواك",
+                "subtitle_en": "Transform your expertise into digital books that establish your authority",
+                "subtitle_ar": "نحوّل خبراتك إلى كتب إلكترونية تفتح لك آفاقاً جديدة في عالم المحتوى والريادة",
+                "cta_text_en": "Create My E-Book",
+                "cta_text_ar": "أنشئ كتابي الإلكتروني",
+                "cta_link_en": "/contact",
+                "cta_link_ar": "/contact",
+                "badges": [
+                    {"text_en": "Professional Design", "text_ar": "تصميم احترافي", "icon": "✓"},
+                    {"text_en": "Multi-Format", "text_ar": "صيغ متعددة", "icon": "✓"},
+                    {"text_en": "Publishing Support", "text_ar": "دعم النشر", "icon": "✓"}
+                ]
+            }},
+            {"block_type": "features", "order": 1, "content": {
+                "title_en": "Our E-Book Services",
+                "title_ar": "خدماتنا التي تفتح آفاق المحتوى",
+                "subtitle_en": "End-to-end e-book production services",
+                "subtitle_ar": "خدمات إنتاج كتب إلكترونية شاملة تفتح آفاق الريادة",
+                "columns": 3,
+                "items": [
+                    {"icon": "✍️", "title_en": "Writing & Editing", "title_ar": "الكتابة والتحرير", "desc_en": "Professional writing and editing services", "desc_ar": "خدمات كتابة وتحرير احترافية تضمن جودة المحتوى وفتح آفاق التأثير", "link": "/blog/welcome-afaq-tech", "points": [{"text_en": "Professional ghostwriting", "text_ar": "كتابة احترافية"}, {"text_en": "Proofreading & editing", "text_ar": "تدقيق ولغوي"}, {"text_en": "SEO-optimized content", "text_ar": "محتوى محسّن للبحث"}]},
+                    {"icon": "🎨", "title_en": "Design & Layout", "title_ar": "التصميم والتنسيق", "desc_en": "Beautiful layouts and cover designs", "desc_ar": "تصاميم غلاف وتنسيق جميل يفتح آفاق اجتذاب القرّاء", "link": "/blog/welcome-afaq-tech", "points": [{"text_en": "Custom cover design", "text_ar": "تصميم غلاف مخصص"}, {"text_en": "Interior layout & formatting", "text_ar": "تنسيق داخلي احترافي"}, {"text_en": "Brand-consistent styling", "text_ar": "تنسيق متسق مع الهوية"}]},
+                    {"icon": "📤", "title_en": "Publishing", "title_ar": "النشر", "desc_en": "Publish on Amazon, Apple Books, and more", "desc_ar": "نشر على أمازون وأبل بوكس والمزيد — فتح آفاق الوصول العالمي", "link": "/blog/welcome-afaq-tech", "points": [{"text_en": "Amazon KDP publishing", "text_ar": "نشر على أمازون KDP"}, {"text_en": "Multi-format export (PDF, EPUB, MOBI)", "text_ar": "تصدير بعدة صيغ"}, {"text_en": "Marketing strategy included", "text_ar": "استراتيجية تسويق مشمولة"}]}
+                ]
+            }},
+            {"block_type": "cta", "order": 2, "content": {
+                "title_en": "Ready to Publish Your E-Book?",
+                "title_ar": "جاهز لنشر كتابك الإلكتروني وفتح آفاق المحتوى؟",
+                "subtitle_en": "Let us transform your expertise into a professional e-book",
+                "subtitle_ar": "دعنا نحوّل خبراتك إلى كتاب إلكتروني احترافي يفتح آفاقاً جديدة",
+                "cta_text_en": "Start Now",
+                "cta_text_ar": "ابدأ الآن",
+                "cta_link_en": "/contact",
+                "cta_link_ar": "/contact"
+            }}
+        ]
+    },
+    # ════════════════════════════════════════════════════════════
+    # Service: Ad Campaigns
+    # ════════════════════════════════════════════════════════════
+    {
+        "slug": "services/ad-campaigns",
+        "title_en": "Ad Campaigns",
+        "title_ar": "الحملات الإعلانية",
+        "description_en": "Effective advertising campaigns",
+        "description_ar": "حملات إعلانية تفتح لك آفاقاً واسعة من الزوار والعملاء",
+        "template": "landing",
+        "is_homepage": False,
+        "show_in_nav": False,
+        "nav_order": 25,
+        "meta_title_en": "Ad Campaigns — Afaq Tech",
+        "meta_title_ar": "الحملات الإعلانية — آفاق تكنولوجي",
+        "blocks": [
+            {"block_type": "hero", "order": 0, "content": {
+                "heading_en": "Ad Campaigns That Deliver Results",
+                "heading_ar": "حملات إعلانية تفتح آفاق النتائج",
+                "subtitle_en": "Targeted advertising campaigns that maximize your ROI",
+                "subtitle_ar": "حملات إعلانية مستهدفة تفتح لك آفاقاً واسعة من الزوار بأقل تكلفة وأعلى عائد",
+                "cta_text_en": "Launch Campaign",
+                "cta_text_ar": "أطلق حملتك",
+                "cta_link_en": "/contact",
+                "cta_link_ar": "/contact",
+                "badges": [
+                    {"text_en": "Google Ads", "text_ar": "إعلانات جوجل", "icon": "✓"},
+                    {"text_en": "Meta Ads", "text_ar": "إعلانات ميتا", "icon": "✓"},
+                    {"text_en": "ROI Focused", "text_ar": "مبنية على العائد", "icon": "✓"}
+                ]
+            }},
+            {"block_type": "features", "order": 1, "content": {
+                "title_en": "Campaign Platforms",
+                "title_ar": "منصات الإعلان التي تفتح آفاق واسعة",
+                "subtitle_en": "We manage campaigns across all major platforms",
+                "subtitle_ar": "ندير الحملات عبر جميع المنصات الكبرى لتوسيع آفاق الوصول",
+                "columns": 3,
+                "items": [
+                    {"icon": "🔍", "title_en": "Google Ads", "title_ar": "إعلانات جوجل", "desc_en": "Search, display, and YouTube campaigns", "desc_ar": "حملات البحث والعرض ويوتيوب — فتح آفاق البحث عن العملاء", "link": "/blog/welcome-afaq-tech", "points": [{"text_en": "Search & Shopping ads", "text_ar": "إعلانات البحث والتسوق"}, {"text_en": "YouTube pre-roll ads", "text_ar": "إعلانات يوتيوب"}, {"text_en": "Display network campaigns", "text_ar": "حملات شبكة العرض"}]},
+                    {"icon": "📱", "title_en": "Social Ads", "title_ar": "إعلانات التواصل", "desc_en": "Facebook, Instagram, TikTok, and Snapchat", "desc_ar": "فيسبوك وانستغرام وتيك توك وسناب شات — فتح آفاق الجمهور الشامل", "link": "/blog/welcome-afaq-tech", "points": [{"text_en": "Meta Ads (FB & IG)", "text_ar": "إعلانات ميتا (فيسبوك وانستغرام)"}, {"text_en": "TikTok & Snapchat ads", "text_ar": "إعلانات تيك توك وسناب"}, {"text_en": "Retargeting campaigns", "text_ar": "حملات إعادة الاستهداف"}]},
+                    {"icon": "📊", "title_en": "Analytics & Optimization", "title_ar": "التحليل والتحسين", "desc_en": "Track ROI and optimize campaigns in real-time", "desc_ar": "تتبع العائد وحسّن الحملات في الوقت الحقيقي لضمان فتح آفاق النجاح", "link": "/blog/welcome-afaq-tech", "points": [{"text_en": "Real-time dashboard", "text_ar": "لوحة تحكم فورية"}, {"text_en": "Cost-per-acquisition tracking", "text_ar": "تتبع تكلفة الاكتساب"}, {"text_en": "Weekly optimization reports", "text_ar": "تقارير تحسين أسبوعية"}]}
+                ]
+            }},
+            {"block_type": "cta", "order": 2, "content": {
+                "title_en": "Ready to Scale Your Advertising?",
+                "title_ar": "جاهز لتوسيع آفاق إعلاناتك؟",
+                "subtitle_en": "Let us manage your campaigns for maximum impact",
+                "subtitle_ar": "دعنا ندير حملاتك لتحقيق أقصى تأثير وفتح آفاق النمو",
+                "cta_text_en": "Get Started",
+                "cta_text_ar": "ابدأ الآن",
+                "cta_link_en": "/contact",
+                "cta_link_ar": "/contact"
+            }}
+        ]
+    },
+    # ════════════════════════════════════════════════════════════
+    # Service: Brand Identity & Consulting
+    # ════════════════════════════════════════════════════════════
+    {
+        "slug": "services/brand-identity",
+        "title_en": "Brand Identity & Consulting",
+        "title_ar": "الهوية البصرية والاستشارات",
+        "description_en": "Complete brand identity and consulting",
+        "description_ar": "نبتكر هوية تفتح لك آفاق التميّز مع استشارات تضعك على خارطة النجاح",
+        "template": "landing",
+        "is_homepage": False,
+        "show_in_nav": False,
+        "nav_order": 26,
+        "meta_title_en": "Brand Identity — Afaq Tech",
+        "meta_title_ar": "الهوية البصرية — آفاق تكنولوجي",
+        "blocks": [
+            {"block_type": "hero", "order": 0, "content": {
+                "heading_en": "Brand Identity That Stands Out",
+                "heading_ar": "هوية بصرية تفتح آفاق التميّز",
+                "subtitle_en": "We craft unique brand identities that set you apart from competitors",
+                "subtitle_ar": "نبتكر هوية فريدة تفتح لك آفاق التميّز عن المنافسين مع استشارات تضعك على خارطة النجاح",
+                "cta_text_en": "Build My Brand",
+                "cta_text_ar": "ابنِ هويتي",
+                "cta_link_en": "/contact",
+                "cta_link_ar": "/contact",
+                "badges": [
+                    {"text_en": "Logo Design", "text_ar": "تصميم شعار", "icon": "✓"},
+                    {"text_en": "Brand Guidelines", "text_ar": "دليل هوية", "icon": "✓"},
+                    {"text_en": "Strategic Consulting", "text_ar": "استشارات استراتيجية", "icon": "✓"}
+                ]
+            }},
+            {"block_type": "features", "order": 1, "content": {
+                "title_en": "Our Branding Services",
+                "title_ar": "خدماتنا التي تفتح آفاق الهوية",
+                "subtitle_en": "Complete branding solutions for businesses of all sizes",
+                "subtitle_ar": "حلول هوية شاملة للأعمال الكبيرة والصغيرة لفتح آفاق التميّز",
+                "columns": 3,
+                "items": [
+                    {"icon": "🎨", "title_en": "Logo & Visual Identity", "title_ar": "الشعار والهوية البصرية", "desc_en": "Memorable logos and complete visual systems", "desc_ar": "شعارات لا تُنسى وأنظمة بصرية متكاملة تفتح آفاق التأثير", "link": "/blog/welcome-afaq-tech", "points": [{"text_en": "Multiple logo concepts", "text_ar": "عدة مفاهيم للشعار"}, {"text_en": "Color palette & typography", "text_ar": "لوحة ألوان وخطوط"}, {"text_en": "Business cards & stationery", "text_ar": "بطاقات أعمال وأوراق"}]},
+                    {"icon": "📋", "title_en": "Brand Guidelines", "title_ar": "دليل الهوية", "desc_en": "Comprehensive brand books for consistency", "desc_ar": "كتب هوية شاملة لضمان التناسق وفتح آفاق الاحترافية", "link": "/blog/welcome-afaq-tech", "points": [{"text_en": "50+ page brand book", "text_ar": "كتاب هوية 50+ صفحة"}, {"text_en": "Usage rules & examples", "text_ar": "قواعد الاستخدام وأمثلة"}, {"text_en": "Digital asset templates", "text_ar": "قوالب أصول رقمية"}]},
+                    {"icon": "💡", "title_en": "Strategic Consulting", "title_ar": "الاستشارات الاستراتيجية", "desc_en": "Expert guidance on brand positioning", "desc_ar": "إرشاد خبير في تحديد مواقع العلامة التجارية لفتح آفاق النجاح", "link": "/blog/welcome-afaq-tech", "points": [{"text_en": "Market research & analysis", "text_ar": "بحث وتحليل السوق"}, {"text_en": "Brand positioning strategy", "text_ar": "استراتيجية موقع العلامة"}, {"text_en": "Competitor differentiation", "text_ar": "التميّز عن المنافسين"}]}
+                ]
+            }},
+            {"block_type": "testimonials", "order": 2, "content": {
+                "title_en": "Brands We've Transformed",
+                "title_ar": "علامات فتحنا لها آفاقاً جديدة",
+                "subtitle_en": "See how our branding helped businesses grow",
+                "subtitle_ar": "شاهد كيف ساعدت هوياتنا الأعمال في فتح آفاق النمو",
+                "columns": 2,
+                "items": [
+                    {"name_en": "Omar Saleh", "name_ar": "عمر صالح", "role_en": "Startup Founder", "role_ar": "مؤسس مشروع", "text_en": "Our new brand identity tripled our recognition", "text_ar": "هويتنا الجديدة ضاعفت التعرف على علامتنا 3 مرات — فتحوا لنا آفاقاً جديدة", "rating": 5},
+                    {"name_en": "Lina Mohammed", "name_ar": "لينا محمد", "role_en": "Restaurant Owner", "role_ar": "صاحبة مطعم", "text_en": "The rebranding transformed our business completely", "text_ar": "إعادة الهوية غيّرت أعمالنا بالكامل — آفاق النجاح لم تكن بهذا الوضوح", "rating": 5}
+                ]
+            }},
+            {"block_type": "cta", "order": 3, "content": {
+                "title_en": "Ready to Transform Your Brand?",
+                "title_ar": "جاهز لتحويل هويتك وفتح آفاق التميّز؟",
+                "subtitle_en": "Let us create a brand identity that opens new horizons",
+                "subtitle_ar": "دعنا نصمم لك هوية تفتح آفاقاً جديدة وتميّزك عن المنافسين",
+                "cta_text_en": "Start Your Project",
+                "cta_text_ar": "ابدأ مشروعك",
+                "cta_link_en": "/contact",
+                "cta_link_ar": "/contact"
+            }}
+        ]
+    }
+]
+
+# ════════════════════════════════════════════════════════════════
+# Seed
+# ════════════════════════════════════════════════════════════════
+# Seed
+# ════════════════════════════════════════════════════════════════
+
+for page_data in PAGES:
+    blocks_data = page_data.pop("blocks")
+    page, was_created = Page.objects.update_or_create(
+        slug=page_data["slug"],
+        defaults=page_data,
+    )
+    action = "Created" if was_created else "Updated"
+    print(f"  {action}: {page}")
+
+    # Clear old blocks then re-create
+    page.blocks.all().delete()
+    for block_data in blocks_data:
+        block = PageBlock.objects.create(page=page, **block_data)
+        print(f"    Block: {block.get_block_type_display()} (order={block.order})")
+
+print(f"\nDone! Pages: {Page.objects.count()}, Blocks: {PageBlock.objects.count()}")

@@ -1,0 +1,107 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+import { usePathname } from "next/navigation";
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { localizedContent } from "@/lib/i18n";
+
+export default function PlatformHero({ content }: { content?: Record<string, any> }) {
+  const t = useTranslations("landing");
+  const pathname = usePathname();
+  const locale = pathname.split("/")[1] || "en";
+  const c = content || {};
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+
+  const heading = localizedContent(c, "heading", locale, t("platformHeroTitle"));
+  const subtitle = localizedContent(c, "subtitle", locale, t("platformHeroSubtitle"));
+  const ctaText = localizedContent(c, "cta_text", locale, t("platformHeroCTA"));
+  const ctaLink = localizedContent(c, "cta_link", locale, "/register");
+  const secText = localizedContent(c, "secondary_cta", locale, t("platformHeroServices"));
+  const secLink = localizedContent(c, "secondary_cta_link", locale, "#services");
+  const defaultBadges = [
+    { text: { en: "Free forever", ar: "مجاني تماماً" } },
+    { text: { en: "Free consultation", ar: "استشارة مجانية" } },
+    { text: { en: "24/7 support", ar: "دعم فني 24/7" } },
+  ];
+  const badges = (c.badges || defaultBadges).map((b: any) => ({
+    ...b,
+    text_display: localizedContent(b, "text", locale),
+  }));
+
+  const scrollToSection = (hash: string) => {
+    const el = document.getElementById(hash.replace("#", ""));
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth" });
+      window.history.replaceState(null, "", `/${locale}${hash}`);
+    }
+  };
+
+  const isHash = (link: string) => link.startsWith("#");
+
+  return (
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden" style={{ background: "var(--color-background)" }}>
+      <div className="absolute inset-0 opacity-30">
+        <div className="absolute top-20 left-10 w-72 h-72 rounded-full animate-morph opacity-20" style={{ background: "var(--color-primary)" }} />
+        <div className="absolute bottom-20 right-10 w-96 h-96 rounded-full animate-morph opacity-15" style={{ background: "var(--color-secondary)", animationDelay: "2s" }} />
+      </div>
+
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {[...Array(8)].map((_, i) => (
+          <div key={i} className="particle" style={{ left: `${10 + i * 11}%`, top: `${15 + (i % 4) * 22}%`, width: `${6 + i * 2}px`, height: `${6 + i * 2}px`, animationDelay: `${i * 0.7}s`, animationDuration: `${4 + i * 0.6}s` }} />
+        ))}
+      </div>
+
+      <div className="relative z-10 text-center max-w-4xl mx-auto px-4 sm:px-6 py-12 sm:py-20">
+        <div className={`mb-6 sm:mb-8 transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-8'}`}>
+          <div className="w-16 h-16 sm:w-24 sm:h-24 mx-auto mb-6 sm:mb-8 rounded-3xl flex items-center justify-center shadow-2xl animate-float" style={{ background: "linear-gradient(135deg, var(--color-primary), var(--color-secondary))" }}>
+            <span className="text-white text-3xl sm:text-4xl font-bold">آ</span>
+          </div>
+        </div>
+
+        <h1 className={`text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-4 sm:mb-6 leading-tight transition-all duration-700 delay-200 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`} style={{ fontFamily: "var(--font-heading)", color: "var(--color-text)" }}>
+          <span className="gradient-text">{heading}</span>
+        </h1>
+
+        <p className={`text-base sm:text-xl md:text-2xl mb-6 sm:mb-10 leading-relaxed max-w-2xl mx-auto transition-all duration-700 delay-400 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`} style={{ color: "var(--color-text-secondary)" }}>
+          {subtitle}
+        </p>
+
+        <div className={`flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center transition-all duration-700 delay-600 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+          {isHash(ctaLink) ? (
+            <button onClick={() => scrollToSection(ctaLink)} className="group btn-primary px-6 sm:px-10 py-3 sm:py-4 text-base sm:text-lg">
+              <span className="flex items-center gap-2">
+                {ctaText}
+                <span className="transition-transform group-hover:translate-x-1 rtl:group-hover:-translate-x-1">←</span>
+              </span>
+            </button>
+          ) : (
+            <Link href={`/${locale}${ctaLink}`} className="group btn-primary px-6 sm:px-10 py-3 sm:py-4 text-base sm:text-lg">
+              <span className="flex items-center gap-2">
+                {ctaText}
+                <span className="transition-transform group-hover:translate-x-1 rtl:group-hover:-translate-x-1">←</span>
+              </span>
+            </Link>
+          )}
+          {isHash(secLink) ? (
+            <button onClick={() => scrollToSection(secLink)} className="btn-secondary px-6 sm:px-10 py-3 sm:py-4 text-base sm:text-lg hover:bg-[var(--color-primary)] hover:text-white hover:border-[var(--color-primary)]">{secText}</button>
+          ) : (
+            <Link href={`/${locale}${secLink}`} className="btn-secondary px-6 sm:px-10 py-3 sm:py-4 text-base sm:text-lg hover:bg-[var(--color-primary)] hover:text-white hover:border-[var(--color-primary)]">{secText}</Link>
+          )}
+        </div>
+
+        <div className={`mt-8 sm:mt-12 flex flex-wrap items-center justify-center gap-3 sm:gap-6 text-xs sm:text-sm transition-all duration-700 delay-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`} style={{ color: "var(--color-text-muted)" }}>
+          {badges.map((b: any, i: number) => (
+            <span key={i} className="flex items-center gap-1.5 sm:gap-2 bg-[var(--color-surface)] px-3 py-1.5 rounded-full border border-[var(--color-border)]">
+              <span className="w-2 h-2 rounded-full shrink-0 animate-pulse" style={{ backgroundColor: "var(--color-success)" }} />
+              {b.text_display}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      <div className="absolute bottom-0 left-0 right-0 h-24" style={{ background: "linear-gradient(to top, var(--color-background), transparent)" }} />
+    </section>
+  );
+}

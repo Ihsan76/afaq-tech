@@ -1,0 +1,32 @@
+import os, django
+os.environ['DJANGO_SETTINGS_MODULE'] = 'config.settings.development'
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings.development')
+django.setup()
+
+from apps.pages.models import MenuItem, Page
+
+menu_items = [
+    {"menu": "header", "title_en": "Home", "title_ar": "الرئيسية", "url": "/", "icon": "🏠", "order": 0, "is_active": True},
+    {"menu": "header", "title_en": "Academy", "title_ar": "الأكاديمية", "url": "/academy", "icon": "🎓", "order": 1, "is_active": True},
+    {"menu": "header", "title_en": "Curriculum", "title_ar": "المناهج", "url": "/curriculum", "icon": "📚", "order": 2, "is_active": True},
+    {"menu": "header", "title_en": "Blog", "title_ar": "المدونة", "url": "/blog", "icon": "📝", "order": 3, "is_active": True},
+    {"menu": "header", "title_en": "Contact", "title_ar": "تواصل معنا", "url": "/contact", "icon": "📞", "order": 4, "is_active": True},
+    {"menu": "footer", "title_en": "About Us", "title_ar": "من نحن", "url": "/about", "icon": "ℹ️", "order": 0, "is_active": True},
+    {"menu": "footer", "title_en": "Privacy Policy", "title_ar": "سياسة الخصوصية", "url": "/privacy", "icon": "🔒", "order": 1, "is_active": True},
+    {"menu": "footer", "title_en": "Terms of Service", "title_ar": "شروط الخدمة", "url": "/terms", "icon": "📄", "order": 2, "is_active": True},
+    {"menu": "footer", "title_en": "Contact Us", "title_ar": "تواصل معنا", "url": "/contact", "icon": "📞", "order": 3, "is_active": True},
+]
+
+created = 0
+for item in menu_items:
+    obj, is_new = MenuItem.objects.get_or_create(
+        menu=item["menu"], title_en=item["title_en"],
+        defaults=item
+    )
+    if is_new:
+        created += 1
+        print(f"  Created: {obj.title_ar} / {obj.title_en} ({obj.menu})")
+    else:
+        print(f"  Exists: {obj.title_ar} / {obj.title_en} ({obj.menu})")
+
+print(f"\nTotal: {MenuItem.objects.count()} menu items ({created} new)")
