@@ -8,42 +8,12 @@ from django.core.cache import cache
 from django.db.models import Case, IntegerField, Q, Value, When
 from django.template import Context, Template
 from .models import AIModel, AIProvider, PromptTemplate
+from .router import ProviderRouter, AIResponse
 from apps.academics.models import CurriculumDocument
 
 genai.configure(api_key=settings.GEMINI_API_KEY)
 
-SYSTEM_PROMPT = (
-    "أنت مساعد ذكي متخصص في التعليم والتكنولوجيا، تعمل في منصة 'آفاق تكنولوجي' (Afaq Tech). "
-    "تستطيع الإجابة بالعربية والإنجليزية والفرنسية والتركية والإسبانية والألمانية والإندونيسية والبengالية والأردية. "
-    "استخدم لغة المستخدم في الرد. كن مفيداً ودقيقاً وواضحاً. "
-    "إذا سئلت عن مواضيع خارج نطاق التعليم والتكنولوجيا، حاول ربطها بالمجال بلطف. "
-    "قدم إجابات منظمة وواضحة، واستخدم تنسيق Markdown للعناوين والقوائم والنقاط المهمة."
-)
-
-LESSON_PLAN_PROMPT = (
-    "أنت معلم خبير في إعداد خطط الدروس. مهمتك إنشاء خطة درس متكاملة ومنظمة بناءً على معلومات المستخدم.\n\n"
-    "يجب أن يكون الرد بصيغة JSON فقط (بدون markdown أو أكواد) باللغة التي كتب بها المستخدم.\n\n"
-    "عنوان الدرس: {{ title }}\n"
-    "وصف الدرس: {{ prompt_text }}\n"
-    "المادة: {{ subject }}\n"
-    "المرحلة: {{ grade }}\n"
-    "اللغة: {{ language }}\n\n"
-    "JSON format المطلوب:\n"
-    "{\n"
-    '  "objectives": ["هدف1", "هدف2", "هدف3"],\n'
-    '  "materials_needed": ["أداة1", "أداة2"],\n'
-    '  "introduction": "نص المقدمة والتمهيد",\n'
-    '  "main_activity": [{"step": 1, "title": "عنوان الخطوة", "description": "شرح الخطوة", "duration_minutes": 10}],\n'
-    '  "assessment": "وصف أسلوب التقييم",\n'
-    '  "homework": "وصف الواجب",\n'
-    '  "estimated_duration": 45,\n'
-    '  "teaching_methods": ["طريقة1", "طريقة2"],\n'
-    '  "tags": ["tag1", "tag2"]\n'
-    "}\n\n"
-    "يجب أن تكون الأهداف التعليمية واضحة وقابلة للقياس. "
-    "يجب أن يكون النشاط الرئيسي مقسماً إلى خطوات متسلسلة بزمن محدد لكل خطوة. "
-    "يجب أن يتناسب المحتوى مع المرحلة الدراسية والمادة المطلوبة."
-)
+router = ProviderRouter()
 
 DEFAULT_MODEL = "gemini-3.6-flash"
 
@@ -98,8 +68,58 @@ class PromptBuilderService:
         return None
 
     @classmethod
-    def build_prompt(cls, feature_key='lesson_plan', language='ar', variables=None, learner_stage=None, subject=None, curriculum=None):
+    def build_prompt_constraints(cls, grade, subject=None):
+        from .models import GradePromptProfile, SubjectPromptProfile
+
+        try:
+            base = grade.prompt_profile
+        except GradePromptProfile.DoesNotExist:
+            return {}
+
+        if not base.is_active:
+            return {}
+
+        subj_profile = None
+        if subject:
+            subj_profile = SubjectPromptProfile.objects.filter(
+                grade_profile=base, subject=subject, is_active=True
+            ).first()
+
+        def pick(field, override_flag):
+            if subj_profile and getattr(subj_profile, override_flag, False):
+                return getattr(subj_profile, field, '')
+            return getattr(base, field, '')
+
+        def merge_list(base_list, subj_list, merge_flag):
+            if not subj_profile:
+                return base_list
+            if getattr(subj_profile, merge_flag, True):
+                return base_list + [x for x in subj_list if x not in base_list]
+            return subj_list
+
+        return {
+            'learner_stage': pick('learner_stage', 'override_learner_stage') or '',
+            'language_guidance': pick('language_guidance', 'override_language_guidance'),
+            'content_depth_guidance': pick('content_depth_guidance', 'override_content_depth_guidance'),
+            'activity_guidance': pick('activity_guidance', 'override_activity_guidance'),
+            'materials_guidance': pick('materials_guidance', 'override_materials_guidance'),
+            'assessment_guidance': pick('assessment_guidance', 'override_assessment_guidance'),
+            'forbidden_terms': ', '.join(merge_list(base.forbidden_terms, subj_profile.forbidden_terms if subj_profile else [], 'merge_forbidden_terms')),
+            'discouraged_patterns': ', '.join(merge_list(base.discouraged_patterns, subj_profile.discouraged_patterns if subj_profile else [], 'merge_discouraged_patterns')),
+            'extra_instructions': '\n'.join(merge_list(base.extra_instructions, subj_profile.extra_instructions if subj_profile else [], 'merge_extra_instructions')),
+            'topic_rules': subj_profile.topic_rules if subj_profile else '',
+        }
+
+    @classmethod
+    def build_prompt(cls, feature_key='lesson_plan', language='ar', variables=None, learner_stage=None, subject=None, curriculum=None, grade=None):
         variables = variables or {}
+
+        if grade is not None:
+            constraints = cls.build_prompt_constraints(grade, subject=subject)
+            variables.update(constraints)
+            if not learner_stage:
+                learner_stage = constraints.get('learner_stage') or learner_stage
+
         template_obj = cls.select_template(
             feature_key=feature_key,
             language=language,
@@ -108,13 +128,18 @@ class PromptBuilderService:
             curriculum=curriculum,
         )
 
-        if template_obj:
-            body = template_obj.template_body
-        else:
-            body = LESSON_PLAN_PROMPT
+        if not template_obj:
+            return "", ""
 
-        rendered = Template(body).render(Context(variables))
-        return rendered
+        system = Template(template_obj.template_body).render(Context(variables))
+        user_msg = ""
+        if template_obj.user_message_template:
+            user_msg = Template(template_obj.user_message_template).render(Context(variables))
+        return system, user_msg
+
+    @classmethod
+    def build_system_prompt(cls, feature_key='lesson_plan', language='ar', variables=None, learner_stage=None, subject=None, curriculum=None, grade=None):
+        return cls.build_prompt(feature_key, language, variables, learner_stage, subject, curriculum, grade)[0]
 
 
 def _resolve_model_and_client(requested_model_id=None):
@@ -156,12 +181,21 @@ def _build_history(messages_qs):
     return history
 
 
+def _get_system_prompt(language='ar'):
+    return PromptBuilderService.build_system_prompt(
+        feature_key='assistant',
+        language=language,
+    )
+
+
 def chat_stream(messages, new_message, model_id=None):
     provider_code, model_name, api_key, base_url = _resolve_model_and_client(model_id)
 
     total_tokens = 0
     full_text = ""
     start_time = time.time()
+
+    system_prompt = _get_system_prompt()
 
     if provider_code == 'google':
         if api_key:
@@ -172,7 +206,7 @@ def chat_stream(messages, new_message, model_id=None):
         conversation_history = _build_history(messages)
         model = genai.GenerativeModel(
             model_name,
-            system_instruction=SYSTEM_PROMPT,
+            system_instruction=system_prompt,
         )
         chat = model.start_chat(history=conversation_history)
         response = chat.send_message(new_message, stream=True)
@@ -201,7 +235,7 @@ def chat_stream(messages, new_message, model_id=None):
 
         client = OpenAI(api_key=client_api_key, base_url=client_base_url)
         
-        openai_messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+        openai_messages = [{"role": "system", "content": system_prompt}]
         for msg in messages:
             openai_messages.append({"role": msg.role, "content": msg.content})
         openai_messages.append({"role": "user", "content": new_message})
@@ -223,16 +257,12 @@ def chat_stream(messages, new_message, model_id=None):
 
 
 def generate_lesson_plan(title, prompt_text, subject="", grade="", language="ar", model_id=None, subject_obj=None, grade_obj=None, learner_stage=""):
-    # Semantic Caching check
     cache_key_data = f"{title}-{prompt_text}-{subject}-{grade}-{language}-{model_id}"
     cache_hash = hashlib.sha256(cache_key_data.encode('utf-8')).hexdigest()
     cached_result = cache.get(f"ai_lesson_plan:{cache_hash}")
     if cached_result:
         return cached_result, (model_id or DEFAULT_MODEL), 0, 0
 
-    provider_code, model_name, api_key, base_url = _resolve_model_and_client(model_id)
-
-    # Curriculum document context injection
     curriculum_text = ""
     if subject_obj:
         docs = CurriculumDocument.objects.filter(subject=subject_obj)[:3]
@@ -249,56 +279,28 @@ def generate_lesson_plan(title, prompt_text, subject="", grade="", language="ar"
         "curriculum_context": curriculum_text,
     }
 
-    lesson_prompt = PromptBuilderService.build_prompt(
+    lesson_prompt, user_msg = PromptBuilderService.build_prompt(
         feature_key='lesson_plan',
         language=language,
         variables=variables,
         learner_stage=learner_stage,
         subject=subject_obj,
+        grade=grade_obj,
     )
 
-    start_time = time.time()
-    tokens = 0
-    raw = ""
+    ai_resp = router.generate(
+        prompt=user_msg or "قم بإنشاء خطة الدرس المطلوبة.",
+        feature="lesson_plan",
+        system_instruction=lesson_prompt,
+    )
 
-    if provider_code == 'google':
-        if api_key:
-            genai.configure(api_key=api_key)
-        else:
-            genai.configure(api_key=settings.GEMINI_API_KEY)
+    raw = ai_resp.content
+    model_name = ai_resp.model
+    tokens = ai_resp.total_tokens
+    elapsed = ai_resp.latency_ms
 
-        model = genai.GenerativeModel(
-            model_name,
-            system_instruction=lesson_prompt,
-        )
-        response = model.generate_content("قم بإنشاء خطة الدرس المطلوبة.")
-        raw = response.text.strip()
-        if hasattr(response, 'usage_metadata') and response.usage_metadata:
-            tokens = response.usage_metadata.total_token_count
-    else:
-        if provider_code == 'ollama':
-            client_base_url = (base_url or 'http://localhost:11434').rstrip('/') + '/v1'
-            client_api_key = api_key or 'ollama'
-        elif provider_code == 'openai_compatible':
-            client_base_url = (base_url or '').rstrip('/') + '/v1'
-            client_api_key = api_key or 'sk-placeholder'
-        else:
-            client_base_url = None
-            client_api_key = api_key or 'sk-placeholder'
-
-        client = OpenAI(api_key=client_api_key, base_url=client_base_url)
-        response = client.chat.completions.create(
-            model=model_name,
-            messages=[
-                {"role": "system", "content": lesson_prompt},
-                {"role": "user", "content": "قم بإنشاء خطة الدرس المطلوبة."}
-            ],
-        )
-        raw = response.choices[0].message.content.strip()
-        if hasattr(response, 'usage') and response.usage:
-            tokens = response.usage.total_tokens
-
-    elapsed = int((time.time() - start_time) * 1000)
+    if not ai_resp.success:
+        return {"raw_response": raw, "error": f"AI generation failed: {ai_resp.error}"}, model_name, tokens, elapsed
 
     if raw.startswith("```"):
         raw = raw.split("\n", 1)[-1]
@@ -310,7 +312,6 @@ def generate_lesson_plan(title, prompt_text, subject="", grade="", language="ar"
     except json.JSONDecodeError:
         plan_data = {"raw_response": raw, "error": "failed to parse structured JSON"}
 
-    # Cache successful plan for 24 hours
     if "error" not in plan_data:
         cache.set(f"ai_lesson_plan:{cache_hash}", plan_data, 86400)
 
@@ -318,40 +319,28 @@ def generate_lesson_plan(title, prompt_text, subject="", grade="", language="ar"
 
 
 def refine_lesson_plan(current_plan_data, refinement_prompt, language="ar", model_id=None):
-    provider_code, model_name, api_key, base_url = _resolve_model_and_client(model_id)
-
-    refine_system_prompt = (
-        f"أنت خبير تربوي ومصمم خطط دروس. لديك خطة الدرس الحالية بصيغة JSON:\n{json.dumps(current_plan_data, ensure_ascii=False)}\n\n"
-        f"طلب التعديل من المعلم:\n{refinement_prompt}\n\n"
-        "قم بتعديل وتطوير خطة الدرس بناءً على طلب المعلم.\n"
-        "يجب أن يكون الرد بصيغة JSON فقط متوافقة تماماً مع نفس هيكل الخطة الأصلية (objectives, materials_needed, introduction, main_activity, assessment, homework, estimated_duration, teaching_methods, tags)."
+    variables = {
+        "current_plan": json.dumps(current_plan_data, ensure_ascii=False),
+        "refinement_prompt": refinement_prompt,
+    }
+    refine_prompt_body, user_msg = PromptBuilderService.build_prompt(
+        feature_key='refine',
+        language=language,
+        variables=variables,
     )
 
-    start_time = time.time()
-    tokens = 0
-    raw = ""
+    ai_resp = router.generate(
+        prompt=user_msg or "قم بتعديل خطة الدرس المطلوبة.",
+        feature="refine",
+        system_instruction=refine_prompt_body,
+    )
 
-    if provider_code == 'google':
-        if api_key:
-            genai.configure(api_key=api_key)
-        else:
-            genai.configure(api_key=settings.GEMINI_API_KEY)
+    raw = ai_resp.content
+    model_name = ai_resp.model
+    tokens = ai_resp.total_tokens
 
-        model = genai.GenerativeModel(model_name, system_instruction=refine_system_prompt)
-        response = model.generate_content("قم بتعديل خطة الدرس المطلوبة.")
-        raw = response.text.strip()
-        if hasattr(response, 'usage_metadata') and response.usage_metadata:
-            tokens = response.usage_metadata.total_token_count
-    else:
-        client = OpenAI(api_key=api_key or 'sk-placeholder', base_url=(base_url or '').rstrip('/') + '/v1' if base_url else None)
-        response = client.chat.completions.create(
-            model=model_name,
-            messages=[
-                {"role": "system", "content": refine_system_prompt},
-                {"role": "user", "content": "قم بتعديل خطة الدرس المطلوبة."}
-            ]
-        )
-        raw = response.choices[0].message.content.strip()
+    if not ai_resp.success:
+        return {"raw_response": raw, "error": f"Refinement failed: {ai_resp.error}"}, model_name, tokens
 
     if raw.startswith("```"):
         raw = raw.split("\n", 1)[-1]

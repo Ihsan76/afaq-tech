@@ -12,4 +12,6 @@ urlpatterns = [
     path('api/v1/ebooks/', include('apps.ebooks.urls')),
     path('api/v1/courses/', include('apps.courses.urls')),
     path('api/v1/ai/', include('apps.ai.urls')),
+    path('api/v1/gamification/', include('apps.gamification.urls')),
+    path('api/v1/marketplace/', include('apps.marketplace.urls')),
 ]

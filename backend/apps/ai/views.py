@@ -5,7 +5,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework import generics, permissions, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
-from .models import Conversation, Message, AIRun, AIModel, AIProvider, ProviderType
+from .models import Conversation, Message, AIRun, AIModel, AIProvider, ProviderType, PromptTemplate, GradePromptProfile, SubjectPromptProfile
 from .serializers import (
     ConversationSerializer,
     ConversationDetailSerializer,
@@ -15,6 +15,11 @@ from .serializers import (
     AIModelPublicSerializer,
     AIProviderSerializer,
     ProviderTypeSerializer,
+    PromptTemplateSerializer,
+    PromptTemplateListSerializer,
+    GradePromptProfileSerializer,
+    GradePromptProfileListSerializer,
+    SubjectPromptProfileSerializer,
 )
 from .services import chat_stream
 
@@ -369,3 +374,53 @@ def import_provider_models(request):
         )
         created.append({'model_id': model_id, 'created': was_created})
     return Response({'imported': created})
+
+
+# --- Prompt Template CRUD ---
+
+class PromptTemplateListView(generics.ListCreateAPIView):
+    queryset = PromptTemplate.objects.all()
+    permission_classes = [permissions.IsAdminUser]
+
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return PromptTemplateListSerializer
+        return PromptTemplateSerializer
+
+
+class PromptTemplateDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = PromptTemplate.objects.all()
+    serializer_class = PromptTemplateSerializer
+    permission_classes = [permissions.IsAdminUser]
+
+
+# --- Grade Prompt Profile CRUD ---
+
+class GradePromptProfileListView(generics.ListCreateAPIView):
+    queryset = GradePromptProfile.objects.select_related('grade').prefetch_related('subject_profiles__subject').all()
+    permission_classes = [permissions.IsAdminUser]
+
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return GradePromptProfileListSerializer
+        return GradePromptProfileSerializer
+
+
+class GradePromptProfileDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = GradePromptProfile.objects.select_related('grade').prefetch_related('subject_profiles__subject').all()
+    serializer_class = GradePromptProfileSerializer
+    permission_classes = [permissions.IsAdminUser]
+
+
+# --- Subject Prompt Profile CRUD ---
+
+class SubjectPromptProfileListView(generics.ListCreateAPIView):
+    queryset = SubjectPromptProfile.objects.select_related('grade_profile__grade', 'subject').all()
+    serializer_class = SubjectPromptProfileSerializer
+    permission_classes = [permissions.IsAdminUser]
+
+
+class SubjectPromptProfileDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = SubjectPromptProfile.objects.select_related('grade_profile__grade', 'subject').all()
+    serializer_class = SubjectPromptProfileSerializer
+    permission_classes = [permissions.IsAdminUser]

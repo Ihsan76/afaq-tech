@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Conversation, Message, AIModel, AIProvider, ProviderType
+from .models import Conversation, Message, AIModel, AIProvider, ProviderType, PromptTemplate, GradePromptProfile, SubjectPromptProfile
 
 
 class MessageSerializer(serializers.ModelSerializer):
@@ -99,3 +99,66 @@ class ChatInputSerializer(serializers.Serializer):
     conversation_id = serializers.IntegerField(required=False, allow_null=True)
     message = serializers.CharField(required=True, min_length=1)
     model_id = serializers.CharField(required=False, allow_blank=True, default='')
+
+
+# --- Prompt Template CRUD ---
+
+class PromptTemplateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PromptTemplate
+        fields = '__all__'
+        read_only_fields = ['created_at', 'updated_at']
+
+
+class PromptTemplateListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PromptTemplate
+        fields = ['id', 'name', 'feature_key', 'language', 'learner_stage', 'subject', 'curriculum', 'priority', 'is_default', 'is_active', 'version', 'template_body', 'user_message_template', 'updated_at']
+
+
+# --- Grade Prompt Profile CRUD ---
+
+class SubjectPromptProfileSerializer(serializers.ModelSerializer):
+    subject_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = SubjectPromptProfile
+        fields = '__all__'
+        read_only_fields = ['created_at', 'updated_at']
+
+    def get_subject_name(self, obj):
+        t = obj.subject.translations or {}
+        if isinstance(t, dict):
+            return t.get('ar', {}).get('name', '') or t.get('en', {}).get('name', '') or str(obj.subject)
+        return str(obj.subject)
+
+
+class GradePromptProfileSerializer(serializers.ModelSerializer):
+    grade_name = serializers.SerializerMethodField()
+    subject_profiles = SubjectPromptProfileSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = GradePromptProfile
+        fields = '__all__'
+        read_only_fields = ['created_at', 'updated_at']
+
+    def get_grade_name(self, obj):
+        t = obj.grade.translations or {}
+        if isinstance(t, dict):
+            return t.get('ar', {}).get('name', '') or t.get('en', {}).get('name', '') or str(obj.grade)
+        return str(obj.grade)
+
+
+class GradePromptProfileListSerializer(serializers.ModelSerializer):
+    grade_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = GradePromptProfile
+        fields = ['id', 'grade', 'grade_name', 'learner_stage', 'is_active', 'updated_at']
+
+    def get_grade_name(self, obj):
+        t = obj.grade.translations or {}
+        if isinstance(t, dict):
+            return t.get('ar', {}).get('name', '') or t.get('en', {}).get('name', '') or str(obj.grade)
+        return str(obj.grade)
+        return obj.grade.translations.get('ar', str(obj.grade)) if hasattr(obj.grade, 'translations') else str(obj.grade)

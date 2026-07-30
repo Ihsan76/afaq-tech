@@ -47,6 +47,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     ]},
     { section: "AI", items: [
       { href: "/admin/ai-models", label: "نماذج AI", icon: "🤖" },
+      { href: "/admin/prompts", label: "البرومبتات", icon: "📝" },
     ]},
     { section: t("admin.messagesSection"), items: [
       { href: "/admin/messages", label: t("admin.messages"), icon: "✉️" },

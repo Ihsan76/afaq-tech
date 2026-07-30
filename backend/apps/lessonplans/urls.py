@@ -15,5 +15,6 @@ urlpatterns = [
     path('<int:pk>/toggle-public/', views.toggle_public_view, name='lessonplan-toggle-public'),
     path('<int:pk>/worksheet/', views.generate_worksheet_view, name='lessonplan-worksheet'),
     path('<int:pk>/homework/', views.generate_homework_view, name='lessonplan-homework'),
+    path('<int:pk>/export-pdf/', views.export_plan_pdf, name='lessonplan-export-pdf'),
 ]
 

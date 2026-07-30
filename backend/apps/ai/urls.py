@@ -17,4 +17,12 @@ urlpatterns = [
     path('admin/providers/test/', views.test_provider_connection, name='aiprovider-test'),
     path('admin/provider-types/', views.ProviderTypeListView.as_view(), name='providertype-list'),
     path('models/', views.AIModelPublicListView.as_view(), name='aimodel-public-list'),
+
+    # Prompt management
+    path('admin/prompt-templates/', views.PromptTemplateListView.as_view(), name='prompttemplate-list'),
+    path('admin/prompt-templates/<int:pk>/', views.PromptTemplateDetailView.as_view(), name='prompttemplate-detail'),
+    path('admin/grade-prompt-profiles/', views.GradePromptProfileListView.as_view(), name='gradepromptprofile-list'),
+    path('admin/grade-prompt-profiles/<int:pk>/', views.GradePromptProfileDetailView.as_view(), name='gradepromptprofile-detail'),
+    path('admin/subject-prompt-profiles/', views.SubjectPromptProfileListView.as_view(), name='subjectpromptprofile-list'),
+    path('admin/subject-prompt-profiles/<int:pk>/', views.SubjectPromptProfileDetailView.as_view(), name='subjectpromptprofile-detail'),
 ]

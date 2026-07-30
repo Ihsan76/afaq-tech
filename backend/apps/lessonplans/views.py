@@ -1,12 +1,18 @@
 import json
+from io import BytesIO
 from django.conf import settings
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import cm
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, ListFlowable, ListItem
 from apps.ai.models import AIRun
-from apps.ai.services import generate_lesson_plan as ai_generate, refine_lesson_plan as ai_refine
+from apps.ai.services import generate_lesson_plan as ai_generate, refine_lesson_plan as ai_refine, PromptBuilderService
 from apps.academics.models import Subject, Grade, CurriculumDocument
 from .models import LessonPlan, LessonPlanRefinement
 from .serializers import LessonPlanSerializer, LessonPlanDetailSerializer
@@ -42,9 +48,9 @@ def generate_lesson_plan(request):
     model_id = request.data.get('model_id')
 
     if not title:
-        return Response({'error': 'العنوان مطلوب'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'error': 'Title is required'}, status=status.HTTP_400_BAD_REQUEST)
     if not prompt_text:
-        return Response({'error': 'وصف الدرس مطلوب'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'error': 'Lesson description is required'}, status=status.HTTP_400_BAD_REQUEST)
 
     subject_obj = None
     grade_obj = None
@@ -85,11 +91,11 @@ def generate_lesson_plan(request):
             grade_obj=grade_obj,
         )
     except Exception as e:
-        return Response({'error': f'فشل توليد الخطة: {str(e)}'}, status=status.HTTP_502_BAD_GATEWAY)
+        return Response({'error': f'Failed to generate plan: {e}'}, status=status.HTTP_502_BAD_GATEWAY)
 
     if 'error' in plan_data:
         return Response({
-            'error': 'فشل تحليل رد AI بصيغة منظمة',
+            'error': 'Failed to parse AI response in structured format',
             'raw_response': plan_data.get('raw_response', ''),
         }, status=status.HTTP_502_BAD_GATEWAY)
 
@@ -115,11 +121,16 @@ def generate_lesson_plan(request):
     )
 
     # Gamification reward
-    request.user.points += 10
-    request.user.lessons_created_count += 1
-    if request.user.lessons_created_count >= 5 and 'pro_creator' not in request.user.badges:
-        request.user.badges.append('pro_creator')
-    request.user.save(update_fields=['points', 'lessons_created_count', 'badges'])
+    try:
+        from apps.gamification.services import PointsManager, BadgeAwarder, AchievementManager, ChallengeManager
+        PointsManager.award_points(request.user, 'lesson_created')
+        request.user.lessons_created_count += 1
+        request.user.save(update_fields=['lessons_created_count'])
+        BadgeAwarder.check_and_award(request.user, 'lessons_created', request.user.lessons_created_count)
+        AchievementManager.check_and_award(request.user, 'lessons_created')
+        ChallengeManager.update_progress(request.user, 'lessons_created')
+    except Exception:
+        pass
 
     return Response(LessonPlanDetailSerializer(lesson_plan).data, status=status.HTTP_201_CREATED)
 
@@ -130,7 +141,7 @@ def duplicate_lesson_plan(request, pk):
     
     new_plan = LessonPlan.objects.create(
         user=request.user,
-        title=f"{original.title} (نسخة)",
+        title=f"{original.title} (Copy)",
         subject=original.subject,
         grade=original.grade,
         plan_data=original.plan_data,
@@ -145,12 +156,12 @@ def duplicate_lesson_plan(request, pk):
 def refine_lesson_plan_view(request, pk):
     lesson_plan = _get_plan_or_403(pk, request)
     if lesson_plan is None:
-        return Response({'error': 'ليس لديك صلاحية تعديل هذه الخطة'}, status=status.HTTP_403_FORBIDDEN)
+        return Response({'error': 'You do not have permission to modify this plan'}, status=status.HTTP_403_FORBIDDEN)
     prompt = request.data.get('prompt', '').strip()
     model_id = request.data.get('model_id')
 
     if not prompt:
-        return Response({'error': 'طلب التعديل مطلوب'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'error': 'Refinement prompt is required'}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
         updated_data, model_used, tokens = ai_refine(
@@ -160,10 +171,10 @@ def refine_lesson_plan_view(request, pk):
             model_id=model_id,
         )
     except Exception as e:
-        return Response({'error': f'فشل تعديل الخطة: {str(e)}'}, status=status.HTTP_502_BAD_GATEWAY)
+        return Response({'error': f'Failed to refine plan: {e}'}, status=status.HTTP_502_BAD_GATEWAY)
 
     if 'error' in updated_data:
-        return Response({'error': 'فشل تحليل رد AI بصيغة منظمة'}, status=status.HTTP_502_BAD_GATEWAY)
+        return Response({'error': 'Failed to parse AI response in structured format'}, status=status.HTTP_502_BAD_GATEWAY)
 
     lesson_plan.plan_data = updated_data
     lesson_plan.save()
@@ -190,7 +201,7 @@ def clone_marketplace_plan_view(request, pk):
 
     cloned = LessonPlan.objects.create(
         user=request.user,
-        title=f"{original.title} (مستنسخة)",
+        title=f"{original.title} (Cloned)",
         subject=original.subject,
         grade=original.grade,
         plan_data=original.plan_data,
@@ -211,10 +222,10 @@ def toggle_like_view(request, pk):
 @api_view(['GET'])
 def smart_prompts_view(request):
     prompts = [
-        {"title": "مقدمة تفاعلية وعصف ذهني", "prompt": "صمم خطة درس تركز على العصف الذهني واستنباط المفاهيم الأساسية بحماس."},
-        {"title": "التعلم باللعب والتجارب العملية", "prompt": "أدمج أنشطة تفاعلية وألعاب تعليمية أو تجارب علمية تطبيقية مبسطة."},
-        {"title": "تقييم تكويني واستقصائي", "prompt": "ركز على الأسئلة الاستقصائية والتقييم التكويني المستمر لقياس فهم الطلاب."},
-        {"title": "مهارات التفكير العليا والنقاش", "prompt": "ركز على مهارات التفكير الناقد وحل المشكلات والنقاش الجماعي الموجه."}
+        {"title": _("Interactive Introduction & Brainstorming"), "prompt": _("Design a lesson plan focused on brainstorming and eliciting key concepts with enthusiasm.")},
+        {"title": _("Learning through Play & Practical Experiments"), "prompt": _("Incorporate interactive activities, educational games, or simplified applied science experiments.")},
+        {"title": _("Formative & Inquiry-Based Assessment"), "prompt": _("Focus on inquiry questions and continuous formative assessment to measure student understanding.")},
+        {"title": _("Higher-Order Thinking Skills & Discussion"), "prompt": _("Focus on critical thinking, problem-solving, and guided group discussion.")}
     ]
     return Response(prompts, status=status.HTTP_200_OK)
 
@@ -225,13 +236,13 @@ def delete_lesson_plan_view(request, pk):
     try:
         plan = LessonPlan.objects.get(pk=pk)
     except LessonPlan.DoesNotExist:
-        return Response({'error': 'الخطة غير موجودة'}, status=status.HTTP_404_NOT_FOUND)
+        return Response({'error': 'Plan not found'}, status=status.HTTP_404_NOT_FOUND)
 
     if plan.user != request.user and not request.user.is_staff:
-        return Response({'error': 'ليس لديك صلاحية حذف هذه الخطة'}, status=status.HTTP_403_FORBIDDEN)
+        return Response({'error': 'You do not have permission to delete this plan'}, status=status.HTTP_403_FORBIDDEN)
 
     plan.delete()
-    return Response({'detail': 'تم حذف الخطة بنجاح'}, status=status.HTTP_204_NO_CONTENT)
+    return Response({'detail': 'Plan deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
 
 
 @api_view(['POST'])
@@ -239,7 +250,7 @@ def delete_lesson_plan_view(request, pk):
 def toggle_public_view(request, pk):
     plan = _get_plan_or_403(pk, request)
     if plan is None:
-        return Response({'error': 'ليس لديك صلاحية تعديل هذه الخطة'}, status=status.HTTP_403_FORBIDDEN)
+        return Response({'error': 'You do not have permission to modify this plan'}, status=status.HTTP_403_FORBIDDEN)
     plan.is_public = not plan.is_public
     if plan.is_public and plan.status == 'draft':
         plan.status = 'published'
@@ -252,34 +263,35 @@ def toggle_public_view(request, pk):
 def generate_worksheet_view(request, pk):
     plan = _get_plan_or_403(pk, request)
     if plan is None:
-        return Response({'error': 'ليس لديك صلاحية تعديل هذه الخطة'}, status=status.HTTP_403_FORBIDDEN)
-    from apps.ai.services import _resolve_model_and_client
-    import google.generativeai as genai
-    from openai import OpenAI
+        return Response({'error': 'You do not have permission to modify this plan'}, status=status.HTTP_403_FORBIDDEN)
+    from apps.ai.router import ProviderRouter
 
-    provider_code, model_name, api_key, base_url = _resolve_model_and_client()
     plan_data_json = json.dumps(plan.plan_data, ensure_ascii=False)
-    sys_prompt = (
-        f"بناءً على خطة الدرس:\n{plan_data_json}\n\n"
-        f"قم بإنشاء ورقة عمل تعليمية شاملة بصيغة JSON فقط "
-        f'(بدون markdown):\n{{"title": "ورقة عمل", "instructions": "تعليمات", '
-        f'"exercises": [{{"question": "...", "options": ["أ", "ب", "ج", "د"], "answer": "..."}}]}}'
+    sys_prompt, user_msg = PromptBuilderService.build_prompt(
+        feature_key='worksheet',
+        language=request.data.get('language', 'ar'),
+        variables={'plan_data': plan_data_json},
+        subject=plan.subject,
+        grade=plan.grade,
     )
+    if not sys_prompt:
+        return Response({'error': 'Worksheet prompt template not found'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     try:
-        if provider_code == 'google':
-            genai.configure(api_key=api_key or settings.GEMINI_API_KEY)
-            model = genai.GenerativeModel(model_name, system_instruction=sys_prompt)
-            res = model.generate_content("أنشئ ورقة العمل.")
-            raw = res.text.strip()
+        router = ProviderRouter()
+        resp = router.generate(
+            prompt=user_msg or "أنشئ ورقة العمل.",
+            feature="worksheet",
+            system_instruction=sys_prompt,
+            use_cache=False,
+        )
+        raw = resp.content
+        if not resp.success:
+            worksheet_data = {"error": resp.error}
         else:
-            client = OpenAI(api_key=api_key or 'sk-placeholder', base_url=(base_url or '').rstrip('/') + '/v1' if base_url else None)
-            res = client.chat.completions.create(model=model_name, messages=[{"role": "system", "content": sys_prompt}, {"role": "user", "content": "أنشئ ورقة العمل."}])
-            raw = res.choices[0].message.content.strip()
-
-        if raw.startswith("```"):
-            raw = raw.split("\n", 1)[-1].rsplit("```", 1)[0].strip()
-        worksheet_data = json.loads(raw)
+            if raw.startswith("```"):
+                raw = raw.split("\n", 1)[-1].rsplit("```", 1)[0].strip()
+            worksheet_data = json.loads(raw)
     except Exception as e:
         worksheet_data = {"error": str(e)}
 
@@ -293,39 +305,97 @@ def generate_worksheet_view(request, pk):
 def generate_homework_view(request, pk):
     plan = _get_plan_or_403(pk, request)
     if plan is None:
-        return Response({'error': 'ليس لديك صلاحية تعديل هذه الخطة'}, status=status.HTTP_403_FORBIDDEN)
-    from apps.ai.services import _resolve_model_and_client
-    import google.generativeai as genai
-    from openai import OpenAI
+        return Response({'error': 'You do not have permission to modify this plan'}, status=status.HTTP_403_FORBIDDEN)
+    from apps.ai.router import ProviderRouter
 
-    provider_code, model_name, api_key, base_url = _resolve_model_and_client()
     plan_data_json = json.dumps(plan.plan_data, ensure_ascii=False)
-    sys_prompt = (
-        f"بناءً على خطة الدرس:\n{plan_data_json}\n\n"
-        f"قم بإنشاء واجب منزلي تفصيلي بصيغة JSON فقط "
-        f'(بدون markdown):\n{{"homework_title": "الواجب المنزلي", "instructions": "...", '
-        f'"tasks": [{{"task_number": 1, "description": "..."}}]}}'
+    sys_prompt, user_msg = PromptBuilderService.build_prompt(
+        feature_key='homework',
+        language=request.data.get('language', 'ar'),
+        variables={'plan_data': plan_data_json},
+        subject=plan.subject,
+        grade=plan.grade,
     )
+    if not sys_prompt:
+        return Response({'error': 'Homework prompt template not found'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     try:
-        if provider_code == 'google':
-            genai.configure(api_key=api_key or settings.GEMINI_API_KEY)
-            model = genai.GenerativeModel(model_name, system_instruction=sys_prompt)
-            res = model.generate_content("أنشئ الواجب المنزلي.")
-            raw = res.text.strip()
+        router = ProviderRouter()
+        resp = router.generate(
+            prompt=user_msg or "أنشئ الواجب المنزلي.",
+            feature="homework",
+            system_instruction=sys_prompt,
+            use_cache=False,
+        )
+        raw = resp.content
+        if not resp.success:
+            homework_data = {"error": resp.error}
         else:
-            client = OpenAI(api_key=api_key or 'sk-placeholder', base_url=(base_url or '').rstrip('/') + '/v1' if base_url else None)
-            res = client.chat.completions.create(model=model_name, messages=[{"role": "system", "content": sys_prompt}, {"role": "user", "content": "أنشئ الواجب المنزلي."}])
-            raw = res.choices[0].message.content.strip()
-
-        if raw.startswith("```"):
-            raw = raw.split("\n", 1)[-1].rsplit("```", 1)[0].strip()
-        homework_data = json.loads(raw)
+            if raw.startswith("```"):
+                raw = raw.split("\n", 1)[-1].rsplit("```", 1)[0].strip()
+            homework_data = json.loads(raw)
     except Exception as e:
         homework_data = {"error": str(e)}
 
     plan.plan_data['homework_assignment'] = homework_data
     plan.save(update_fields=['plan_data'])
     return Response(LessonPlanDetailSerializer(plan).data, status=status.HTTP_200_OK)
+
+
+# --- PDF Export ---
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def export_plan_pdf(request, pk):
+    plan = _get_plan_or_403(pk, request)
+    if plan is None:
+        return Response({'error': 'Not found or no permission'}, status=status.HTTP_404_NOT_FOUND)
+
+    buf = BytesIO()
+    doc = SimpleDocTemplate(buf, pagesize=A4, rightMargin=2*cm, leftMargin=2*cm, topMargin=2*cm, bottomMargin=2*cm)
+
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle('TitleAr', parent=styles['Title'], fontName='Helvetica', fontSize=18, spaceAfter=12)
+    heading_style = ParagraphStyle('HeadingAr', parent=styles['Heading2'], fontName='Helvetica', fontSize=14, spaceAfter=8, spaceBefore=12)
+    body_style = ParagraphStyle('BodyAr', parent=styles['Normal'], fontName='Helvetica', fontSize=10, spaceAfter=6, leading=14)
+
+    elements = []
+    pd = plan.plan_data
+
+    title = pd.get('title', pd.get('lesson_title', str(plan)))
+    elements.append(Paragraph(title, title_style))
+    elements.append(Spacer(1, 0.3*cm))
+
+    elements.append(Paragraph(f"Subject: {plan.subject}", body_style))
+    elements.append(Paragraph(f"Grade: {plan.grade}", body_style))
+    elements.append(Paragraph(f"Language: {plan.language}", body_style))
+    elements.append(Spacer(1, 0.3*cm))
+
+    sections = [
+        ('objectives', 'Objectives'),
+        ('materials', 'Materials'),
+        ('procedure', 'Procedure'),
+        ('assessment', 'Assessment'),
+        ('homework', 'Homework'),
+        ('extension', 'Extension Activities'),
+    ]
+
+    for key, label in sections:
+        content = pd.get(key, '')
+        if isinstance(content, list):
+            content = '\n'.join(f'- {item}' for item in content)
+        if content:
+            elements.append(Paragraph(label, heading_style))
+            for line in content.split('\n'):
+                if line.strip():
+                    elements.append(Paragraph(line.strip(), body_style))
+
+    doc.build(elements)
+    pdf_bytes = buf.getvalue()
+    buf.close()
+
+    response = HttpResponse(pdf_bytes, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="{plan.title or "lesson-plan"}-{pk}.pdf"'
+    return response
 
 
