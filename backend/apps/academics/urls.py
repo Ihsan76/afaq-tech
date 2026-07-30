@@ -13,5 +13,8 @@ urlpatterns = [
     path('curricula/<int:pk>/', views.CurriculumDetailView.as_view(), name='curriculum-detail'),
     path('curricula/<int:curriculum_id>/units/', views.UnitListView.as_view(), name='unit-list'),
     path('curricula/<int:curriculum_id>/units/create/', views.UnitCreateView.as_view(), name='unit-create'),
+    path('curricula/<int:curriculum_id>/documents/', views.CurriculumDocumentListView.as_view(), name='document-list'),
+    path('curricula/<int:curriculum_id>/documents/upload/', views.CurriculumDocumentCreateView.as_view(), name='document-upload'),
     path('units/<int:pk>/', views.UnitDetailView.as_view(), name='unit-detail'),
+    path('documents/<int:pk>/', views.CurriculumDocumentDetailView.as_view(), name='document-detail'),
 ]

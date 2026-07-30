@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Grade, Subject, Curriculum, Unit
+from .models import Grade, Subject, Curriculum, Unit, CurriculumDocument
 from apps.core.translations import get_translation
 
 
@@ -63,6 +63,18 @@ class CurriculumSerializer(serializers.ModelSerializer):
 
 class CurriculumDetailSerializer(CurriculumSerializer):
     units = UnitSerializer(many=True, read_only=True)
+    documents = serializers.SerializerMethodField()
 
     class Meta(CurriculumSerializer.Meta):
-        fields = CurriculumSerializer.Meta.fields + ['units']
+        fields = CurriculumSerializer.Meta.fields + ['units', 'documents']
+
+    def get_documents(self, obj):
+        docs = CurriculumDocument.objects.filter(curriculum=obj)
+        return CurriculumDocumentSerializer(docs, many=True).data
+
+
+class CurriculumDocumentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CurriculumDocument
+        fields = ['id', 'curriculum', 'subject', 'title', 'file', 'extracted_text', 'created_at']
+        read_only_fields = ['extracted_text', 'created_at']

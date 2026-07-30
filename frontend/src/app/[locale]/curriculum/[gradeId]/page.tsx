@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useApiList, usePrefetch } from "@/lib/useApi";
 
-interface Subject { id: number; name: Record<string, string>; icon: string; }
+interface Subject { id: number; name: string; icon: string; translations: Record<string, { name: string }>; }
 
 export default function CurriculumGradeDetailPage() {
   const t = useTranslations("academy");
@@ -54,7 +54,7 @@ export default function CurriculumGradeDetailPage() {
                 style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", boxShadow: "var(--card-shadow)" }}>
                 <div className="text-4xl mb-3">{subject.icon || "📚"}</div>
                 <h3 className="text-lg font-bold" style={{ color: "var(--color-text)", fontFamily: "var(--font-heading)" }}>
-                  {subject.name?.[locale] || subject.name?.en || subject.name?.ar || ""}
+                  {subject.translations?.[locale]?.name || subject.translations?.en?.name || subject.translations?.ar?.name || subject.name || ""}
                 </h3>
               </Link>
             ))}

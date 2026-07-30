@@ -381,10 +381,10 @@ export default function AdminPromptsPage() {
               + إضافة قالب
             </button>
           </div>
-          <div className="overflow-x-auto rounded-2xl" style={surface}>
+          <div className="overflow-auto max-h-[400px] rounded-2xl" style={surface}>
             <table className="w-full text-sm">
               <thead>
-                <tr style={{ borderBottom: "1px solid var(--color-border)" }}>
+                <tr className="sticky top-0" style={{ borderBottom: "1px solid var(--color-border)", background: "var(--color-surface)" }}>
                   <th className="p-3 text-right font-semibold">الاسم</th>
                   <th className="p-3 text-right font-semibold">الميزة</th>
                   <th className="p-3 text-right font-semibold">اللغة</th>
@@ -480,10 +480,10 @@ export default function AdminPromptsPage() {
               + إضافة بروفايل صف
             </button>
           </div>
-          <div className="overflow-x-auto rounded-2xl" style={surface}>
+          <div className="overflow-auto max-h-[400px] rounded-2xl" style={surface}>
             <table className="w-full text-sm">
               <thead>
-                <tr style={{ borderBottom: "1px solid var(--color-border)" }}>
+                <tr className="sticky top-0" style={{ borderBottom: "1px solid var(--color-border)", background: "var(--color-surface)" }}>
                   <th className="p-3 text-right font-semibold">الصف</th>
                   <th className="p-3 text-right font-semibold">المرحلة</th>
                   <th className="p-3 text-right font-semibold">نشط</th>
@@ -561,10 +561,10 @@ export default function AdminPromptsPage() {
               + إضافة بروفايل مادة
             </button>
           </div>
-          <div className="overflow-x-auto rounded-2xl" style={surface}>
+          <div className="overflow-auto max-h-[400px] rounded-2xl" style={surface}>
             <table className="w-full text-sm">
               <thead>
-                <tr style={{ borderBottom: "1px solid var(--color-border)" }}>
+                <tr className="sticky top-0" style={{ borderBottom: "1px solid var(--color-border)", background: "var(--color-surface)" }}>
                   <th className="p-3 text-right font-semibold">بروفايل الصف</th>
                   <th className="p-3 text-right font-semibold">المادة</th>
                   <th className="p-3 text-right font-semibold">نشط</th>

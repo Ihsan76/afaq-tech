@@ -1,6 +1,6 @@
-from rest_framework import generics, permissions
-from .models import Grade, Subject, Curriculum, Unit
-from .serializers import GradeSerializer, SubjectSerializer, CurriculumSerializer, CurriculumDetailSerializer, UnitSerializer
+from rest_framework import generics, permissions, parsers
+from .models import Grade, Subject, Curriculum, Unit, CurriculumDocument
+from .serializers import GradeSerializer, SubjectSerializer, CurriculumSerializer, CurriculumDetailSerializer, UnitSerializer, CurriculumDocumentSerializer
 
 
 class GradeListView(generics.ListAPIView):
@@ -78,4 +78,26 @@ class UnitCreateView(generics.CreateAPIView):
 class UnitDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Unit.objects.all()
     serializer_class = UnitSerializer
+    permission_classes = [permissions.IsAdminUser]
+
+
+class CurriculumDocumentListView(generics.ListAPIView):
+    serializer_class = CurriculumDocumentSerializer
+    permission_classes = [permissions.IsAdminUser]
+
+    def get_queryset(self):
+        curriculum_id = self.kwargs.get('curriculum_id')
+        return CurriculumDocument.objects.filter(curriculum_id=curriculum_id)
+
+
+class CurriculumDocumentCreateView(generics.CreateAPIView):
+    queryset = CurriculumDocument.objects.all()
+    serializer_class = CurriculumDocumentSerializer
+    permission_classes = [permissions.IsAdminUser]
+    parser_classes = [parsers.MultiPartParser, parsers.FormParser]
+
+
+class CurriculumDocumentDetailView(generics.RetrieveDestroyAPIView):
+    queryset = CurriculumDocument.objects.all()
+    serializer_class = CurriculumDocumentSerializer
     permission_classes = [permissions.IsAdminUser]

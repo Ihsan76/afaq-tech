@@ -381,6 +381,7 @@ def import_provider_models(request):
 class PromptTemplateListView(generics.ListCreateAPIView):
     queryset = PromptTemplate.objects.all()
     permission_classes = [permissions.IsAdminUser]
+    pagination_class = None
 
     def get_serializer_class(self):
         if self.request.method == 'GET':
@@ -399,6 +400,7 @@ class PromptTemplateDetailView(generics.RetrieveUpdateDestroyAPIView):
 class GradePromptProfileListView(generics.ListCreateAPIView):
     queryset = GradePromptProfile.objects.select_related('grade').prefetch_related('subject_profiles__subject').all()
     permission_classes = [permissions.IsAdminUser]
+    pagination_class = None
 
     def get_serializer_class(self):
         if self.request.method == 'GET':
@@ -418,6 +420,7 @@ class SubjectPromptProfileListView(generics.ListCreateAPIView):
     queryset = SubjectPromptProfile.objects.select_related('grade_profile__grade', 'subject').all()
     serializer_class = SubjectPromptProfileSerializer
     permission_classes = [permissions.IsAdminUser]
+    pagination_class = None
 
 
 class SubjectPromptProfileDetailView(generics.RetrieveUpdateDestroyAPIView):
