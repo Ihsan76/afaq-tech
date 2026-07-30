@@ -419,7 +419,7 @@ export default function AdminCurriculaPage() {
                   <div className="rounded-3xl shadow-xl overflow-hidden" style={surface}>
                     <div className="overflow-auto max-h-[400px]">
                       <table className="w-full">
-                        <thead className="sticky top-0" style={{ backgroundColor: "var(--color-background-secondary)" }}>
+                        <thead className="sticky top-0" style={{ background: "var(--color-surface)" }}>
                           <tr>
                             <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>{al(locale, "title")}</th>
                             <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>{al(locale, "subject")}</th>
@@ -519,7 +519,7 @@ export default function AdminCurriculaPage() {
               <div className="rounded-3xl shadow-xl overflow-hidden" style={surface}>
                 <div className="overflow-auto max-h-[500px]">
                   <table className="w-full">
-                    <thead className="sticky top-0" style={{ backgroundColor: "var(--color-background-secondary)" }}>
+                    <thead className="sticky top-0" style={{ background: "var(--color-surface)" }}>
                       <tr>
                         <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>{al(locale, "level")}</th>
                         <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>{al(locale, "nameAr")}</th>

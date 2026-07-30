@@ -134,7 +134,7 @@ export default function AdminGradesPage() {
           <div className="rounded-3xl shadow-xl overflow-hidden" style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", boxShadow: "var(--card-shadow)" }}>
             <div className="overflow-auto max-h-[500px]">
               <table className="w-full">
-                <thead className="sticky top-0" style={{ backgroundColor: "var(--color-background-secondary)" }}>
+                <thead className="sticky top-0" style={{ background: "var(--color-surface)" }}>
                   <tr>
                     <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>{t("common.level")}</th>
                     <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>{t("common.nameAr")}</th>
