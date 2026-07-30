@@ -6,11 +6,10 @@ import { api } from "@/lib/api";
 
 interface ThemeData {
   id: number;
-  name: string;
-  name_ar: string;
+  display_name: string;
+  display_description: string;
   icon: string;
-  description: string;
-  description_ar: string;
+  translations: Record<string, { name: string; description?: string }>;
   is_active: boolean;
   is_default: boolean;
   order: number;
@@ -43,8 +42,15 @@ interface ThemeData {
   line_height: string;
 }
 
+const LANGUAGES = [
+  { code: "ar", label: "العربية" }, { code: "en", label: "English" },
+  { code: "fr", label: "Français" }, { code: "tr", label: "Türkçe" },
+  { code: "ur", label: "اردو" }, { code: "es", label: "Español" },
+  { code: "de", label: "Deutsch" }, { code: "id", label: "Bahasa Indonesia" },
+  { code: "bn", label: "বাংলা" },
+];
 const EMPTY_THEME: Partial<ThemeData> = {
-  name: "", name_ar: "", icon: "🎨", description: "", description_ar: "",
+  display_name: "", display_description: "", icon: "🎨", translations: {},
   is_active: true, is_default: false, order: 0,
   primary: "#4F46E5", secondary: "#7C3AED", accent: "#6366F1",
   success: "#10B981", error: "#EF4444", warning: "#F59E0B",
@@ -124,6 +130,9 @@ export default function AdminThemesPage() {
   const [form, setForm] = useState<Partial<ThemeData>>(EMPTY_THEME);
   const [previewTheme, setPreviewTheme] = useState<ThemeData | null>(null);
   const [activeTab, setActiveTab] = useState<"colors" | "buttons" | "cards" | "fonts">("colors");
+  const [themeSelectedLang, setThemeSelectedLang] = useState("ar");
+  const [themeNameInput, setThemeNameInput] = useState("");
+  const [themeDescInput, setThemeDescInput] = useState("");
 
   useEffect(() => { fetchThemes(); }, []);
 
@@ -159,8 +168,25 @@ export default function AdminThemesPage() {
     } catch {}
   };
 
-  const resetForm = () => { setForm(EMPTY_THEME); setEditing(null); setShowForm(false); setActiveTab("colors"); };
+  useEffect(() => {
+    const tr = form.translations || {};
+    setThemeNameInput(tr[themeSelectedLang]?.name || "");
+    setThemeDescInput(tr[themeSelectedLang]?.description || "");
+  }, [themeSelectedLang, form.translations]);
+
+  const updateTranslation = (field: "name" | "description", val: string) => {
+    const tr = { ...(form.translations || {}) };
+    const entry = { ...(tr[themeSelectedLang] || { name: "", description: "" }) };
+    entry[field] = val;
+    tr[themeSelectedLang] = entry;
+    setForm((p) => ({ ...p, translations: tr }));
+    if (field === "name") setThemeNameInput(val);
+    else setThemeDescInput(val);
+  };
+
+  const resetForm = () => { setForm(EMPTY_THEME); setEditing(null); setShowForm(false); setActiveTab("colors"); setThemeSelectedLang("ar"); setThemeNameInput(""); setThemeDescInput(""); };
   const startEdit = (th: ThemeData) => { setForm({ ...th }); setEditing(th); setShowForm(true); };
+  const themeFilled = LANGUAGES.filter(l => form.translations?.[l.code]?.name?.trim()).length;
   const set = (key: string, value: any) => setForm((p) => ({ ...p, [key]: value }));
 
   const btnRadius = { rounded: "12px", pill: "9999px", square: "4px" }[form.btn_shape || "rounded"] || "12px";
@@ -219,13 +245,13 @@ export default function AdminThemesPage() {
                     {/* Theme Info */}
                     <div className="p-4">
                       <div className="mb-2">
-                        <h3 className="font-bold" style={{ color: "var(--color-text)" }}>{th.name_ar}</h3>
-                        {th.name && <p className="text-xs mt-0.5" style={{ color: "var(--color-text-secondary)" }}>{th.name}</p>}
+                        <h3 className="font-bold" style={{ color: "var(--color-text)" }}>{th.translations?.ar?.name || th.display_name}</h3>
+                        {th.translations?.en?.name && <p className="text-xs mt-0.5" style={{ color: "var(--color-text-secondary)" }}>{th.translations.en.name}</p>}
                       </div>
 
-                      {th.description_ar && <p className="text-xs mb-1" style={{ color: "var(--color-text-muted)" }}>{th.description_ar}</p>}
-                      {th.description && <p className="text-xs mb-3" style={{ color: "var(--color-text-muted)" }}>{th.description}</p>}
-                      {!th.description_ar && !th.description && <div className="mb-3" />}
+                      {th.translations?.ar?.description && <p className="text-xs mb-1" style={{ color: "var(--color-text-muted)" }}>{th.translations.ar.description}</p>}
+                      {th.translations?.en?.description && <p className="text-xs mb-3" style={{ color: "var(--color-text-muted)" }}>{th.translations.en.description}</p>}
+                      {!th.translations?.ar?.description && !th.translations?.en?.description && <div className="mb-3" />}
 
                       {/* Color Palette */}
                       <div className="flex gap-1.5 mb-3">
@@ -283,7 +309,7 @@ export default function AdminThemesPage() {
                 <div className="rounded-3xl border overflow-hidden" style={{ borderColor: "var(--color-border)", background: "var(--color-surface)", boxShadow: "var(--card-shadow)" }}>
                   <div className="px-4 py-3 border-b flex items-center justify-between" style={{ borderColor: "var(--color-border)" }}>
                     <span className="text-sm font-bold" style={{ color: "var(--color-text)" }}>{t("admin.livePreview")}</span>
-                    <span className="text-xs" style={{ color: "var(--color-text-muted)" }}>{previewTheme.icon} {previewTheme.name_ar} {previewTheme.name && `/ ${previewTheme.name}`}</span>
+                    <span className="text-xs" style={{ color: "var(--color-text-muted)" }}>{previewTheme.icon} {previewTheme.translations?.ar?.name || previewTheme.display_name} {previewTheme.translations?.en?.name && `/ ${previewTheme.translations.en.name}`}</span>
                   </div>
                   <div className="p-4 max-h-[70vh] overflow-y-auto">
                     <ThemeMiniPreview theme={previewTheme} />
@@ -313,22 +339,41 @@ export default function AdminThemesPage() {
 
                 <form onSubmit={handleSubmit}>
                   {/* Basic Info */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
-                    <div>
-                      <label className="block text-xs font-medium mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("admin.nameAr")}</label>
-                      <input type="text" value={form.name_ar || ""} onChange={(e) => set("name_ar", e.target.value)} className="w-full px-3 py-2 rounded-xl border text-sm" style={{ borderColor: "var(--color-border)", color: "var(--color-text)", background: "var(--color-surface)" }} required />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("admin.nameEn")}</label>
-                      <input type="text" value={form.name || ""} onChange={(e) => set("name", e.target.value)} className="w-full px-3 py-2 rounded-xl border text-sm" style={{ borderColor: "var(--color-border)", color: "var(--color-text)", background: "var(--color-surface)" }} required />
-                    </div>
+                  <div className="space-y-3 mb-5">
                     <div>
                       <label className="block text-xs font-medium mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("admin.icon")}</label>
                       <input type="text" value={form.icon || ""} onChange={(e) => set("icon", e.target.value)} className="w-full px-3 py-2 rounded-xl border text-sm" style={{ borderColor: "var(--color-border)", color: "var(--color-text)", background: "var(--color-surface)" }} />
                     </div>
+                    <div className="flex gap-3 items-end">
+                      <div className="flex-1">
+                        <label className="block text-xs font-medium mb-1" style={{ color: "var(--color-text-secondary)" }}>اللغة</label>
+                        <select value={themeSelectedLang} onChange={(e) => setThemeSelectedLang(e.target.value)}
+                          className="w-full px-3 py-2 rounded-xl border text-sm" style={{ borderColor: "var(--color-border)", color: "var(--color-text)", background: "var(--color-surface)" }}>
+                          {LANGUAGES.map(l => (
+                            <option key={l.code} value={l.code}>{l.label} {form.translations?.[l.code]?.name?.trim() ? "✅" : ""}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="flex-[2]">
+                        <label className="block text-xs font-medium mb-1" style={{ color: "var(--color-text-secondary)" }}>الاسم ({LANGUAGES.find(l => l.code === themeSelectedLang)?.label})</label>
+                        <input type="text" value={themeNameInput} onChange={(e) => updateTranslation("name", e.target.value)}
+                          className="w-full px-3 py-2 rounded-xl border text-sm" style={{ borderColor: "var(--color-border)", color: "var(--color-text)", background: "var(--color-surface)" }}
+                          dir={themeSelectedLang === "ar" || themeSelectedLang === "ur" ? "rtl" : "ltr"} />
+                      </div>
+                    </div>
+                    <div className="flex gap-2 flex-wrap">
+                      {LANGUAGES.map(l => (
+                        <span key={l.code} className={`px-2 py-1 rounded-lg text-xs font-medium ${form.translations?.[l.code]?.name?.trim() ? "" : "opacity-40"}`}
+                          style={{ background: themeSelectedLang === l.code ? "var(--color-primary)" : "var(--color-background)", color: themeSelectedLang === l.code ? "#FFF" : "var(--color-text-secondary)", border: "1px solid var(--color-border)", cursor: "pointer" }}
+                          onClick={() => setThemeSelectedLang(l.code)}>{l.code} {form.translations?.[l.code]?.name?.trim() ? "✓" : ""}</span>
+                      ))}
+                    </div>
+                    <p className="text-xs" style={{ color: "var(--color-text-muted)" }}>الاسم: {themeFilled}/{LANGUAGES.length}</p>
                     <div>
-                      <label className="block text-xs font-medium mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("admin.description")}</label>
-                      <input type="text" value={form.description_ar || ""} onChange={(e) => set("description_ar", e.target.value)} className="w-full px-3 py-2 rounded-xl border text-sm" style={{ borderColor: "var(--color-border)", color: "var(--color-text)", background: "var(--color-surface)" }} />
+                      <label className="block text-xs font-medium mb-1" style={{ color: "var(--color-text-secondary)" }}>الوصف ({LANGUAGES.find(l => l.code === themeSelectedLang)?.label})</label>
+                      <input type="text" value={themeDescInput} onChange={(e) => updateTranslation("description", e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl border text-sm" style={{ borderColor: "var(--color-border)", color: "var(--color-text)", background: "var(--color-surface)" }}
+                        dir={themeSelectedLang === "ar" || themeSelectedLang === "ur" ? "rtl" : "ltr"} />
                     </div>
                   </div>
 
