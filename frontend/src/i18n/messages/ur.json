@@ -128,7 +128,18 @@
     "lessonDescription": "سباق کی تفصیل",
     "lessonDescPlaceholder": "درکار سباق کی تفصیل لکھیں...",
     "generating": "تیار ہو رہا ہے...",
-    "generationError": "منصوبہ تیار کرنے میں خرابی"
+    "generationError": "منصوبہ تیار کرنے میں خرابی",
+    "marketplace": "بازار",
+    "marketplaceTitle": "نصابِ تدریس کا بازار",
+    "marketplaceDesc": "اساتذہ کی کمیونٹی کے ساتھ نصابِ تدریس دیکھیں اور شیئر کریں",
+    "noPublicPlans": "ابھی تک کوئی عوامی منصوبہ نہیں — اپنے منصوبے شیئر کریں",
+    "clone": "نقل کریں",
+    "cloneSuccess": "منصوبہ کامیابی سے نقل ہوگیا",
+    "likes": "پسند",
+    "clones": "نقل شدہ",
+    "byTeacher": "بذریعہ",
+    "shareYourPlan": "اپنے منصوبے شیئر کریں",
+    "shareHint": "بازار میں ظاہر ہونے کے لیے منصوبوں کو عوامی بنائیں"
   },
   "admin": {
     "title": "عنوان",

@@ -745,3 +745,13 @@ a:hover {
 .rich-text-editor-content [style*="text-align: left"] { text-align: left; }
 .rich-text-editor-content [style*="text-align: center"] { text-align: center; }
 .rich-text-editor-content [style*="text-align: right"] { text-align: right; }
+
+/* ── Print: hide layout chrome ── */
+@media print {
+  nav:not(.print\\:block), header, footer,
+  [class*="navbar"], [class*="Navbar"],
+  [class*="footer"], [class*="Footer"],
+  [class*="chat"], [class*="Chat"] {
+    display: none !important;
+  }
+}

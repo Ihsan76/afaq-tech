@@ -128,7 +128,18 @@
     "lessonDescription": "পাঠের বিবরণ",
     "lessonDescPlaceholder": "প্রয়োজনীয় পাঠের একটি বিস্তারিত বিবরণ লিখুন...",
     "generating": "তৈরি হচ্ছে...",
-    "generationError": "পরিকল্পনা তৈরিতে ত্রুটি"
+    "generationError": "পরিকল্পনা তৈরিতে ত্রুটি",
+    "marketplace": "বাজার",
+    "marketplaceTitle": "পাঠ পরিকল্পনা বাজার",
+    "marketplaceDesc": "শিক্ষক সম্প্রদায়ের সাথে পাঠ পরিকল্পনা ব্রাউজ ও শেয়ার করুন",
+    "noPublicPlans": "কোনো পাবলিক প্ল্যান নেই — আপনার প্ল্যান শেয়ার করুন",
+    "clone": "ক্লোন",
+    "cloneSuccess": "প্ল্যান ক্লোন করা সফল",
+    "likes": "পছন্দ",
+    "clones": "কপি",
+    "byTeacher": "দ্বারা",
+    "shareYourPlan": "আপনার প্ল্যান শেয়ার করুন",
+    "shareHint": "বাজারে প্রদর্শনের জন্য প্ল্যান পাবলিক করুন"
   },
   "admin": {
     "title": "শিরোনাম",

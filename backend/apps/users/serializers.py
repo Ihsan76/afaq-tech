@@ -22,8 +22,8 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ['id', 'email', 'name', 'role', 'subscription_plan', 'ui_language',
                   'is_verified', 'is_staff', 'phone', 'avatar', 'timezone', 'date_joined',
-                  'translations']
-        read_only_fields = ['id', 'date_joined', 'is_verified']
+                  'translations', 'points', 'badges', 'lessons_created_count']
+        read_only_fields = ['id', 'date_joined', 'is_verified', 'points', 'badges', 'lessons_created_count']
 
     def get_name(self, obj):
         loc = _locale(self.context.get('request'))

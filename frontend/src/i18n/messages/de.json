@@ -128,7 +128,18 @@
     "lessonDescription": "Unterrichtsbeschreibung",
     "lessonDescPlaceholder": "Schreiben Sie eine detaillierte Beschreibung des erforderlichen Unterrichts...",
     "generating": "Generierung...",
-    "generationError": "Fehler bei der Planerstellung"
+    "generationError": "Fehler bei der Planerstellung",
+    "marketplace": "Marktplatz",
+    "marketplaceTitle": "Marktplatz für Unterrichtspläne",
+    "marketplaceDesc": "Durchstöbern und teilen Sie Unterrichtspläne mit der Lehrergemeinschaft",
+    "noPublicPlans": "Noch keine öffentlichen Pläne — teilen Sie Ihre Pläne",
+    "clone": "Klonen",
+    "cloneSuccess": "Plan erfolgreich geklont",
+    "likes": "Gefällt mir",
+    "clones": "Kopien",
+    "byTeacher": "von",
+    "shareYourPlan": "Teilen Sie Ihre Pläne",
+    "shareHint": "Machen Sie Pläne öffentlich, um im Marktplatz zu erscheinen"
   },
   "admin": {
     "title": "Titel",

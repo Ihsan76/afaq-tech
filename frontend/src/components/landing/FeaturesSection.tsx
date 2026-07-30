@@ -53,7 +53,10 @@ export default function FeaturesSection({ content }: { content?: Record<string, 
       desc,
       color: defaultFeatures[i]?.color || "var(--color-primary-light)",
       points: item.points
-        ?       item.points.map((p: any) => localizedContent(p, "text", locale))
+        ? item.points.map((p: any) => {
+            if (typeof p === "string") return p;
+            return localizedContent(p, "text", locale) || localizedContent(p, "ar", locale) || p?.ar || p?.en || p?.translations?.ar?.text || "";
+          })
         : [],
       href: item.link ? `/${locale}${item.link}` : (defaultFeatures[i]?.href || "#"),
     };

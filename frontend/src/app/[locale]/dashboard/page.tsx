@@ -6,14 +6,27 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useAuthStore } from "@/store/auth";
 import { api } from "@/lib/api";
+import FadeIn from "@/components/FadeIn";
 
 interface LessonPlan {
   id: number;
   title: string;
   status: string;
+  is_public: boolean;
   created_at: string;
   subject?: number | null;
   grade?: number | null;
+}
+
+interface UserStats {
+  points: number;
+  badges: string[];
+  lessons_created_count: number;
+  total_plans: number;
+  published_plans: number;
+  total_likes: number;
+  total_clones: number;
+  total_downloads: number;
 }
 
 const ROLE_ICONS: Record<string, string> = {
@@ -30,6 +43,20 @@ const PLAN_COLORS: Record<string, { bg: string; color: string }> = {
   enterprise: { bg: "#fef3c7", color: "#d97706" },
 };
 
+const BADGE_LABELS: Record<string, { label: string; icon: string }> = {
+  pro_creator: { label: "منتج محترف", icon: "🏆" },
+  early_adopter: { label: "متبنٍ مبكر", icon: "🌟" },
+  top_contributor: { label: "مساهم مميز", icon: "💎" },
+};
+
+const STAT_CARDS = [
+  { key: "total_plans", icon: "📝", label: "إجمالي الخطط" },
+  { key: "published_plans", icon: "🌍", label: "الخطط المنشورة" },
+  { key: "total_likes", icon: "❤️", label: "الإعجابات" },
+  { key: "total_clones", icon: "📋", label: "الاستنساخ" },
+  { key: "total_downloads", icon: "⬇️", label: "التحميل" },
+] as const;
+
 export default function DashboardPage() {
   const t = useTranslations();
   const router = useRouter();
@@ -41,6 +68,8 @@ export default function DashboardPage() {
   const [plansLoading, setPlansLoading] = useState(false);
   const [enrollments, setEnrollments] = useState<any[]>([]);
   const [enrollLoading, setEnrollLoading] = useState(false);
+  const [stats, setStats] = useState<UserStats | null>(null);
+  const [statsLoading, setStatsLoading] = useState(false);
 
   useEffect(() => { if (!loadedRef.current) { loadedRef.current = true; loadUser(); } }, [loadUser]);
   useEffect(() => { if (loadedRef.current && !isLoading && !user) router.push(`/${locale}/login`); }, [user, isLoading, router, locale]);
@@ -52,7 +81,7 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!user || !canCreatePlans) return;
     setPlansLoading(true);
-    api.get("/lessonplans/")
+    api.get("/lesson-plans/")
       .then((r) => {
         const list = r.data.results || r.data || [];
         setPlans(Array.isArray(list) ? list.slice(0, 5) : []);
@@ -72,6 +101,16 @@ export default function DashboardPage() {
       })
       .catch(() => {})
       .finally(() => setEnrollLoading(false));
+  }, [user]);
+
+  // Load gamification stats
+  useEffect(() => {
+    if (!user) return;
+    setStatsLoading(true);
+    api.get("/users/me/stats/")
+      .then((r) => setStats(r.data))
+      .catch(() => {})
+      .finally(() => setStatsLoading(false));
   }, [user]);
 
   if (isLoading && !user) return (
@@ -108,6 +147,13 @@ export default function DashboardPage() {
       title: t("dashboard.myPlans"),
       desc: t("dashboard.myPlansDesc"),
       color: "var(--color-success-light)",
+    });
+    actions.push({
+      href: `/${locale}/lesson-plans/marketplace`,
+      icon: "🏪",
+      title: t("marketplace"),
+      desc: t("lessonPlan.marketplaceDesc"),
+      color: "var(--color-warning-light)",
     });
   }
 
@@ -192,19 +238,64 @@ export default function DashboardPage() {
           </div>
         </div>
 
+        {/* Gamification Stats */}
+        {canCreatePlans && (
+          <div className="mb-8">
+            {statsLoading ? (
+              <div className="text-center py-6" style={{ color: "var(--color-text-muted)" }}>{t("common.loading")}</div>
+            ) : stats ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                {/* Points & Badge — special card */}
+                <div className="col-span-2 sm:col-span-1 lg:col-span-2 p-4 rounded-3xl flex flex-col justify-center" style={{ background: "linear-gradient(135deg, var(--color-primary), var(--color-secondary))", color: "#fff" }}>
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className="text-3xl">⭐</span>
+                    <div>
+                      <p className="text-2xl font-bold">{stats.points}</p>
+                      <p className="text-xs opacity-80">نقطة</p>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {stats.badges.length === 0 ? (
+                      <span className="text-xs opacity-60">لا توجد شارات بعد</span>
+                    ) : (
+                      stats.badges.map((b) => (
+                        <span key={b} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-white/20">
+                          {BADGE_LABELS[b]?.icon || "🎖️"} {BADGE_LABELS[b]?.label || b}
+                        </span>
+                      ))
+                    )}
+                  </div>
+                </div>
+
+                {STAT_CARDS.map((card) => (
+                  <div key={card.key} className="p-4 rounded-3xl text-center" style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)" }}>
+                    <div className="text-2xl mb-1">{card.icon}</div>
+                    <p className="text-xl font-bold" style={{ color: "var(--color-text)" }}>
+                      {String(stats[card.key as keyof UserStats] ?? 0)}
+                    </p>
+                    <p className="text-xs" style={{ color: "var(--color-text-muted)" }}>{card.label}</p>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+          </div>
+        )}
+
         {/* Quick Actions */}
         <h2 className="text-lg font-bold mb-4" style={{ color: "var(--color-text)", fontFamily: "var(--font-heading)" }}>
           {t("dashboard.quickActions")}
         </h2>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
-          {actions.map((a) => (
-            <Link key={a.href} href={a.href} className="group p-5 rounded-3xl transition-all duration-300 hover:-translate-y-1" style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", boxShadow: "var(--card-shadow)" }}>
-              <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-transform group-hover:scale-110" style={{ background: a.color }}>
-                <span className="text-2xl">{a.icon}</span>
-              </div>
-              <h3 className="font-bold mb-1" style={{ color: "var(--color-text)", fontFamily: "var(--font-heading)" }}>{a.title}</h3>
-              <p className="text-sm" style={{ color: "var(--color-text-muted)" }}>{a.desc}</p>
-            </Link>
+          {actions.map((a, idx) => (
+            <FadeIn key={a.href} delay={idx * 60} direction="up">
+              <Link href={a.href} className="group block p-5 rounded-3xl transition-all duration-300 hover:-translate-y-1" style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", boxShadow: "var(--card-shadow)" }}>
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-transform group-hover:scale-110" style={{ background: a.color }}>
+                  <span className="text-2xl">{a.icon}</span>
+                </div>
+                <h3 className="font-bold mb-1" style={{ color: "var(--color-text)", fontFamily: "var(--font-heading)" }}>{a.title}</h3>
+                <p className="text-sm" style={{ color: "var(--color-text-muted)" }}>{a.desc}</p>
+              </Link>
+            </FadeIn>
           ))}
         </div>
 

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Grade, Subject, Curriculum, Unit
+from .models import Grade, Subject, Curriculum, Unit, CurriculumDocument
 
 
 @admin.register(Grade)
@@ -24,3 +24,11 @@ class UnitAdmin(admin.ModelAdmin):
     list_display = ['curriculum', 'order']
     list_filter = ['curriculum']
     ordering = ['order']
+
+
+@admin.register(CurriculumDocument)
+class CurriculumDocumentAdmin(admin.ModelAdmin):
+    list_display = ['title', 'curriculum', 'subject', 'created_at']
+    list_filter = ['curriculum', 'subject', 'created_at']
+    search_fields = ['title', 'extracted_text']
+

@@ -1,11 +1,13 @@
 from rest_framework import generics, status, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate, get_user_model
 from django.core.mail import send_mail
 from django.conf import settings
 from .serializers import UserSerializer, RegisterSerializer
+from apps.lessonplans.models import LessonPlan
 
 User = get_user_model()
 
@@ -171,3 +173,27 @@ class ResetPasswordView(APIView):
         user.set_password(password)
         user.save()
         return Response({'message': 'تم إعادة تعيين كلمة المرور بنجاح'}, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def user_stats_view(request):
+    user = request.user
+    plans = LessonPlan.objects.filter(user=user)
+
+    total_plans = plans.count()
+    published_plans = plans.filter(is_public=True, status='published').count()
+    total_likes = sum(p.likes_count for p in plans.iterator())
+    total_clones = sum(p.clones_count for p in plans.iterator())
+    total_downloads = sum(p.downloads_count for p in plans.iterator())
+
+    return Response({
+        'points': user.points,
+        'badges': user.badges,
+        'lessons_created_count': user.lessons_created_count or total_plans,
+        'total_plans': total_plans,
+        'published_plans': published_plans,
+        'total_likes': total_likes,
+        'total_clones': total_clones,
+        'total_downloads': total_downloads,
+    })

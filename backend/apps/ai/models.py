@@ -139,3 +139,45 @@ class AIModel(models.Model):
         if self.is_default:
             AIModel.objects.filter(is_default=True).exclude(pk=self.pk).update(is_default=False)
         super().save(*args, **kwargs)
+
+
+class EducationStageChoices(models.TextChoices):
+    EARLY_PRIMARY = "early_primary", "الصف الأول الأساسي المبكر"
+    PRIMARY = "primary", "المرحلة الأساسية"
+    MIDDLE = "middle", "المرحلة المتوسطة"
+    SECONDARY = "secondary", "المرحلة الثانوية"
+    UNIVERSITY = "university", "الجامعية"
+    PROFESSIONAL = "professional", "مهني"
+
+
+class PromptTemplate(models.Model):
+    name = models.CharField('اسم القالب', max_length=255)
+    feature_key = models.CharField('مفتاح الخدمة', max_length=50, default='lesson_plan', db_index=True)
+    language = models.CharField('اللغة', max_length=10, default='ar', db_index=True)
+    learner_stage = models.CharField('المرحلة التعليمية', max_length=32, choices=EducationStageChoices.choices, blank=True, default='')
+    subject = models.ForeignKey('academics.Subject', on_delete=models.SET_NULL, null=True, blank=True, verbose_name='المادة')
+    curriculum = models.ForeignKey('academics.Curriculum', on_delete=models.SET_NULL, null=True, blank=True, verbose_name='المنهاج')
+    template_body = models.TextField('نص البرومبت (Template)')
+    priority = models.IntegerField('الأولوية', default=0, help_text='كلما زاد الرقم كانت الأولوية أعلى عند تساوي التخصص')
+    is_default = models.BooleanField('قالب افتراضي', default=False)
+    is_active = models.BooleanField('مفعل', default=True)
+    version = models.IntegerField('الإصدار', default=1)
+    created_at = models.DateTimeField('تاريخ الإنشاء', auto_now_add=True)
+    updated_at = models.DateTimeField('تاريخ التحديث', auto_now=True)
+
+    class Meta:
+        verbose_name = 'قالب برومبت الذكاء الاصطناعي'
+        verbose_name_plural = 'قوالب برومبت الذكاء الاصطناعي'
+        ordering = ['-priority', '-updated_at']
+
+    def __str__(self):
+        return f"{self.name} ({self.feature_key} - {self.language})"
+
+    def save(self, *args, **kwargs):
+        if self.is_default:
+            PromptTemplate.objects.filter(
+                feature_key=self.feature_key,
+                language=self.language,
+                is_default=True
+            ).exclude(pk=self.pk).update(is_default=False)
+        super().save(*args, **kwargs)

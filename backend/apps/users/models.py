@@ -32,6 +32,12 @@ class User(AbstractUser):
     avatar = models.URLField('الصورة', blank=True)
     timezone = models.CharField('المنطقة الزمنية', max_length=50, default='Asia/Amman')
     
+    # Gamification
+    points = models.IntegerField('النقاط', default=0)
+    badges = models.JSONField('الشارات', default=list, blank=True)
+    lessons_created_count = models.IntegerField('عدد الخطط المنشأة', default=0)
+
+    
     objects = UserManager()
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []

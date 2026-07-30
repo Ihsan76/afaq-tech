@@ -128,7 +128,18 @@
     "lessonDescription": "Ders Açıklaması",
     "lessonDescPlaceholder": "Gerekli dersin ayrıntılı bir açıklamasını yazın...",
     "generating": "Oluşturuluyor...",
-    "generationError": "Plan oluşturulurken hata"
+    "generationError": "Plan oluşturulurken hata",
+    "marketplace": "Pazar Yeri",
+    "marketplaceTitle": "Ders Planı Pazar Yeri",
+    "marketplaceDesc": "Öğretmen topluluğuyla ders planlarını keşfedin ve paylaşın",
+    "noPublicPlans": "Henüz herkese açık plan yok — planlarınızı paylaşın",
+    "clone": "Klonla",
+    "cloneSuccess": "Plan başarıyla klonlandı",
+    "likes": "Beğeni",
+    "clones": "Kopyalar",
+    "byTeacher": "tarafından",
+    "shareYourPlan": "Planlarınızı paylaşın",
+    "shareHint": "Pazar yerinde görünmek için planlarınızı herkese açın"
   },
   "admin": {
     "title": "Başlık",

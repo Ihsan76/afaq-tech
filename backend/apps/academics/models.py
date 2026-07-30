@@ -48,3 +48,19 @@ class Unit(models.Model):
     
     def __str__(self):
         return self.translations.get('ar', {}).get('name', str(self.order))
+
+class CurriculumDocument(models.Model):
+    curriculum = models.ForeignKey(Curriculum, on_delete=models.CASCADE, related_name='documents', null=True, blank=True, verbose_name='المنهج الدراسي')
+    subject = models.ForeignKey(Subject, on_delete=models.CASCADE, related_name='documents', null=True, blank=True, verbose_name='المادة الدراسية')
+    title = models.CharField('عنوان المستند/الملف', max_length=255)
+    file = models.FileField('ملف المنهج (PDF/TXT)', upload_to='curricula/documents/')
+    extracted_text = models.TextField('النص المستخرج / محتوى المنهج', blank=True)
+    created_at = models.DateTimeField('تاريخ الرفع', auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'مستند منهج ومادة'
+        verbose_name_plural = 'مستندات المناهج والمواد (Curriculum Documents)'
+
+    def __str__(self):
+        return self.title
+

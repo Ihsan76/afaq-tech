@@ -15,6 +15,14 @@ class LessonPlan(models.Model):
     generated_by = models.CharField('مولّد بواسطة', max_length=10, default='ai')
     ai_model_used = models.CharField('نموذج AI المستخدم', max_length=100, blank=True)
     status = models.CharField('الحالة', max_length=15, choices=Status.choices, default=Status.DRAFT)
+    
+    # Marketplace & Community
+    is_public = models.BooleanField('مشاركة عامة (Marketplace)', default=False)
+    likes_count = models.IntegerField('عدد الإعجابات', default=0)
+    clones_count = models.IntegerField('عدد الاستنساخات', default=0)
+    downloads_count = models.IntegerField('عدد التحميلات', default=0)
+    original_plan = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='clones', verbose_name='الخطة الأصلية')
+
     created_at = models.DateTimeField('تاريخ الإنشاء', auto_now_add=True)
     updated_at = models.DateTimeField('تاريخ التحديث', auto_now=True)
 
@@ -25,3 +33,20 @@ class LessonPlan(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class LessonPlanRefinement(models.Model):
+    lesson_plan = models.ForeignKey(LessonPlan, on_delete=models.CASCADE, related_name='refinements', verbose_name='خطة الدرس')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name='المستخدم')
+    user_prompt = models.TextField('طلب التعديل')
+    ai_response = models.TextField('رد الذكاء الاصطناعي')
+    created_at = models.DateTimeField('تاريخ التعديل', auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'تعديل تفاعلي للخطة'
+        verbose_name_plural = 'تعديلات خطط الدروس التفاعلية'
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f"تعديل على {self.lesson_plan.title}"
+

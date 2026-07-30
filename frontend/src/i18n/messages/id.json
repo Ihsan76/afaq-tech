@@ -128,7 +128,18 @@
     "lessonDescription": "Deskripsi Pelajaran",
     "lessonDescPlaceholder": "Tulis deskripsi rinci tentang pelajaran yang diperlukan...",
     "generating": "Membuat...",
-    "generationError": "Kesalahan saat membuat rencana"
+    "generationError": "Kesalahan saat membuat rencana",
+    "marketplace": "Pasar",
+    "marketplaceTitle": "Pasar Rencana Pelajaran",
+    "marketplaceDesc": "Jelajahi dan bagikan rencana pelajaran dengan komunitas guru",
+    "noPublicPlans": "Belum ada rencana publik — bagikan rencana Anda",
+    "clone": "Duplikat",
+    "cloneSuccess": "Rencana berhasil digandakan",
+    "likes": "Suka",
+    "clones": "Salinan",
+    "byTeacher": "oleh",
+    "shareYourPlan": "Bagikan rencana Anda",
+    "shareHint": "Buat rencana Anda publik untuk muncul di pasar"
   },
   "admin": {
     "title": "Judul",

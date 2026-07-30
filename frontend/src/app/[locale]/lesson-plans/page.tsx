@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { api } from "@/lib/api";
+import FadeIn from "@/components/FadeIn";
 
 interface LessonPlan { id: number; title: string; status: string; created_at: string; }
 
@@ -39,11 +40,18 @@ export default function LessonPlansPage() {
             <h1 className="text-3xl font-bold mb-1" style={{ color: "var(--color-text)", fontFamily: "var(--font-heading)" }}>{t("myPlans")}</h1>
             <p style={{ color: "var(--color-text-muted)" }}>{t("title")}</p>
           </div>
-          <Link href={`/${locale}/lesson-plans/new`}
-            className="text-white px-5 py-2.5 rounded-xl font-semibold transition-all shadow-md flex items-center gap-2"
-            style={{ background: "var(--btn-primary-bg)", color: "var(--btn-primary-color)", boxShadow: "var(--btn-shadow)" }}>
-            <span>+</span> {t("create")}
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link href={`/${locale}/lesson-plans/marketplace`}
+              className="px-5 py-2.5 rounded-xl font-semibold transition-all border flex items-center gap-2"
+              style={{ borderColor: "var(--color-border)", color: "var(--color-text)" }}>
+              🏪 {t("marketplace")}
+            </Link>
+            <Link href={`/${locale}/lesson-plans/new`}
+              className="text-white px-5 py-2.5 rounded-xl font-semibold transition-all shadow-md flex items-center gap-2"
+              style={{ background: "var(--btn-primary-bg)", color: "var(--btn-primary-color)", boxShadow: "var(--btn-shadow)" }}>
+              <span>+</span> {t("create")}
+            </Link>
+          </div>
         </div>
 
         {loading ? (
@@ -64,20 +72,22 @@ export default function LessonPlansPage() {
           </div>
         ) : (
           <div className="space-y-4">
-            {plans.map((plan) => (
-              <Link key={plan.id} href={`/${locale}/lesson-plans/${plan.id}`}
-                className="group block p-5 rounded-3xl shadow-xl hover:-translate-y-0.5 hover:shadow-2xl transition-all duration-300"
-                style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", boxShadow: "var(--card-shadow)" }}>
-                <div className="flex justify-between items-center">
-                  <div>
-                    <h3 className="text-lg font-bold" style={{ color: "var(--color-text)", fontFamily: "var(--font-heading)" }}>{plan.title}</h3>
-                    <p className="text-sm mt-1" style={{ color: "var(--color-text-muted)" }}>{new Date(plan.created_at).toLocaleDateString()}</p>
+            {plans.map((plan, idx) => (
+              <FadeIn key={plan.id} delay={idx * 60} direction="up">
+                <Link href={`/${locale}/lesson-plans/${plan.id}`}
+                  className="group block p-5 rounded-3xl shadow-xl hover:-translate-y-0.5 hover:shadow-2xl transition-all duration-300"
+                  style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", boxShadow: "var(--card-shadow)" }}>
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <h3 className="text-lg font-bold" style={{ color: "var(--color-text)", fontFamily: "var(--font-heading)" }}>{plan.title}</h3>
+                      <p className="text-sm mt-1" style={{ color: "var(--color-text-muted)" }}>{new Date(plan.created_at).toLocaleDateString()}</p>
+                    </div>
+                    <span className="text-xs font-semibold px-3 py-1.5 rounded-full" style={statusStyle(plan.status)}>
+                      {statusLabel(plan.status)}
+                    </span>
                   </div>
-                  <span className="text-xs font-semibold px-3 py-1.5 rounded-full" style={statusStyle(plan.status)}>
-                    {statusLabel(plan.status)}
-                  </span>
-                </div>
-              </Link>
+                </Link>
+              </FadeIn>
             ))}
           </div>
         )}

@@ -8,7 +8,7 @@ import { useApiList, usePrefetch } from "@/lib/useApi";
 
 interface Subject { id: number; name: Record<string, string>; icon: string; }
 
-export default function GradeDetailPage() {
+export default function CurriculumGradeDetailPage() {
   const t = useTranslations("academy");
   const tc = useTranslations("common");
   const params = useParams();
@@ -27,12 +27,14 @@ export default function GradeDetailPage() {
     <div className="min-h-screen" style={{ background: "var(--color-background)" }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         <nav className="flex items-center gap-2 text-sm mb-6" style={{ color: "var(--color-text-muted)" }}>
-          <Link href={`/${locale}/academy`} className="transition-colors" style={{ color: "var(--color-primary)" }}>{t("title")}</Link>
+          <Link href={`/${locale}/curriculum`} className="transition-colors" style={{ color: "var(--color-primary)" }}>{locale === "ar" ? "المناهج الدراسية" : "Curriculum"}</Link>
           <span>/</span>
           <span className="font-medium" style={{ color: "var(--color-text)" }}>{t("subjects")}</span>
         </nav>
 
-        <h2 className="text-3xl font-bold mb-8" style={{ color: "var(--color-text)", fontFamily: "var(--font-heading)" }}>{t("selectSubject")}</h2>
+        <h2 className="text-3xl font-bold mb-8" style={{ color: "var(--color-text)", fontFamily: "var(--font-heading)" }}>
+          {locale === "ar" ? "اختر المادة الدراسية للمنهاج" : "Select Curriculum Subject"}
+        </h2>
 
         {loading ? (
           <div className="flex items-center gap-3" style={{ color: "var(--color-text-muted)" }}>
@@ -47,7 +49,7 @@ export default function GradeDetailPage() {
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {subjects.map((subject) => (
-              <Link key={subject.id} href={`/${locale}/academy/${gradeId}/${subject.id}`}
+              <Link key={subject.id} href={`/${locale}/curriculum/${gradeId}/${subject.id}`}
                 className="group p-6 rounded-3xl shadow-xl hover:-translate-y-1 hover:shadow-2xl transition-all duration-300 text-center"
                 style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", boxShadow: "var(--card-shadow)" }}>
                 <div className="text-4xl mb-3">{subject.icon || "📚"}</div>

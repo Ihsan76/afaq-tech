@@ -128,7 +128,18 @@
     "lessonDescription": "Descripción de la lección",
     "lessonDescPlaceholder": "Escribe una descripción detallada de la lección requerida...",
     "generating": "Generando...",
-    "generationError": "Error al generar el plan"
+    "generationError": "Error al generar el plan",
+    "marketplace": "Mercado",
+    "marketplaceTitle": "Mercado de Planes de Clase",
+    "marketplaceDesc": "Explore y comparta planes de clase con la comunidad docente",
+    "noPublicPlans": "No hay planes públicos aún — comparta sus planes",
+    "clone": "Clonar",
+    "cloneSuccess": "Plan clonado exitosamente",
+    "likes": "Me gusta",
+    "clones": "Copias",
+    "byTeacher": "por",
+    "shareYourPlan": "Comparte tus planes",
+    "shareHint": "Haga públicos sus planes para que aparezcan en el mercado"
   },
   "admin": {
     "title": "Título",
