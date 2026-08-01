@@ -925,7 +925,28 @@
       "points": "পয়েন্ট",
       "streak": "ধারাবাহিকতা"
     },
-    "title": "গেমিফিকেশন"
+    "title": "গেমিফিকেশন",
+    "activities": {
+      "lesson_complete": "পাঠ সম্পন্ন হয়েছে",
+      "lesson_created": "পাঠ পরিকল্পনা তৈরি হয়েছে",
+      "quiz_perfect": "কুইজে নিখুঁত স্কোর",
+      "quiz_pass": "কুইজ পাস হয়েছে",
+      "course_complete": "কোর্স সম্পন্ন হয়েছে",
+      "course_review": "কোর্স পর্যালোচনা করা হয়েছে",
+      "daily_login": "দৈনিক লগইন",
+      "consecutive_days_3": "৩ দিনের ধারা",
+      "consecutive_days_7": "৭ দিনের ধারা",
+      "consecutive_days_30": "৩০ দিনের ধারা",
+      "blog_post": "ব্লগ পোস্ট",
+      "blog_comment": "ব্লগ মন্তব্য",
+      "helpful_answer": "সহায়ক উত্তর",
+      "product_upload": "পণ্য আপলোড হয়েছে",
+      "first_sale": "প্রথম বিক্রয়",
+      "sale": "বিক্রয় সম্পন্ন",
+      "badge_earned": "ব্যাজ অর্জিত হয়েছে",
+      "level_up": "লেভেল উন্নীত",
+      "challenge_complete": "চ্যালেঞ্জ সম্পন্ন হয়েছে"
+    }
   },
   "search": {
     "button": "অনুসন্ধান",

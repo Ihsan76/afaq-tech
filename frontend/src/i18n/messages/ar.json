@@ -976,6 +976,27 @@
       "points": "النقاط",
       "empty": "لا توجد معاملات بعد",
       "level": "المستوى"
+    },
+    "activities": {
+      "lesson_complete": "إكمال درس",
+      "lesson_created": "إنشاء خطة درس",
+      "quiz_perfect": "اختبار مثالي",
+      "quiz_pass": "اجتياز اختبار",
+      "course_complete": "إكمال دورة",
+      "course_review": "مراجعة دورة",
+      "daily_login": "تسجيل دخول يومي",
+      "consecutive_days_3": "3 أيام متتالية",
+      "consecutive_days_7": "7 أيام متتالية",
+      "consecutive_days_30": "30 يوماً متتالية",
+      "blog_post": "كتابة مقال",
+      "blog_comment": "تعليق على مقال",
+      "helpful_answer": "إجابة مفيدة",
+      "product_upload": "رفع منتج",
+      "first_sale": "أول عملية بيع",
+      "sale": "عملية بيع",
+      "badge_earned": "الحصول على شارة",
+      "level_up": "رفع المستوى",
+      "challenge_complete": "إكمال تحدٍ"
     }
   }
 }

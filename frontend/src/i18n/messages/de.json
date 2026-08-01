@@ -925,7 +925,28 @@
       "points": "Punkte",
       "streak": "Serien"
     },
-    "title": "Gamification"
+    "title": "Gamification",
+    "activities": {
+      "lesson_complete": "Lektion abgeschlossen",
+      "lesson_created": "Unterrichtsplan erstellt",
+      "quiz_perfect": "Perfektes Quiz-Ergebnis",
+      "quiz_pass": "Quiz bestanden",
+      "course_complete": "Kurs abgeschlossen",
+      "course_review": "Kurs bewertet",
+      "daily_login": "Täglicher Login",
+      "consecutive_days_3": "3-Tage-Serie",
+      "consecutive_days_7": "7-Tage-Serie",
+      "consecutive_days_30": "30-Tage-Serie",
+      "blog_post": "Blogbeitrag",
+      "blog_comment": "Blog-Kommentar",
+      "helpful_answer": "Hilfreiche Antwort",
+      "product_upload": "Produkt hochgeladen",
+      "first_sale": "Erster Verkauf",
+      "sale": "Verkauf getätigt",
+      "badge_earned": "Abzeichen verdient",
+      "level_up": "Level aufgestiegen",
+      "challenge_complete": "Herausforderung abgeschlossen"
+    }
   },
   "search": {
     "button": "Suchen",

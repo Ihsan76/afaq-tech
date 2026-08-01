@@ -976,6 +976,27 @@
       "points": "Points",
       "empty": "No transactions yet",
       "level": "Level"
+    },
+    "activities": {
+      "lesson_complete": "Lesson Completed",
+      "lesson_created": "Lesson Plan Created",
+      "quiz_perfect": "Perfect Quiz Score",
+      "quiz_pass": "Quiz Passed",
+      "course_complete": "Course Completed",
+      "course_review": "Course Reviewed",
+      "daily_login": "Daily Login",
+      "consecutive_days_3": "3-Day Streak",
+      "consecutive_days_7": "7-Day Streak",
+      "consecutive_days_30": "30-Day Streak",
+      "blog_post": "Blog Post",
+      "blog_comment": "Blog Comment",
+      "helpful_answer": "Helpful Answer",
+      "product_upload": "Product Uploaded",
+      "first_sale": "First Sale",
+      "sale": "Sale Made",
+      "badge_earned": "Badge Earned",
+      "level_up": "Level Up",
+      "challenge_complete": "Challenge Completed"
     }
   }
 }

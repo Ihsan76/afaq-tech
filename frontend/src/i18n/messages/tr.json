@@ -925,7 +925,28 @@
       "points": "Puan",
       "streak": "Seriler"
     },
-    "title": "Oyunlaştırma"
+    "title": "Oyunlaştırma",
+    "activities": {
+      "lesson_complete": "Ders Tamamlandı",
+      "lesson_created": "Ders Planı Oluşturuldu",
+      "quiz_perfect": "Mükemmel Sınav Puanı",
+      "quiz_pass": "Sınav Geçildi",
+      "course_complete": "Kurs Tamamlandı",
+      "course_review": "Kurs Değerlendirildi",
+      "daily_login": "Günlük Giriş",
+      "consecutive_days_3": "3 Gün Seri",
+      "consecutive_days_7": "7 Gün Seri",
+      "consecutive_days_30": "30 Gün Seri",
+      "blog_post": "Blog Yazısı",
+      "blog_comment": "Blog Yorumu",
+      "helpful_answer": "Yardımcı Cevap",
+      "product_upload": "Ürün Yüklendi",
+      "first_sale": "İlk Satış",
+      "sale": "Satış Yapıldı",
+      "badge_earned": "Rozet Kazanıldı",
+      "level_up": "Seviye Atlama",
+      "challenge_complete": "Meydan Okuma Tamamlandı"
+    }
   },
   "search": {
     "button": "Ara",

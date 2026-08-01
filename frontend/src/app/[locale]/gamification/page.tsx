@@ -156,6 +156,23 @@ const RARITY_COLORS: Record<string, string> = {
   legendary: "#F59E0B",
 };
 
+const fetchAll = async (url: string): Promise<any[]> => {
+  const first = await api.get(url);
+  const data = first.data;
+  if (Array.isArray(data)) return data;
+  if (data && Array.isArray(data.results)) {
+    let results = [...data.results];
+    let next: string | null = data.next;
+    while (next) {
+      const page = await api.get(next);
+      results = results.concat(page.data.results || []);
+      next = page.data.next || null;
+    }
+    return results;
+  }
+  return data || [];
+};
+
 const ACTIVITY_LABELS: Record<string, { ar: string; en: string }> = {
   lesson_complete: { ar: "إكمال درس", en: "Lesson Completed" },
   lesson_created: { ar: "إنشاء خطة درس", en: "Lesson Plan Created" },
@@ -228,19 +245,19 @@ export default function GamificationPage() {
         }
         case "badges": {
           const [allBadges, userBadges] = await Promise.all([
-            api.get("/gamification/badges/"),
+            fetchAll("/gamification/badges/"),
             api.get("/gamification/badges/my/"),
           ]);
-          setBadges(allBadges.data);
+          setBadges(allBadges);
           setMyBadges(userBadges.data);
           break;
         }
         case "achievements": {
           const [allAch, userAch] = await Promise.all([
-            api.get("/gamification/achievements/"),
+            fetchAll("/gamification/achievements/"),
             api.get("/gamification/achievements/my/"),
           ]);
-          setAchievements(allAch.data);
+          setAchievements(allAch);
           setMyAchievements(userAch.data);
           break;
         }
@@ -307,17 +324,15 @@ export default function GamificationPage() {
   };
 
   const getActivityLabel = (activity: string): string => {
-    const label = ACTIVITY_LABELS[activity];
-    if (!label) return activity;
-    return locale === "ar" ? label.ar : label.en;
+    const key = `gamification.activities.${activity}`;
+    const localized = t(key);
+    if (localized && localized !== key) return localized;
+    return ACTIVITY_LABELS[activity]?.en || activity;
   };
 
   const earnedBadgeIds = new Set(myBadges.map((b) => b.badge.id));
-  const completedAchIds = new Set(myAchievements.filter((a) => a.completed).map((a) => a.achievement.id));
   const completedChallengeIds = new Set(myChallenges.filter((c) => c.completed).map((c) => c.challenge.id));
   const joinedChallengeIds = new Set(myChallenges.map((c) => c.challenge.id));
-
-  const displayName = user?.name_ar || user?.name_en || user?.email || "";
 
   if (authLoading || !user) {
     return (

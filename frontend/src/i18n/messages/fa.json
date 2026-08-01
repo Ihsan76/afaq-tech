@@ -976,6 +976,27 @@
       "points": "امتیاز",
       "empty": "هنوز تراکنشی وجود ندارد",
       "level": "سطح"
+    },
+    "activities": {
+      "lesson_complete": "درس تکمیل شد",
+      "lesson_created": "طرح درس ایجاد شد",
+      "quiz_perfect": "نمره عالی در آزمون",
+      "quiz_pass": "آزمون قبول شد",
+      "course_complete": "دوره تکمیل شد",
+      "course_review": "دوره نقد شد",
+      "daily_login": "ورود روزانه",
+      "consecutive_days_3": "سری ۳ روزه",
+      "consecutive_days_7": "سری ۷ روزه",
+      "consecutive_days_30": "سری ۳۰ روزه",
+      "blog_post": "پست وبلاگ",
+      "blog_comment": "نظر وبلاگ",
+      "helpful_answer": "پاسخ مفید",
+      "product_upload": "محصول بارگذاری شد",
+      "first_sale": "اولین فروش",
+      "sale": "فروش انجام شد",
+      "badge_earned": "نشان دریافت شد",
+      "level_up": "ارتقای سطح",
+      "challenge_complete": "چالش تکمیل شد"
     }
   }
 }

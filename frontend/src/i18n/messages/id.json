@@ -925,7 +925,28 @@
       "points": "Poin",
       "streak": "Rangkaian"
     },
-    "title": "Gamifikasi"
+    "title": "Gamifikasi",
+    "activities": {
+      "lesson_complete": "Pelajaran Selesai",
+      "lesson_created": "Rencana Pelajaran Dibuat",
+      "quiz_perfect": "Skor Kuis Sempurna",
+      "quiz_pass": "Kuis Lulus",
+      "course_complete": "Kursus Selesai",
+      "course_review": "Kursus Diulas",
+      "daily_login": "Login Harian",
+      "consecutive_days_3": "3 Hari Beruntun",
+      "consecutive_days_7": "7 Hari Beruntun",
+      "consecutive_days_30": "30 Hari Beruntun",
+      "blog_post": "Postingan Blog",
+      "blog_comment": "Komentar Blog",
+      "helpful_answer": "Jawaban Bermanfaat",
+      "product_upload": "Produk Diunggah",
+      "first_sale": "Penjualan Pertama",
+      "sale": "Penjualan Dilakukan",
+      "badge_earned": "Lencana Diraih",
+      "level_up": "Naik Level",
+      "challenge_complete": "Tantangan Selesai"
+    }
   },
   "search": {
     "button": "Cari",

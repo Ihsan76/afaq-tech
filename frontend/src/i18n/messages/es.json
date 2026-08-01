@@ -925,7 +925,28 @@
       "points": "Puntos",
       "streak": "Rachas"
     },
-    "title": "Gamificación"
+    "title": "Gamificación",
+    "activities": {
+      "lesson_complete": "Lección completada",
+      "lesson_created": "Plan de lección creado",
+      "quiz_perfect": "Puntuación perfecta en el cuestionario",
+      "quiz_pass": "Cuestionario aprobado",
+      "course_complete": "Curso completado",
+      "course_review": "Curso reseñado",
+      "daily_login": "Inicio de sesión diario",
+      "consecutive_days_3": "Racha de 3 días",
+      "consecutive_days_7": "Racha de 7 días",
+      "consecutive_days_30": "Racha de 30 días",
+      "blog_post": "Publicación de blog",
+      "blog_comment": "Comentario de blog",
+      "helpful_answer": "Respuesta útil",
+      "product_upload": "Producto subido",
+      "first_sale": "Primera venta",
+      "sale": "Venta realizada",
+      "badge_earned": "Insignia ganada",
+      "level_up": "Subida de nivel",
+      "challenge_complete": "Desafío completado"
+    }
   },
   "search": {
     "button": "Buscar",

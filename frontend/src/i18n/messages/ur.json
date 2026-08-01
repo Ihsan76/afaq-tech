@@ -925,7 +925,28 @@
       "points": "پوائنٹس",
       "streak": "سلاسل"
     },
-    "title": "گیمیفیکیشن"
+    "title": "گیمیفیکیشن",
+    "activities": {
+      "lesson_complete": "سبق مکمل ہوا",
+      "lesson_created": "سبق کا منصوبہ بنایا گیا",
+      "quiz_perfect": "کوئز میں کامل سکور",
+      "quiz_pass": "کوئز پاس ہوا",
+      "course_complete": "کورس مکمل ہوا",
+      "course_review": "کورس کا جائزہ لیا گیا",
+      "daily_login": "روزانہ لاگ ان",
+      "consecutive_days_3": "3 دن کا سلسلہ",
+      "consecutive_days_7": "7 دن کا سلسلہ",
+      "consecutive_days_30": "30 دن کا سلسلہ",
+      "blog_post": "بلاگ پوسٹ",
+      "blog_comment": "بلاگ تبصرہ",
+      "helpful_answer": "مفید جواب",
+      "product_upload": "پروڈکٹ اپ لوڈ ہوئی",
+      "first_sale": "پہلی فروخت",
+      "sale": "فروخت ہوئی",
+      "badge_earned": "بیج حاصل ہوا",
+      "level_up": "سطح میں اضافہ",
+      "challenge_complete": "چیلنج مکمل ہوا"
+    }
   },
   "search": {
     "button": "تلاش",
