@@ -3,18 +3,11 @@
 import { useState, useEffect, Fragment } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { api } from "@/lib/api";
+import { useLanguages } from "@/lib/useLanguages";
 
 interface Grade { id: number; level: number; translations: Record<string, { name: string }>; }
 interface Curriculum { id: number; translations: Record<string, { name: string }>; name?: string; country: string; year: number; grade: number; }
 interface CurriculumDocument { id: number; curriculum: number; subject: number | null; title: string; file: string; extracted_text: string; created_at: string; }
-
-const LANGUAGES = [
-  { code: "ar", label: "العربية" }, { code: "en", label: "English" },
-  { code: "fr", label: "Français" }, { code: "tr", label: "Türkçe" },
-  { code: "ur", label: "اردو" }, { code: "es", label: "Español" },
-  { code: "de", label: "Deutsch" }, { code: "id", label: "Bahasa Indonesia" },
-  { code: "bn", label: "বাংলা" },
-];
 
 const LABELS: Record<string, Record<string, string>> = {
   curriculaTab: { ar: "📋 المناهج", en: "📋 Curricula", fr: "📋 Programmes", tr: "📋 Müfredat", ur: "📋 نصاب", es: "📋 Planes de Estudio", de: "📋 Lehrpläne", id: "📋 Kurikulum", bn: "📋 পাঠ্যক্রম" },
@@ -89,6 +82,8 @@ type Tab = "curricula" | "grades" | "documents";
 export default function AdminCurriculaPage() {
   const t = useTranslations();
   const locale = useLocale();
+  const { languages } = useLanguages();
+  const LANGUAGES = languages.map((l) => ({ code: l.code, label: l.native_name || l.name }));
   const [tab, setTab] = useState<Tab>("curricula");
 
   // ---- Curricula ----

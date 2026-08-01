@@ -3,21 +3,17 @@
 import { useState, useEffect } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { api } from "@/lib/api";
+import { useLanguages } from "@/lib/useLanguages";
 
 interface Subject { id: number; translations: Record<string, { name: string }>; name?: string; icon: string; }
 
-const LANGUAGES = [
-  { code: "ar", label: "العربية" }, { code: "en", label: "English" },
-  { code: "fr", label: "Français" }, { code: "tr", label: "Türkçe" },
-  { code: "ur", label: "اردو" }, { code: "es", label: "Español" },
-  { code: "de", label: "Deutsch" }, { code: "id", label: "Bahasa Indonesia" },
-  { code: "bn", label: "বাংলা" },
-];
 const inputCls = "w-full px-4 py-3 border rounded-2xl focus:ring-2 transition-all";
 
 export default function AdminSubjectsPage() {
   const t = useTranslations();
   const locale = useLocale();
+  const { languages } = useLanguages();
+  const LANGUAGES = languages.map((l) => ({ code: l.code, label: l.native_name || l.name, rtl: l.is_rtl }));
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -111,7 +107,7 @@ export default function AdminSubjectsPage() {
                   <label className="block text-sm font-semibold mb-2" style={{ color: "var(--color-text-secondary)" }}>الاسم ({LANGUAGES.find(l => l.code === selectedLang)?.label})</label>
                   <input type="text" value={nameInput} onChange={(e) => updateName(e.target.value)}
                     className={inputCls} style={{ borderColor: "var(--color-border)", color: "var(--color-text)", backgroundColor: "var(--color-background)" }}
-                    dir={selectedLang === "ar" || selectedLang === "ur" ? "rtl" : "ltr"} />
+                    dir={LANGUAGES.find(l => l.code === selectedLang)?.rtl ? "rtl" : "ltr"} />
                 </div>
               </div>
 

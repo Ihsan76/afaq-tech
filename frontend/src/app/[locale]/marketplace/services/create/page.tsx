@@ -5,6 +5,7 @@ import { useRouter, usePathname, useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { api } from "@/lib/api";
 import FadeIn from "@/components/FadeIn";
+import { useLanguages } from "@/lib/useLanguages";
 
 interface Category { id: number; name: Record<string, string>; icon: string; }
 interface ServiceData {
@@ -14,14 +15,6 @@ interface ServiceData {
   max_students: number; category: number | null;
 }
 
-const LANGUAGES = [
-  { code: "ar", label: "العربية" }, { code: "en", label: "English" },
-  { code: "fr", label: "Français" }, { code: "tr", label: "Türkçe" },
-  { code: "ur", label: "اردو" }, { code: "es", label: "Español" },
-  { code: "de", label: "Deutsch" }, { code: "id", label: "Bahasa Indonesia" },
-  { code: "bn", label: "বাংলা" },
-];
-
 const SERVICE_TYPES = ["tutoring", "course", "consultation", "other"];
 
 export default function CreateServicePage() {
@@ -29,6 +22,8 @@ export default function CreateServicePage() {
   const pathname = usePathname();
   const router = useRouter();
   const locale = pathname.split("/")[1] || "en";
+  const { languages } = useLanguages();
+  const LANGUAGES = languages.map((l) => ({ code: l.code, label: l.native_name || l.name }));
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [titleTr, setTitleTr] = useState<Record<string, string>>({});

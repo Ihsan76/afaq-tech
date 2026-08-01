@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { api } from "@/lib/api";
+import { useLanguages } from "@/lib/useLanguages";
 
 interface AIModel {
   id: number;
@@ -19,18 +20,6 @@ interface AIModel {
   max_tokens: number;
   sort_order: number;
 }
-
-const LANGUAGES: { code: string; label: string }[] = [
-  { code: "ar", label: "العربية" },
-  { code: "en", label: "English" },
-  { code: "fr", label: "Français" },
-  { code: "tr", label: "Türkçe" },
-  { code: "ur", label: "اردو" },
-  { code: "es", label: "Español" },
-  { code: "de", label: "Deutsch" },
-  { code: "id", label: "Bahasa Indonesia" },
-  { code: "bn", label: "বাংলা" },
-];
 
 interface AIProvider {
   id: number;
@@ -80,6 +69,8 @@ type FetchMode = "stored" | "fresh";
 
 export default function AdminAIModelsPage() {
   const t = useTranslations();
+  const { languages } = useLanguages();
+  const LANGUAGES: { code: string; label: string }[] = languages.map((l) => ({ code: l.code, label: l.native_name || l.name }));
   const [models, setModels] = useState<AIModel[]>([]);
   const [providers, setProviders] = useState<AIProvider[]>([]);
   const [providerTypes, setProviderTypes] = useState<ProviderTypeOption[]>([]);

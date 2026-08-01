@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { api } from "@/lib/api";
+import { useLanguages } from "@/lib/useLanguages";
 
 interface Template {
   id: number; translations: Record<string, { name: string; description?: string }>;
@@ -10,18 +11,13 @@ interface Template {
   category: string; thumbnail: string; is_active: boolean;
 }
 
-const LANGUAGES = [
-  { code: "ar", label: "العربية" }, { code: "en", label: "English" },
-  { code: "fr", label: "Français" }, { code: "tr", label: "Türkçe" },
-  { code: "ur", label: "اردو" }, { code: "es", label: "Español" },
-  { code: "de", label: "Deutsch" }, { code: "id", label: "Bahasa Indonesia" },
-  { code: "bn", label: "বাংলা" },
-];
 const inputCls = "w-full px-4 py-3 border rounded-2xl focus:ring-2 transition-all";
 
 export default function AdminTemplatesPage() {
   const t = useTranslations();
   const locale = useLocale();
+  const { languages } = useLanguages();
+  const LANGUAGES = languages.map((l) => ({ code: l.code, label: l.native_name || l.name }));
   const [templates, setTemplates] = useState<Template[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);

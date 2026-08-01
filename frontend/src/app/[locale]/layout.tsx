@@ -6,6 +6,7 @@ import NavbarWrapper from "@/components/NavbarWrapper";
 import Footer from "@/components/Footer";
 import HtmlAttrs from "@/components/HtmlAttrs";
 import ChatWidget from "@/components/ChatWidget";
+import TranslationProvider from "@/components/TranslationProvider";
 import "../globals.css";
 
 export default async function LocaleLayout({
@@ -27,11 +28,13 @@ export default async function LocaleLayout({
     <>
       <HtmlAttrs locale={locale} />
       <NextIntlClientProvider messages={messages}>
-        <NavbarWrapper />
-        {children}
-        {/* Footer */}
-        <Footer />
-        <ChatWidget />
+        <TranslationProvider locale={locale} messages={messages}>
+          <NavbarWrapper />
+          {children}
+          {/* Footer */}
+          <Footer />
+          <ChatWidget />
+        </TranslationProvider>
       </NextIntlClientProvider>
     </>
   );

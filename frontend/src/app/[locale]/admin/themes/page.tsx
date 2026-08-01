@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { api } from "@/lib/api";
+import { useLanguages } from "@/lib/useLanguages";
 
 interface ThemeData {
   id: number;
@@ -42,13 +43,6 @@ interface ThemeData {
   line_height: string;
 }
 
-const LANGUAGES = [
-  { code: "ar", label: "العربية" }, { code: "en", label: "English" },
-  { code: "fr", label: "Français" }, { code: "tr", label: "Türkçe" },
-  { code: "ur", label: "اردو" }, { code: "es", label: "Español" },
-  { code: "de", label: "Deutsch" }, { code: "id", label: "Bahasa Indonesia" },
-  { code: "bn", label: "বাংলা" },
-];
 const EMPTY_THEME: Partial<ThemeData> = {
   display_name: "", display_description: "", icon: "🎨", translations: {},
   is_active: true, is_default: false, order: 0,
@@ -123,6 +117,8 @@ function ThemeMiniPreview({ theme }: { theme: ThemeData }) {
 
 export default function AdminThemesPage() {
   const t = useTranslations();
+  const { languages } = useLanguages();
+  const LANGUAGES = languages.map((l) => ({ code: l.code, label: l.native_name || l.name }));
   const [themes, setThemes] = useState<ThemeData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);

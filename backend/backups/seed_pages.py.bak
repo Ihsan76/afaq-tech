@@ -434,8 +434,8 @@ PAGES = [
                 "subtitle_ar": "نحن هنا لمساعدتك في فتح آفاق جديدة لأعمالك — تواصل معنا اليوم",
                 "cta_text_en": "Send Email",
                 "cta_text_ar": "أرسل إيميل",
-                "cta_link_en": "mailto:info@afaq-tech.com",
-                "cta_link_ar": "mailto:info@afaq-tech.com",
+                "cta_link_en": "mailto:info@afaq.app",
+                "cta_link_ar": "mailto:info@afaq.app",
                 "badges": [
                     {"text_en": "Free Consultation", "text_ar": "استشارة مجانية", "icon": "✓"},
                     {"text_en": "Response Within 24h", "text_ar": "رد خلال 24 ساعة", "icon": "✓"},
@@ -449,7 +449,7 @@ PAGES = [
                 "subtitle_ar": "طرق متعددة للتواصل مع فريقنا وفتح آفاق التعاون",
                 "columns": 3,
                 "items": [
-                    {"icon": "📧", "title_en": "Email Us", "title_ar": "أرسل لنا إيميل", "desc_en": "info@afaq-tech.com", "desc_ar": "info@afaq-tech.com — نرد خلال 24 ساعة"},
+                    {"icon": "📧", "title_en": "Email Us", "title_ar": "أرسل لنا إيميل", "desc_en": "info@afaq.app", "desc_ar": "info@afaq.app — نرد خلال 24 ساعة"},
                     {"icon": "📱", "title_en": "WhatsApp", "title_ar": "واتساب", "desc_en": "+966 50 000 0000", "desc_ar": "+966 50 000 0000 — تواصل فوري"},
                     {"icon": "📍", "title_en": "Our Office", "title_ar": "مكتبنا", "desc_en": "Riyadh, Saudi Arabia", "desc_ar": "الرياض، المملكة العربية السعودية"}
                 ]
@@ -501,7 +501,7 @@ PAGES = [
                     {"title_en": "Data Protection", "title_ar": "حماية البيانات", "content_en": "We use industry-standard encryption and security measures to protect your data from unauthorized access.", "content_ar": "نستخدم تشفيراً ومعايير أمان بمعايير الصناعة لحماية بياناتك من الوصول غير المصرح به. نفتح آفاق الأمان الرقمي لبياناتك."},
                     {"title_en": "Cookies", "title_ar": "ملفات تعريف الارتباط", "content_en": "We use cookies to enhance your browsing experience. You can control cookie settings through your browser.", "content_ar": "نستخدم ملفات تعريف الارتباط لتحسين تجربة التصفح. يمكنك التحكم في إعدادات الكوكيز من خلال متصفحك."},
                     {"title_en": "Your Rights", "title_ar": "حقوقك", "content_en": "You have the right to access, modify, or delete your personal data at any time by contacting us.", "content_ar": "لك الحق في الوصول إلى بياناتك الشخصية أو تعديلها أو حذفها في أي وقت عن طريق التواصل معنا. نفتح آفاق التحكم الكامل في بياناتك."},
-                    {"title_en": "Contact for Privacy Concerns", "title_ar": "التواصل بخصوص الخصوصية", "content_en": "For any privacy-related questions, please email privacy@afaq-tech.com", "content_ar": " لأي استفسارات تتعلق بالخصوصية، يرجى التواصل على privacy@afaq-tech.com"}
+                    {"title_en": "Contact for Privacy Concerns", "title_ar": "التواصل بخصوص الخصوصية", "content_en": "For any privacy-related questions, please email privacy@afaq.app", "content_ar": " لأي استفسارات تتعلق بالخصوصية، يرجى التواصل على privacy@afaq.app"}
                 ]
             }},
             {"block_type": "cta", "order": 2, "content": {

@@ -79,6 +79,8 @@ export default function Navbar() {
     { href: `/${locale}/admin/blog`, label: t("admin.blog"), icon: "📝" },
     { href: `/${locale}/admin/themes`, label: t("admin.themes"), icon: "🎨" },
     { href: `/${locale}/admin/menus`, label: t("admin.menus"), icon: "📋" },
+    { href: `/${locale}/admin/languages`, label: t("admin.languages"), icon: "🌐" },
+    { href: `/${locale}/admin/translations`, label: t("admin.translations"), icon: "🗂️" },
     { href: `/${locale}/admin/settings`, label: t("admin.settings"), icon: "🔧" },
   ];
 

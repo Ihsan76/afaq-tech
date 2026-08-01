@@ -2,16 +2,13 @@
 
 import { useState, useRef, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { locales, localeNames } from "@/i18n/config";
-
-const FLAG: Record<string, string> = {
-  ar: "🇸🇦", en: "🇬🇧", fr: "🇫🇷", tr: "🇹🇷", ur: "🇵🇰",
-  es: "🇪🇸", de: "🇩🇪", id: "🇮🇩", bn: "🇧🇩",
-};
+import { locales } from "@/i18n/config";
+import { useLanguages } from "@/lib/useLanguages";
 
 export default function LanguageSwitcher() {
   const pathname = usePathname();
   const router = useRouter();
+  const { languages } = useLanguages();
   const currentLocale = pathname.split("/")[1] || "en";
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -23,6 +20,28 @@ export default function LanguageSwitcher() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  const routable = languages.filter((l) => locales.includes(l.code as (typeof locales)[number]));
+  const fallback = locales.filter((l) => !languages.some((lang) => lang.code === l));
+
+  const displayList = [
+    ...routable.map((l) => ({ code: l.code, label: l.native_name || l.name, flag: l.flag || "🌐" })),
+    ...fallback.map((l) => {
+      const known: Record<string, string> = {
+        ar: "العربية", en: "English", fr: "Français", tr: "Türkçe", ur: "اردو",
+        es: "Español", de: "Deutsch", id: "Bahasa Indonesia", bn: "বাংলা",
+      };
+      const flags: Record<string, string> = {
+        ar: "🇸🇦", en: "🇬🇧", fr: "🇫🇷", tr: "🇹🇷", ur: "🇵🇰",
+        es: "🇪🇸", de: "🇩🇪", id: "🇮🇩", bn: "🇧🇩",
+      };
+      return { code: l, label: known[l] || l, flag: flags[l] || "🌐" };
+    }),
+  ];
+
+  const current = displayList.find((l) => l.code === currentLocale);
+  const currentFlag = current?.flag || "🌐";
+  const currentLabel = current?.label || currentLocale;
 
   const handleChange = (newLocale: string) => {
     const segments = pathname.split("/");
@@ -48,13 +67,13 @@ export default function LanguageSwitcher() {
           if (!open) e.currentTarget.style.backgroundColor = "transparent";
         }}
       >
-        <span className="text-base">{FLAG[currentLocale] || "🌐"}</span>
-        <span>{currentLocale}</span>
+        <span className="text-base">{currentFlag}</span>
+        <span>{currentLabel}</span>
       </button>
 
       {open && (
         <div
-          className="absolute top-full mt-2 w-52 rounded-2xl shadow-2xl overflow-hidden z-50 py-1"
+          className="absolute top-full mt-2 w-56 rounded-2xl shadow-2xl overflow-hidden z-50 py-1"
           style={{
             backgroundColor: "var(--color-surface)",
             border: "1px solid var(--color-border)",
@@ -66,25 +85,25 @@ export default function LanguageSwitcher() {
             <p className="text-xs font-semibold px-2" style={{ color: "var(--color-text-muted)" }}>Language</p>
           </div>
           <div className="p-1 max-h-72 overflow-y-auto">
-            {locales.map((locale) => (
+            {displayList.map((locale) => (
               <button
-                key={locale}
-                onClick={() => handleChange(locale)}
+                key={locale.code}
+                onClick={() => handleChange(locale.code)}
                 className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors"
                 style={{
-                  backgroundColor: locale === currentLocale ? "var(--color-primary-light)" : "transparent",
-                  color: locale === currentLocale ? "var(--color-primary)" : "var(--color-text)",
+                  backgroundColor: locale.code === currentLocale ? "var(--color-primary-light)" : "transparent",
+                  color: locale.code === currentLocale ? "var(--color-primary)" : "var(--color-text)",
                 }}
                 onMouseEnter={(e) => {
-                  if (locale !== currentLocale) e.currentTarget.style.backgroundColor = "var(--color-muted)";
+                  if (locale.code !== currentLocale) e.currentTarget.style.backgroundColor = "var(--color-muted)";
                 }}
                 onMouseLeave={(e) => {
-                  if (locale !== currentLocale) e.currentTarget.style.backgroundColor = "transparent";
+                  if (locale.code !== currentLocale) e.currentTarget.style.backgroundColor = "transparent";
                 }}
               >
-                <span className="text-lg">{FLAG[locale] || "🌐"}</span>
-                <span className="flex-1 text-start">{localeNames[locale]}</span>
-                {locale === currentLocale && (
+                <span className="text-lg">{locale.flag}</span>
+                <span className="flex-1 text-start">{locale.label}</span>
+                {locale.code === currentLocale && (
                   <svg className="w-4 h-4" style={{ color: "var(--color-primary)" }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </svg>

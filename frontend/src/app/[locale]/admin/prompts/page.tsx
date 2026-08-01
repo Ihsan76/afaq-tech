@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { api } from "@/lib/api";
+import { useLanguages } from "@/lib/useLanguages";
 
 // ---- Types ----
 
@@ -52,13 +53,6 @@ const TABS: { key: Tab; label: string; icon: string }[] = [
 ];
 
 const FEATURE_KEYS = ["lesson_plan", "refine", "assistant", "worksheet", "homework"];
-const LANGUAGES = [
-  { code: "ar", label: "العربية" }, { code: "en", label: "English" },
-  { code: "fr", label: "Français" }, { code: "tr", label: "Türkçe" },
-  { code: "ur", label: "اردو" }, { code: "es", label: "Español" },
-  { code: "de", label: "Deutsch" }, { code: "id", label: "Bahasa Indonesia" },
-  { code: "bn", label: "বাংলা" },
-];
 const STAGES = [
   { value: "", label: "الكل" }, { value: "early_primary", label: "المرحلة المبكرة" },
   { value: "primary", label: "ابتدائي" }, { value: "middle", label: "متوسط" },
@@ -102,6 +96,8 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 export default function AdminPromptsPage() {
   const t = useTranslations();
+  const { languages } = useLanguages();
+  const LANGUAGES = languages.map((l) => ({ code: l.code, label: l.native_name || l.name }));
   const [tab, setTab] = useState<Tab>("templates");
 
   // Shared
