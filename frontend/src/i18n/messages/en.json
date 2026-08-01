@@ -69,6 +69,7 @@
     "ebooks": "E-Books",
     "search": "Search",
     "marketplace": "Marketplace",
+    "gamification": "Gamification",
     "chat": "AI Assistant",
     "admin": "Admin"
   },
@@ -146,11 +147,55 @@
     "noPublicPlans": "No public plans yet — share your plans to appear here",
     "clone": "Clone",
     "cloneSuccess": "Plan cloned successfully",
+    "exportPdf": "Export PDF",
+    "exportingPdf": "Exporting PDF...",
     "likes": "Likes",
     "clones": "Copies",
     "byTeacher": "by",
     "shareYourPlan": "Share Your Plans",
     "shareHint": "Make your plans public to appear in the marketplace"
+  },
+  "servicesMarketplace": {
+    "title": "Services Marketplace",
+    "subtitle": "Browse educational services from qualified providers",
+    "categories": "Categories",
+    "allCategories": "All",
+    "price": "Price",
+    "duration": "Duration",
+    "minutes": "min",
+    "online": "Online",
+    "inPerson": "In Person",
+    "sales": "Sales",
+    "rating": "Rating",
+    "reviews": "Reviews",
+    "orderNow": "Book Now",
+    "myServices": "My Services",
+    "myOrders": "My Orders",
+    "createService": "Add New Service",
+    "editService": "Edit Service",
+    "serviceType": "Service Type",
+    "tutoring": "Private Tutoring",
+    "course": "Course",
+    "consultation": "Consultation",
+    "other": "Other",
+    "status": "Status",
+    "pending": "Pending",
+    "confirmed": "Confirmed",
+    "inProgress": "In Progress",
+    "completed": "Completed",
+    "cancelled": "Cancelled",
+    "refunded": "Refunded",
+    "buyer": "Buyer",
+    "provider": "Provider",
+    "notes": "Notes",
+    "scheduledAt": "Scheduled At",
+    "noServices": "No services available",
+    "noOrders": "No orders found",
+    "myOrdersDesc": "View my orders as buyer or provider",
+    "draft": "Draft",
+    "published": "Published",
+    "archived": "Archived",
+    "provideService": "Offer a Service"
   },
   "admin": {
     "title": "Title",
@@ -802,5 +847,97 @@
     "freePreview": "Free Preview",
     "loginRequired": "Log in to track your progress",
     "paidComingSoon": "Payment integration coming soon"
+  },
+  "gamification": {
+    "title": "Gamification",
+    "description": "Earn points, badges, and complete challenges as you learn",
+    "tabs": {
+      "leaderboard": "Leaderboard",
+      "badges": "Badges",
+      "achievements": "Achievements",
+      "challenges": "Challenges",
+      "streak": "Streak",
+      "points": "Points"
+    },
+    "leaderboard": {
+      "title": "Leaderboard",
+      "period": {
+        "daily": "Daily",
+        "weekly": "Weekly",
+        "monthly": "Monthly",
+        "allTime": "All Time"
+      },
+      "category": {
+        "points": "Points",
+        "lessons": "Lessons",
+        "streak": "Streak",
+        "badges": "Badges"
+      },
+      "rank": "Rank",
+      "user": "User",
+      "score": "Score",
+      "noData": "No data yet",
+      "yourRank": "Your Rank",
+      "outOf": "out of"
+    },
+    "badges": {
+      "title": "Badges",
+      "earned": "Earned",
+      "notEarned": "Not Earned",
+      "all": "All",
+      "rarity": {
+        "common": "Common",
+        "uncommon": "Uncommon",
+        "rare": "Rare",
+        "epic": "Epic",
+        "legendary": "Legendary"
+      },
+      "empty": "No badges earned yet",
+      "points_reward": "Points Reward"
+    },
+    "achievements": {
+      "title": "Achievements",
+      "completed": "Completed",
+      "inProgress": "In Progress",
+      "locked": "Locked",
+      "progress": "Progress",
+      "empty": "No achievements yet"
+    },
+    "challenges": {
+      "title": "Challenges",
+      "join": "Join",
+      "joined": "Joined",
+      "completed": "Completed",
+      "progress": "Progress",
+      "active": "Active Challenges",
+      "my": "My Challenges",
+      "empty": "No active challenges",
+      "endsAt": "Ends at",
+      "points_reward": "Points Reward",
+      "daily": "Daily",
+      "weekly": "Weekly",
+      "monthly": "Monthly",
+      "special": "Special"
+    },
+    "streak": {
+      "title": "Streak",
+      "current": "Current Streak",
+      "longest": "Longest Streak",
+      "checkIn": "Check In",
+      "checkedIn": "Checked In Today",
+      "days": "days",
+      "milestone": "Milestone"
+    },
+    "points": {
+      "title": "Points History",
+      "total": "Total Points",
+      "current": "Current Points",
+      "today": "Today's Points",
+      "activity": "Activity",
+      "date": "Date",
+      "points": "Points",
+      "empty": "No transactions yet",
+      "level": "Level"
+    }
   }
 }

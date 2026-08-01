@@ -6,7 +6,7 @@ import DynamicPage from "@/components/DynamicPage";
 const RESERVED_PREFIXES = [
   "login", "register", "admin", "lesson-plans", "profile", "chat",
   "curriculum", "academy", "ebooks", "blog", "dashboard",
-  "forgot-password", "reset-password", "search", "services"
+  "forgot-password", "reset-password", "search", "services", "marketplace"
 ];
 
 export default function CatchAllPage() {

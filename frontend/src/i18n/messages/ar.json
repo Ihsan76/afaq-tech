@@ -69,6 +69,7 @@
     "ebooks": "الكتب الإلكترونية",
     "search": "بحث",
     "marketplace": "السوق",
+    "gamification": "التحديات",
     "chat": "المساعد الذكي",
     "admin": "الإدارة"
   },
@@ -146,11 +147,55 @@
     "noPublicPlans": "لا توجد خطط عامة بعد — شارك خططك لتظهر هنا",
     "clone": "استنساخ",
     "cloneSuccess": "تم استنساخ الخطة بنجاح",
+    "exportPdf": "تصدير PDF",
+    "exportingPdf": "جار تصدير PDF...",
     "likes": "إعجابات",
     "clones": "نسخ",
     "byTeacher": "بواسطة",
     "shareYourPlan": "شارك خططك",
     "shareHint": "اجعل خططك عامة لتظهر في السوق"
+  },
+  "servicesMarketplace": {
+    "title": "سوق الخدمات",
+    "subtitle": "تصفح الخدمات التعليمية المتاحة من مزودي الخدمات",
+    "categories": "التصنيفات",
+    "allCategories": "الكل",
+    "price": "السعر",
+    "duration": "المدة",
+    "minutes": "دقيقة",
+    "online": "عن بعد",
+    "inPerson": "حضوري",
+    "sales": "مبيعات",
+    "rating": "التقييم",
+    "reviews": "التقييمات",
+    "orderNow": "احجز الآن",
+    "myServices": "خدماتي",
+    "myOrders": "طلباتي",
+    "createService": "إضافة خدمة جديدة",
+    "editService": "تعديل الخدمة",
+    "serviceType": "نوع الخدمة",
+    "tutoring": "دروس خصوصية",
+    "course": "دورة تعليمية",
+    "consultation": "استشارة",
+    "other": "أخرى",
+    "status": "الحالة",
+    "pending": "قيد الانتظار",
+    "confirmed": "مؤكد",
+    "inProgress": "قيد التنفيذ",
+    "completed": "مكتمل",
+    "cancelled": "ملغي",
+    "refunded": "مسترجع",
+    "buyer": "المشتري",
+    "provider": "مقدم الخدمة",
+    "notes": "ملاحظات",
+    "scheduledAt": "موعد الحجز",
+    "noServices": "لا توجد خدمات متاحة",
+    "noOrders": "لا توجد طلبات",
+    "myOrdersDesc": "عرض طلباتي كمشتري أو مقدم خدمة",
+    "draft": "مسودة",
+    "published": "منشور",
+    "archived": "مؤرشف",
+    "provideService": "تقديم خدمة"
   },
   "admin": {
     "title": "العنوان",
@@ -802,5 +847,97 @@
     "freePreview": "معاينة مجانية",
     "loginRequired": "سجّل الدخول لتتبع تقدمك",
     "paidComingSoon": "الدفع الإلكتروني قريباً"
+  },
+  "gamification": {
+    "title": "التلعيب",
+    "description": "اكسب النقاط والشارات والتحديات أثناء تعلّمك",
+    "tabs": {
+      "leaderboard": "المتصدرين",
+      "badges": "الشارات",
+      "achievements": "الإنجازات",
+      "challenges": "التحديات",
+      "streak": "السلاسل",
+      "points": "النقاط"
+    },
+    "leaderboard": {
+      "title": "لوحة المتصدرين",
+      "period": {
+        "daily": "يومي",
+        "weekly": "أسبوعي",
+        "monthly": "شهري",
+        "allTime": "كل الوقت"
+      },
+      "category": {
+        "points": "النقاط",
+        "lessons": "الدروس",
+        "streak": "السلاسل",
+        "badges": "الشارات"
+      },
+      "rank": "الترتيب",
+      "user": "المستخدم",
+      "score": "النتيجة",
+      "noData": "لا توجد بيانات بعد",
+      "yourRank": "ترتيبك",
+      "outOf": "من"
+    },
+    "badges": {
+      "title": "الشارات",
+      "earned": "تم الحصول عليها",
+      "notEarned": "لم يتم الحصول عليها",
+      "all": "الكل",
+      "rarity": {
+        "common": "عادي",
+        "uncommon": "غير عادي",
+        "rare": "نادر",
+        "epic": "ملحمي",
+        "legendary": "أسطوري"
+      },
+      "empty": "لم تحصل على شارات بعد",
+      "points_reward": "مكافأة النقاط"
+    },
+    "achievements": {
+      "title": "الإنجازات",
+      "completed": "مكتمل",
+      "inProgress": "قيد التقدم",
+      "locked": "مقفل",
+      "progress": "التقدم",
+      "empty": "لا توجد إنجازات"
+    },
+    "challenges": {
+      "title": "التحديات",
+      "join": "انضم",
+      "joined": "منضم",
+      "completed": "مكتمل",
+      "progress": "التقدم",
+      "active": "التحديات النشطة",
+      "my": "تحدياتي",
+      "empty": "لا توجد تحديات نشطة",
+      "endsAt": "ينتهي في",
+      "points_reward": "مكافأة النقاط",
+      "daily": "يومي",
+      "weekly": "أسبوعي",
+      "monthly": "شهري",
+      "special": "خاص"
+    },
+    "streak": {
+      "title": "السلسلة",
+      "current": "السلسلة الحالية",
+      "longest": "أطول سلسلة",
+      "checkIn": "تسجيل حضور",
+      "checkedIn": "تم التسجيل اليوم",
+      "days": "أيام",
+      "milestone": "إنجاز"
+    },
+    "points": {
+      "title": "سجل النقاط",
+      "total": "إجمالي النقاط",
+      "current": "النقاط الحالية",
+      "today": "نقاط اليوم",
+      "activity": "النشاط",
+      "date": "التاريخ",
+      "points": "النقاط",
+      "empty": "لا توجد معاملات بعد",
+      "level": "المستوى"
+    }
   }
 }

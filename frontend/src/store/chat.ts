@@ -46,7 +46,7 @@ interface ChatState {
 
   loadConversations: () => Promise<void>;
   loadMessages: (id: number) => Promise<void>;
-  sendMessage: (text: string) => Promise<void>;
+  sendMessage: (text: string, modelId?: string) => Promise<void>;
   createConversation: () => Promise<void>;
   deleteConversation: (id: number) => Promise<void>;
   clearConversation: (id: number) => Promise<void>;

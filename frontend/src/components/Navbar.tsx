@@ -176,6 +176,32 @@ export default function Navbar() {
 
             {user && (
               <Link
+                href={`/${locale}/gamification`}
+                className="px-3 xl:px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200"
+                style={{
+                  backgroundColor: isActive(`/${locale}/gamification`) ? "var(--color-primary-light)" : "transparent",
+                  color: isActive(`/${locale}/gamification`) ? "var(--color-primary)" : "var(--color-text-secondary)",
+                }}
+                onMouseEnter={(e) => {
+                  if (!isActive(`/${locale}/gamification`)) {
+                    e.currentTarget.style.color = "var(--color-text)";
+                    e.currentTarget.style.backgroundColor = "var(--color-muted)";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isActive(`/${locale}/gamification`)) {
+                    e.currentTarget.style.color = "var(--color-text-secondary)";
+                    e.currentTarget.style.backgroundColor = "transparent";
+                  }
+                }}
+              >
+                <span className="mr-1">🎮</span>
+                {t("nav.gamification")}
+              </Link>
+            )}
+
+            {user && (
+              <Link
                 href={`/${locale}/chat`}
                 className="px-3 xl:px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200"
                 style={{
@@ -415,6 +441,17 @@ export default function Navbar() {
                   >
                     <span className="text-lg">📊</span>
                     {t("nav.dashboard")}
+                  </Link>
+                  <Link
+                    href={`/${locale}/gamification`}
+                    className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors"
+                    style={{
+                      backgroundColor: isActive(`/${locale}/gamification`) ? "var(--color-primary-light)" : "transparent",
+                      color: isActive(`/${locale}/gamification`) ? "var(--color-primary)" : "var(--color-text-secondary)",
+                    }}
+                  >
+                    <span className="text-lg">🎮</span>
+                    {t("nav.gamification")}
                   </Link>
                   <Link
                     href={`/${locale}/chat`}

@@ -22,6 +22,7 @@ interface GradePromptProfile {
   forbidden_terms: string[]; discouraged_patterns: string[];
   extra_instructions: string[]; is_active: boolean;
   subject_profiles: SubjectPromptProfile[];
+  updated_at?: string;
 }
 
 interface SubjectPromptProfile {
@@ -499,7 +500,7 @@ export default function AdminPromptsPage() {
                     <td className="p-3 font-medium">{p.grade_name}</td>
                     <td className="p-3">{STAGES.find(s => s.value === p.learner_stage)?.label || p.learner_stage}</td>
                     <td className="p-3">{p.is_active ? "✅" : "❌"}</td>
-                    <td className="p-3">{new Date(p.updated_at).toLocaleDateString()}</td>
+                    <td className="p-3">{p.updated_at ? new Date(p.updated_at).toLocaleDateString() : "—"}</td>
                     <td className="p-3">
                       <div className="flex gap-2">
                         <button onClick={() => openGradeEdit(p)} className="px-3 py-1 rounded-lg text-xs font-semibold transition-all hover:opacity-80"

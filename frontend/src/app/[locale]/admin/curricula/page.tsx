@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Fragment } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { api } from "@/lib/api";
 
@@ -50,6 +50,11 @@ const LABELS: Record<string, Record<string, string>> = {
   dateUploaded: { ar: "تاريخ الرفع", en: "Upload Date", fr: "Date de téléchargement", tr: "Yükleme Tarihi", ur: "اپ لوڈ کی تاریخ", es: "Fecha de subida", de: "Hochladedatum", id: "Tanggal Unggah", bn: "আপলোডের তারিখ" },
   view: { ar: "عرض", en: "View", fr: "Voir", tr: "Görüntüle", ur: "دیکھیں", es: "Ver", de: "Anzeigen", id: "Lihat", bn: "দেখুন" },
   delete: { ar: "حذف", en: "Delete", fr: "Supprimer", tr: "Sil", ur: "حذف کریں", es: "Eliminar", de: "Löschen", id: "Hapus", bn: "মুছুন" },
+  extract: { ar: "استخراج النص", en: "Extract Text", fr: "Extraire le texte", tr: "Metni Çıkar", ur: "متن نکالیں", es: "Extraer texto", de: "Text extrahieren", id: "Ekstrak Teks", bn: "টেক্সট এক্সট্রাক্ট করুন" },
+  extracting: { ar: "جار الاستخراج...", en: "Extracting...", fr: "Extraction...", tr: "Çıkarılıyor...", ur: "نکالا جا رہا ہے...", es: "Extrayendo...", de: "Extrahiere...", id: "Mengekstrak...", bn: "নিষ্কাশন করা হচ্ছে..." },
+  extractedText: { ar: "النص المستخرج", en: "Extracted Text", fr: "Texte extrait", tr: "Çıkarılan Metin", ur: "نکالا گیا متن", es: "Texto extraído", de: "Extrahierter Text", id: "Teks yang Diekstrak", bn: "নিষ্কাশিত টেক্সট" },
+  extractSuccess: { ar: "تم استخراج النص بنجاح", en: "Text extracted successfully", fr: "Texte extrait avec succès", tr: "Metin başarıyla çıkarıldı", ur: "متن کامیابی سے نکال لیا گیا", es: "Texto extraído exitosamente", de: "Text erfolgreich extrahiert", id: "Teks berhasil diekstrak", bn: "টেক্সট সফলভাবে নিষ্কাশিত হয়েছে" },
+  noExtractedText: { ar: "لم يتم استخراج النص بعد. اضغط على زر الاستخراج.", en: "No text extracted yet. Click extract.", fr: "Aucun texte extrait. Cliquez sur extraire.", tr: "Henüz metin çıkarılmadı. Çıkarmak için tıklayın.", ur: "ابھی تک کوئی متن نہیں نکالا گیا۔ نکالنے کے لیے کلک کریں۔", es: "Aún no se extrajo texto. Haga clic en extraer.", de: "Noch kein Text extrahiert. Klicken Sie auf Extrahieren.", id: "Belum ada teks yang diekstrak. Klik ekstrak.", bn: "এখনও কোন টেক্সট নিষ্কাশিত হয়নি। নিষ্কাশন করতে ক্লিক করুন।" },
   selectCurriculum: { ar: "اختر المنهج", en: "Select Curriculum", fr: "Sélectionner le programme", tr: "Müfredat Seçin", ur: "نصاب منتخب کریں", es: "Seleccionar plan de estudios", de: "Lehrplan auswählen", id: "Pilih Kurikulum", bn: "পাঠ্যক্রম নির্বাচন করুন" },
   selectCurriculumPlaceholder: { ar: "-- اختر منهجاً --", en: "-- Select Curriculum --", fr: "-- Choisir un programme --", tr: "-- Müfredat Seçin --", ur: "-- نصاب منتخب کریں --", es: "-- Seleccionar --", de: "-- Lehrplan auswählen --", id: "-- Pilih Kurikulum --", bn: "-- পাঠ্যক্রম নির্বাচন করুন --" },
   selectSubjectPlaceholder: { ar: "-- اختر المادة --", en: "-- Select Subject --", fr: "-- Choisir une matière --", tr: "-- Ders Seçin --", ur: "-- مضمون منتخب کریں --", es: "-- Seleccionar materia --", de: "-- Fach auswählen --", id: "-- Pilih Mata Pelajaran --", bn: "-- বিষয় নির্বাচন করুন --" },
@@ -125,6 +130,8 @@ export default function AdminCurriculaPage() {
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [loadingDocs, setLoadingDocs] = useState(false);
+  const [extractingDoc, setExtractingDoc] = useState<number | null>(null);
+  const [expandedDoc, setExpandedDoc] = useState<number | null>(null);
 
   const [error, setError] = useState("");
 
@@ -255,6 +262,16 @@ export default function AdminCurriculaPage() {
     if (!confirm(al(locale, "confirmDeleteDoc"))) return;
     try { await api.delete(`/academics/documents/${id}/`); await loadDocuments(selectedCurrId); }
     catch { setError(al(locale, "deleteFailed")); }
+  };
+
+  const handleExtract = async (docId: number) => {
+    setExtractingDoc(docId); setError("");
+    try {
+      const { data } = await api.post(`/academics/documents/${docId}/extract/`);
+      setDocuments(prev => prev.map(d => d.id === docId ? { ...d, extracted_text: data.extracted_text } : d));
+      setExpandedDoc(docId);
+    } catch (e: any) { setError(e.response?.data ? JSON.stringify(e.response.data) : al(locale, "extractSuccess")); }
+    finally { setExtractingDoc(null); }
   };
 
   // ---- Render helpers ----
@@ -432,15 +449,36 @@ export default function AdminCurriculaPage() {
                           {documents.map(d => {
                             const subj = subjects.find(s => s.id === d.subject);
                             return (
-                              <tr key={d.id} style={{ borderTop: "1px solid var(--color-border)" }}>
-                                <td className="px-6 py-4 font-medium" style={{ color: "var(--color-text)" }}>{d.title}</td>
-                                <td className="px-6 py-4" style={{ color: "var(--color-text-muted)" }}>{subj?.label || "-"}</td>
-                                <td className="px-6 py-4"><a href={d.file} target="_blank" rel="noopener noreferrer" className="font-medium text-sm transition-colors" style={{ color: "var(--color-primary)" }}>📄 {al(locale, "view")}</a></td>
-                                <td className="px-6 py-4" style={{ color: "var(--color-text-muted)" }}>{new Date(d.created_at).toLocaleDateString()}</td>
-                                <td className="px-6 py-4">
-                                  <button onClick={() => handleDeleteDocument(d.id)} className="font-medium text-sm transition-colors" style={{ color: "var(--color-error)" }}>{al(locale, "delete")}</button>
-                                </td>
-                              </tr>
+                              <Fragment key={d.id}>
+                                <tr style={{ borderTop: "1px solid var(--color-border)" }}>
+                                  <td className="px-6 py-4 font-medium" style={{ color: "var(--color-text)" }}>{d.title}</td>
+                                  <td className="px-6 py-4" style={{ color: "var(--color-text-muted)" }}>{subj?.label || "-"}</td>
+                                  <td className="px-6 py-4"><a href={d.file} target="_blank" rel="noopener noreferrer" className="font-medium text-sm transition-colors" style={{ color: "var(--color-primary)" }}>📄 {al(locale, "view")}</a></td>
+                                  <td className="px-6 py-4" style={{ color: "var(--color-text-muted)" }}>{new Date(d.created_at).toLocaleDateString()}</td>
+                                  <td className="px-6 py-4 flex gap-2 items-center">
+                                    <button onClick={() => handleExtract(d.id)} disabled={extractingDoc === d.id}
+                                      className="font-medium text-sm transition-colors disabled:opacity-50"
+                                      style={{ color: "var(--color-primary)" }}>
+                                      {extractingDoc === d.id ? al(locale, "extracting") : al(locale, "extract")}
+                                    </button>
+                                    {d.extracted_text && (
+                                      <button onClick={() => setExpandedDoc(expandedDoc === d.id ? null : d.id)}
+                                        className="font-medium text-sm" style={{ color: "var(--color-text-secondary)" }}>
+                                        {expandedDoc === d.id ? "▲" : "▼"}
+                                      </button>
+                                    )}
+                                    <button onClick={() => handleDeleteDocument(d.id)} className="font-medium text-sm transition-colors" style={{ color: "var(--color-error)" }}>{al(locale, "delete")}</button>
+                                  </td>
+                                </tr>
+                                {expandedDoc === d.id && d.extracted_text && (
+                                  <tr style={{ background: "var(--color-background)" }}>
+                                    <td colSpan={5} className="px-6 py-4">
+                                      <div className="text-sm font-semibold mb-2" style={{ color: "var(--color-text-secondary)" }}>{al(locale, "extractedText")}</div>
+                                      <pre className="text-xs whitespace-pre-wrap max-h-48 overflow-y-auto rounded-xl p-4" style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", color: "var(--color-text)" }}>{d.extracted_text}</pre>
+                                    </td>
+                                  </tr>
+                                )}
+                              </Fragment>
                             );
                           })}
                         </tbody>

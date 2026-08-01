@@ -7,10 +7,9 @@ from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
-from reportlab.lib.pagesizes import A4
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.units import cm
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, ListFlowable, ListItem
+from weasyprint import HTML
+
+FONT_DIR = settings.BASE_DIR / 'apps' / 'lessonplans' / 'fonts'
 from apps.ai.models import AIRun
 from apps.ai.services import generate_lesson_plan as ai_generate, refine_lesson_plan as ai_refine, PromptBuilderService
 from apps.academics.models import Subject, Grade, CurriculumDocument
@@ -344,6 +343,32 @@ def generate_homework_view(request, pk):
 
 # --- PDF Export ---
 
+def _val_to_html(val) -> str:
+    if isinstance(val, str):
+        return ''.join(f'<p>{_e(line)}</p>' for line in val.split('\n') if line.strip())
+    if isinstance(val, list):
+        dict_items = [i for i in val if isinstance(i, dict)]
+        str_items = [i for i in val if isinstance(i, str)]
+        parts = []
+        for item in dict_items:
+            line = item.get('title', '')
+            if item.get('description'):
+                line += f'<br/>{_e(item["description"])}'
+            if item.get('duration_minutes'):
+                line += f'<br/><span class="badge">{item["duration_minutes"]} دقيقة</span>'
+            if line:
+                parts.append(f'<div class="step">{line}</div>')
+        if str_items:
+            lis = ''.join(f'<li>{_e(s)}</li>' for s in str_items)
+            parts.append(f'<ul>{lis}</ul>')
+        return ''.join(parts)
+    return ''
+
+
+def _e(text) -> str:
+    return str(text).replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quot;')
+
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def export_plan_pdf(request, pk):
@@ -351,51 +376,127 @@ def export_plan_pdf(request, pk):
     if plan is None:
         return Response({'error': 'Not found or no permission'}, status=status.HTTP_404_NOT_FOUND)
 
-    buf = BytesIO()
-    doc = SimpleDocTemplate(buf, pagesize=A4, rightMargin=2*cm, leftMargin=2*cm, topMargin=2*cm, bottomMargin=2*cm)
+    locale = request.query_params.get('locale', 'ar')
+    is_rtl = locale in ('ar', 'ur')
 
-    styles = getSampleStyleSheet()
-    title_style = ParagraphStyle('TitleAr', parent=styles['Title'], fontName='Helvetica', fontSize=18, spaceAfter=12)
-    heading_style = ParagraphStyle('HeadingAr', parent=styles['Heading2'], fontName='Helvetica', fontSize=14, spaceAfter=8, spaceBefore=12)
-    body_style = ParagraphStyle('BodyAr', parent=styles['Normal'], fontName='Helvetica', fontSize=10, spaceAfter=6, leading=14)
-
-    elements = []
     pd = plan.plan_data
+    title = _e(pd.get('title', pd.get('lesson_title', plan.title)))
 
-    title = pd.get('title', pd.get('lesson_title', str(plan)))
-    elements.append(Paragraph(title, title_style))
-    elements.append(Spacer(1, 0.3*cm))
+    subject_str = _e(str(plan.subject)) if plan.subject else '-'
+    grade_str = _e(str(plan.grade)) if plan.grade else '-'
 
-    elements.append(Paragraph(f"Subject: {plan.subject}", body_style))
-    elements.append(Paragraph(f"Grade: {plan.grade}", body_style))
-    elements.append(Paragraph(f"Language: {plan.language}", body_style))
-    elements.append(Spacer(1, 0.3*cm))
+    if is_rtl:
+        meta = f'المادة: {subject_str} | الصف: {grade_str}'
+        if pd.get('estimated_duration'):
+            meta += f' | المدة المتوقعة: {pd["estimated_duration"]} دقيقة'
+    else:
+        meta = f'Subject: {subject_str} | Grade: {grade_str}'
+        if pd.get('estimated_duration'):
+            meta += f' | Duration: {pd["estimated_duration"]} min'
+    font_url = str(FONT_DIR / 'NotoNaskhArabic-Regular.ttf')
+    font_bold_url = str(FONT_DIR / 'NotoNaskhArabic-Bold.ttf')
 
-    sections = [
+    font_face = f'''
+@font-face {{ font-family: 'Noto'; src: url('file://{font_url}') format('truetype'); font-weight: normal; }}
+@font-face {{ font-family: 'Noto'; src: url('file://{font_bold_url}') format('truetype'); font-weight: bold; }}'''
+
+    ar_sections = [
+        ('objectives', 'الأهداف التعليمية'),
+        ('materials_needed', 'المواد والوسائل التعليمية'),
+        ('introduction', 'التمهيد والمقدمة'),
+        ('main_activity', 'الأنشطة التعليمية (خطوة بخطوة)'),
+        ('teaching_methods', 'طرق واستراتيجيات التدريس'),
+        ('assessment', 'التقييم والقياس'),
+        ('homework', 'الواجب والتطبيق المنزلي'),
+    ]
+    en_sections = [
         ('objectives', 'Objectives'),
-        ('materials', 'Materials'),
-        ('procedure', 'Procedure'),
+        ('materials_needed', 'Materials'),
+        ('introduction', 'Introduction'),
+        ('main_activity', 'Procedure'),
+        ('teaching_methods', 'Teaching Methods'),
         ('assessment', 'Assessment'),
         ('homework', 'Homework'),
-        ('extension', 'Extension Activities'),
     ]
+    sections = ar_sections if is_rtl else en_sections
 
+    body_parts = []
     for key, label in sections:
-        content = pd.get(key, '')
-        if isinstance(content, list):
-            content = '\n'.join(f'- {item}' for item in content)
-        if content:
-            elements.append(Paragraph(label, heading_style))
-            for line in content.split('\n'):
-                if line.strip():
-                    elements.append(Paragraph(line.strip(), body_style))
+        val = pd.get(key)
+        if not val:
+            continue
+        html = _val_to_html(val)
+        if not html:
+            continue
+        body_parts.append(f'<div class="section"><h2>{_e(label)}</h2>{html}</div>')
+    ws = pd.get('worksheet')
+    if ws and isinstance(ws, dict) and not ws.get('error'):
+        wst = _e(ws.get('title', 'ورقة العمل' if is_rtl else 'Worksheet'))
+        wh = f'<div style="page-break-before: always; break-before: page; height: 0;"></div><div class="section"><h2>{wst}</h2>'
+        if ws.get('instructions'):
+            wh += f'<p class="instructions">{_e(ws["instructions"])}</p>'
+        if ws.get('exercises') and isinstance(ws['exercises'], list):
+            for i, ex in enumerate(ws['exercises']):
+                wh += f'<div class="exercise"><p><strong>{i+1}. {_e(ex.get("question", ""))}</strong></p>'
+                if ex.get('options') and isinstance(ex['options'], list):
+                    wh += '<ul class="options">' + ''.join(f'<li>{_e(o)}</li>' for o in ex['options']) + '</ul>'
+                wh += '</div>'
+        wh += '</div>'
+        body_parts.append(wh)
 
-    doc.build(elements)
-    pdf_bytes = buf.getvalue()
-    buf.close()
+    ha = pd.get('homework_assignment')
+    if ha and isinstance(ha, dict) and not ha.get('error'):
+        hat = _e(ha.get('homework_title', 'الواجب المنزلي' if is_rtl else 'Homework Assignment'))
+        hh = f'<div style="page-break-before: always; break-before: page; height: 0;"></div><div class="section"><h2>{hat}</h2>'
+        if ha.get('instructions'):
+            hh += f'<p class="instructions">{_e(ha["instructions"])}</p>'
+        if ha.get('tasks') and isinstance(ha['tasks'], list):
+            for task in ha['tasks']:
+                tn = task.get('task_number', '')
+                td = _e(task.get('description', ''))
+                hh += f'<div class="task"><span class="task-num">{tn}.</span> {td}<div class="answer-space"></div></div>'
+        hh += '</div>'
+        body_parts.append(hh)
+
+
+    html_str = f'''<!DOCTYPE html>
+<html dir="{ "rtl" if is_rtl else "ltr" }">
+<head><meta charset="utf-8">
+<style>
+{font_face}
+* {{ margin: 0; padding: 0; box-sizing: border-box; }}
+body {{ font-family: 'Noto', 'DejaVu Sans', sans-serif; font-size: 11pt; line-height: 1.7; color: #1e293b; padding: 2cm; }}
+h1 {{ font-size: 18pt; font-weight: bold; margin-bottom: 8pt; color: #1e293b; }}
+.meta {{ font-size: 9pt; color: #64748b; margin-bottom: 18pt; }}
+.section {{ margin-bottom: 14pt; }}
+h2 {{ font-size: 13pt; font-weight: bold; margin-bottom: 6pt; padding-bottom: 3pt; border-bottom: 1.5px solid #4f46e5; color: #1e293b; }}
+p {{ margin-bottom: 4pt; }}
+ul {{ padding-{"right" if is_rtl else "left"}: 20pt; }}
+li {{ margin-bottom: 2pt; }}
+.step {{ margin-bottom: 6pt; padding: 4pt 6pt; background: #f8fafc; border-radius: 4pt; }}
+.badge {{ font-size: 9pt; color: #64748b; }}
+.page-break {{ page-break-before: always; break-before: page; }}
+.instructions {{ margin-bottom: 10pt; font-style: italic; }}
+.exercise {{ margin-bottom: 10pt; padding: 8pt; border: 0.5pt solid #e2e8f0; border-radius: 4pt; }}
+.exercise p {{ margin-bottom: 3pt; }}
+ul.options {{ padding-{"right" if is_rtl else "left"}: 16pt; list-style: none; }}
+ul.options li::before {{ content: "○ "; color: #4f46e5; }}
+.answer {{ font-size: 9pt; color: #059669; margin-top: 4pt; }}
+.task {{ margin-bottom: 6pt; padding: 6pt 8pt; background: #f1f5f9; border-radius: 4pt; }}
+.task-num {{ font-weight: bold; color: #4f46e5; }}
+.answer-space {{ height: 40pt; margin-top: 8pt; border-bottom: 0.5pt dashed #cbd5e1; }}
+</style></head>
+<body>
+<h1>{title}</h1>
+<p class="meta">{_e(meta)}</p>
+{''.join(body_parts)}
+</body></html>'''
+
+    pdf_bytes = HTML(string=html_str).write_pdf()
 
     response = HttpResponse(pdf_bytes, content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="{plan.title or "lesson-plan"}-{pk}.pdf"'
+    safe_title = plan.title.replace('"', "'") if plan.title else "lesson-plan"
+    response['Content-Disposition'] = f'attachment; filename="{safe_title}-{pk}.pdf"'
     return response
 
 

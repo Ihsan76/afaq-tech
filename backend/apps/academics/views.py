@@ -1,6 +1,9 @@
-from rest_framework import generics, permissions, parsers
+from rest_framework import generics, permissions, parsers, status
+from rest_framework.response import Response
+from rest_framework.views import APIView
 from .models import Grade, Subject, Curriculum, Unit, CurriculumDocument
 from .serializers import GradeSerializer, SubjectSerializer, CurriculumSerializer, CurriculumDetailSerializer, UnitSerializer, CurriculumDocumentSerializer
+from .extraction import extract_text
 
 
 class GradeListView(generics.ListAPIView):
@@ -101,3 +104,19 @@ class CurriculumDocumentDetailView(generics.RetrieveDestroyAPIView):
     queryset = CurriculumDocument.objects.all()
     serializer_class = CurriculumDocumentSerializer
     permission_classes = [permissions.IsAdminUser]
+
+
+class CurriculumDocumentExtractView(APIView):
+    permission_classes = [permissions.IsAdminUser]
+
+    def post(self, request, pk):
+        try:
+            doc = CurriculumDocument.objects.get(pk=pk)
+        except CurriculumDocument.DoesNotExist:
+            return Response({"error": "Document not found"}, status=status.HTTP_404_NOT_FOUND)
+        extracted = extract_text(doc)
+        if not extracted:
+            return Response({"error": "No text could be extracted from this file"}, status=status.HTTP_400_BAD_REQUEST)
+        doc.extracted_text = extracted
+        doc.save(update_fields=["extracted_text"])
+        return Response({"id": doc.id, "extracted_text": doc.extracted_text})

@@ -53,7 +53,7 @@ export default function AdminTemplatesPage() {
       for (const lang of LANGUAGES) {
         const entry: { name: string; description?: string } = { name: nameTranslations[lang.code]?.trim() || "" };
         if (descTranslations[lang.code]?.trim()) entry.description = descTranslations[lang.code].trim();
-        translations[lang] = entry;
+        translations[lang.code] = entry;
       }
       await api.post("/pages/admin/templates/create/", {
         translations, slug, category, default_blocks: [], default_layout: {},

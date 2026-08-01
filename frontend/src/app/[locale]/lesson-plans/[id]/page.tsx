@@ -60,6 +60,7 @@ export default function LessonPlanDetailPage() {
   const [refineOpen, setRefineOpen] = useState(false);
   const [refinePrompt, setRefinePrompt] = useState("");
   const [refining, setRefining] = useState(false);
+  const [exportingPdf, setExportingPdf] = useState(false);
 
   useEffect(() => {
     api
@@ -81,6 +82,20 @@ export default function LessonPlanDetailPage() {
 
   const handlePrint = () => {
     window.print();
+  };
+
+  const handleExportPdf = async () => {
+    setExportingPdf(true);
+    try {
+      const res = await api.get(`/lesson-plans/${planId}/export-pdf/`, { params: { locale }, responseType: "blob" });
+      const url = window.URL.createObjectURL(new Blob([res.data], { type: "application/pdf" }));
+      const a = document.createElement("a");
+      a.href = url; a.download = `${plan?.title || "lesson-plan"}-${planId}.pdf`;
+      document.body.appendChild(a); a.click();
+      a.remove(); window.URL.revokeObjectURL(url);
+    } catch {
+      alert("فشل تصدير PDF");
+    } finally { setExportingPdf(false); }
   };
 
   const handleCopyText = () => {
@@ -257,6 +272,15 @@ export default function LessonPlanDetailPage() {
               style={{ borderColor: "var(--color-border)", color: "var(--color-text)" }}
             >
               🖨️ طباعة
+            </button>
+
+            <button
+              onClick={handleExportPdf}
+              disabled={exportingPdf}
+              className="px-3.5 py-2 rounded-xl text-xs font-bold transition-all border flex items-center gap-1.5 disabled:opacity-50"
+              style={{ borderColor: "var(--color-border)", color: "var(--color-error)" }}
+            >
+              {exportingPdf ? t("exportingPdf") : `📄 ${t("exportPdf")}`}
             </button>
 
             <button
