@@ -54,6 +54,19 @@ def sync_language_from_messages(language):
     return len(to_update)
 
 
+def cleanup_language_from_translations(language):
+    """إزالة قيم لغة محذوفة من كل TranslationKey (post_delete)."""
+    code = language.code
+    to_update = []
+    for obj in TranslationKey.objects.all().iterator():
+        if code in obj.translations:
+            obj.translations.pop(code)
+            to_update.append(obj)
+    if to_update:
+        TranslationKey.objects.bulk_update(to_update, ["translations"], batch_size=200)
+    return len(to_update)
+
+
 def sync_key_from_messages(key_obj):
     """تعبئة اللغات الناقصة لمفتاح جديد من ملفات messages/*.json.
 
