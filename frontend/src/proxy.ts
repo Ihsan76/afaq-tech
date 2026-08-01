@@ -7,6 +7,8 @@ export default createMiddleware({
   localePrefix: "always",
 });
 
+// NOTE: must stay a static literal — Next.js parses `matcher` at compile time.
+// Regenerated automatically by `npm run sync:locales`.
 export const config = {
-  matcher: ["/", "/(ar|en|fr|tr|ur|es|de|id|bn)/:path*"],
+  matcher: ["/", "/(ar|en|fr|tr|ur|es|de|id|bn|fa)/:path*"],
 };

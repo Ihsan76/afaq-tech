@@ -81,6 +81,7 @@ export default function Navbar() {
     { href: `/${locale}/admin/menus`, label: t("admin.menus"), icon: "📋" },
     { href: `/${locale}/admin/languages`, label: t("admin.languages"), icon: "🌐" },
     { href: `/${locale}/admin/translations`, label: t("admin.translations"), icon: "🗂️" },
+    { href: `/${locale}/admin/feature-flags`, label: t("admin.featureFlags"), icon: "🚩" },
     { href: `/${locale}/admin/settings`, label: t("admin.settings"), icon: "🔧" },
   ];
 

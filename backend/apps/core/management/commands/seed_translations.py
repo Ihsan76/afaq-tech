@@ -7,19 +7,7 @@ from pathlib import Path
 from django.core.management.base import BaseCommand, CommandError
 
 from apps.core.models import TranslationKey
-
-
-def flatten(messages, prefix="", out=None):
-    """تحويل الكائنات المتداخلة إلى مفاتيح مسطحة بنقاط: {"a": {"b": "x"}} -> {"a.b": "x"}"""
-    if out is None:
-        out = {}
-    for key, value in messages.items():
-        dotted = f"{prefix}.{key}" if prefix else key
-        if isinstance(value, dict):
-            flatten(value, dotted, out)
-        else:
-            out[dotted] = value
-    return out
+from apps.core.translation_seed import flatten
 
 
 class Command(BaseCommand):

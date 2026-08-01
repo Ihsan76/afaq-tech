@@ -2,8 +2,8 @@ from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from django.shortcuts import get_object_or_404
-from .models import Language, TranslationKey
-from .serializers import LanguageSerializer, TranslationSerializer
+from .models import Language, TranslationKey, FeatureFlag
+from .serializers import LanguageSerializer, TranslationSerializer, FeatureFlagSerializer
 
 
 class LanguagePublicListView(generics.ListAPIView):
@@ -85,4 +85,38 @@ class TranslationAdminUpdateView(generics.RetrieveUpdateAPIView):
 def translation_delete(request, pk):
     translation = get_object_or_404(TranslationKey, pk=pk)
     translation.delete()
+    return Response({'status': 'deleted'})
+
+
+class FeatureFlagPublicListView(generics.ListAPIView):
+    queryset = FeatureFlag.objects.filter(is_active=True)
+    serializer_class = FeatureFlagSerializer
+    permission_classes = [permissions.AllowAny]
+    pagination_class = None
+
+
+class FeatureFlagAdminListView(generics.ListAPIView):
+    queryset = FeatureFlag.objects.all()
+    serializer_class = FeatureFlagSerializer
+    permission_classes = [permissions.IsAdminUser]
+    pagination_class = None
+
+
+class FeatureFlagAdminCreateView(generics.CreateAPIView):
+    queryset = FeatureFlag.objects.all()
+    serializer_class = FeatureFlagSerializer
+    permission_classes = [permissions.IsAdminUser]
+
+
+class FeatureFlagAdminUpdateView(generics.RetrieveUpdateAPIView):
+    queryset = FeatureFlag.objects.all()
+    serializer_class = FeatureFlagSerializer
+    permission_classes = [permissions.IsAdminUser]
+
+
+@api_view(['DELETE'])
+@permission_classes([permissions.IsAdminUser])
+def feature_flag_delete(request, pk):
+    flag = get_object_or_404(FeatureFlag, pk=pk)
+    flag.delete()
     return Response({'status': 'deleted'})

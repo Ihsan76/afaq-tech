@@ -16,6 +16,9 @@ export default function AdminPage() {
       { href: `/${locale}/admin/templates`, title: t("admin.templates"), description: t("admin.templatesDesc"), icon: "📝", gradient: "linear-gradient(135deg, var(--color-success), var(--color-accent))" },
       { href: `/${locale}/admin/themes`, title: t("admin.themes"), description: t("admin.themesDesc"), icon: "🎨", gradient: "linear-gradient(135deg, var(--color-error), var(--color-warning))" },
       { href: `/${locale}/admin/settings`, title: t("admin.settings"), description: t("admin.settingsDesc"), icon: "⚙️", gradient: "linear-gradient(135deg, var(--color-text-muted), var(--color-border))" },
+      { href: `/${locale}/admin/languages`, title: t("admin.languages"), description: t("admin.languagesDesc"), icon: "🌐", gradient: "linear-gradient(135deg, var(--color-primary), var(--color-accent))" },
+      { href: `/${locale}/admin/translations`, title: t("admin.translations"), description: t("admin.translationsDesc"), icon: "🗂️", gradient: "linear-gradient(135deg, var(--color-secondary), var(--color-primary))" },
+      { href: `/${locale}/admin/feature-flags`, title: t("admin.featureFlags"), description: t("admin.featureFlagsDesc"), icon: "🚩", gradient: "linear-gradient(135deg, var(--color-warning), var(--color-error))" },
     ]},
     { section: t("admin.educationSection"), items: [
       { href: `/${locale}/admin/grades`, title: t("admin.grades"), description: t("admin.gradesDesc"), icon: "🎓", gradient: "linear-gradient(135deg, var(--color-primary-light), var(--color-muted))" },

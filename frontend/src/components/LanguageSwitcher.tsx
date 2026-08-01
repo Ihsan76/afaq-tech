@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { locales } from "@/i18n/config";
+import { locales, localeNames, localeFlags } from "@/i18n/config";
 import { useLanguages } from "@/lib/useLanguages";
 
 export default function LanguageSwitcher() {
@@ -26,17 +26,7 @@ export default function LanguageSwitcher() {
 
   const displayList = [
     ...routable.map((l) => ({ code: l.code, label: l.native_name || l.name, flag: l.flag || "🌐" })),
-    ...fallback.map((l) => {
-      const known: Record<string, string> = {
-        ar: "العربية", en: "English", fr: "Français", tr: "Türkçe", ur: "اردو",
-        es: "Español", de: "Deutsch", id: "Bahasa Indonesia", bn: "বাংলা",
-      };
-      const flags: Record<string, string> = {
-        ar: "🇸🇦", en: "🇬🇧", fr: "🇫🇷", tr: "🇹🇷", ur: "🇵🇰",
-        es: "🇪🇸", de: "🇩🇪", id: "🇮🇩", bn: "🇧🇩",
-      };
-      return { code: l, label: known[l] || l, flag: flags[l] || "🌐" };
-    }),
+    ...fallback.map((l) => ({ code: l, label: localeNames[l] || l, flag: localeFlags[l] || "🌐" })),
   ];
 
   const current = displayList.find((l) => l.code === currentLocale);

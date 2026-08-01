@@ -1,8 +1,7 @@
 import type { MetadataRoute } from "next";
+import { locales } from "@/i18n/config";
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://afaq.app";
-
-const LOCALES = ["ar", "en", "fr", "tr", "ur", "es", "de", "id", "bn"];
 
 const STATIC_PAGES = [
   "",
@@ -75,7 +74,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const entries: MetadataRoute.Sitemap = [];
 
   for (const path of allPaths) {
-    for (const locale of LOCALES) {
+    for (const locale of locales) {
       entries.push({
         url: `${BASE_URL}/${locale}${path}`,
         lastModified: now,
@@ -86,7 +85,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }
 
   for (const slug of blogPosts) {
-    for (const locale of LOCALES) {
+    for (const locale of locales) {
       entries.push({
         url: `${BASE_URL}/${locale}${slug}`,
         lastModified: now,
@@ -97,7 +96,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }
 
   for (const slug of ebooks) {
-    for (const locale of LOCALES) {
+    for (const locale of locales) {
       entries.push({
         url: `${BASE_URL}/${locale}${slug}`,
         lastModified: now,

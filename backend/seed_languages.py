@@ -18,6 +18,7 @@ LANGUAGES = [
     {'code': 'de', 'name': 'German', 'native_name': 'Deutsch', 'flag': '🇩🇪', 'is_rtl': False, 'order': 7},
     {'code': 'id', 'name': 'Indonesian', 'native_name': 'Bahasa Indonesia', 'flag': '🇮🇩', 'is_rtl': False, 'order': 8},
     {'code': 'bn', 'name': 'Bengali', 'native_name': 'বাংলা', 'flag': '🇧🇩', 'is_rtl': False, 'order': 9},
+    {'code': 'fa', 'name': 'Persian', 'native_name': 'فارسی', 'flag': '🇮🇷', 'is_rtl': True, 'order': 10},
 ]
 
 created = 0

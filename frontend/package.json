@@ -6,7 +6,8 @@
     "dev": "NODE_OPTIONS=\"--unhandled-rejections=warn\" next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "sync:locales": "node scripts/sync-locales.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.8",
