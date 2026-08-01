@@ -1,13 +1,44 @@
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
 import { notFound } from "next/navigation";
-import { locales } from "@/i18n/config";
+import type { Metadata } from "next";
+import { locales, localeNames } from "@/i18n/config";
 import NavbarWrapper from "@/components/NavbarWrapper";
 import Footer from "@/components/Footer";
 import HtmlAttrs from "@/components/HtmlAttrs";
 import ChatWidget from "@/components/ChatWidget";
 import TranslationProvider from "@/components/TranslationProvider";
 import "../globals.css";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+
+  const languages: Record<string, string> = { "x-default": "/" };
+  for (const loc of locales) {
+    languages[loc] = `/${loc}`;
+  }
+
+  return {
+    alternates: {
+      canonical: `/${locale}`,
+      languages,
+    },
+    openGraph: {
+      type: "website",
+      locale,
+      alternateLocale: [...locales],
+      siteName: "آفاق تكنولوجي | Afaq Tech",
+    },
+    title: {
+      default: `${localeNames[locale] || locale} — آفاق تكنولوجي | Afaq Tech`,
+      template: "%s | آفاق تكنولوجي",
+    },
+  };
+}
 
 export default async function LocaleLayout({
   children,

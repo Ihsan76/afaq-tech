@@ -1,7 +1,28 @@
 import type { Metadata } from "next";
 import "./globals.css";
 
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://afaq.app";
+const JSON_LD = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      name: "آفاق تكنولوجي | Afaq Tech",
+      url: BASE_URL,
+      description:
+        "منصة رقمية متخصصة في الخدمات الرقمية والتعليم بالذكاء الاصطناعي",
+    },
+    {
+      "@type": "WebSite",
+      name: "آفاق تكنولوجي | Afaq Tech",
+      url: BASE_URL,
+      inLanguage: ["ar", "en", "fr", "tr", "ur", "es", "de", "id", "bn", "fa"],
+    },
+  ],
+};
+
 export const metadata: Metadata = {
+  metadataBase: new URL(BASE_URL),
   title: {
     default: "آفاق تكنولوجي | Afaq Tech",
     template: "%s | آفاق تكنولوجي",
@@ -37,6 +58,10 @@ export default function RootLayout({
     <html suppressHydrationWarning>
       <head>
         <meta name="theme-color" content="#4F46E5" />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }}
+        />
       </head>
       <body>{children}</body>
     </html>
