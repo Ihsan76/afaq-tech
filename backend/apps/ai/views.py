@@ -1,10 +1,10 @@
 import json
 import time
 
-import google.generativeai as genai
 from django.conf import settings
 from django.http import StreamingHttpResponse
 from django.shortcuts import get_object_or_404
+from google import genai
 from rest_framework import generics, permissions, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
@@ -286,20 +286,19 @@ def _resolve_provider_and_key(request):
 
 
 def _fetch_google_models(api_key):
-    genai.configure(api_key=api_key)
-    models = genai.list_models()
+    client = genai.Client(api_key=api_key)
+    models = client.models.list()
     result = []
     for m in models:
-        if 'generateContent' in m.supported_generation_methods:
-            name = m.name.replace('models/', '')
+        if m.supported_generation_methods and 'generateContent' in m.supported_generation_methods:
+            name = m.name.replace('models/', '') if m.name else ''
             result.append({
                 'model_id': name,
-                'display_name': m.display_name,
-                'description': m.description,
-                'input_token_limit': m.input_token_limit,
-                'output_token_limit': m.output_token_limit,
+                'display_name': getattr(m, 'display_name', name),
+                'description': getattr(m, 'description', ''),
+                'input_token_limit': getattr(m, 'input_token_limit', 0),
+                'output_token_limit': getattr(m, 'output_token_limit', 0),
             })
-    genai.configure(api_key=settings.GEMINI_API_KEY)
     return result
 
 
@@ -364,9 +363,8 @@ def test_provider_connection(request):
     provider_type, api_key, base_url = _resolve_provider_and_key(request)
     try:
         if provider_type == 'google':
-            genai.configure(api_key=api_key)
-            genai.list_models()
-            genai.configure(api_key=settings.GEMINI_API_KEY)
+            client = genai.Client(api_key=api_key)
+            client.models.list()
         elif provider_type == 'openai':
             from openai import OpenAI
             OpenAI(api_key=api_key).models.list()

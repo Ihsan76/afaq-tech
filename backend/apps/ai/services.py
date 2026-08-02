@@ -2,19 +2,17 @@ import hashlib
 import json
 import time
 
-import google.generativeai as genai
 from django.conf import settings
 from django.core.cache import cache
 from django.db.models import Case, IntegerField, Q, Value, When
 from django.template import Context, Template
+from google import genai
 from openai import OpenAI
 
 from apps.academics.models import CurriculumDocument
 
 from .models import AIModel, AIProvider, PromptTemplate
 from .router import ProviderRouter
-
-genai.configure(api_key=settings.GEMINI_API_KEY)
 
 router = ProviderRouter()
 
@@ -180,7 +178,7 @@ def _build_history(messages_qs):
     history = []
     for msg in messages_qs:
         role = "model" if msg.role == "assistant" else "user"
-        history.append({"role": role, "parts": [msg.content]})
+        history.append({"role": role, "parts": [{"text": msg.content}]})
     return history
 
 
@@ -201,18 +199,17 @@ def chat_stream(messages, new_message, model_id=None):
     system_prompt = _get_system_prompt()
 
     if provider_code == 'google':
-        if api_key:
-            genai.configure(api_key=api_key)
-        else:
-            genai.configure(api_key=settings.GEMINI_API_KEY)
+        k = api_key if api_key else settings.GEMINI_API_KEY
+        client = genai.Client(api_key=k)
 
         conversation_history = _build_history(messages)
-        model = genai.GenerativeModel(
-            model_name,
-            system_instruction=system_prompt,
+        config = genai.types.GenerateContentConfig(system_instruction=system_prompt)
+        chat = client.chats.create(
+            model=model_name,
+            history=conversation_history,
+            config=config,
         )
-        chat = model.start_chat(history=conversation_history)
-        response = chat.send_message(new_message, stream=True)
+        response = chat.send_message_stream(new_message)
 
         for chunk in response:
             if chunk.text:

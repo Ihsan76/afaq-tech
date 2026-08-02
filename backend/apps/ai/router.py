@@ -5,9 +5,9 @@ from abc import ABC, abstractmethod
 from collections import defaultdict
 from dataclasses import dataclass
 
-import google.generativeai as genai
 from django.conf import settings
 from django.core.cache import cache
+from google import genai
 from openai import OpenAI
 
 logger = logging.getLogger(__name__)
@@ -47,22 +47,22 @@ class GeminiProvider(BaseProvider):
     name = "google"
     model_name = "gemini-3.6-flash"
 
-    def _get_model(self):
+    def _get_client(self):
         k = self.api_key or settings.GEMINI_API_KEY
-        genai.configure(api_key=k)
-        return genai.GenerativeModel(self.model_name)
+        return genai.Client(api_key=k)
 
     def generate(self, prompt: str, **kwargs) -> AIResponse:
         start = time.time()
         try:
-            model = self._get_model()
+            client = self._get_client()
             system_instruction = kwargs.get("system_instruction", "")
-            if system_instruction:
-                m = genai.GenerativeModel(self.model_name, system_instruction=system_instruction)
-            else:
-                m = model
-            resp = m.generate_content(prompt)
-            raw = resp.text.strip()
+            config = genai.types.GenerateContentConfig(system_instruction=system_instruction) if system_instruction else None
+            resp = client.models.generate_content(
+                model=self.model_name,
+                contents=prompt,
+                config=config,
+            )
+            raw = resp.text.strip() if resp.text else ""
             tokens = 0
             if hasattr(resp, "usage_metadata") and resp.usage_metadata:
                 tokens = resp.usage_metadata.total_token_count
@@ -80,8 +80,8 @@ class GeminiProvider(BaseProvider):
 
     def health_check(self) -> bool:
         try:
-            genai.configure(api_key=self.api_key or settings.GEMINI_API_KEY)
-            genai.GenerativeModel(self.model_name).generate_content("test")
+            client = genai.Client(api_key=self.api_key or settings.GEMINI_API_KEY)
+            client.models.generate_content(model=self.model_name, contents="test")
             return True
         except Exception:
             return False
