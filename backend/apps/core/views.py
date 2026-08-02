@@ -1,10 +1,21 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, permissions, status
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.response import Response
 
 from .models import FeatureFlag, Language, TranslationKey
 from .serializers import FeatureFlagSerializer, LanguageSerializer, TranslationSerializer
+
+
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+@throttle_classes([])
+def health_view(request):
+    """Liveness/health probe for load balancers and monitoring."""
+    return Response({
+        'status': 'ok',
+        'service': 'afaq-api',
+    })
 
 
 class LanguagePublicListView(generics.ListAPIView):

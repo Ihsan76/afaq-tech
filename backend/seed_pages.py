@@ -4,6 +4,7 @@ Run: python seed_pages.py
 """
 import os
 import sys
+
 import django
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))

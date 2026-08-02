@@ -8,7 +8,6 @@ from rest_framework import generics, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from weasyprint import HTML
 
 from apps.academics.models import Curriculum, CurriculumDocument, Grade, Subject, Unit
 from apps.ai.models import AIRun
@@ -549,6 +548,7 @@ ul.options li::before {{ content: "○ "; color: #4f46e5; }}
 {''.join(body_parts)}
 </body></html>'''
 
+    from weasyprint import HTML
     pdf_bytes = HTML(string=html_str).write_pdf()
 
     response = HttpResponse(pdf_bytes, content_type='application/pdf')

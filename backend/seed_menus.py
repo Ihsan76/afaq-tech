@@ -1,4 +1,7 @@
-import os, django
+import os
+
+import django
+
 os.environ['DJANGO_SETTINGS_MODULE'] = 'config.settings.base'
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings.base')
 django.setup()

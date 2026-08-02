@@ -9,15 +9,15 @@ Run: python seed_courses.py
 """
 import os
 import sys
+
 import django
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings.base')
 django.setup()
 
-from apps.courses.models import CourseCategory, Course, Chapter, Lesson
-from course_data import HTML_LESSONS, CSS_LESSONS, JS_LESSONS, PY_LESSONS
-
+from apps.courses.models import Chapter, Course, CourseCategory, Lesson
+from course_data import CSS_LESSONS, HTML_LESSONS, JS_LESSONS, PY_LESSONS
 
 # ════════════════════════════════════════════════════════════════
 # Categories
@@ -55,7 +55,7 @@ CATEGORIES = [
 def make_chapters(lessons, chapter_titles_ar, chapter_titles_en, per_chapter=6):
     """Split a flat lesson list into chapters."""
     chapters = []
-    for i, (ar_title, en_title) in enumerate(zip(chapter_titles_ar, chapter_titles_en)):
+    for i, (ar_title, en_title) in enumerate(zip(chapter_titles_ar, chapter_titles_en, strict=False)):
         chunk = lessons[i * per_chapter:(i + 1) * per_chapter]
         if chunk:
             chapters.append({

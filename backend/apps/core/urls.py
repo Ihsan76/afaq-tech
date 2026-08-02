@@ -19,4 +19,5 @@ urlpatterns = [
     path('admin/feature-flags/<int:pk>/', views.FeatureFlagAdminUpdateView.as_view(), name='feature-flag-admin-update'),
     path('admin/feature-flags/<int:pk>/delete/', views.feature_flag_delete, name='feature-flag-admin-delete'),
     path('admin/stats/', views.admin_stats, name='admin-stats'),
+    path('health/', views.health_view, name='health'),
 ]

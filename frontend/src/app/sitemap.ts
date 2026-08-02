@@ -53,14 +53,14 @@ async function fetchGradePaths(): Promise<string[]> {
 
 async function fetchBlogPaths(): Promise<string[]> {
   const data = await fetchJson("/blog/posts/?locale=en");
-  return ((data?.results || data) as any[])
+  return ((data?.results || data || []) as any[])
     .filter((p: any) => p.slug)
     .map((p: any) => p.slug);
 }
 
 async function fetchEbookPaths(): Promise<string[]> {
   const data = await fetchJson("/ebooks/?locale=en");
-  return ((data?.results || data) as any[])
+  return ((data?.results || data || []) as any[])
     .filter((e: any) => e.slug)
     .map((e: any) => e.slug);
 }
