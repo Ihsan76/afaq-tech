@@ -7,6 +7,7 @@ import NavbarWrapper from "@/components/NavbarWrapper";
 import Footer from "@/components/Footer";
 import HtmlAttrs from "@/components/HtmlAttrs";
 import ChatWidget from "@/components/ChatWidget";
+import KeepAlive from "@/components/KeepAlive";
 import TranslationProvider from "@/components/TranslationProvider";
 import "../globals.css";
 
@@ -65,6 +66,7 @@ export default async function LocaleLayout({
           {/* Footer */}
           <Footer />
           <ChatWidget />
+          <KeepAlive />
         </TranslationProvider>
       </NextIntlClientProvider>
     </>
