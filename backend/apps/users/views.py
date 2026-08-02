@@ -14,10 +14,10 @@ from django.utils import timezone
 from rest_framework import generics, permissions, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
-from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from apps.core.throttling import ResilientScopedRateThrottle
 from apps.lessonplans.models import LessonPlan
 
 from .models import EmailVerification, LoginAttempt
@@ -77,7 +77,7 @@ class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = RegisterSerializer
     permission_classes = [permissions.AllowAny]
-    throttle_classes = [ScopedRateThrottle]
+    throttle_classes = [ResilientScopedRateThrottle]
     throttle_scope = 'auth_register'
 
     def create(self, request, *args, **kwargs):
@@ -99,7 +99,7 @@ class RegisterView(generics.CreateAPIView):
 
 class LoginView(APIView):
     permission_classes = [permissions.AllowAny]
-    throttle_classes = [ScopedRateThrottle]
+    throttle_classes = [ResilientScopedRateThrottle]
     throttle_scope = 'auth_login'
 
     def post(self, request):
@@ -186,7 +186,7 @@ class TokenRefreshView(APIView):
 
 class ForgotPasswordView(APIView):
     permission_classes = [permissions.AllowAny]
-    throttle_classes = [ScopedRateThrottle]
+    throttle_classes = [ResilientScopedRateThrottle]
     throttle_scope = 'auth_reset'
 
     def post(self, request):
@@ -221,7 +221,7 @@ class ForgotPasswordView(APIView):
 
 class ResetPasswordView(APIView):
     permission_classes = [permissions.AllowAny]
-    throttle_classes = [ScopedRateThrottle]
+    throttle_classes = [ResilientScopedRateThrottle]
     throttle_scope = 'auth_reset'
 
     def post(self, request):
@@ -311,7 +311,7 @@ def user_stats_view(request):
 
 class LogoutView(APIView):
     permission_classes = [permissions.AllowAny]
-    throttle_classes = [ScopedRateThrottle]
+    throttle_classes = [ResilientScopedRateThrottle]
     throttle_scope = 'auth_login'
 
     def post(self, request):
@@ -329,7 +329,7 @@ class LogoutView(APIView):
 class VerifyEmailView(APIView):
     """Send (or resend) a verification code to the user's email."""
     permission_classes = [permissions.AllowAny]
-    throttle_classes = [ScopedRateThrottle]
+    throttle_classes = [ResilientScopedRateThrottle]
     throttle_scope = 'auth_verify'
 
     def post(self, request):
@@ -352,7 +352,7 @@ class VerifyEmailView(APIView):
 class VerifyEmailConfirmView(APIView):
     """Confirm a verification code and mark the user's email as verified."""
     permission_classes = [permissions.AllowAny]
-    throttle_classes = [ScopedRateThrottle]
+    throttle_classes = [ResilientScopedRateThrottle]
     throttle_scope = 'auth_verify'
 
     def post(self, request):
