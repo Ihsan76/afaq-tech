@@ -173,6 +173,9 @@ CACHES = {
     },
 }
 
+DJANGO_REDIS_IGNORE_EXCEPTIONS = True
+DJANGO_REDIS_LOG_IGNORED_EXCEPTIONS = True
+
 SENTRY_DSN = env('SENTRY_DSN_BACKEND', default=None)
 if SENTRY_DSN:
     import sentry_sdk
