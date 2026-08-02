@@ -7,7 +7,7 @@ import Link from "next/link";
 import { useApiList, usePrefetch } from "@/lib/useApi";
 import { localizedContent } from "@/lib/i18n";
 
-interface Grade { id: number; translations: Record<string, Record<string, string>>; level: number; }
+interface Grade { id: number; name?: string; translations: Record<string, Record<string, string>>; level: number; }
 
 const gradeIcons = ["📚", "📐", "🔬", "🌍", "🎨", "📖"];
 const gradeColors = ["var(--color-primary-light)", "var(--color-success-light)", "var(--color-accent-light)", "var(--color-warning-light)", "var(--color-error-light)"];
@@ -17,8 +17,8 @@ export default function GradeShowcase({ content }: { content?: Record<string, an
   const tl = useTranslations("landing");
   const pathname = usePathname();
   const locale = pathname.split("/")[1] || "en";
-  const { data: grades, loading } = useApiList<Grade>("/academics/grades/");
-  const prefetch = usePrefetch(grades.map((g) => `/academics/subjects/`));
+  const { data: grades, loading } = useApiList<Grade>("/academics/grades/", { locale });
+  const prefetch = usePrefetch(grades.map(() => `/academics/subjects/`));
   const c = content || {};
 
   useEffect(() => {
@@ -56,10 +56,8 @@ export default function GradeShowcase({ content }: { content?: Record<string, an
               <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4 shadow-sm" style={{ background: gradeColors[i % gradeColors.length] }}>
                 <span className="text-2xl">{gradeIcons[i % gradeIcons.length]}</span>
               </div>
-              <h3 className="text-xl font-bold mb-1" style={{ fontFamily: "var(--font-heading)", color: "var(--color-text)" }}>{localizedContent(grade, "name", locale)}</h3>
-              <p className="text-xs font-medium px-2.5 py-1 rounded-full inline-block mt-3" style={{ color: "var(--color-primary)", background: "var(--color-primary-light)" }}>
-                {t("level")} {grade.level}
-              </p>
+              <h3 className="text-xl font-bold mb-1" style={{ fontFamily: "var(--font-heading)", color: "var(--color-text)" }}>{typeof grade.name === "string" && grade.name ? grade.name : localizedContent(grade, "name", locale)}</h3>
+              <p className="text-sm" style={{ color: "var(--color-text-muted)" }}>{t("level")} {grade.level}</p>
             </Link>
           );})}
         </div>
