@@ -120,3 +120,65 @@ def feature_flag_delete(request, pk):
     flag = get_object_or_404(FeatureFlag, pk=pk)
     flag.delete()
     return Response({'status': 'deleted'})
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAdminUser])
+def admin_stats(request):
+    from django.contrib.auth import get_user_model
+    from django.db.models import Count, Sum
+    from datetime import timedelta
+    from django.utils import timezone
+    from apps.lessonplans.models import LessonPlan
+    from apps.marketplace.models import Service, Order, ServiceCategory
+    from apps.ai.models import AIRun
+    from apps.blog.models import BlogPost
+    from apps.courses.models import Course, Enrollment
+    from apps.gamification.models import PointsTransaction, UserBadge
+
+    User = get_user_model()
+    week_ago = timezone.now() - timedelta(days=7)
+
+    users = User.objects.all()
+    orders = Order.objects.all()
+    ai_runs = AIRun.objects.all()
+
+    return Response({
+        'users': {
+            'total': users.count(),
+            'new_7d': users.filter(date_joined__gte=week_ago).count(),
+            'by_role': dict(users.values_list('role').annotate(c=Count('id')).values_list('role', 'c')),
+            'by_plan': dict(users.values_list('subscription_plan').annotate(c=Count('id')).values_list('subscription_plan', 'c')),
+        },
+        'lesson_plans': {
+            'total': LessonPlan.objects.count(),
+            'published': LessonPlan.objects.filter(is_public=True).count(),
+        },
+        'marketplace': {
+            'services': Service.objects.count(),
+            'published_services': Service.objects.filter(status=Service.Status.PUBLISHED).count(),
+            'categories': ServiceCategory.objects.count(),
+            'orders': orders.count(),
+            'orders_7d': orders.filter(created_at__gte=week_ago).count(),
+            'revenue': float(orders.exclude(status=Order.Status.CANCELLED).aggregate(s=Sum('price_paid'))['s'] or 0),
+            'orders_by_status': dict(orders.values_list('status').annotate(c=Count('id')).values_list('status', 'c')),
+        },
+        'ai': {
+            'runs': ai_runs.count(),
+            'runs_7d': ai_runs.filter(created_at__gte=week_ago).count(),
+            'tokens': ai_runs.aggregate(s=Sum('tokens_used'))['s'] or 0,
+            'cost': float(ai_runs.aggregate(s=Sum('cost'))['s'] or 0),
+            'avg_duration_ms': round((ai_runs.aggregate(a=Sum('duration_ms'))['a'] or 0) / ai_runs.count() if ai_runs.count() else 0),
+        },
+        'blog': {
+            'posts': BlogPost.objects.count(),
+        },
+        'courses': {
+            'courses': Course.objects.count(),
+            'enrollments': Enrollment.objects.count(),
+        },
+        'gamification': {
+            'points_awarded': PointsTransaction.objects.aggregate(s=Sum('points'))['s'] or 0,
+            'badges_issued': UserBadge.objects.count(),
+        },
+    })

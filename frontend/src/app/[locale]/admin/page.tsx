@@ -1,13 +1,45 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
+import { api } from "@/lib/api";
+
+interface AdminStats {
+  users: { total: number; new_7d: number; by_role: Record<string, number> };
+  lesson_plans: { total: number; published: number };
+  marketplace: { services: number; published_services: number; categories: number; orders: number; revenue: number; orders_7d: number };
+  ai: { runs: number; runs_7d: number; tokens: number; cost: number; avg_duration_ms: number };
+  blog: { posts: number };
+  courses: { courses: number; enrollments: number };
+  gamification: { points_awarded: number; badges_issued: number };
+}
 
 export default function AdminPage() {
   const t = useTranslations();
   const pathname = usePathname();
   const locale = pathname.split("/")[1] || "en";
+  const [stats, setStats] = useState<AdminStats | null>(null);
+  const [statsLoading, setStatsLoading] = useState(true);
+
+  useEffect(() => {
+    api.get("/core/admin/stats/")
+      .then((r) => setStats(r.data))
+      .catch(() => {})
+      .finally(() => setStatsLoading(false));
+  }, []);
+
+  const statCards: { icon: string; value: string; label: string; sub: string; color: string }[] = stats ? [
+    { icon: "👥", value: String(stats.users.total), label: t("admin.statUsers"), sub: `+${stats.users.new_7d} ${t("admin.statNew7d")}`, color: "linear-gradient(135deg, var(--color-primary), var(--color-secondary))" },
+    { icon: "📝", value: String(stats.lesson_plans.total), label: t("admin.statLessonPlans"), sub: `${stats.lesson_plans.published} ${t("admin.statPublished")}`, color: "linear-gradient(135deg, var(--color-success), var(--color-accent))" },
+    { icon: "🛒", value: String(stats.marketplace.orders), label: t("admin.statOrders"), sub: `${stats.marketplace.revenue.toLocaleString(locale === "ar" ? "ar-JO" : "en-US")} ${t("admin.currency")}`, color: "linear-gradient(135deg, var(--color-warning), var(--color-error))" },
+    { icon: "🏪", value: String(stats.marketplace.services), label: t("admin.statServices"), sub: `${stats.marketplace.published_services} ${t("admin.statPublished")}`, color: "linear-gradient(135deg, var(--color-accent), var(--color-primary))" },
+    { icon: "🤖", value: String(stats.ai.runs), label: t("admin.statAiRuns"), sub: `${stats.ai.tokens.toLocaleString()} ${t("admin.statTokens")}`, color: "linear-gradient(135deg, var(--color-secondary), var(--color-info, #0284c7))" },
+    { icon: "📰", value: String(stats.blog.posts), label: t("admin.statBlogPosts"), sub: "", color: "linear-gradient(135deg, var(--color-error), var(--color-warning))" },
+    { icon: "🎬", value: String(stats.courses.courses), label: t("admin.statCourses"), sub: `${stats.courses.enrollments} ${t("admin.statEnrollments")}`, color: "linear-gradient(135deg, var(--color-primary-light), var(--color-muted))" },
+    { icon: "⭐", value: String(stats.gamification.points_awarded), label: t("admin.statPoints"), sub: `${stats.gamification.badges_issued} ${t("admin.statBadges")}`, color: "linear-gradient(135deg, var(--color-success-light), var(--color-warning))" },
+  ] : [];
 
   const adminLinks = [
     { section: t("admin.contentSection"), items: [
@@ -34,6 +66,10 @@ export default function AdminPage() {
     { section: t("admin.coursesSection"), items: [
       { href: `/${locale}/admin/courses`, title: t("admin.courses"), description: t("admin.coursesDesc"), icon: "🎬", gradient: "linear-gradient(135deg, var(--color-error), var(--color-primary))" },
     ]},
+    { section: t("admin.marketplaceSection"), items: [
+      { href: `/${locale}/admin/marketplace`, title: t("admin.marketplace"), description: t("admin.marketplaceDesc"), icon: "🏪", gradient: "linear-gradient(135deg, var(--color-warning), var(--color-success))" },
+      { href: `/${locale}/admin/ai-runs`, title: t("admin.aiRuns"), description: t("admin.aiRunsDesc"), icon: "🤖", gradient: "linear-gradient(135deg, var(--color-secondary), var(--color-primary))" },
+    ]},
     { section: t("admin.messagesSection"), items: [
       { href: `/${locale}/admin/messages`, title: t("admin.messages"), description: t("admin.messagesDesc"), icon: "✉️", gradient: "linear-gradient(135deg, var(--color-secondary), var(--color-accent))" },
       { href: `/${locale}/admin/newsletter`, title: t("admin.newsletterSubs"), description: t("admin.newsletterDesc"), icon: "📬", gradient: "linear-gradient(135deg, var(--color-success), var(--color-primary))" },
@@ -49,6 +85,25 @@ export default function AdminPage() {
         <h1 className="text-3xl font-bold mb-1" style={{ color: "var(--color-text)", fontFamily: "var(--font-heading)" }}>{t("admin.title")}</h1>
         <p style={{ color: "var(--color-text-muted)" }}>{t("admin.dashboard")}</p>
       </div>
+
+      {statsLoading ? (
+        <div className="text-center py-8 mb-8" style={{ color: "var(--color-text-muted)" }}>{t("common.loading")}</div>
+      ) : stats ? (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          {statCards.map((card) => (
+            <div key={card.label} className="p-4 rounded-3xl flex items-center gap-4" style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", boxShadow: "var(--card-shadow)" }}>
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center text-white shrink-0" style={{ background: card.color }}>
+                <span className="text-xl">{card.icon}</span>
+              </div>
+              <div className="min-w-0">
+                <p className="text-xl font-bold leading-tight truncate" style={{ color: "var(--color-text)" }}>{card.value}</p>
+                <p className="text-xs font-semibold truncate" style={{ color: "var(--color-text-secondary)" }}>{card.label}</p>
+                <p className="text-[11px] truncate" style={{ color: "var(--color-text-muted)" }}>{card.sub}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : null}
 
       {adminLinks.map((section) => (
         <div key={section.section} className="mb-8">

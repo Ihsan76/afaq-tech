@@ -1,5 +1,26 @@
 from rest_framework import serializers
-from .models import Conversation, Message, AIModel, AIProvider, ProviderType, PromptTemplate, GradePromptProfile, SubjectPromptProfile
+from .models import Conversation, Message, AIRun, AIModel, AIProvider, ProviderType, PromptTemplate, GradePromptProfile, SubjectPromptProfile
+from apps.core.translations import get_translation
+
+
+class AIRunAdminSerializer(serializers.ModelSerializer):
+    user_email = serializers.SerializerMethodField()
+    user_name = serializers.SerializerMethodField()
+    feature_display = serializers.SerializerMethodField()
+
+    class Meta:
+        model = AIRun
+        fields = ['id', 'user', 'user_email', 'user_name', 'feature', 'feature_display',
+                  'prompt', 'response', 'model_used', 'tokens_used', 'cost', 'duration_ms', 'created_at']
+
+    def get_user_email(self, obj):
+        return obj.user.email
+
+    def get_user_name(self, obj):
+        return get_translation(obj.user.translations, 'ar', 'name', obj.user.email)
+
+    def get_feature_display(self, obj):
+        return obj.get_feature_display()
 
 
 class MessageSerializer(serializers.ModelSerializer):

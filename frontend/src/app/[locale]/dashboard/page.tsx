@@ -107,7 +107,7 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!user) return;
     setStatsLoading(true);
-    api.get("/users/me/stats/")
+    api.get("/auth/me/stats/")
       .then((r) => setStats(r.data))
       .catch(() => {})
       .finally(() => setStatsLoading(false));

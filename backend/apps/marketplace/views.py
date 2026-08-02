@@ -7,6 +7,7 @@ from .models import Service, ServiceCategory, ServiceAvailability, Order, Review
 from .serializers import (
     ServiceCategorySerializer, ServiceListSerializer, ServiceDetailSerializer,
     ServiceAvailabilitySerializer, OrderSerializer, OrderCreateSerializer, ReviewSerializer,
+    AdminServiceSerializer, AdminOrderSerializer, AdminReviewSerializer,
 )
 from apps.gamification.services import PointsManager
 
@@ -156,3 +157,122 @@ class ReviewListView(generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
         serializer.save(reviewer=self.request.user)
+
+
+# --- Admin: Categories ---
+
+class AdminServiceCategoryListCreateView(generics.ListCreateAPIView):
+    queryset = ServiceCategory.objects.all()
+    serializer_class = ServiceCategorySerializer
+    permission_classes = [permissions.IsAdminUser]
+    pagination_class = None
+
+
+class AdminServiceCategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = ServiceCategory.objects.all()
+    serializer_class = ServiceCategorySerializer
+    permission_classes = [permissions.IsAdminUser]
+
+
+# --- Admin: Services ---
+
+class AdminServiceListView(generics.ListCreateAPIView):
+    serializer_class = AdminServiceSerializer
+    permission_classes = [permissions.IsAdminUser]
+
+    def get_queryset(self):
+        qs = Service.objects.select_related('provider', 'category').all()
+        status_filter = self.request.query_params.get('status')
+        category = self.request.query_params.get('category')
+        service_type = self.request.query_params.get('service_type')
+        search = self.request.query_params.get('search')
+        if status_filter:
+            qs = qs.filter(status=status_filter)
+        if category:
+            qs = qs.filter(category_id=category)
+        if service_type:
+            qs = qs.filter(service_type=service_type)
+        if search:
+            qs = qs.filter(title__icontains=search)
+        return qs.order_by('-created_at')
+
+    def perform_create(self, serializer):
+        serializer.save(provider=self.request.user)
+
+
+class AdminServiceDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Service.objects.select_related('provider', 'category').all()
+    serializer_class = AdminServiceSerializer
+    permission_classes = [permissions.IsAdminUser]
+
+
+# --- Admin: Orders ---
+
+class AdminOrderListView(generics.ListAPIView):
+    serializer_class = AdminOrderSerializer
+    permission_classes = [permissions.IsAdminUser]
+
+    def get_queryset(self):
+        qs = Order.objects.select_related('buyer', 'service', 'service__provider').all()
+        order_status = self.request.query_params.get('status')
+        search = self.request.query_params.get('search')
+        if order_status:
+            qs = qs.filter(status=order_status)
+        if search:
+            qs = qs.filter(
+                models.Q(buyer__email__icontains=search)
+                | models.Q(buyer__name_ar__icontains=search)
+                | models.Q(buyer__name_en__icontains=search)
+                | models.Q(service__title__icontains=search)
+            )
+        return qs.order_by('-created_at')
+
+
+class AdminOrderDetailView(generics.RetrieveUpdateAPIView):
+    serializer_class = AdminOrderSerializer
+    permission_classes = [permissions.IsAdminUser]
+
+    def get_queryset(self):
+        return Order.objects.select_related('buyer', 'service', 'service__provider').all()
+
+    def update(self, request, *args, **kwargs):
+        order = self.get_object()
+        new_status = request.data.get('status')
+        if new_status not in Order.Status.values:
+            return Response({'error': 'Invalid status'}, status=status.HTTP_400_BAD_REQUEST)
+        order.status = new_status
+        if new_status == Order.Status.COMPLETED and not order.completed_at:
+            order.completed_at = timezone.now()
+        if new_status == Order.Status.COMPLETED:
+            order.service.sales_count += 1
+            order.service.save(update_fields=['sales_count'])
+            PointsManager.award_points(order.service.provider, 'order_completed')
+        order.save()
+        return Response(AdminOrderSerializer(order).data)
+
+
+# --- Admin: Reviews ---
+
+class AdminReviewListView(generics.ListAPIView):
+    serializer_class = AdminReviewSerializer
+    permission_classes = [permissions.IsAdminUser]
+    pagination_class = None
+
+    def get_queryset(self):
+        qs = Review.objects.select_related('reviewer', 'service').all()
+        approved = self.request.query_params.get('approved')
+        service = self.request.query_params.get('service')
+        if approved is not None:
+            qs = qs.filter(is_approved=approved.lower() in ('1', 'true', 'yes'))
+        if service:
+            qs = qs.filter(service_id=service)
+        return qs.order_by('-created_at')
+
+
+class AdminReviewDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Review.objects.select_related('reviewer', 'service').all()
+    serializer_class = AdminReviewSerializer
+    permission_classes = [permissions.IsAdminUser]
+
+    def perform_update(self, serializer):
+        serializer.save()

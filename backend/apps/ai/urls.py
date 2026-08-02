@@ -25,4 +25,6 @@ urlpatterns = [
     path('admin/grade-prompt-profiles/<int:pk>/', views.GradePromptProfileDetailView.as_view(), name='gradepromptprofile-detail'),
     path('admin/subject-prompt-profiles/', views.SubjectPromptProfileListView.as_view(), name='subjectpromptprofile-list'),
     path('admin/subject-prompt-profiles/<int:pk>/', views.SubjectPromptProfileDetailView.as_view(), name='subjectpromptprofile-detail'),
+    path('admin/air-runs/', views.AIRunAdminListView.as_view(), name='airun-admin-list'),
+    path('admin/air-runs/stats/', views.air_run_stats, name='airun-admin-stats'),
 ]

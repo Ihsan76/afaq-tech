@@ -20,8 +20,66 @@ from .serializers import (
     GradePromptProfileSerializer,
     GradePromptProfileListSerializer,
     SubjectPromptProfileSerializer,
+    AIRunAdminSerializer,
 )
 from .services import chat_stream
+
+
+class AIRunAdminListView(generics.ListAPIView):
+    serializer_class = AIRunAdminSerializer
+    permission_classes = [permissions.IsAdminUser]
+
+    def get_queryset(self):
+        from django.db.models import Q
+        qs = AIRun.objects.select_related('user').all()
+        feature = self.request.query_params.get('feature')
+        model = self.request.query_params.get('model')
+        search = self.request.query_params.get('search')
+        date_from = self.request.query_params.get('date_from')
+        date_to = self.request.query_params.get('date_to')
+        if feature:
+            qs = qs.filter(feature=feature)
+        if model:
+            qs = qs.filter(model_used__icontains=model)
+        if search:
+            qs = qs.filter(
+                Q(user__email__icontains=search)
+                | Q(user__name_ar__icontains=search)
+                | Q(user__name_en__icontains=search)
+                | Q(prompt__icontains=search)
+            )
+        if date_from:
+            qs = qs.filter(created_at__gte=date_from)
+        if date_to:
+            qs = qs.filter(created_at__lte=date_to)
+        return qs.order_by('-created_at')
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAdminUser])
+def air_run_stats(request):
+    from django.db.models import Count, Sum, Avg
+    qs = AIRun.objects.all()
+    feature = request.query_params.get('feature')
+    if feature:
+        qs = qs.filter(feature=feature)
+    total = qs.count()
+    stats = qs.aggregate(
+        total_tokens=Sum('tokens_used'),
+        total_cost=Sum('cost'),
+        avg_duration_ms=Avg('duration_ms'),
+    )
+    by_feature = (AIRun.objects.filter(feature=feature) if feature else AIRun.objects.all()) \
+        .values('feature') \
+        .annotate(count=Count('id'), tokens=Sum('tokens_used')) \
+        .order_by('-count')
+    return Response({
+        'total_runs': total,
+        'total_tokens': stats['total_tokens'] or 0,
+        'total_cost': float(stats['total_cost'] or 0),
+        'avg_duration_ms': round(stats['avg_duration_ms'] or 0),
+        'by_feature': list(by_feature),
+    })
 
 
 @api_view(['POST'])
