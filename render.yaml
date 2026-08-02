@@ -1,0 +1,44 @@
+services:
+  - type: web
+    name: afaq-api
+    runtime: docker
+    repo: https://github.com/YOUR_USERNAME/afaq-tech
+    branch: master
+    rootDir: backend
+    plan: free
+    healthCheckPath: /api/v1/core/health/
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: config.settings.production
+      - key: GUNICORN_WORKERS
+        value: "1"
+      - key: GUNICORN_THREADS
+        value: "2"
+      - key: ALLOWED_HOSTS
+        value: afaq.app,www.afaq.app,api.afaq.app
+      - key: CORS_ALLOWED_ORIGINS
+        value: https://afaq.app,https://www.afaq.app
+      - key: CSRF_TRUSTED_ORIGINS
+        value: https://afaq.app,https://www.afaq.app
+      - key: FRONTEND_URL
+        value: https://afaq.app
+      - key: DJANGO_SECRET_KEY
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_KEY
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: JWT_PRIVATE_KEY_B64
+        sync: false
+      - key: JWT_PUBLIC_KEY_B64
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: SENTRY_DSN_BACKEND
+        sync: false

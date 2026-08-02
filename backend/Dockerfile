@@ -31,6 +31,6 @@ USER appuser
 EXPOSE 8000
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
-    CMD python -c "import urllib.request,sys; r=urllib.request.Request('http://127.0.0.1:8000/api/v1/core/health/', headers={'Host':'afaq.app','X-Forwarded-Proto':'https'}); sys.exit(0 if urllib.request.urlopen(r, timeout=3).status==200 else 1)"
+    CMD python -c "import os,urllib.request,sys; p=os.environ.get('PORT','8000'); r=urllib.request.Request(f'http://127.0.0.1:{p}/api/v1/core/health/', headers={'Host':'afaq.app','X-Forwarded-Proto':'https'}); sys.exit(0 if urllib.request.urlopen(r, timeout=3).status==200 else 1)"
 
 CMD ["./entrypoint.sh"]
