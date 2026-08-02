@@ -1,6 +1,16 @@
 from rest_framework import serializers
-from .models import Page, PageBlock, MenuItem, PageTemplate, SiteSettings, ContactMessage, NewsletterSubscriber
+
 from apps.core.translations import get_translation
+
+from .models import (
+    ContactMessage,
+    MenuItem,
+    NewsletterSubscriber,
+    Page,
+    PageBlock,
+    PageTemplate,
+    SiteSettings,
+)
 
 
 def _locale(request):

@@ -1,6 +1,8 @@
 from rest_framework import serializers
-from .models import Grade, Subject, Curriculum, Unit, CurriculumDocument
+
 from apps.core.translations import get_translation
+
+from .models import Curriculum, CurriculumDocument, Grade, Subject, Unit
 
 
 def _locale(request):

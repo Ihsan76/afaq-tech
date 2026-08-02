@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import Language, FeatureFlag, TranslationKey
+
+from .models import FeatureFlag, Language, TranslationKey
 
 
 class LanguageSerializer(serializers.ModelSerializer):

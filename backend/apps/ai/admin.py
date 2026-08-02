@@ -1,5 +1,14 @@
 from django.contrib import admin
-from .models import AIRun, Conversation, Message, AIModel, PromptTemplate, GradePromptProfile, SubjectPromptProfile
+
+from .models import (
+    AIModel,
+    AIRun,
+    Conversation,
+    GradePromptProfile,
+    Message,
+    PromptTemplate,
+    SubjectPromptProfile,
+)
 
 
 @admin.register(AIRun)

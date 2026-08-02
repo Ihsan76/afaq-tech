@@ -1,4 +1,3 @@
-from django.conf import settings
 
 SUPPORTED_LANGUAGES = ['ar', 'en', 'fr', 'tr', 'ur', 'es', 'de', 'id', 'bn', 'fa']
 DEFAULT_LANGUAGE = 'en'

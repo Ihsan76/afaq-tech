@@ -2,9 +2,10 @@
 Email utility using Resend API.
 https://resend.com/docs/api-reference/emails/send-email
 """
+import logging
+
 import httpx
 from django.conf import settings
-import logging
 
 logger = logging.getLogger(__name__)
 

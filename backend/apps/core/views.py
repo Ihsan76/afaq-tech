@@ -1,9 +1,10 @@
-from rest_framework import generics, permissions, status
-from rest_framework.response import Response
-from rest_framework.decorators import api_view, permission_classes
 from django.shortcuts import get_object_or_404
-from .models import Language, TranslationKey, FeatureFlag
-from .serializers import LanguageSerializer, TranslationSerializer, FeatureFlagSerializer
+from rest_framework import generics, permissions, status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.response import Response
+
+from .models import FeatureFlag, Language, TranslationKey
+from .serializers import FeatureFlagSerializer, LanguageSerializer, TranslationSerializer
 
 
 class LanguagePublicListView(generics.ListAPIView):
@@ -125,16 +126,18 @@ def feature_flag_delete(request, pk):
 @api_view(['GET'])
 @permission_classes([permissions.IsAdminUser])
 def admin_stats(request):
+    from datetime import timedelta
+
     from django.contrib.auth import get_user_model
     from django.db.models import Count, Sum
-    from datetime import timedelta
     from django.utils import timezone
-    from apps.lessonplans.models import LessonPlan
-    from apps.marketplace.models import Service, Order, ServiceCategory
+
     from apps.ai.models import AIRun
     from apps.blog.models import BlogPost
     from apps.courses.models import Course, Enrollment
     from apps.gamification.models import PointsTransaction, UserBadge
+    from apps.lessonplans.models import LessonPlan
+    from apps.marketplace.models import Order, Service, ServiceCategory
 
     User = get_user_model()
     week_ago = timezone.now() - timedelta(days=7)

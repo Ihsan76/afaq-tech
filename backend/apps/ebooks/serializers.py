@@ -1,6 +1,6 @@
 from rest_framework import serializers
-from .models import EbookCategory, Ebook
 
+from .models import Ebook, EbookCategory
 
 PLAN_LEVELS = {'free': 0, 'basic': 1, 'pro': 2, 'enterprise': 3}
 

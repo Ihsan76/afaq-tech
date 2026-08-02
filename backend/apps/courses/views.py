@@ -1,17 +1,17 @@
-from rest_framework import generics, permissions, status
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from django.shortcuts import get_object_or_404
 from django.db.models import Q
-from .models import CourseCategory, Course, Chapter, Lesson, Enrollment
+from django.shortcuts import get_object_or_404
+from rest_framework import generics, permissions, status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from .models import Course, CourseCategory, Enrollment, Lesson
 from .serializers import (
     CourseCategorySerializer,
-    CourseListSerializer,
-    CourseDetailSerializer,
     CourseCreateUpdateSerializer,
+    CourseDetailSerializer,
+    CourseListSerializer,
     EnrollmentSerializer,
 )
-
 
 # ── Public ──
 

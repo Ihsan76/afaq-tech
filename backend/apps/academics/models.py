@@ -1,25 +1,27 @@
 from django.db import models
 
+
 class Grade(models.Model):
     translations = models.JSONField('الترجمات', default=dict, blank=True)
     level = models.IntegerField('المستوى')
-    
+
     class Meta:
         verbose_name = 'صف'
         verbose_name_plural = 'الصفوف'
         ordering = ['level']
-    
+
     def __str__(self):
         return self.translations.get('ar', {}).get('name', str(self.level))
 
 class Subject(models.Model):
     translations = models.JSONField('الترجمات', default=dict, blank=True)
     icon = models.CharField('الأيقونة', max_length=50, blank=True)
-    
+
     class Meta:
         verbose_name = 'مادة'
         verbose_name_plural = 'المواد'
-    
+        ordering = ['id']
+
     def __str__(self):
         return self.translations.get('ar', {}).get('name', '')
 
@@ -28,11 +30,11 @@ class Curriculum(models.Model):
     country = models.CharField('الدولة', max_length=100)
     year = models.IntegerField('السنة')
     grade = models.ForeignKey(Grade, on_delete=models.CASCADE, related_name='curricula')
-    
+
     class Meta:
         verbose_name = 'منهج'
         verbose_name_plural = 'المناهج'
-    
+
     def __str__(self):
         return f"{self.translations.get('ar', {}).get('name', '')} - {self.country}"
 
@@ -43,12 +45,12 @@ class Unit(models.Model):
     outcomes = models.JSONField('نواتج التعلم', default=list, blank=True, help_text='قائمة نواتج التعلم الرسمية لهذه الوحدة')
     content = models.TextField('محتوى الوحدة الرسمي', blank=True, help_text='مقتطفات من محتوى المنهاج الرسمي لحقنها في توليد الخطط')
     order = models.IntegerField('الترتيب', default=0)
-    
+
     class Meta:
         verbose_name = 'وحدة'
         verbose_name_plural = 'الوحدات'
         ordering = ['order']
-    
+
     def __str__(self):
         return self.translations.get('ar', {}).get('name', str(self.order))
 

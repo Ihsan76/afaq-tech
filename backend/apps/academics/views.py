@@ -1,9 +1,17 @@
-from rest_framework import generics, permissions, parsers, status
+from rest_framework import generics, parsers, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .models import Grade, Subject, Curriculum, Unit, CurriculumDocument
-from .serializers import GradeSerializer, SubjectSerializer, CurriculumSerializer, CurriculumDetailSerializer, UnitSerializer, CurriculumDocumentSerializer
+
 from .extraction import extract_text
+from .models import Curriculum, CurriculumDocument, Grade, Subject, Unit
+from .serializers import (
+    CurriculumDetailSerializer,
+    CurriculumDocumentSerializer,
+    CurriculumSerializer,
+    GradeSerializer,
+    SubjectSerializer,
+    UnitSerializer,
+)
 
 
 class GradeListView(generics.ListAPIView):
@@ -63,7 +71,7 @@ class CurriculumDetailView(generics.RetrieveUpdateDestroyAPIView):
 class UnitListView(generics.ListAPIView):
     serializer_class = UnitSerializer
     permission_classes = [permissions.AllowAny]
-    
+
     def get_queryset(self):
         curriculum_id = self.kwargs.get('curriculum_id')
         return Unit.objects.filter(curriculum_id=curriculum_id)
@@ -129,7 +137,6 @@ class CurriculumResolveView(generics.ListAPIView):
 
     def get_queryset(self):
         grade_id = self.request.query_params.get('grade')
-        subject_id = self.request.query_params.get('subject')
         country = self.request.query_params.get('country', '').strip()
         qs = Curriculum.objects.all().order_by('-year', '-id')
         if grade_id:

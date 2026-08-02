@@ -1,26 +1,27 @@
-from rest_framework import generics, status, permissions
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.throttling import ScopedRateThrottle
-from rest_framework_simplejwt.tokens import RefreshToken
-from django.contrib.auth import authenticate, get_user_model
-from django.core.mail import send_mail
-from django.conf import settings
-from django.db.models import Sum
-from django.http import HttpResponseRedirect
-from django.utils import timezone
-from urllib.parse import urlencode
 import base64
 import hashlib
 import json
 import secrets
 from datetime import timedelta
-import requests
+from urllib.parse import urlencode
 
-from .serializers import UserSerializer, RegisterSerializer
-from .models import EmailVerification, LoginAttempt
+import requests
+from django.conf import settings
+from django.contrib.auth import authenticate, get_user_model
+from django.db.models import Sum
+from django.http import HttpResponseRedirect
+from django.utils import timezone
+from rest_framework import generics, permissions, status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.response import Response
+from rest_framework.throttling import ScopedRateThrottle
+from rest_framework.views import APIView
+from rest_framework_simplejwt.tokens import RefreshToken
+
 from apps.lessonplans.models import LessonPlan
+
+from .models import EmailVerification, LoginAttempt
+from .serializers import RegisterSerializer, UserSerializer
 
 User = get_user_model()
 
@@ -78,7 +79,7 @@ class RegisterView(generics.CreateAPIView):
     permission_classes = [permissions.AllowAny]
     throttle_classes = [ScopedRateThrottle]
     throttle_scope = 'auth_register'
-    
+
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -100,19 +101,19 @@ class LoginView(APIView):
     permission_classes = [permissions.AllowAny]
     throttle_classes = [ScopedRateThrottle]
     throttle_scope = 'auth_login'
-    
+
     def post(self, request):
         email = request.data.get('email')
         password = request.data.get('password')
         ip = _client_ip(request)
-        
+
         if email:
             email = email.lower()
             if _is_locked_out(email):
                 return Response({'error': 'Too many failed attempts. Try again in 15 minutes.'}, status=status.HTTP_429_TOO_MANY_REQUESTS)
-        
+
         user = authenticate(email=email, password=password)
-        
+
         if user:
             _record_login_attempt(email or '', ip, successful=True)
             tokens = get_tokens_for_user(user)
@@ -167,7 +168,7 @@ class UserAdminUpdateView(generics.RetrieveUpdateAPIView):
 
 class TokenRefreshView(APIView):
     permission_classes = [permissions.AllowAny]
-    
+
     def post(self, request):
         refresh_token = request.data.get('refresh')
         if not refresh_token:
@@ -190,9 +191,10 @@ class ForgotPasswordView(APIView):
 
     def post(self, request):
         from django.contrib.auth.tokens import PasswordResetTokenGenerator
-        from django.utils.http import urlsafe_base64_encode
         from django.utils.encoding import force_bytes
-        from apps.core.email import send_email, password_reset_email
+        from django.utils.http import urlsafe_base64_encode
+
+        from apps.core.email import password_reset_email, send_email
 
         email = request.data.get('email')
         if not email:
@@ -224,8 +226,8 @@ class ResetPasswordView(APIView):
 
     def post(self, request):
         from django.contrib.auth.tokens import PasswordResetTokenGenerator
-        from django.utils.http import urlsafe_base64_decode
         from django.utils.encoding import force_str
+        from django.utils.http import urlsafe_base64_decode
 
         uid = request.data.get('uid')
         token = request.data.get('token')
@@ -268,7 +270,7 @@ def user_stats_view(request):
     badges_detail = []
     level_data = {}
     try:
-        from apps.gamification.models import UserStreak, Level, PointsTransaction, UserBadge
+        from apps.gamification.models import Level, PointsTransaction, UserBadge, UserStreak
         streak = UserStreak.objects.filter(user=user).first()
         if streak:
             streak_data = {'current': streak.current_streak, 'longest': streak.longest_streak}

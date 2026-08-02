@@ -1,5 +1,7 @@
 from django.contrib import admin
+
 from .models import FeatureFlag, Language, TranslationKey
+
 
 @admin.register(FeatureFlag)
 class FeatureFlagAdmin(admin.ModelAdmin):

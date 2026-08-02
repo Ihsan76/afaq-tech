@@ -1,7 +1,7 @@
-import os
 import logging
+import os
+
 from django.core.files.storage import default_storage
-from django.core.files.base import ContentFile
 
 logger = logging.getLogger(__name__)
 

@@ -1,11 +1,14 @@
+from django.shortcuts import get_object_or_404
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from django.shortcuts import get_object_or_404
-from .models import EbookCategory, Ebook
+
+from .models import Ebook, EbookCategory
 from .serializers import (
-    EbookCategorySerializer, EbookListSerializer,
-    EbookDetailSerializer, EbookCreateUpdateSerializer,
+    EbookCategorySerializer,
+    EbookCreateUpdateSerializer,
+    EbookDetailSerializer,
+    EbookListSerializer,
 )
 
 PLAN_LEVELS = {'free': 0, 'basic': 1, 'pro': 2, 'enterprise': 3}

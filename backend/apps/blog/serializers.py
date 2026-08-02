@@ -1,6 +1,6 @@
 from rest_framework import serializers
+
 from .models import BlogCategory, BlogPost
-from apps.core.translations import get_translation
 
 
 def _extract_field(translations_dict, field):

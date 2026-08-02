@@ -1,6 +1,7 @@
 from rest_framework import generics, permissions
+
 from .models import Theme
-from .serializers import ThemeSerializer, ThemeListSerializer
+from .serializers import ThemeListSerializer, ThemeSerializer
 
 
 class ThemeListView(generics.ListAPIView):

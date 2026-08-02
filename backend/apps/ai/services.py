@@ -1,15 +1,18 @@
+import hashlib
 import json
 import time
-import hashlib
+
 import google.generativeai as genai
-from openai import OpenAI
 from django.conf import settings
 from django.core.cache import cache
 from django.db.models import Case, IntegerField, Q, Value, When
 from django.template import Context, Template
-from .models import AIModel, AIProvider, PromptTemplate
-from .router import ProviderRouter, AIResponse
+from openai import OpenAI
+
 from apps.academics.models import CurriculumDocument
+
+from .models import AIModel, AIProvider, PromptTemplate
+from .router import ProviderRouter
 
 genai.configure(api_key=settings.GEMINI_API_KEY)
 
@@ -150,7 +153,7 @@ def _resolve_model_and_client(requested_model_id=None):
         model_obj = AIModel.objects.filter(is_default=True, is_active=True).first()
     if not model_obj:
         model_obj = AIModel.objects.filter(is_active=True).first()
-    
+
     if not model_obj:
         return 'google', DEFAULT_MODEL, settings.GEMINI_API_KEY, ''
 
@@ -234,7 +237,7 @@ def chat_stream(messages, new_message, model_id=None):
             client_api_key = api_key or 'sk-placeholder'
 
         client = OpenAI(api_key=client_api_key, base_url=client_base_url)
-        
+
         openai_messages = [{"role": "system", "content": system_prompt}]
         for msg in messages:
             openai_messages.append({"role": msg.role, "content": msg.content})

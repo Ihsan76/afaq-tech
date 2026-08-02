@@ -1,25 +1,36 @@
-from rest_framework import generics, status, permissions
-from rest_framework.response import Response
-from rest_framework.decorators import api_view, permission_classes
-from django.shortcuts import get_object_or_404
 from django.db.models import Sum
+from django.shortcuts import get_object_or_404
+from rest_framework import generics, permissions, status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.response import Response
+
 from .models import (
-    Badge, UserBadge, Achievement, UserAchievement,
-    Challenge, ChallengeParticipant, UserStreak, Level,
-    PointsTransaction, Leaderboard,
+    Achievement,
+    Badge,
+    Challenge,
+    ChallengeParticipant,
+    Leaderboard,
+    Level,
+    PointsTransaction,
+    UserAchievement,
+    UserBadge,
 )
 from .serializers import (
-    BadgeSerializer, UserBadgeSerializer,
-    AchievementSerializer, UserAchievementSerializer,
-    ChallengeSerializer, ChallengeParticipantSerializer,
-    UserStreakSerializer, LevelSerializer,
-    PointsTransactionSerializer, LeaderboardSerializer,
+    AchievementSerializer,
+    BadgeSerializer,
+    ChallengeParticipantSerializer,
+    ChallengeSerializer,
+    LeaderboardSerializer,
+    LevelSerializer,
+    PointsTransactionSerializer,
+    UserAchievementSerializer,
+    UserBadgeSerializer,
 )
 from .services import (
-    PointsManager, BadgeAwarder, StreakTracker,
-    AchievementManager, ChallengeManager, LeaderboardManager,
+    ChallengeManager,
+    LeaderboardManager,
+    StreakTracker,
 )
-
 
 # ── Points ──
 

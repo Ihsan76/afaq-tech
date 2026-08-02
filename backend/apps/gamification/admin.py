@@ -1,8 +1,17 @@
 from django.contrib import admin
+
 from .models import (
-    BadgeCategory, Badge, UserBadge, Achievement, UserAchievement,
-    Challenge, ChallengeParticipant, UserStreak, Level,
-    PointsTransaction, Leaderboard,
+    Achievement,
+    Badge,
+    BadgeCategory,
+    Challenge,
+    ChallengeParticipant,
+    Leaderboard,
+    Level,
+    PointsTransaction,
+    UserAchievement,
+    UserBadge,
+    UserStreak,
 )
 
 

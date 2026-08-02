@@ -1,7 +1,6 @@
 """زرع مفاتيح الترجمات من ملفات JSON الخاصة بالواجهة الأمامية إلى قاعدة البيانات."""
 
 import json
-import os
 from pathlib import Path
 
 from django.core.management.base import BaseCommand, CommandError

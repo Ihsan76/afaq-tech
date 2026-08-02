@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+
 import environ
 
 env = environ.Env()
@@ -94,7 +95,6 @@ TIME_ZONE = 'Asia/Amman'
 USE_I18N = True
 USE_TZ = True
 
-from .languages import LANGUAGES
 
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
@@ -156,6 +156,22 @@ SUPABASE_URL = env('SUPABASE_URL')
 SUPABASE_KEY = env('SUPABASE_KEY')
 
 REDIS_URL = env('REDIS_URL', default='redis://localhost:6379')
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': REDIS_URL,
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            'CONNECTION_POOL_KWARGS': {
+                'socket_connect_timeout': 2,
+                'socket_timeout': 2,
+            },
+        },
+        'KEY_PREFIX': 'afaq',
+        'TIMEOUT': 300,
+    },
+}
 
 SENTRY_DSN = env('SENTRY_DSN_BACKEND', default=None)
 if SENTRY_DSN:

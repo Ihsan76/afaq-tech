@@ -1,8 +1,17 @@
 from rest_framework import serializers
+
 from .models import (
-    Badge, UserBadge, Achievement, UserAchievement,
-    Challenge, ChallengeParticipant, UserStreak, Level,
-    PointsTransaction, Leaderboard, BadgeCategory,
+    Achievement,
+    Badge,
+    BadgeCategory,
+    Challenge,
+    ChallengeParticipant,
+    Leaderboard,
+    Level,
+    PointsTransaction,
+    UserAchievement,
+    UserBadge,
+    UserStreak,
 )
 
 

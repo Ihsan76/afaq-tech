@@ -1,7 +1,19 @@
+
+from django.db.models import Count, Sum
 from django.utils import timezone
-from datetime import timedelta, date
-from django.db.models import Sum, Count
-from .models import PointsTransaction, Level, Badge, UserBadge, UserStreak, Achievement, UserAchievement, Challenge, ChallengeParticipant, Leaderboard
+
+from .models import (
+    Achievement,
+    Badge,
+    Challenge,
+    ChallengeParticipant,
+    Leaderboard,
+    Level,
+    PointsTransaction,
+    UserAchievement,
+    UserBadge,
+    UserStreak,
+)
 
 
 class PointsManager:
@@ -70,10 +82,6 @@ class PointsManager:
         ).order_by('-points_required').first()
 
         if next_level:
-            old_points_required = Level.objects.filter(
-                points_required__lt=next_level.points_required
-            ).order_by('-points_required').values_list('points_required', flat=True).first() or 0
-
             current_level = Level.objects.filter(
                 points_required__lte=total_points
             ).order_by('-points_required').first()
@@ -274,7 +282,6 @@ class LeaderboardManager:
 
     @classmethod
     def _get_badges_entries(cls) -> list:
-        from django.db.models import Count
         from django.contrib.auth import get_user_model
         User = get_user_model()
         users = User.objects.annotate(

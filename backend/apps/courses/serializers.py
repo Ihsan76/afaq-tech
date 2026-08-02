@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import CourseCategory, Course, Chapter, Lesson, Enrollment
+
+from .models import Chapter, Course, CourseCategory, Enrollment, Lesson
 
 
 def _extract_field(translations_dict, field):
@@ -77,7 +78,7 @@ class ChapterSerializer(serializers.ModelSerializer):
         # Locked: only previews get video_url
         lessons = obj.lessons.all()
         data = LessonLockedSerializer(lessons, many=True).data
-        for lesson, serialized in zip(lessons, data):
+        for lesson, serialized in zip(lessons, data, strict=False):
             if lesson.is_free_preview:
                 full = LessonSerializer(lesson).data
                 serialized['video_url'] = full.get('video_url')

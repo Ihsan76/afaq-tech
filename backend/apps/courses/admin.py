@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import CourseCategory, Course, Chapter, Lesson, Enrollment
+
+from .models import Chapter, Course, CourseCategory, Enrollment, Lesson
 
 
 class ChapterInline(admin.TabularInline):

@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import Page, PageBlock, MenuItem, PageTemplate, SiteSettings
+
+from .models import MenuItem, Page, PageBlock, PageTemplate, SiteSettings
 
 
 class PageBlockInline(admin.TabularInline):

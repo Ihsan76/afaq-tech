@@ -1,18 +1,34 @@
+from django.shortcuts import get_object_or_404
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from django.shortcuts import get_object_or_404
-from .models import Page, PageBlock, MenuItem, PageTemplate, SiteSettings, ContactMessage, NewsletterSubscriber
-from .serializers import (
-    PageListSerializer, PageDetailSerializer, PageCreateUpdateSerializer,
-    BlockSerializer, BlockCreateUpdateSerializer,
-    MenuItemSerializer, MenuItemListSerializer, MenuItemCreateUpdateSerializer,
-    PageTemplateSerializer, PageTemplateListSerializer,
-    SiteSettingsSerializer,
-    ContactMessageCreateSerializer, ContactMessageListSerializer,
-    NewsletterSubscribeSerializer, NewsletterSubscriberListSerializer,
-)
 
+from .models import (
+    ContactMessage,
+    MenuItem,
+    NewsletterSubscriber,
+    Page,
+    PageBlock,
+    PageTemplate,
+    SiteSettings,
+)
+from .serializers import (
+    BlockCreateUpdateSerializer,
+    BlockSerializer,
+    ContactMessageCreateSerializer,
+    ContactMessageListSerializer,
+    MenuItemCreateUpdateSerializer,
+    MenuItemListSerializer,
+    MenuItemSerializer,
+    NewsletterSubscriberListSerializer,
+    NewsletterSubscribeSerializer,
+    PageCreateUpdateSerializer,
+    PageDetailSerializer,
+    PageListSerializer,
+    PageTemplateListSerializer,
+    PageTemplateSerializer,
+    SiteSettingsSerializer,
+)
 
 # ═══════════════════════════════════════════════════════════════
 # Page Views
@@ -253,7 +269,8 @@ class ContactMessageCreateView(generics.CreateAPIView):
 
         # Notify admin email (from SiteSettings) — fails silently
         try:
-            from apps.core.email import send_email, contact_notification_email
+            from apps.core.email import contact_notification_email, send_email
+
             from .models import SiteSettings
             admin_email = SiteSettings.load().email
             if admin_email:

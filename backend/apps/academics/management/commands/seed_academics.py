@@ -1,5 +1,6 @@
 from django.core.management.base import BaseCommand
-from apps.academics.models import Grade, Subject, Curriculum
+
+from apps.academics.models import Curriculum, Grade, Subject
 
 GRADES = [
     {"level": 0, "ar": "تمهيدي", "en": "Kindergarten", "fr": "Maternelle", "tr": "Anaokulu", "ur": "کے جی", "es": "Preescolar", "de": "Vorschule", "id": "TK", "bn": "কেজি"},

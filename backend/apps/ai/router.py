@@ -1,17 +1,14 @@
-import time
 import hashlib
-import json
 import logging
+import time
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
 from collections import defaultdict
-from datetime import datetime, timedelta
-from typing import Optional
+from dataclasses import dataclass
 
 import google.generativeai as genai
-from openai import OpenAI
 from django.conf import settings
 from django.core.cache import cache
+from openai import OpenAI
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +23,7 @@ class AIResponse:
     total_tokens: int = 0
     latency_ms: int = 0
     success: bool = True
-    error: Optional[str] = None
+    error: str | None = None
 
 
 class BaseProvider(ABC):
@@ -244,7 +241,8 @@ class ProviderRouter:
         self._load_providers()
 
     def _load_providers(self):
-        from .models import AIModel, AIProvider as AIProviderModel
+        from .models import AIModel
+        from .models import AIProvider as AIProviderModel
 
         models = AIModel.objects.filter(is_active=True)
         for m in models:
@@ -272,7 +270,7 @@ class ProviderRouter:
             p.model_name = "gemini-3.6-flash"
             self._providers["google"] = p
 
-    def _build_provider(self, provider_code: str, api_key: str, base_url: str) -> Optional[BaseProvider]:
+    def _build_provider(self, provider_code: str, api_key: str, base_url: str) -> BaseProvider | None:
         if provider_code == "google":
             return GeminiProvider(api_key=api_key, base_url=base_url)
         elif provider_code == "openai":
@@ -353,8 +351,9 @@ class ProviderRouter:
 
     def _log_ai_run(self, feature: str, prompt: str, response: AIResponse):
         try:
-            from .models import AIRun
             from django.contrib.auth import get_user_model
+
+            from .models import AIRun
 
             user = get_user_model().objects.filter(is_superuser=True).first()
             AIRun.objects.create(

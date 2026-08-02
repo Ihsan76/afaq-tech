@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import ServiceCategory, Service, ServiceAvailability, Order, Review
+
+from .models import Order, Review, Service, ServiceAvailability, ServiceCategory
 
 
 class ServiceAvailabilityInline(admin.TabularInline):

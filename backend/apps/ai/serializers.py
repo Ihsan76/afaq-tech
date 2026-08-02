@@ -1,6 +1,18 @@
 from rest_framework import serializers
-from .models import Conversation, Message, AIRun, AIModel, AIProvider, ProviderType, PromptTemplate, GradePromptProfile, SubjectPromptProfile
+
 from apps.core.translations import get_translation
+
+from .models import (
+    AIModel,
+    AIProvider,
+    AIRun,
+    Conversation,
+    GradePromptProfile,
+    Message,
+    PromptTemplate,
+    ProviderType,
+    SubjectPromptProfile,
+)
 
 
 class AIRunAdminSerializer(serializers.ModelSerializer):

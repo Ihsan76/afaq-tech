@@ -1,6 +1,8 @@
-from django.conf import settings
+import base64
+import hashlib
+
 from cryptography.fernet import Fernet
-import base64, hashlib
+from django.conf import settings
 
 
 def _get_fernet():

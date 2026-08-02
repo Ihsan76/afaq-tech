@@ -1,26 +1,39 @@
 import json
 import time
+
+import google.generativeai as genai
+from django.conf import settings
 from django.http import StreamingHttpResponse
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, permissions, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
-from .models import Conversation, Message, AIRun, AIModel, AIProvider, ProviderType, PromptTemplate, GradePromptProfile, SubjectPromptProfile
+
+from .models import (
+    AIModel,
+    AIProvider,
+    AIRun,
+    Conversation,
+    GradePromptProfile,
+    Message,
+    PromptTemplate,
+    ProviderType,
+    SubjectPromptProfile,
+)
 from .serializers import (
-    ConversationSerializer,
-    ConversationDetailSerializer,
-    MessageSerializer,
-    ChatInputSerializer,
-    AIModelSerializer,
     AIModelPublicSerializer,
+    AIModelSerializer,
     AIProviderSerializer,
-    ProviderTypeSerializer,
-    PromptTemplateSerializer,
-    PromptTemplateListSerializer,
-    GradePromptProfileSerializer,
-    GradePromptProfileListSerializer,
-    SubjectPromptProfileSerializer,
     AIRunAdminSerializer,
+    ChatInputSerializer,
+    ConversationDetailSerializer,
+    ConversationSerializer,
+    GradePromptProfileListSerializer,
+    GradePromptProfileSerializer,
+    PromptTemplateListSerializer,
+    PromptTemplateSerializer,
+    ProviderTypeSerializer,
+    SubjectPromptProfileSerializer,
 )
 from .services import chat_stream
 
@@ -58,7 +71,7 @@ class AIRunAdminListView(generics.ListAPIView):
 @api_view(['GET'])
 @permission_classes([permissions.IsAdminUser])
 def air_run_stats(request):
-    from django.db.models import Count, Sum, Avg
+    from django.db.models import Avg, Count, Sum
     qs = AIRun.objects.all()
     feature = request.query_params.get('feature')
     if feature:
@@ -231,10 +244,6 @@ class AIModelPublicListView(generics.ListAPIView):
     pagination_class = None
 
 
-import google.generativeai as genai
-from django.conf import settings
-
-
 # --- ProviderType management ---
 
 class ProviderTypeListView(generics.ListAPIView):
@@ -277,7 +286,6 @@ def _resolve_provider_and_key(request):
 
 
 def _fetch_google_models(api_key):
-    import google.generativeai as genai
     genai.configure(api_key=api_key)
     models = genai.list_models()
     result = []
@@ -356,7 +364,6 @@ def test_provider_connection(request):
     provider_type, api_key, base_url = _resolve_provider_and_key(request)
     try:
         if provider_type == 'google':
-            import google.generativeai as genai
             genai.configure(api_key=api_key)
             genai.list_models()
             genai.configure(api_key=settings.GEMINI_API_KEY)

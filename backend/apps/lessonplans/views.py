@@ -1,20 +1,25 @@
 import json
-from io import BytesIO
+
 from django.conf import settings
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
+from django.utils.translation import gettext as _
 from rest_framework import generics, status
-from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 from weasyprint import HTML
 
-FONT_DIR = settings.BASE_DIR / 'apps' / 'lessonplans' / 'fonts'
+from apps.academics.models import Curriculum, CurriculumDocument, Grade, Subject, Unit
 from apps.ai.models import AIRun
-from apps.ai.services import generate_lesson_plan as ai_generate, refine_lesson_plan as ai_refine, PromptBuilderService
-from apps.academics.models import Subject, Grade, Curriculum, Unit, CurriculumDocument
+from apps.ai.services import PromptBuilderService
+from apps.ai.services import generate_lesson_plan as ai_generate
+from apps.ai.services import refine_lesson_plan as ai_refine
+
 from .models import LessonPlan, LessonPlanRefinement
-from .serializers import LessonPlanSerializer, LessonPlanDetailSerializer
+from .serializers import LessonPlanDetailSerializer, LessonPlanSerializer
+
+FONT_DIR = settings.BASE_DIR / 'apps' / 'lessonplans' / 'fonts'
 
 
 def _get_plan_or_403(pk, request):
@@ -64,13 +69,13 @@ def build_curriculum_context(grade_obj, subject_obj, unit_obj=None, language='ar
 
 class LessonPlanListView(generics.ListAPIView):
     serializer_class = LessonPlanSerializer
-    
+
     def get_queryset(self):
         return LessonPlan.objects.filter(user=self.request.user)
 
 class LessonPlanDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = LessonPlanDetailSerializer
-    
+
     def get_queryset(self):
         return LessonPlan.objects.filter(user=self.request.user)
 
@@ -168,7 +173,12 @@ def generate_lesson_plan(request):
 
     # Gamification reward
     try:
-        from apps.gamification.services import PointsManager, BadgeAwarder, AchievementManager, ChallengeManager
+        from apps.gamification.services import (
+            AchievementManager,
+            BadgeAwarder,
+            ChallengeManager,
+            PointsManager,
+        )
         PointsManager.award_points(request.user, 'lesson_created')
         request.user.lessons_created_count += 1
         request.user.save(update_fields=['lessons_created_count'])
@@ -184,7 +194,7 @@ def generate_lesson_plan(request):
 @permission_classes([IsAuthenticated])
 def duplicate_lesson_plan(request, pk):
     original = generics.get_object_or_404(LessonPlan, pk=pk, user=request.user)
-    
+
     new_plan = LessonPlan.objects.create(
         user=request.user,
         title=f"{original.title} (Copy)",
@@ -194,7 +204,7 @@ def duplicate_lesson_plan(request, pk):
         generated_by='duplicate',
         ai_model_used=original.ai_model_used,
     )
-    
+
     return Response(LessonPlanDetailSerializer(new_plan).data, status=status.HTTP_201_CREATED)
 
 @api_view(['POST'])
