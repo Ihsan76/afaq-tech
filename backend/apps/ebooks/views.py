@@ -28,7 +28,7 @@ class EbookListView(generics.ListAPIView):
         return {'request': self.request}
 
     def get_queryset(self):
-        qs = Ebook.objects.filter(is_published=True)
+        qs = Ebook.objects.filter(is_published=True).select_related('category')
         category = self.request.query_params.get('category')
         if category:
             qs = qs.filter(category__slug=category)

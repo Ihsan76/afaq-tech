@@ -30,6 +30,8 @@ class BlogCategorySerializer(serializers.ModelSerializer):
         return _extract_field(obj.translations, 'description')
 
     def get_posts_count(self, obj):
+        if hasattr(obj, '_posts_count'):
+            return obj._posts_count
         return obj.posts.filter(is_published=True).count()
 
 

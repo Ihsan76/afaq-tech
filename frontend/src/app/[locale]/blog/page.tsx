@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { useApiList, usePrefetch } from "@/lib/useApi";
+import { useApiList } from "@/lib/useApi";
 
 interface BlogPost {
   id: number;
@@ -44,13 +44,6 @@ export default function BlogPage() {
 
   const { data: posts, loading } = useApiList<BlogPost>("/blog/posts/", Object.keys(postParams).length ? postParams : undefined);
   const { data: categories } = useApiList<BlogCategory>("/blog/categories/");
-  const prefetch = usePrefetch(posts.map((p) => `/blog/posts/${p.slug}/`));
-
-  useEffect(() => {
-    if (posts.length === 0) return;
-    const timer = setTimeout(prefetch, 600);
-    return () => clearTimeout(timer);
-  }, [posts, prefetch]);
 
   const featured = posts.filter((p) => p.is_featured);
   const regular = posts.filter((p) => !p.is_featured);

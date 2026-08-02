@@ -1,3 +1,4 @@
+from django.db.models import Count, Q
 from rest_framework import generics, permissions
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
@@ -14,9 +15,13 @@ from .serializers import (
 
 class BlogCategoryListView(generics.ListAPIView):
     """Blog categories — public"""
-    queryset = BlogCategory.objects.filter(is_active=True)
     serializer_class = BlogCategorySerializer
     permission_classes = [permissions.AllowAny]
+
+    def get_queryset(self):
+        return BlogCategory.objects.filter(is_active=True).annotate(
+            _posts_count=Count('posts', filter=Q(posts__is_published=True))
+        )
 
 
 class BlogPostPublicListView(generics.ListAPIView):
@@ -25,7 +30,7 @@ class BlogPostPublicListView(generics.ListAPIView):
     permission_classes = [permissions.AllowAny]
 
     def get_queryset(self):
-        qs = BlogPost.objects.filter(is_published=True)
+        qs = BlogPost.objects.filter(is_published=True).select_related('category')
         cat = self.request.query_params.get('category')
         if cat:
             qs = qs.filter(category__slug=cat)

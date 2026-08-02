@@ -1,12 +1,11 @@
 "use client";
 
-import { useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { useScrollReveal } from "@/hooks/useScrollReveal";
 import { localizedContent, localized } from "@/lib/i18n";
-import { useApiList, usePrefetch } from "@/lib/useApi";
+import { useApiList } from "@/lib/useApi";
 
 interface BlogPost {
   id: number;
@@ -26,13 +25,6 @@ export default function BlogListBlock({ content }: { content?: Record<string, an
 
   const { ref: sectionRef, isVisible } = useScrollReveal();
   const { data: allPosts } = useApiList<BlogPost>("/blog/posts/");
-  const prefetch = usePrefetch(allPosts.slice(0, c.limit || 3).map((p) => `/blog/posts/${p.slug}/`));
-
-  useEffect(() => {
-    if (allPosts.length === 0) return;
-    const timer = setTimeout(prefetch, 700);
-    return () => clearTimeout(timer);
-  }, [allPosts, prefetch, c.limit]);
 
   const posts = allPosts.slice(0, c.limit || 3);
 

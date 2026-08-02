@@ -125,11 +125,15 @@ export default function EbooksPage() {
             >
               {ebook.cover_image ? (
                 <div className="aspect-[3/4] overflow-hidden">
-                  <img src={ebook.cover_image} alt={localized(ebook.translations, locale, "title")} className="w-full h-full object-cover" />
+                  <img src={ebook.cover_image} alt={localized(ebook.translations, locale, "title")} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                 </div>
               ) : (
-                <div className="aspect-[3/4] flex items-center justify-center text-6xl" style={{ background: "var(--color-surface-alt)" }}>
-                  📚
+                <div className="aspect-[3/4] flex flex-col items-center justify-center p-6 text-center relative overflow-hidden" style={{ background: "linear-gradient(135deg, var(--color-primary), var(--color-secondary))", color: "white" }}>
+                  <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px]" />
+                  <span className="text-5xl mb-3 drop-shadow-md">📖</span>
+                  <h4 className="font-bold text-sm line-clamp-3 drop-shadow" style={{ fontFamily: "var(--font-heading)" }}>
+                    {localized(ebook.translations, locale, "title")}
+                  </h4>
                 </div>
               )}
               <div className="p-4">
