@@ -55,7 +55,18 @@
     "enterNewPassword": "Ingresa tu nueva contraseña",
     "invalidToken": "Token inválido o expirado",
     "tokenMissing": "Falta el token de restablecimiento",
-    "loginError": "Credenciales inválidas"
+    "loginError": "Credenciales inválidas",
+    "continueWithGoogle": "Continuar con Google",
+    "verificationCodeSent": "Enviamos un código de verificación a tu correo electrónico",
+    "enterVerificationCode": "Ingresa el código de verificación",
+    "verify": "Verificar",
+    "resendCode": "Reenviar código",
+    "verificationSuccess": "Correo verificado con éxito",
+    "codeExpired": "Código expirado o ya utilizado",
+    "codeInvalid": "Código inválido",
+    "googleNotConfigured": "El inicio de sesión con Google aún no está disponible",
+    "verifyYourEmail": "Verifica tu dirección de correo",
+    "loginLocked": "Demasiados intentos fallidos. Inténtalo de nuevo en 15 minutos."
   },
   "nav": {
     "home": "Inicio",

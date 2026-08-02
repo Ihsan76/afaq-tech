@@ -55,7 +55,18 @@
     "enterNewPassword": "اپنا نیا پاس ورڈ درج کریں",
     "invalidToken": "غلط یا مائع ٹوکن",
     "tokenMissing": "Reset ٹوکن موجود نہیں ہے",
-    "loginError": "غلط اسناد"
+    "loginError": "غلط اسناد",
+    "continueWithGoogle": "گوگل کے ساتھ جاری رکھیں",
+    "verificationCodeSent": "ہم نے آپ کے ای میل پر تصدیقی کوڈ بھیج دیا ہے",
+    "enterVerificationCode": "تصدیقی کوڈ درج کریں",
+    "verify": "تصدیق کریں",
+    "resendCode": "کوڈ دوبارہ بھیجیں",
+    "verificationSuccess": "ای میل کامیابی سے تصدیق ہو گئی",
+    "codeExpired": "کوڈ کی میعاد ختم یا پہلے استعمال ہو چکا",
+    "codeInvalid": "غلط کوڈ",
+    "googleNotConfigured": "گوگل سائن ان ابھی دستیاب نہیں",
+    "verifyYourEmail": "اپنا ای میل پتہ تصدیق کریں",
+    "loginLocked": "بہت زیادہ ناکام کوششیں۔ 15 منٹ بعد دوبارہ کوشش کریں۔"
   },
   "nav": {
     "home": "ہوم",

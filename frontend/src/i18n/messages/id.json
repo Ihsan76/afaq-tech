@@ -55,7 +55,18 @@
     "enterNewPassword": "Masukkan kata sandi baru Anda",
     "invalidToken": "Token tidak valid atau sudah kedaluwarsa",
     "tokenMissing": "Token pengaturan ulang tidak ada",
-    "loginError": "Kredensial tidak valid"
+    "loginError": "Kredensial tidak valid",
+    "continueWithGoogle": "Lanjutkan dengan Google",
+    "verificationCodeSent": "Kami mengirimkan kode verifikasi ke email Anda",
+    "enterVerificationCode": "Masukkan kode verifikasi",
+    "verify": "Verifikasi",
+    "resendCode": "Kirim ulang kode",
+    "verificationSuccess": "Email berhasil diverifikasi",
+    "codeExpired": "Kode kedaluwarsa atau sudah digunakan",
+    "codeInvalid": "Kode tidak valid",
+    "googleNotConfigured": "Masuk dengan Google belum tersedia",
+    "verifyYourEmail": "Verifikasi alamat email Anda",
+    "loginLocked": "Terlalu banyak percobaan gagal. Coba lagi dalam 15 menit."
   },
   "nav": {
     "home": "Beranda",

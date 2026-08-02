@@ -2,12 +2,24 @@ from rest_framework import generics, status, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view, permission_classes
+from rest_framework.throttling import ScopedRateThrottle
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate, get_user_model
 from django.core.mail import send_mail
 from django.conf import settings
 from django.db.models import Sum
+from django.http import HttpResponseRedirect
+from django.utils import timezone
+from urllib.parse import urlencode
+import base64
+import hashlib
+import json
+import secrets
+from datetime import timedelta
+import requests
+
 from .serializers import UserSerializer, RegisterSerializer
+from .models import EmailVerification, LoginAttempt
 from apps.lessonplans.models import LessonPlan
 
 User = get_user_model()
@@ -19,36 +31,96 @@ def get_tokens_for_user(user):
         'access': str(refresh.access_token),
     }
 
+
+def _client_ip(request):
+    xff = request.META.get('HTTP_X_FORWARDED_FOR')
+    if xff:
+        return xff.split(',')[0].strip()
+    return request.META.get('REMOTE_ADDR')
+
+
+def _record_login_attempt(email, ip, successful):
+    LoginAttempt.objects.create(email=email.lower(), ip_address=ip, successful=successful)
+
+
+def _is_locked_out(email, window_minutes=15, max_failures=5):
+    since = timezone.now() - timedelta(minutes=window_minutes)
+    failures = LoginAttempt.objects.filter(
+        email=email.lower(), successful=False, attempted_at__gte=since
+    ).count()
+    return failures >= max_failures
+
+
+def send_verification_code(user, locale='ar', purpose='verify_email'):
+    """Generate, store (hashed) and email a 6-digit code. Returns the plain code only for dev when Resend is unconfigured."""
+    from apps.core.email import send_email, verification_email
+
+    code = f"{secrets.randbelow(1000000):06d}"
+    code_hash = hashlib.sha256(code.encode()).hexdigest()
+    EmailVerification.objects.filter(user=user, purpose=purpose, used=False).delete()
+    EmailVerification.objects.create(
+        user=user,
+        code_hash=code_hash,
+        purpose=purpose,
+        expires_at=timezone.now() + timedelta(hours=1),
+    )
+    sent = send_email(
+        to=user.email,
+        subject='Email Verification — Afaq Tech',
+        html=verification_email(code, locale),
+    )
+    return code if not sent else None
+
+
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = RegisterSerializer
     permission_classes = [permissions.AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = 'auth_register'
     
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
         tokens = get_tokens_for_user(user)
+        debug_code = None
+        if not settings.RESEND_API_KEY:
+            debug_code = send_verification_code(user, request.data.get('locale', 'ar'))
+        else:
+            send_verification_code(user, request.data.get('locale', 'ar'))
         return Response({
             'user': UserSerializer(user).data,
+            'verification_sent': True,
+            'debug_code': debug_code,
             **tokens
         }, status=status.HTTP_201_CREATED)
 
 class LoginView(APIView):
     permission_classes = [permissions.AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = 'auth_login'
     
     def post(self, request):
         email = request.data.get('email')
         password = request.data.get('password')
+        ip = _client_ip(request)
+        
+        if email:
+            email = email.lower()
+            if _is_locked_out(email):
+                return Response({'error': 'Too many failed attempts. Try again in 15 minutes.'}, status=status.HTTP_429_TOO_MANY_REQUESTS)
         
         user = authenticate(email=email, password=password)
         
         if user:
+            _record_login_attempt(email or '', ip, successful=True)
             tokens = get_tokens_for_user(user)
             return Response({
                 'user': UserSerializer(user).data,
                 **tokens
             })
+        _record_login_attempt(email or '', ip, successful=False)
         return Response({'error': 'Invalid login credentials'}, status=status.HTTP_401_UNAUTHORIZED)
 
 class ProfileView(generics.RetrieveUpdateAPIView):
@@ -113,6 +185,8 @@ class TokenRefreshView(APIView):
 
 class ForgotPasswordView(APIView):
     permission_classes = [permissions.AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = 'auth_reset'
 
     def post(self, request):
         from django.contrib.auth.tokens import PasswordResetTokenGenerator
@@ -145,6 +219,8 @@ class ForgotPasswordView(APIView):
 
 class ResetPasswordView(APIView):
     permission_classes = [permissions.AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = 'auth_reset'
 
     def post(self, request):
         from django.contrib.auth.tokens import PasswordResetTokenGenerator
@@ -227,3 +303,178 @@ def user_stats_view(request):
         'total_clones': total_clones,
         'total_downloads': total_downloads,
     })
+
+
+# ── Auth hardening: logout, email verification, Google OAuth ──
+
+class LogoutView(APIView):
+    permission_classes = [permissions.AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = 'auth_login'
+
+    def post(self, request):
+        refresh_token = request.data.get('refresh')
+        if not refresh_token:
+            return Response({'error': 'Refresh token is required'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+        except Exception:
+            return Response({'error': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'message': 'Logged out successfully'})
+
+
+class VerifyEmailView(APIView):
+    """Send (or resend) a verification code to the user's email."""
+    permission_classes = [permissions.AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = 'auth_verify'
+
+    def post(self, request):
+        email = request.data.get('email', '').lower()
+        locale = request.data.get('locale', 'ar')
+        if not email:
+            return Response({'error': 'Email is required'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            return Response({'message': 'If the email is registered, a verification code has been sent'})
+
+        debug_code = send_verification_code(user, locale)
+        return Response({
+            'message': 'Verification code sent',
+            'debug_code': debug_code if not settings.RESEND_API_KEY else None,
+        })
+
+
+class VerifyEmailConfirmView(APIView):
+    """Confirm a verification code and mark the user's email as verified."""
+    permission_classes = [permissions.AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = 'auth_verify'
+
+    def post(self, request):
+        email = request.data.get('email', '').lower()
+        code = request.data.get('code', '')
+        if not email or not code:
+            return Response({'error': 'Email and code are required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            return Response({'error': 'Invalid email'}, status=status.HTTP_400_BAD_REQUEST)
+
+        verification = EmailVerification.objects.filter(
+            user=user, purpose='verify_email', used=False
+        ).order_by('-created_at').first()
+
+        if not verification or not verification.is_valid():
+            return Response({'error': 'Code expired or already used'}, status=status.HTTP_400_BAD_REQUEST)
+        if verification.code_hash != hashlib.sha256(code.encode()).hexdigest():
+            return Response({'error': 'Invalid code'}, status=status.HTTP_400_BAD_REQUEST)
+
+        verification.used = True
+        verification.save()
+        user.is_verified = True
+        user.save(update_fields=['is_verified'])
+        return Response({'message': 'Email verified successfully', 'user': UserSerializer(user).data})
+
+
+def _state_payload(locale):
+    raw = json.dumps({'locale': locale, 'nonce': secrets.token_urlsafe(16)})
+    return base64.urlsafe_b64encode(raw.encode()).decode()
+
+
+def _decode_state(state):
+    try:
+        raw = base64.urlsafe_b64decode(state.encode()).decode()
+        return json.loads(raw)
+    except Exception:
+        return {'locale': 'ar'}
+
+
+class GoogleLoginView(APIView):
+    """Starts the Google OAuth Authorization Code flow."""
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        client_id = settings.GOOGLE_OAUTH_CLIENT_ID
+        if not client_id or not settings.GOOGLE_OAUTH_CLIENT_SECRET:
+            return Response({'error': 'Google OAuth is not configured yet'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+        locale = request.GET.get('locale', 'ar')
+        params = {
+            'client_id': client_id,
+            'redirect_uri': settings.GOOGLE_REDIRECT_URI,
+            'response_type': 'code',
+            'scope': 'openid email profile',
+            'state': _state_payload(locale),
+            'prompt': 'select_account',
+        }
+        return HttpResponseRedirect(f"{settings.GOOGLE_AUTH_URI}?{urlencode(params)}")
+
+
+class GoogleCallbackView(APIView):
+    """Exchanges the Google auth code for tokens and signs the user in."""
+    permission_classes = [permissions.AllowAny]
+
+    def _redirect_frontend(self, locale, **params):
+        url = f"{settings.FRONTEND_URL}/{locale}/auth/google/callback"
+        if params:
+            url = f"{url}?{urlencode(params)}"
+        return HttpResponseRedirect(url)
+
+    def get(self, request):
+        code = request.GET.get('code')
+        state = request.GET.get('state')
+        locale = _decode_state(state).get('locale', 'ar')
+
+        if not code:
+            return self._redirect_frontend(locale, error='access_denied')
+
+        if not settings.GOOGLE_OAUTH_CLIENT_ID or not settings.GOOGLE_OAUTH_CLIENT_SECRET:
+            return self._redirect_frontend(locale, error='not_configured')
+
+        try:
+            token_resp = requests.post(
+                settings.GOOGLE_TOKEN_URI,
+                data={
+                    'code': code,
+                    'client_id': settings.GOOGLE_OAUTH_CLIENT_ID,
+                    'client_secret': settings.GOOGLE_OAUTH_CLIENT_SECRET,
+                    'redirect_uri': settings.GOOGLE_REDIRECT_URI,
+                    'grant_type': 'authorization_code',
+                },
+                timeout=15,
+            )
+            token_data = token_resp.json()
+            if 'access_token' not in token_data:
+                return self._redirect_frontend(locale, error='token_exchange_failed')
+
+            userinfo_resp = requests.get(
+                settings.GOOGLE_USERINFO_URI,
+                headers={'Authorization': f"Bearer {token_data['access_token']}"},
+                timeout=15,
+            )
+            info = userinfo_resp.json()
+        except requests.RequestException:
+            return self._redirect_frontend(locale, error='google_unreachable')
+
+        email = (info.get('email') or '').lower()
+        if not email or not info.get('verified_email', True):
+            return self._redirect_frontend(locale, error='invalid_google_account')
+
+        name = info.get('name') or info.get('given_name') or email.split('@')[0]
+        user = User.objects.filter(email=email).first()
+        if not user:
+            user = User.objects.create_user(email=email, password=secrets.token_urlsafe(32))
+            user.translations = {'ar': {'name': name}, 'en': {'name': name}}
+            user.is_verified = True
+            user.avatar = info.get('picture', '')
+            user.save()
+        elif not user.is_verified:
+            user.is_verified = True
+            user.save(update_fields=['is_verified'])
+
+        tokens = get_tokens_for_user(user)
+        return self._redirect_frontend(locale, access=tokens['access'], refresh=tokens['refresh'])

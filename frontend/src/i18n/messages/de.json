@@ -55,7 +55,18 @@
     "enterNewPassword": "Geben Sie Ihr neues Passwort ein",
     "invalidToken": "Ungültiges oder abgelaufenes Token",
     "tokenMissing": "Setzungs-Token fehlt",
-    "loginError": "Ungültige Anmeldedaten"
+    "loginError": "Ungültige Anmeldedaten",
+    "continueWithGoogle": "Mit Google fortfahren",
+    "verificationCodeSent": "Wir haben einen Bestätigungscode an Ihre E-Mail gesendet",
+    "enterVerificationCode": "Bestätigungscode eingeben",
+    "verify": "Bestätigen",
+    "resendCode": "Code erneut senden",
+    "verificationSuccess": "E-Mail erfolgreich bestätigt",
+    "codeExpired": "Code abgelaufen oder bereits verwendet",
+    "codeInvalid": "Ungültiger Code",
+    "googleNotConfigured": "Google-Anmeldung ist noch nicht verfügbar",
+    "verifyYourEmail": "Bestätigen Sie Ihre E-Mail-Adresse",
+    "loginLocked": "Zu viele fehlgeschlagene Versuche. Versuchen Sie es in 15 Minuten erneut."
   },
   "nav": {
     "home": "Startseite",

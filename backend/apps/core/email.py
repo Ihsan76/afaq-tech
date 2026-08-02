@@ -82,6 +82,41 @@ def password_reset_email(reset_url: str, locale: str = 'ar') -> str:
     """
 
 
+def verification_email(code: str, locale: str = 'ar') -> str:
+    """HTML template for email verification code."""
+    if locale == 'ar':
+        return f"""
+        <div dir="rtl" style="font-family: Tahoma, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="text-align: center; margin-bottom: 30px;">
+                <h1 style="color: #4F46E5; margin: 0;">آفاق تكنولوجي</h1>
+            </div>
+            <h2 style="color: #333;">تأكيد البريد الإلكتروني</h2>
+            <p style="color: #555; line-height: 1.8;">استخدم الرمز التالي لتأكيد بريدك الإلكتروني:</p>
+            <div style="text-align: center; margin: 30px 0; padding: 20px; background: #f6f6f6; border-radius: 12px;">
+                <span style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #4F46E5;">{code}</span>
+            </div>
+            <p style="color: #888; font-size: 14px;">هذا الرمز صالح لمدة ساعة واحدة. إذا لم تطلب هذا الرمز، تجاهل هذه الرسالة.</p>
+            <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+            <p style="color: #aaa; font-size: 12px; text-align: center;">© آفاق تكنولوجي — منصة رقمية للخدمات والتعليم</p>
+        </div>
+        """
+    return f"""
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="text-align: center; margin-bottom: 30px;">
+            <h1 style="color: #4F46E5; margin: 0;">Afaq Tech</h1>
+        </div>
+        <h2 style="color: #333;">Email Verification</h2>
+        <p style="color: #555; line-height: 1.8;">Use the code below to verify your email address:</p>
+        <div style="text-align: center; margin: 30px 0; padding: 20px; background: #f6f6f6; border-radius: 12px;">
+            <span style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #4F46E5;">{code}</span>
+        </div>
+        <p style="color: #888; font-size: 14px;">This code is valid for one hour. If you didn't request this, ignore this email.</p>
+        <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+        <p style="color: #aaa; font-size: 12px; text-align: center;">© Afaq Tech — Digital platform for services and education</p>
+    </div>
+    """
+
+
 def contact_notification_email(name: str, email: str, phone: str, subject: str, message: str, service: str) -> str:
     """HTML template for admin contact notification."""
     rows = "".join([

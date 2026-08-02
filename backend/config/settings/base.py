@@ -83,6 +83,12 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
+PASSWORD_HASHERS = [
+    'django.contrib.auth.hashers.Argon2PasswordHasher',
+    'django.contrib.auth.hashers.PBKDF2PasswordHasher',
+    'django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher',
+]
+
 LANGUAGE_CODE = 'ar'
 TIME_ZONE = 'Asia/Amman'
 USE_I18N = True
@@ -113,8 +119,17 @@ REST_FRAMEWORK = {
     'DEFAULT_THROTTLE_RATES': {
         'anon': '60/minute',
         'user': '120/minute',
+        'auth_login': '5/minute',
+        'auth_register': '3/hour',
+        'auth_verify': '5/minute',
+        'auth_reset': '3/hour',
     },
 }
+
+import base64
+
+JWT_PRIVATE_KEY = base64.b64decode(env('JWT_PRIVATE_KEY_B64', default='')).decode()
+JWT_PUBLIC_KEY = base64.b64decode(env('JWT_PUBLIC_KEY_B64', default='')).decode()
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
@@ -122,9 +137,17 @@ SIMPLE_JWT = {
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
     'AUTH_HEADER_TYPES': ('Bearer',),
+    'ALGORITHM': 'RS256',
+    'SIGNING_KEY': JWT_PRIVATE_KEY,
+    'VERIFYING_KEY': JWT_PUBLIC_KEY,
 }
 
 CORS_ALLOWED_ORIGINS = env.list('CORS_ALLOWED_ORIGINS', default=[
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+])
+
+CSRF_TRUSTED_ORIGINS = env.list('CSRF_TRUSTED_ORIGINS', default=[
     'http://localhost:3000',
     'http://127.0.0.1:3000',
 ])
@@ -144,3 +167,10 @@ GEMINI_API_KEY = env('GEMINI_API_KEY', default='')
 RESEND_API_KEY = env('RESEND_API_KEY', default=None)
 DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='Afaq Tech <onboarding@resend.dev>')
 FRONTEND_URL = env('FRONTEND_URL', default='http://localhost:3000')
+
+GOOGLE_OAUTH_CLIENT_ID = env('GOOGLE_OAUTH_CLIENT_ID', default='')
+GOOGLE_OAUTH_CLIENT_SECRET = env('GOOGLE_OAUTH_CLIENT_SECRET', default='')
+GOOGLE_REDIRECT_URI = env('GOOGLE_REDIRECT_URI', default='http://localhost:8003/api/v1/auth/google/callback/')
+GOOGLE_AUTH_URI = 'https://accounts.google.com/o/oauth2/v2/auth'
+GOOGLE_TOKEN_URI = 'https://oauth2.googleapis.com/token'
+GOOGLE_USERINFO_URI = 'https://www.googleapis.com/oauth2/v2/userinfo'

@@ -55,7 +55,18 @@
     "enterNewPassword": "Entrez votre nouveau mot de passe",
     "invalidToken": "Jeton invalide ou expiré",
     "tokenMissing": "Le jeton de réinitialisation est manquant",
-    "loginError": "Identifiants invalides"
+    "loginError": "Identifiants invalides",
+    "continueWithGoogle": "Continuer avec Google",
+    "verificationCodeSent": "Un code de vérification a été envoyé à votre adresse e-mail",
+    "enterVerificationCode": "Saisissez le code de vérification",
+    "verify": "Vérifier",
+    "resendCode": "Renvoyer le code",
+    "verificationSuccess": "E-mail vérifié avec succès",
+    "codeExpired": "Code expiré ou déjà utilisé",
+    "codeInvalid": "Code invalide",
+    "googleNotConfigured": "La connexion avec Google n'est pas encore disponible",
+    "verifyYourEmail": "Vérifiez votre adresse e-mail",
+    "loginLocked": "Trop de tentatives échouées. Réessayez dans 15 minutes."
   },
   "nav": {
     "home": "Accueil",

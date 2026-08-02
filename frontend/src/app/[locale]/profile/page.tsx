@@ -206,6 +206,15 @@ export default function ProfilePage() {
               }`}>
                 {user.is_verified ? t("profile.verified") : t("profile.notVerified")}
               </span>
+              {!user.is_verified && (
+                <button
+                  onClick={() => router.push(`/${locale}/verify-email?email=${encodeURIComponent(user.email)}`)}
+                  className="text-xs font-semibold underline ml-1"
+                  style={{ color: "var(--color-primary)" }}
+                >
+                  {t("auth.verify")}
+                </button>
+              )}
             </div>
             <p className="text-sm" style={{ color: "var(--color-text-muted)" }}>{t("profile.memberSince")}: {new Date(user.date_joined).toLocaleDateString(locale === "ar" ? "ar-EG" : "en-US")}</p>
           </div>

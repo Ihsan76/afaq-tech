@@ -1,5 +1,6 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from .managers import UserManager
 
@@ -49,3 +50,33 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.translations.get('ar', {}).get('name', self.email)
+
+
+class EmailVerification(models.Model):
+    """Short-lived verification code sent to the user's email."""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='verifications')
+    code_hash = models.CharField(max_length=128)
+    purpose = models.CharField(max_length=20, default='verify_email')
+    expires_at = models.DateTimeField()
+    used = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = _('Email Verification')
+        verbose_name_plural = _('Email Verifications')
+
+    def is_valid(self):
+        return not self.used and self.expires_at > timezone.now()
+
+
+class LoginAttempt(models.Model):
+    """Tracks login failures for brute-force lockout."""
+    email = models.CharField(max_length=255, db_index=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    successful = models.BooleanField(default=False)
+    attempted_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = _('Login Attempt')
+        verbose_name_plural = _('Login Attempts')
+        indexes = [models.Index(fields=['email', 'attempted_at'])]

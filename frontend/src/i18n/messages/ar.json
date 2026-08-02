@@ -55,7 +55,18 @@
     "enterNewPassword": "أدخل كلمة المرور الجديدة",
     "invalidToken": "الرمز غير صالح أو منتهي الصلاحية",
     "tokenMissing": "رمز إعادة التعيين غير موجود",
-    "loginError": "بيانات الدخول غير صحيحة"
+    "loginError": "بيانات الدخول غير صحيحة",
+    "continueWithGoogle": "المتابعة بحساب جوجل",
+    "verificationCodeSent": "أرسلنا رمز التحقق إلى بريدك الإلكتروني",
+    "enterVerificationCode": "أدخل رمز التحقق",
+    "verify": "تأكيد",
+    "resendCode": "إعادة إرسال الرمز",
+    "verificationSuccess": "تم تأكيد البريد الإلكتروني بنجاح",
+    "codeExpired": "انتهت صلاحية الرمز أو تم استخدامه",
+    "codeInvalid": "الرمز غير صحيح",
+    "googleNotConfigured": "تسجيل الدخول بحساب جوجل غير متاح بعد",
+    "verifyYourEmail": "تحقق من عنوان بريدك الإلكتروني",
+    "loginLocked": "محاولات كثيرة فاشلة. حاول مجدداً بعد 15 دقيقة"
   },
   "nav": {
     "home": "الرئيسية",

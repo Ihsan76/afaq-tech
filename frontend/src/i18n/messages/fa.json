@@ -55,7 +55,18 @@
     "enterNewPassword": "رمز عبور جدید خود را وارد کنید",
     "invalidToken": "توکن نامعتبر یا منقضی شده است",
     "tokenMissing": "توکن بازیابی یافت نشد",
-    "loginError": "اطلاعات ورود نامعتبر است"
+    "loginError": "اطلاعات ورود نامعتبر است",
+    "continueWithGoogle": "ادامه با گوگل",
+    "verificationCodeSent": "کد تأیید به ایمیل شما ارسال شد",
+    "enterVerificationCode": "کد تأیید را وارد کنید",
+    "verify": "تأیید",
+    "resendCode": "ارسال مجدد کد",
+    "verificationSuccess": "ایمیل با موفقیت تأیید شد",
+    "codeExpired": "کد منقضی شده یا قبلاً استفاده شده است",
+    "codeInvalid": "کد نامعتبر",
+    "googleNotConfigured": "ورود با گوگل هنوز در دسترس نیست",
+    "verifyYourEmail": "آدرس ایمیل خود را تأیید کنید",
+    "loginLocked": "تلاش‌های ناموفق بیش از حد. ۱۵ دقیقه دیگر دوباره تلاش کنید."
   },
   "nav": {
     "home": "خانه",

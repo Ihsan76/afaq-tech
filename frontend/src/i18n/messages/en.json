@@ -55,7 +55,18 @@
     "enterNewPassword": "Enter your new password",
     "invalidToken": "Invalid or expired token",
     "tokenMissing": "Reset token is missing",
-    "loginError": "Invalid credentials"
+    "loginError": "Invalid credentials",
+    "continueWithGoogle": "Continue with Google",
+    "verificationCodeSent": "We sent a verification code to your email",
+    "enterVerificationCode": "Enter the verification code",
+    "verify": "Verify",
+    "resendCode": "Resend code",
+    "verificationSuccess": "Email verified successfully",
+    "codeExpired": "Code expired or already used",
+    "codeInvalid": "Invalid code",
+    "googleNotConfigured": "Google sign-in is not available yet",
+    "verifyYourEmail": "Verify your email address",
+    "loginLocked": "Too many failed attempts. Try again in 15 minutes."
   },
   "nav": {
     "home": "Home",

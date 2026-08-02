@@ -28,8 +28,11 @@ interface AuthState {
   error: string | null;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, name_ar: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   loadUser: () => Promise<void>;
+  sendVerification: (email: string, locale: string) => Promise<void>;
+  confirmVerification: (email: string, code: string) => Promise<void>;
+  completeGoogleLogin: (access: string, refresh: string) => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -70,10 +73,32 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
   },
 
-  logout: () => {
+  logout: async () => {
+    const refresh = localStorage.getItem("refreshToken");
+    try {
+      if (refresh) await api.post("/auth/logout/", { refresh });
+    } catch {
+      // ignore — always clear local session
+    }
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
     set({ user: null, accessToken: null, refreshToken: null });
+  },
+
+  sendVerification: async (email: string, locale: string) => {
+    await api.post("/auth/verify-email/", { email, locale });
+  },
+
+  confirmVerification: async (email: string, code: string) => {
+    const { data } = await api.post("/auth/verify-email/confirm/", { email, code });
+    set({ user: data.user });
+  },
+
+  completeGoogleLogin: async (access: string, refresh: string) => {
+    localStorage.setItem("accessToken", access);
+    localStorage.setItem("refreshToken", refresh);
+    const { data } = await api.get("/auth/profile/");
+    set({ user: data, accessToken: access, refreshToken: refresh, isLoading: false });
   },
 
   loadUser: async () => {

@@ -5,6 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useAuthStore } from "@/store/auth";
+import GoogleButton from "@/components/GoogleButton";
 
 export default function RegisterPage() {
   const t = useTranslations("auth");
@@ -24,7 +25,7 @@ export default function RegisterPage() {
     e.preventDefault();
     setLocalError("");
     if (password !== confirmPassword) { setLocalError(t("confirmPassword") + " ≠"); return; }
-    try { await register(email, name, password); router.push(`/${locale}/dashboard`); } catch {}
+    try { await register(email, name, password); router.push(`/${locale}/verify-email?email=${encodeURIComponent(email)}`); } catch {}
   };
 
   const displayError = localError || error;
@@ -71,6 +72,14 @@ export default function RegisterPage() {
               {isLoading ? "..." : t("register")}
             </button>
           </form>
+
+          <div className="flex items-center gap-4 my-6">
+            <div className="flex-1" style={{ borderTop: "1px solid var(--color-border)" }} />
+            <span className="text-sm" style={{ color: "var(--color-text-muted)" }}>OR</span>
+            <div className="flex-1" style={{ borderTop: "1px solid var(--color-border)" }} />
+          </div>
+
+          <GoogleButton />
 
           <div className="mt-6 pt-6 text-center" style={{ borderTop: "1px solid var(--color-border)" }}>
             <p className="text-sm" style={{ color: "var(--color-text-muted)" }}>

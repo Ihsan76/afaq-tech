@@ -55,7 +55,18 @@
     "enterNewPassword": "Yeni şifrenizi girin",
     "invalidToken": "Geçersiz veya süresi dolmuş jeton",
     "tokenMissing": "Sıfırlama jetonu eksik",
-    "loginError": "Geçersiz kimlik bilgileri"
+    "loginError": "Geçersiz kimlik bilgileri",
+    "continueWithGoogle": "Google ile devam et",
+    "verificationCodeSent": "E-postanıza bir doğrulama kodu gönderdik",
+    "enterVerificationCode": "Doğrulama kodunu girin",
+    "verify": "Doğrula",
+    "resendCode": "Kodu yeniden gönder",
+    "verificationSuccess": "E-posta başarıyla doğrulandı",
+    "codeExpired": "Kod süresi doldu veya zaten kullanıldı",
+    "codeInvalid": "Geçersiz kod",
+    "googleNotConfigured": "Google ile giriş henüz kullanılamıyor",
+    "verifyYourEmail": "E-posta adresinizi doğrulayın",
+    "loginLocked": "Çok fazla başarısız deneme. 15 dakika sonra tekrar deneyin."
   },
   "nav": {
     "home": "Ana Sayfa",

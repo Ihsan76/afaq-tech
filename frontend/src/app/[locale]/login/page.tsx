@@ -5,6 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useAuthStore } from "@/store/auth";
+import GoogleButton from "@/components/GoogleButton";
 
 export default function LoginPage() {
   const t = useTranslations("auth");
@@ -19,8 +20,19 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLocalError("");
-    try { await login(email, password); router.push(`/${locale}/dashboard`); }
-    catch (err: any) { setLocalError(err?.response?.data?.error || err?.message || t("loginError")); }
+    try {
+      await login(email, password);
+      const user = useAuthStore.getState().user;
+      const targetLocale = user?.ui_language && ["ar", "bn", "de", "en", "es", "fa", "fr", "id", "tr", "ur"].includes(user.ui_language) ? user.ui_language : locale;
+      router.push(`/${targetLocale}/dashboard`);
+    } catch (err: any) {
+      const backendMsg = err?.response?.data?.error || "";
+      if (backendMsg.includes("Too many failed attempts")) {
+        setLocalError(t("loginLocked"));
+      } else {
+        setLocalError(t("loginError"));
+      }
+    }
   };
 
   const displayError = localError || error;
@@ -76,6 +88,14 @@ export default function LoginPage() {
               ) : t("login")}
             </button>
           </form>
+
+          <div className="flex items-center gap-4 my-6">
+            <div className="flex-1" style={{ borderTop: "1px solid var(--color-border)" }} />
+            <span className="text-sm" style={{ color: "var(--color-text-muted)" }}>OR</span>
+            <div className="flex-1" style={{ borderTop: "1px solid var(--color-border)" }} />
+          </div>
+
+          <GoogleButton />
 
           <div className="mt-6 pt-6 text-center" style={{ borderTop: "1px solid var(--color-border)" }}>
             <p className="text-sm" style={{ color: "var(--color-text-muted)" }}>
