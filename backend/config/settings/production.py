@@ -2,6 +2,14 @@ from .base import *
 
 DEBUG = False
 
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'afaq-prod',
+        'TIMEOUT': 300,
+    },
+}
+
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['afaq.app', 'www.afaq.app'])
 
 CORS_ALLOWED_ORIGINS = env.list('CORS_ALLOWED_ORIGINS', default=[

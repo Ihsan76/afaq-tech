@@ -45,7 +45,7 @@ export default function TranslationProvider({
   messages: Record<string, any>;
   locale: string;
 }) {
-  const { data } = useApiList<TranslationItem>("/core/translations/");
+  const { data } = useApiList<TranslationItem>("/core/translations/", { locale });
 
   const merged = useMemo(() => {
     const overrides: Record<string, any> = {};

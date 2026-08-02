@@ -4,7 +4,12 @@ from rest_framework.decorators import api_view, permission_classes, throttle_cla
 from rest_framework.response import Response
 
 from .models import FeatureFlag, Language, TranslationKey
-from .serializers import FeatureFlagSerializer, LanguageSerializer, TranslationSerializer
+from .serializers import (
+    FeatureFlagSerializer,
+    LanguageSerializer,
+    TranslationPublicSerializer,
+    TranslationSerializer,
+)
 
 
 @api_view(['GET'])
@@ -59,9 +64,14 @@ def language_delete(request, pk):
 
 class TranslationPublicListView(generics.ListAPIView):
     queryset = TranslationKey.objects.filter(is_active=True)
-    serializer_class = TranslationSerializer
+    serializer_class = TranslationPublicSerializer
     permission_classes = [permissions.AllowAny]
     pagination_class = None
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['locale'] = self.request.query_params.get('locale')
+        return context
 
 
 class TranslationAdminListView(generics.ListAPIView):

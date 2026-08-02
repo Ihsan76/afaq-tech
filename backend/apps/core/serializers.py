@@ -25,3 +25,18 @@ class TranslationSerializer(serializers.ModelSerializer):
         model = TranslationKey
         fields = ['id', 'key', 'namespace', 'translations', 'is_active', 'order', 'created_at', 'updated_at']
         read_only_fields = ['id', 'namespace', 'created_at', 'updated_at']
+
+
+class TranslationPublicSerializer(serializers.ModelSerializer):
+    translations = serializers.SerializerMethodField()
+
+    class Meta:
+        model = TranslationKey
+        fields = ['id', 'key', 'namespace', 'translations', 'is_active', 'order']
+
+    def get_translations(self, obj):
+        locale = self.context.get('locale')
+        if locale:
+            value = obj.translations.get(locale, '')
+            return {locale: value}
+        return obj.translations

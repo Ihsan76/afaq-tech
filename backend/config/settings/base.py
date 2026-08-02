@@ -164,8 +164,8 @@ CACHES = {
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
             'CONNECTION_POOL_KWARGS': {
-                'socket_connect_timeout': 2,
-                'socket_timeout': 2,
+                'socket_connect_timeout': 0.3,
+                'socket_timeout': 0.3,
             },
         },
         'KEY_PREFIX': 'afaq',
