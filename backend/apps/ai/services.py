@@ -256,19 +256,22 @@ def chat_stream(messages, new_message, model_id=None):
     yield None, full_text, total_tokens, elapsed, model_name
 
 
-def generate_lesson_plan(title, prompt_text, subject="", grade="", language="ar", model_id=None, subject_obj=None, grade_obj=None, learner_stage=""):
-    cache_key_data = f"{title}-{prompt_text}-{subject}-{grade}-{language}-{model_id}"
+def generate_lesson_plan(title, prompt_text, subject="", grade="", language="ar", model_id=None, subject_obj=None, grade_obj=None, learner_stage="", curriculum_context=""):
+    cache_key_data = f"{title}-{prompt_text}-{subject}-{grade}-{language}-{model_id}-{curriculum_context}"
     cache_hash = hashlib.sha256(cache_key_data.encode('utf-8')).hexdigest()
     cached_result = cache.get(f"ai_lesson_plan:{cache_hash}")
     if cached_result:
         return cached_result, (model_id or DEFAULT_MODEL), 0, 0
 
-    curriculum_text = ""
-    if subject_obj:
+    # Official curriculum context takes precedence; fall back to uploaded docs.
+    if not curriculum_context and subject_obj:
         docs = CurriculumDocument.objects.filter(subject=subject_obj)[:3]
+        curriculum_text = ""
         for d in docs:
             if d.extracted_text:
                 curriculum_text += f"\n[مرجع المنهاج: {d.title}]\n{d.extracted_text[:3000]}\n"
+    else:
+        curriculum_text = curriculum_context
 
     variables = {
         "title": title,

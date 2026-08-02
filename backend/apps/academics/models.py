@@ -38,7 +38,10 @@ class Curriculum(models.Model):
 
 class Unit(models.Model):
     curriculum = models.ForeignKey(Curriculum, on_delete=models.CASCADE, related_name='units')
+    subject = models.ForeignKey(Subject, on_delete=models.SET_NULL, null=True, blank=True, related_name='units', verbose_name='المادة الدراسية')
     translations = models.JSONField('الترجمات', default=dict, blank=True)
+    outcomes = models.JSONField('نواتج التعلم', default=list, blank=True, help_text='قائمة نواتج التعلم الرسمية لهذه الوحدة')
+    content = models.TextField('محتوى الوحدة الرسمي', blank=True, help_text='مقتطفات من محتوى المنهاج الرسمي لحقنها في توليد الخطط')
     order = models.IntegerField('الترتيب', default=0)
     
     class Meta:

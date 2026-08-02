@@ -164,7 +164,11 @@
     "grade": "Klasse / Stufe",
     "optional": "Optional (-- Auswählen --)",
     "subject": "Fach",
-    "subtitle": "Geben Sie Titel und Beschreibung der Lektion ein, wählen Sie Fach und Klasse — die KI erstellt in Sekunden einen vollständigen Plan."
+    "subtitle": "Geben Sie Titel und Beschreibung der Lektion ein, wählen Sie Fach und Klasse — die KI erstellt in Sekunden einen vollständigen Plan.",
+    "curriculumUnitTitle": "Einheit aus dem offiziellen Lehrplan",
+    "curriculumUnitHint": "Optional — wählen Sie eine offizielle Einheit für präzise Lernziele oder automatisch lassen.",
+    "allUnits": "Alle Einheiten (automatisch)",
+    "loadingUnits": "Lade offizielle Lehrplaneinheiten..."
   },
   "admin": {
     "title": "Titel",

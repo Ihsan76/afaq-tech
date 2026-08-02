@@ -164,7 +164,11 @@
     "grade": "Grado / Nivel",
     "optional": "Opcional (-- Seleccionar --)",
     "subject": "Materia",
-    "subtitle": "Introduce el título y la descripción de la lección, elige la materia y el grado, y la IA preparará un plan completo en segundos."
+    "subtitle": "Introduce el título y la descripción de la lección, elige la materia y el grado, y la IA preparará un plan completo en segundos.",
+    "curriculumUnitTitle": "Unidad del currículo oficial",
+    "curriculumUnitHint": "Opcional: elige una unidad oficial para apuntar a sus resultados de aprendizaje.",
+    "allUnits": "Todas las unidades (automático)",
+    "loadingUnits": "Cargando unidades del currículo oficial..."
   },
   "admin": {
     "title": "Título",

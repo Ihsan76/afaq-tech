@@ -164,7 +164,11 @@
     "grade": "Niveau / Classe",
     "optional": "Facultatif (-- Sélectionner --)",
     "subject": "Matière",
-    "subtitle": "Saisissez le titre et la description de la leçon, choisissez la matière et le niveau, et l'IA préparera un plan complet en quelques secondes."
+    "subtitle": "Saisissez le titre et la description de la leçon, choisissez la matière et le niveau, et l'IA préparera un plan complet en quelques secondes.",
+    "curriculumUnitTitle": "Unité du programme officiel",
+    "curriculumUnitHint": "Optionnel — choisissez une unité officielle pour cibler ses acquis, ou laissez automatique.",
+    "allUnits": "Toutes les unités (automatique)",
+    "loadingUnits": "Chargement des unités du programme..."
   },
   "admin": {
     "title": "Titre",

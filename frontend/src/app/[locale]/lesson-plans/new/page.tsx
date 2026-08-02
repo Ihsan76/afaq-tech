@@ -1,14 +1,23 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter, usePathname } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useTranslations, useLocale } from "next-intl";
 import Link from "next/link";
 import { api } from "@/lib/api";
 
 interface AcademicItem {
   id: number;
   name: string;
+}
+
+interface UnitItem {
+  id: number;
+  name: string;
+  subject: number | null;
+  subject_name: string;
+  order: number;
+  outcomes: string[];
 }
 
 interface AIModelItem {
@@ -25,19 +34,23 @@ export default function NewLessonPlanPage() {
   const t = useTranslations("lessonPlan");
   const tc = useTranslations("common");
   const router = useRouter();
-  const pathname = usePathname();
-  const locale = pathname.split("/")[1] || "en";
+  const searchParams = useSearchParams();
+  const locale = useLocale();
 
   const [title, setTitle] = useState("");
   const [prompt, setPrompt] = useState("");
-  const [subjectId, setSubjectId] = useState<number | "">("");
-  const [gradeId, setGradeId] = useState<number | "">("");
+  const [subjectId, setSubjectId] = useState<number | "">(searchParams.get("subject") ? parseInt(searchParams.get("subject")!) : "");
+  const [gradeId, setGradeId] = useState<number | "">(searchParams.get("grade") ? parseInt(searchParams.get("grade")!) : "");
+  const [unitId, setUnitId] = useState<number | "">("");
   const [selectedModel, setSelectedModel] = useState("");
   const [curriculumFile, setCurriculumFile] = useState<File | null>(null);
   
   const [subjects, setSubjects] = useState<AcademicItem[]>([]);
   const [grades, setGrades] = useState<AcademicItem[]>([]);
   const [models, setModels] = useState<AIModelItem[]>([]);
+  const [curriculumUnits, setCurriculumUnits] = useState<UnitItem[]>([]);
+  const [curriculumLabel, setCurriculumLabel] = useState("");
+  const [curriculumLoading, setCurriculumLoading] = useState(false);
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -61,6 +74,28 @@ export default function NewLessonPlanPage() {
       .catch(() => {});
   }, [locale]);
 
+  // Fetch official curriculum units when grade + subject are selected
+  useEffect(() => {
+    setCurriculumUnits([]);
+    setCurriculumLabel("");
+    setUnitId("");
+    if (!subjectId || !gradeId) return;
+    setCurriculumLoading(true);
+    api.get(`/academics/curricula/resolve/?grade=${gradeId}&subject=${subjectId}&locale=${locale}`)
+      .then((res) => {
+        const units = res.data.units || [];
+        setCurriculumUnits(units);
+        const first = res.data.results?.[0];
+        if (first) {
+          const name = first.name || "";
+          const country = first.country || "";
+          setCurriculumLabel(name ? `${name}${country ? " — " + country : ""}` : "");
+        }
+      })
+      .catch(() => {})
+      .finally(() => setCurriculumLoading(false));
+  }, [subjectId, gradeId, locale]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !prompt.trim()) return;
@@ -75,6 +110,7 @@ export default function NewLessonPlanPage() {
       formData.append("language", locale);
       if (subjectId) formData.append("subject", subjectId.toString());
       if (gradeId) formData.append("grade", gradeId.toString());
+      if (unitId) formData.append("unit", unitId.toString());
       if (selectedModel) formData.append("model_id", selectedModel);
       if (curriculumFile) formData.append("curriculum_file", curriculumFile);
 
@@ -180,6 +216,47 @@ export default function NewLessonPlanPage() {
               </select>
             </div>
           </div>
+
+          {/* Official curriculum unit picker */}
+          {(curriculumUnits.length > 0 || curriculumLoading) && (
+            <div className="p-4 rounded-2xl" style={{ background: "var(--color-surface-alt)", border: "1px solid var(--color-border)" }}>
+              <div className="flex items-center gap-2 mb-3">
+                <span>📚</span>
+                <div>
+                  <div className="text-sm font-bold" style={{ color: "var(--color-text)" }}>
+                    {t("curriculumUnitTitle")}
+                  </div>
+                  {curriculumLabel && (
+                    <div className="text-xs" style={{ color: "var(--color-primary)" }}>{curriculumLabel}</div>
+                  )}
+                </div>
+              </div>
+
+              {curriculumLoading ? (
+                <p className="text-sm" style={{ color: "var(--color-text-muted)" }}>
+                  <span className="inline-block animate-pulse">⏳</span> {t("loadingUnits")}
+                </p>
+              ) : (
+                <>
+                  <select
+                    value={unitId}
+                    onChange={(e) => setUnitId(e.target.value ? parseInt(e.target.value) : "")}
+                    className="w-full px-4 py-3 border rounded-2xl outline-none"
+                    style={{ borderColor: "var(--color-border)", color: "var(--color-text)", backgroundColor: "var(--color-background)" }}
+                    disabled={loading}
+                  >
+                    <option value="">{t("allUnits")}</option>
+                    {curriculumUnits.map((u) => (
+                      <option key={u.id} value={u.id}>{u.name}</option>
+                    ))}
+                  </select>
+                  <p className="text-xs mt-1.5" style={{ color: "var(--color-text-muted)" }}>
+                    {t("curriculumUnitHint")}
+                  </p>
+                </>
+              )}
+            </div>
+          )}
 
             <div>
               <label className="block text-sm font-semibold mb-2" style={{ color: "var(--color-text-secondary)" }}>

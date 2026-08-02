@@ -39,26 +39,38 @@ class SubjectSerializer(serializers.ModelSerializer):
 
 class UnitSerializer(serializers.ModelSerializer):
     name = serializers.SerializerMethodField()
+    subject_name = serializers.SerializerMethodField()
 
     class Meta:
         model = Unit
-        fields = ['id', 'name', 'order', 'translations']
+        fields = ['id', 'name', 'subject', 'subject_name', 'order', 'outcomes', 'content', 'translations']
 
     def get_name(self, obj):
         loc = _locale(self.context.get('request'))
         return get_translation(obj.translations, loc, 'name', '')
+
+    def get_subject_name(self, obj):
+        if not obj.subject:
+            return ''
+        loc = _locale(self.context.get('request'))
+        return get_translation(obj.subject.translations, loc, 'name', '')
 
 
 class CurriculumSerializer(serializers.ModelSerializer):
     name = serializers.SerializerMethodField()
+    grade_name = serializers.SerializerMethodField()
 
     class Meta:
         model = Curriculum
-        fields = ['id', 'name', 'country', 'year', 'grade', 'translations']
+        fields = ['id', 'name', 'country', 'year', 'grade', 'grade_name', 'translations']
 
     def get_name(self, obj):
         loc = _locale(self.context.get('request'))
         return get_translation(obj.translations, loc, 'name', '')
+
+    def get_grade_name(self, obj):
+        loc = _locale(self.context.get('request'))
+        return get_translation(obj.grade.translations, loc, 'name', '')
 
 
 class CurriculumDetailSerializer(CurriculumSerializer):

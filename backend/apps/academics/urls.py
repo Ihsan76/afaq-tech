@@ -9,6 +9,7 @@ urlpatterns = [
     path('subjects/create/', views.SubjectCreateView.as_view(), name='subject-create'),
     path('subjects/<int:pk>/', views.SubjectDetailView.as_view(), name='subject-detail'),
     path('curricula/', views.CurriculumListView.as_view(), name='curriculum-list'),
+    path('curricula/resolve/', views.CurriculumResolveView.as_view(), name='curriculum-resolve'),
     path('curricula/create/', views.CurriculumCreateView.as_view(), name='curriculum-create'),
     path('curricula/<int:pk>/', views.CurriculumDetailView.as_view(), name='curriculum-detail'),
     path('curricula/<int:curriculum_id>/units/', views.UnitListView.as_view(), name='unit-list'),

@@ -164,7 +164,11 @@
     "grade": "Sınıf / Kademe",
     "optional": "İsteğe Bağlı (-- Seçin --)",
     "subject": "Ders",
-    "subtitle": "Ders başlığını ve açıklamasını girin, ders ve sınıf seçin; yapay zeka saniyeler içinde tam bir plan hazırlasın."
+    "subtitle": "Ders başlığını ve açıklamasını girin, ders ve sınıf seçin; yapay zeka saniyeler içinde tam bir plan hazırlasın.",
+    "curriculumUnitTitle": "Resmi Müfredattan Ünite",
+    "curriculumUnitHint": "İsteğe bağlı — kazanımları hedeflemek için resmi bir ünite seçin veya otomatik bırakın.",
+    "allUnits": "Tüm üniteler (otomatik)",
+    "loadingUnits": "Resmi müfredat üniteleri yükleniyor..."
   },
   "admin": {
     "title": "Başlık",

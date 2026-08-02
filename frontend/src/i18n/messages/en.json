@@ -164,7 +164,11 @@
     "clones": "Copies",
     "byTeacher": "by",
     "shareYourPlan": "Share Your Plans",
-    "shareHint": "Make your plans public to appear in the marketplace"
+    "shareHint": "Make your plans public to appear in the marketplace",
+    "curriculumUnitTitle": "Unit from Official Curriculum",
+    "curriculumUnitHint": "Optional — pick an official unit so the plan targets its learning outcomes precisely, or leave it automatic.",
+    "allUnits": "All units (automatic)",
+    "loadingUnits": "Loading official curriculum units..."
   },
   "servicesMarketplace": {
     "title": "Services Marketplace",

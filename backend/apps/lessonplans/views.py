@@ -12,7 +12,7 @@ from weasyprint import HTML
 FONT_DIR = settings.BASE_DIR / 'apps' / 'lessonplans' / 'fonts'
 from apps.ai.models import AIRun
 from apps.ai.services import generate_lesson_plan as ai_generate, refine_lesson_plan as ai_refine, PromptBuilderService
-from apps.academics.models import Subject, Grade, CurriculumDocument
+from apps.academics.models import Subject, Grade, Curriculum, Unit, CurriculumDocument
 from .models import LessonPlan, LessonPlanRefinement
 from .serializers import LessonPlanSerializer, LessonPlanDetailSerializer
 
@@ -23,6 +23,44 @@ def _get_plan_or_403(pk, request):
     if plan.user != request.user and not request.user.is_staff:
         return None
     return plan
+
+
+def build_curriculum_context(grade_obj, subject_obj, unit_obj=None, language='ar'):
+    """Resolve the official curriculum matching grade + subject and build an injection context.
+
+    Returns (context_text, label). When no curriculum matches, returns ('', '').
+    """
+    if not grade_obj or not subject_obj:
+        return '', ''
+
+    if unit_obj is not None:
+        curriculum = unit_obj.curriculum
+    else:
+        curriculum = Curriculum.objects.filter(grade=grade_obj).order_by('-year', '-id').first()
+    if curriculum is None:
+        return '', ''
+
+    label = curriculum.translations.get(language, {}).get('name') or curriculum.translations.get('ar', {}).get('name', '')
+    country = curriculum.country
+    year = curriculum.year
+
+    if unit_obj and unit_obj.curriculum_id == curriculum.id and unit_obj.subject_id == subject_obj.id:
+        units = [unit_obj]
+    else:
+        units = list(Unit.objects.filter(curriculum=curriculum, subject=subject_obj).order_by('order'))
+
+    if not units:
+        return '', label
+
+    def loc_name(translations):
+        return translations.get(language, {}).get('name') or translations.get('ar', {}).get('name', '')
+
+    parts = [f"[المنهاج الرسمي: {label} — {country} ({year})]"]
+    for u in units:
+        parts.append(f"- الوحدة: {loc_name(u.translations)}")
+        for o in (u.outcomes or []):
+            parts.append(f"    ناتج تعلم: {o}")
+    return '\n'.join(parts), label
 
 class LessonPlanListView(generics.ListAPIView):
     serializer_class = LessonPlanSerializer
@@ -43,6 +81,7 @@ def generate_lesson_plan(request):
     prompt_text = request.data.get('prompt', '').strip()
     subject_id = request.data.get('subject')
     grade_id = request.data.get('grade')
+    unit_id = request.data.get('unit')
     language = request.data.get('language', 'ar')
     model_id = request.data.get('model_id')
 
@@ -53,6 +92,7 @@ def generate_lesson_plan(request):
 
     subject_obj = None
     grade_obj = None
+    unit_obj = None
     subject_name = ''
     grade_name = ''
     if subject_id:
@@ -63,6 +103,12 @@ def generate_lesson_plan(request):
         grade_obj = Grade.objects.filter(pk=grade_id).first()
         if grade_obj:
             grade_name = grade_obj.translations.get(language, {}).get('name') or grade_obj.translations.get('ar', {}).get('name', '')
+    if unit_id:
+        unit_obj = Unit.objects.filter(pk=unit_id).first()
+
+    curriculum_context, curriculum_label = build_curriculum_context(
+        grade_obj=grade_obj, subject_obj=subject_obj, unit_obj=unit_obj, language=language,
+    )
 
     curriculum_file = request.FILES.get('curriculum_file')
     if curriculum_file:
@@ -88,6 +134,7 @@ def generate_lesson_plan(request):
             model_id=model_id,
             subject_obj=subject_obj,
             grade_obj=grade_obj,
+            curriculum_context=curriculum_context,
         )
     except Exception as e:
         return Response({'error': f'Failed to generate plan: {e}'}, status=status.HTTP_502_BAD_GATEWAY)

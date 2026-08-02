@@ -120,3 +120,36 @@ class CurriculumDocumentExtractView(APIView):
         doc.extracted_text = extracted
         doc.save(update_fields=["extracted_text"])
         return Response({"id": doc.id, "extracted_text": doc.extracted_text})
+
+
+class CurriculumResolveView(generics.ListAPIView):
+    """Resolve official curriculum + units for a given grade and subject."""
+    serializer_class = CurriculumDetailSerializer
+    permission_classes = [permissions.AllowAny]
+
+    def get_queryset(self):
+        grade_id = self.request.query_params.get('grade')
+        subject_id = self.request.query_params.get('subject')
+        country = self.request.query_params.get('country', '').strip()
+        qs = Curriculum.objects.all().order_by('-year', '-id')
+        if grade_id:
+            qs = qs.filter(grade_id=grade_id)
+        if country:
+            qs = qs.filter(country=country)
+        return qs
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        subject_id = request.query_params.get('subject')
+        curricula = list(queryset[:5])
+
+        units_serializer = None
+        if curricula and subject_id:
+            units = Unit.objects.filter(curriculum_id__in=[c.id for c in curricula], subject_id=subject_id).order_by('order')
+            units_serializer = UnitSerializer(units, many=True, context={'request': request}).data
+
+        data = CurriculumDetailSerializer(curricula, many=True, context={'request': request}).data
+        if units_serializer is not None:
+            for item in data:
+                item['units'] = units_serializer
+        return Response({"results": data, "units": units_serializer})
