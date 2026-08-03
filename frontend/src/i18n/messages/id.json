@@ -19,7 +19,10 @@
     "paymentCancelled": "Pembayaran dibatalkan.",
     "paymentNotAvailable": "Pembayaran tidak tersedia saat ini.",
     "currency": "Mata uang",
-    "chargedNote": "Harga tampilan saja — pembayaran diproses dalam mata uang dasar akun."
+    "chargedNote": "Harga tampilan saja — pembayaran diproses dalam mata uang dasar akun.",
+    "usageTitle": "Penggunaan layanan Anda",
+    "unlimited": "Tanpa batas",
+    "daily": "harian"
   },
   "common": {
     "appName": "Afaq Tech",
@@ -515,6 +518,9 @@
     "aiRuns": "Pemantauan AI",
     "aiRunsDesc": "Pantau proses AI, token, biaya, dan performa model",
     "marketplaceSection": "Marketplace",
+    "subscriptionsSection": "Langganan",
+    "subscriptions": "Paket dan penawaran",
+    "subscriptionsDesc": "Kelola paket, harga, dan langganan",
     "statUsers": "Pengguna",
     "statNew7d": "baru dalam 7 hari",
     "statLessonPlans": "Rencana Pelajaran",
@@ -574,7 +580,8 @@
     "featureLessonPlan": "Rencana Pelajaran",
     "featureQuiz": "Kuis",
     "featureExploration": "Penjelasan",
-    "featureChat": "Obrolan"
+    "featureChat": "Obrolan",
+    "unsavedChanges": "Ada perubahan yang belum disimpan di formulir paket. Tetap keluar?"
   },
   "dashboard": {
     "title": "Dashboard",

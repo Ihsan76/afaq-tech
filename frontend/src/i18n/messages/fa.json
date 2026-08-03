@@ -19,7 +19,10 @@
     "paymentCancelled": "پرداخت لغو شد.",
     "paymentNotAvailable": "پرداخت در حال حاضر در دسترس نیست.",
     "currency": "واحد پول",
-    "chargedNote": "فقط قیمت نمایشی — پرداخت به واحد پول اصلی حساب انجام میشود."
+    "chargedNote": "فقط قیمت نمایشی — پرداخت به واحد پول اصلی حساب انجام میشود.",
+    "usageTitle": "مصرف خدمات شما",
+    "unlimited": "نامحدود",
+    "daily": "روزانه"
   },
   "common": {
     "appName": "آفاق تک",
@@ -567,6 +570,9 @@
     "aiRuns": "پایش هوش مصنوعی",
     "aiRunsDesc": "نظارت بر اجراهای هوش مصنوعی، توکن‌ها، هزینه‌ها و عملکرد مدل‌ها",
     "marketplaceSection": "بازار",
+    "subscriptionsSection": "اشتراک‌ها",
+    "subscriptions": "بسته‌ها و پیشنهادها",
+    "subscriptionsDesc": "مدیریت بسته‌ها، قیمت‌ها و اشتراک‌ها",
     "statUsers": "کاربران",
     "statNew7d": "جدید در ۷ روز",
     "statLessonPlans": "طرح درس‌ها",
@@ -626,7 +632,8 @@
     "featureLessonPlan": "طرح درس",
     "featureQuiz": "کوئیز",
     "featureExploration": "توضیح",
-    "featureChat": "گفتگو"
+    "featureChat": "گفتگو",
+    "unsavedChanges": "تغییرات ذخیره‌نشده در فرم بسته دارید. باز هم خارج شوید؟"
   },
   "dashboard": {
     "title": "داشبورد",

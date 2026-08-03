@@ -13,7 +13,39 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings.base')
 django.setup()
 
-from apps.subscriptions.models import Plan  # noqa: E402
+from apps.subscriptions.models import Plan, PlanService, PlanServiceLimit  # noqa: E402
+
+SERVICES = [
+    {
+        'code': 'ai_lesson_plans',
+        'name': {'ar': 'خطط دروس بالذكاء الاصطناعي', 'en': 'AI Lesson Plans'},
+        'description': {'ar': 'إنشاء خطط الدروس بالذكاء الاصطناعي', 'en': 'Generate AI lesson plans'},
+        'sort_order': 1,
+    },
+    {
+        'code': 'ai_assistant',
+        'name': {'ar': 'المساعد الذكي', 'en': 'AI Assistant'},
+        'description': {'ar': 'الأسئلة والاستفسارات عبر المساعد الذكي', 'en': 'AI assistant questions and queries'},
+        'sort_order': 2,
+    },
+    {
+        'code': 'export_pdf',
+        'name': {'ar': 'تصدير PDF و Word', 'en': 'PDF + Word Export'},
+        'description': {'ar': 'تصدير خطط الدروس إلى PDF أو Word', 'en': 'Export lesson plans to PDF or Word'},
+        'sort_order': 3,
+    },
+    {
+        'code': 'ebook_download',
+        'name': {'ar': 'تحميل الكتب الإلكترونية', 'en': 'E-Book Downloads'},
+        'description': {'ar': 'تحميل الكتب الإلكترونية', 'en': 'Download e-books'},
+        'sort_order': 4,
+    },
+]
+
+FREE_LIMITS = [
+    {'service_code': 'ai_lesson_plans', 'limit': 5, 'period': 'monthly', 'sort_order': 1},
+    {'service_code': 'ai_assistant', 'limit': 10, 'period': 'daily', 'sort_order': 2},
+]
 
 PLANS = [
     {
@@ -140,6 +172,20 @@ def main():
         else:
             updated += 1
         print(f"  • {code}: {'created' if was_created else 'updated'}")
+    for data in SERVICES:
+        PlanService.objects.update_or_create(code=data['code'], defaults=data)
+    print(f"  • services: {len(SERVICES)} catalog entries synced")
+    free_plan = Plan.objects.filter(code='free').first()
+    if free_plan:
+        for data in FREE_LIMITS:
+            service = PlanService.objects.filter(code=data['service_code']).first()
+            if service:
+                PlanServiceLimit.objects.update_or_create(
+                    plan=free_plan,
+                    service=service,
+                    defaults={'limit': data['limit'], 'period': data['period'], 'sort_order': data['sort_order']},
+                )
+        print("  • free plan limits synced")
     print(f"Done — {created} created, {updated} updated, {Plan.objects.count()} plans total.")
 
 

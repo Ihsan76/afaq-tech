@@ -10,7 +10,7 @@ from django.test import override_settings
 from rest_framework.test import APIClient
 
 from apps.marketplace.payments import StripeProvider
-from apps.subscriptions.models import Plan, Subscription
+from apps.subscriptions.models import Plan, PlanServiceLimit, Subscription
 from apps.subscriptions.services import activate_subscription
 
 User = get_user_model()
@@ -358,3 +358,175 @@ def test_webhook_activates_subscription(client, user, pro_plan):
     assert subscription.payment_provider == "myfatoorah"
     assert subscription.payment_transaction_id == "07076409988323998875"
     assert user.subscription_plan == "pro"
+
+
+@pytest.fixture
+def admin_client():
+    admin_user = User.objects.create_user(
+        email="admin@example.com",
+        password="TestPass@123",
+        is_verified=True,
+        is_staff=True,
+        role="admin",
+    )
+    from apps.users.views import get_tokens_for_user
+
+    admin = APIClient()
+    tokens = get_tokens_for_user(admin_user)
+    admin.credentials(HTTP_AUTHORIZATION=f"Bearer {tokens['access']}")
+    return admin
+
+
+@pytest.mark.django_db
+def test_admin_plan_list_requires_staff(client, pro_plan):
+    resp = client.get("/api/v1/subscriptions/admin/plans/")
+    assert resp.status_code in (401, 403)
+
+
+@pytest.mark.django_db
+def test_admin_plan_crud(admin_client, pro_plan):
+    resp = admin_client.get("/api/v1/subscriptions/admin/plans/")
+    assert resp.status_code == 200
+    admin_plans = resp.json()
+    assert any(p["code"] == "pro" for p in admin_plans)
+    pro = next(p for p in admin_plans if p["code"] == "pro")
+    assert pro["prices"]["USD"] == "2.66"
+
+    create = admin_client.post("/api/v1/subscriptions/admin/plans/", {
+        "code": "vip",
+        "name": {"ar": "VIP", "en": "VIP"},
+        "description": {"ar": "", "en": ""},
+        "price": "14.99",
+        "currency": "SAR",
+        "prices": {"SAR": "14.99", "USD": "4.00"},
+        "billing_period": "monthly",
+        "duration_days": 30,
+        "level": 2,
+        "features": [{"ar": "ميزة VIP", "en": "VIP feature"}],
+        "is_active": True,
+        "is_featured": True,
+        "sort_order": 9,
+    }, format="json")
+    assert create.status_code == 201
+    plan = Plan.objects.get(code="vip")
+    assert plan.get_price("USD") == (Decimal("4.00"), "USD")
+
+    update = admin_client.patch(f"/api/v1/subscriptions/admin/plans/{plan.id}/", {
+        "prices": {"SAR": "14.99", "USD": "4.50"},
+        "is_featured": False,
+    }, format="json")
+    assert update.status_code == 200
+    plan.refresh_from_db()
+    assert str(plan.prices["USD"]) == "4.50"
+    assert plan.is_featured is False
+
+    delete = admin_client.delete(f"/api/v1/subscriptions/admin/plans/{plan.id}/")
+    assert delete.status_code == 204
+    assert not Plan.objects.filter(code="vip").exists()
+
+
+@pytest.mark.django_db
+def test_admin_services_crud(admin_client):
+    from apps.subscriptions.models import PlanService
+
+    resp = admin_client.get("/api/v1/subscriptions/admin/services/")
+    assert resp.status_code == 200
+    services = resp.json()
+    assert any(s["code"] == "ai_lesson_plans" for s in services)
+
+    create = admin_client.post("/api/v1/subscriptions/admin/services/", {
+        "code": "worksheet_generator",
+        "name": {"ar": "مولّد أوراق العمل", "en": "Worksheet Generator"},
+        "sort_order": 9,
+        "is_active": True,
+    }, format="json")
+    assert create.status_code == 201
+    service = PlanService.objects.get(code="worksheet_generator")
+
+    update = admin_client.patch(f"/api/v1/subscriptions/admin/services/{service.id}/", {"is_active": False}, format="json")
+    assert update.status_code == 200
+    service.refresh_from_db()
+    assert service.is_active is False
+
+    delete = admin_client.delete(f"/api/v1/subscriptions/admin/services/{service.id}/")
+    assert delete.status_code == 204
+
+
+@pytest.mark.django_db
+def test_admin_plan_services_replace(admin_client, pro_plan):
+    from apps.subscriptions.models import PlanService
+
+    ai = PlanService.objects.get(code="ai_lesson_plans")
+    PlanServiceLimit.objects.create(plan=pro_plan, service=ai, limit=100, period="monthly")
+
+    resp = admin_client.get(f"/api/v1/subscriptions/admin/plans/{pro_plan.id}/services/")
+    assert resp.status_code == 200
+    assert resp.json()[0]["service_code"] == "ai_lesson_plans"
+    assert resp.json()[0]["limit"] == 100
+
+    put = admin_client.put(f"/api/v1/subscriptions/admin/plans/{pro_plan.id}/services/", [
+        {"code": "ai_lesson_plans", "limit": 50, "period": "monthly", "sort_order": 1},
+        {"code": "ai_assistant", "limit": "", "period": "daily", "sort_order": 2},
+    ], format="json")
+    assert put.status_code == 200
+    assert pro_plan.service_limits.count() == 2
+    pro_limit = pro_plan.service_limits.get(service__code="ai_lesson_plans")
+    assert pro_limit.limit == 50
+    assistant_limit = pro_plan.service_limits.get(service__code="ai_assistant")
+    assert assistant_limit.limit is None
+    assert assistant_limit.period == "daily"
+
+
+@pytest.mark.django_db
+def test_usage_summary_and_recording(user, client):
+    from apps.subscriptions.services import record_usage, user_usage_summary
+
+    record_usage(user, "ai_lesson_plans")
+    record_usage(user, "ai_lesson_plans")
+
+    resp = client.get("/api/v1/subscriptions/usage/")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["plan"] == "free"
+    row = next(s for s in data["services"] if s["code"] == "ai_lesson_plans")
+    assert row["used"] == 2
+    assert row["limit"] == 5
+    assert row["period"] == "monthly"
+
+    summary = user_usage_summary(user)
+    assert any(s["code"] == "ai_assistant" for s in summary)
+
+
+@pytest.mark.django_db
+def test_lesson_plan_generation_blocked_at_limit(user, client):
+    from apps.subscriptions.services import record_usage
+
+    for _ in range(5):
+        record_usage(user, "ai_lesson_plans")
+
+    resp = client.post("/api/v1/lesson-plans/generate/", {
+        "title": "درس تجريبي",
+        "prompt": "اشرح درس عن الفضاء",
+        "language": "ar",
+    }, format="json")
+    assert resp.status_code == 402
+    assert resp.json()["error"] == "usage_limit_reached"
+    assert resp.json()["limit"] == 5
+
+
+@pytest.mark.django_db
+def test_lesson_plan_generation_records_usage(user, client):
+    from unittest import mock
+
+    from apps.subscriptions.models import PlanService, ServiceUsage
+
+    plan_data = {"sections": [{"title": "مقدمة", "content": "نص"}]}
+    with mock.patch("apps.lessonplans.views.ai_generate", return_value=(plan_data, "test-model", 100, 50)):
+        resp = client.post("/api/v1/lesson-plans/generate/", {
+            "title": "درس تجريبي",
+            "prompt": "اشرح درس عن الفضاء",
+            "language": "ar",
+        }, format="json")
+    assert resp.status_code in (200, 201)
+    usage = ServiceUsage.objects.get(user=user, service=PlanService.objects.get(code="ai_lesson_plans"))
+    assert usage.used_count == 1

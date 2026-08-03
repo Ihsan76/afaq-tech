@@ -19,7 +19,10 @@
     "paymentCancelled": "ادائیگی منسوخ۔",
     "paymentNotAvailable": "ادائیگی فی الحال دستیاب نہیں۔",
     "currency": "کرنسی",
-    "chargedNote": "صرف ڈسپلے قیمتیں — ادائیگی اکاؤنٹ کی بنیادی کرنسی میں ہوتی ہے۔"
+    "chargedNote": "صرف ڈسپلے قیمتیں — ادائیگی اکاؤنٹ کی بنیادی کرنسی میں ہوتی ہے۔",
+    "usageTitle": "آپ کی سروس کا استعمال",
+    "unlimited": "لا محدود",
+    "daily": "روزانہ"
   },
   "common": {
     "appName": "Afaq Tech",
@@ -515,6 +518,9 @@
     "aiRuns": "اے آئی مانیٹرنگ",
     "aiRunsDesc": "اے آئی رنز، ٹوکنز، اخراجات اور ماڈل کی کارکردگی کی نگرانی کریں",
     "marketplaceSection": "مارکیٹ",
+    "subscriptionsSection": "سبسکرپشنز",
+    "subscriptions": "پیکجز اور پیشکشیں",
+    "subscriptionsDesc": "پیکجز، قیمتیں اور سبسکرپشنز کا انتظام",
     "statUsers": "صارفین",
     "statNew7d": "7 دن میں نئے",
     "statLessonPlans": "اسباق کے منصوبے",
@@ -574,7 +580,8 @@
     "featureLessonPlan": "درس کا منصوبہ",
     "featureQuiz": "کوئز",
     "featureExploration": "وضاحت",
-    "featureChat": "چیٹ"
+    "featureChat": "چیٹ",
+    "unsavedChanges": "پیکج فارم میں غیر محفوظ تبدیلیاں ہیں۔ کیا پھر بھی جانا ہے؟"
   },
   "dashboard": {
     "title": "Dashboard",

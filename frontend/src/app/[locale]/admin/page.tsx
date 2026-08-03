@@ -77,6 +77,9 @@ export default function AdminPage() {
     { section: t("admin.usersSection"), items: [
       { href: `/${locale}/admin/users`, title: t("admin.users"), description: t("admin.usersDesc"), icon: "👥", gradient: "linear-gradient(135deg, var(--color-warning), var(--color-error))" },
     ]},
+    { section: t("admin.subscriptionsSection"), items: [
+      { href: `/${locale}/admin/subscriptions`, title: t("admin.subscriptions"), description: t("admin.subscriptionsDesc"), icon: "💳", gradient: "linear-gradient(135deg, var(--color-secondary), var(--color-success))" },
+    ]},
   ];
 
   return (

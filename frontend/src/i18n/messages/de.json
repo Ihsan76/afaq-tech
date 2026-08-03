@@ -19,7 +19,10 @@
     "paymentCancelled": "Zahlung abgebrochen.",
     "paymentNotAvailable": "Zahlungen sind derzeit nicht verfügbar.",
     "currency": "Währung",
-    "chargedNote": "Nur Anzeigepreise — die Zahlung erfolgt in der Basiswährung des Kontos."
+    "chargedNote": "Nur Anzeigepreise — die Zahlung erfolgt in der Basiswährung des Kontos.",
+    "usageTitle": "Ihre Service-Nutzung",
+    "unlimited": "Unbegrenzt",
+    "daily": "täglich"
   },
   "common": {
     "appName": "Afaq Tech",
@@ -515,6 +518,9 @@
     "aiRuns": "KI-Überwachung",
     "aiRunsDesc": "Überwachen Sie KI-Ausführungen, Token, Kosten und Leistung",
     "marketplaceSection": "Marktplatz",
+    "subscriptionsSection": "Abonnements",
+    "subscriptions": "Pläne & Angebote",
+    "subscriptionsDesc": "Pläne, Preise und Abonnements verwalten",
     "statUsers": "Benutzer",
     "statNew7d": "neu in 7 Tagen",
     "statLessonPlans": "Unterrichtspläne",
@@ -574,7 +580,8 @@
     "featureLessonPlan": "Unterrichtsplan",
     "featureQuiz": "Quiz",
     "featureExploration": "Erklärung",
-    "featureChat": "Chat"
+    "featureChat": "Chat",
+    "unsavedChanges": "Sie haben ungespeicherte Änderungen im Paketformular. Trotzdem verlassen?"
   },
   "dashboard": {
     "title": "Dashboard",

@@ -19,7 +19,10 @@
     "paymentCancelled": "Payment cancelled.",
     "paymentNotAvailable": "Payments are not available right now.",
     "currency": "Currency",
-    "chargedNote": "Display prices only — payment is processed in the account's base currency."
+    "chargedNote": "Display prices only — payment is processed in the account's base currency.",
+    "usageTitle": "Your service usage",
+    "unlimited": "Unlimited",
+    "daily": "daily"
   },
   "common": {
     "appName": "Afaq Tech",
@@ -567,6 +570,9 @@
     "aiRuns": "AI Monitoring",
     "aiRunsDesc": "Monitor AI runs, tokens, costs and model performance",
     "marketplaceSection": "Marketplace",
+    "subscriptionsSection": "Subscriptions",
+    "subscriptions": "Plans & Offers",
+    "subscriptionsDesc": "Manage plans, prices and subscriptions",
     "statUsers": "Users",
     "statNew7d": "new in 7 days",
     "statLessonPlans": "Lesson Plans",
@@ -626,7 +632,8 @@
     "featureLessonPlan": "Lesson Plan",
     "featureQuiz": "Quiz",
     "featureExploration": "Explanation",
-    "featureChat": "Chat"
+    "featureChat": "Chat",
+    "unsavedChanges": "You have unsaved changes in the plan form. Leave anyway?"
   },
   "dashboard": {
     "title": "Dashboard",

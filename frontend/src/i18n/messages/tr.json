@@ -19,7 +19,10 @@
     "paymentCancelled": "Ödeme iptal edildi.",
     "paymentNotAvailable": "Ödeme şu anda mevcut değil.",
     "currency": "Para birimi",
-    "chargedNote": "Gösterim fiyatları — ödeme, hesabın baz para biriminde işlenir."
+    "chargedNote": "Gösterim fiyatları — ödeme, hesabın baz para biriminde işlenir.",
+    "usageTitle": "Hizmet kullanımınız",
+    "unlimited": "Sınırsız",
+    "daily": "günlük"
   },
   "common": {
     "appName": "Afaq Tech",
@@ -515,6 +518,9 @@
     "aiRuns": "AI İzleme",
     "aiRunsDesc": "AI çalışmalarını, tokenları, maliyetleri ve model performansını izleyin",
     "marketplaceSection": "Pazar",
+    "subscriptionsSection": "Abonelikler",
+    "subscriptions": "Paketler ve teklifler",
+    "subscriptionsDesc": "Paketleri, fiyatları ve abonelikleri yönetin",
     "statUsers": "Kullanıcılar",
     "statNew7d": "7 günde yeni",
     "statLessonPlans": "Ders Planları",
@@ -574,7 +580,8 @@
     "featureLessonPlan": "Ders Planı",
     "featureQuiz": "Quiz",
     "featureExploration": "Açıklama",
-    "featureChat": "Sohbet"
+    "featureChat": "Sohbet",
+    "unsavedChanges": "Paket formunda kaydedilmemiş değişiklikler var. Yine de çıkılsın mı?"
   },
   "dashboard": {
     "title": "Dashboard",

@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from .currencies import resolve_currency
-from .models import Plan, Subscription
+from .models import Plan, PlanService, PlanServiceLimit, Subscription
 
 
 def _locale(request):
@@ -64,6 +64,25 @@ class AdminPlanSerializer(serializers.ModelSerializer):
     class Meta:
         model = Plan
         fields = '__all__'
+
+
+class PlanServiceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PlanService
+        fields = '__all__'
+
+
+class PlanServiceLimitSerializer(serializers.ModelSerializer):
+    service_code = serializers.CharField(source='service.code', read_only=True)
+    service_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = PlanServiceLimit
+        fields = ['id', 'service', 'service_code', 'service_name', 'limit', 'period', 'sort_order']
+        read_only_fields = ['service']
+
+    def get_service_name(self, obj):
+        return _localized(obj.service.name, _locale(self.context.get('request')))
 
 
 class SubscriptionSerializer(serializers.ModelSerializer):

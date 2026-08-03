@@ -48,6 +48,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { section: t("admin.coursesSection"), items: [
       { href: "/admin/courses", label: t("admin.courses"), icon: "🎬" },
     ]},
+    { section: t("admin.marketplaceSection"), items: [
+      { href: "/admin/marketplace", label: t("admin.marketplace"), icon: "🏪" },
+      { href: "/admin/ai-runs", label: t("admin.aiRuns"), icon: "🤖" },
+    ]},
     { section: "AI", items: [
       { href: "/admin/ai-models", label: "نماذج AI", icon: "🤖" },
       { href: "/admin/prompts", label: "البرومبتات", icon: "📝" },
@@ -58,6 +62,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     ]},
     { section: t("admin.usersSection"), items: [
       { href: "/admin/users", label: t("admin.users"), icon: "👥" },
+    ]},
+    { section: t("admin.subscriptionsSection"), items: [
+      { href: "/admin/subscriptions", label: t("admin.subscriptions"), icon: "💳" },
     ]},
   ];
 

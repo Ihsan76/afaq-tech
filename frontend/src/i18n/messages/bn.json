@@ -19,7 +19,10 @@
     "paymentCancelled": "পেমেন্ট বাতিল।",
     "paymentNotAvailable": "পেমেন্ট বর্তমানে উপলব্ধ নেই।",
     "currency": "মুদ্রা",
-    "chargedNote": "শুধুমাত্র প্রদর্শন মূল্য — অর্থপ্রদান অ্যাকাউন্টের মূল মুদ্রায় প্রক্রিয়া হয়।"
+    "chargedNote": "শুধুমাত্র প্রদর্শন মূল্য — অর্থপ্রদান অ্যাকাউন্টের মূল মুদ্রায় প্রক্রিয়া হয়।",
+    "usageTitle": "আপনার পরিষেবা ব্যবহার",
+    "unlimited": "সীমাহীন",
+    "daily": "দৈনিক"
   },
   "common": {
     "appName": "Afaq Tech",
@@ -515,6 +518,9 @@
     "aiRuns": "AI মনিটরিং",
     "aiRunsDesc": "AI রান, টোকেন, খরচ এবং মডেল পারফরম্যান্স পর্যবেক্ষণ করুন",
     "marketplaceSection": "মার্কেটপ্লেস",
+    "subscriptionsSection": "সাবস্ক্রিপশন",
+    "subscriptions": "প্যাকেজ এবং অফার",
+    "subscriptionsDesc": "প্যাকেজ, দাম এবং সাবস্ক্রিপশন পরিচালনা করুন",
     "statUsers": "ব্যবহারকারী",
     "statNew7d": "৭ দিনে নতুন",
     "statLessonPlans": "পাঠ পরিকল্পনা",
@@ -574,7 +580,8 @@
     "featureLessonPlan": "পাঠ পরিকল্পনা",
     "featureQuiz": "কুইজ",
     "featureExploration": "ব্যাখ্যা",
-    "featureChat": "চ্যাট"
+    "featureChat": "চ্যাট",
+    "unsavedChanges": "প্যাকেজ ফর্মে অসংরক্ষিত পরিবর্তন আছে। তবুও যাবেন?"
   },
   "dashboard": {
     "title": "Dashboard",

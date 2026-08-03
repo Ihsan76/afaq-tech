@@ -49,6 +49,14 @@ interface Subscription {
   paid_at: string | null;
 }
 
+interface UsageService {
+  code: string;
+  name: Record<string, string>;
+  period: string;
+  limit: number | null;
+  used: number;
+}
+
 const STATUS_COLORS: Record<string, { bg: string; color: string }> = {
   active: { bg: "#d1fae5", color: "#059669" },
   pending: { bg: "#fef3c7", color: "#d97706" },
@@ -67,6 +75,7 @@ export default function SubscriptionsPage() {
 
   const [plans, setPlans] = useState<Plan[]>([]);
   const [current, setCurrent] = useState<Subscription | null>(null);
+  const [usage, setUsage] = useState<UsageService[]>([]);
   const [loading, setLoading] = useState(true);
   const [buying, setBuying] = useState<number | null>(null);
   const [banner, setBanner] = useState<{ type: "success" | "error"; text: string } | null>(null);
@@ -113,8 +122,13 @@ export default function SubscriptionsPage() {
       .then(r => setPlans(r.data))
       .catch(() => {});
     fetchCurrent();
+    if (accessToken) {
+      api.get("/subscriptions/usage/")
+        .then(r => setUsage(r.data?.services || []))
+        .catch(() => {});
+    }
     setLoading(false);
-  }, [locale, fetchCurrent, t]);
+  }, [locale, fetchCurrent, t, accessToken]);
 
   const handleCurrencyChange = async (code: string) => {
     setSelectedCurrency(code);
@@ -207,6 +221,33 @@ export default function SubscriptionsPage() {
                 style={{ background: (STATUS_COLORS[current.status] || STATUS_COLORS.pending).bg, color: (STATUS_COLORS[current.status] || STATUS_COLORS.pending).color }}>
                 {t(current.status)}
               </span>
+            </div>
+          </div>
+        )}
+
+        {usage.length > 0 && (
+          <div className={surfaceCls + " p-5 mb-8"} style={surfaceStyle}>
+            <h3 className="text-sm font-bold mb-4" style={{ color: "var(--color-text)", fontFamily: "var(--font-heading)" }}>{t("usageTitle")}</h3>
+            <div className="space-y-4">
+              {usage.map((s) => {
+                const name = s.name?.[locale] || s.name?.ar || s.name?.en || s.code;
+                const unlimited = s.limit === null || s.limit === undefined;
+                const exhausted = !unlimited && s.used >= (s.limit as number);
+                const pct = unlimited ? 100 : Math.min(100, (s.used / Math.max(s.limit as number, 1)) * 100);
+                return (
+                  <div key={s.code}>
+                    <div className="flex items-center justify-between text-sm mb-1">
+                      <span className="font-medium" style={{ color: "var(--color-text-secondary)" }}>{name}</span>
+                      <span style={{ color: exhausted ? "var(--color-error)" : "var(--color-text-muted)" }}>
+                        {unlimited ? `∞ ${t("unlimited")}` : `${s.used} / ${s.limit} ${t(s.period)}`}
+                      </span>
+                    </div>
+                    <div className="h-2 rounded-full overflow-hidden" style={{ background: "var(--color-background-secondary)" }}>
+                      <div className="h-2 rounded-full transition-all" style={{ width: `${pct}%`, background: exhausted ? "var(--color-error)" : "linear-gradient(135deg, var(--color-primary), var(--color-secondary))" }} />
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}

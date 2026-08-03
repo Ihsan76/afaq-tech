@@ -86,3 +86,64 @@ class Subscription(models.Model):
 
     def __str__(self):
         return f"{self.user} - {self.plan} ({self.status})"
+
+
+class PlanService(models.Model):
+    class Period(models.TextChoices):
+        DAILY = 'daily', _('Daily')
+        MONTHLY = 'monthly', _('Monthly')
+        YEARLY = 'yearly', _('Yearly')
+        LIFETIME = 'lifetime', _('Lifetime')
+
+    code = models.SlugField(_('Code'), max_length=64, unique=True)
+    name = models.JSONField(_('Name (Multilingual)'), default=dict)
+    description = models.JSONField(_('Description (Multilingual)'), default=dict, blank=True)
+    sort_order = models.IntegerField(_('Sort Order'), default=0)
+    is_active = models.BooleanField(_('Active'), default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = _('Plan Service')
+        verbose_name_plural = _('Plan Services')
+        ordering = ['sort_order', 'id']
+
+    def __str__(self):
+        return self.name.get('ar') or self.name.get('en') or self.code
+
+
+class PlanServiceLimit(models.Model):
+    plan = models.ForeignKey(Plan, on_delete=models.CASCADE, related_name='service_limits')
+    service = models.ForeignKey(PlanService, on_delete=models.CASCADE, related_name='plan_limits')
+    limit = models.PositiveIntegerField(
+        _('Usage Limit'), null=True, blank=True,
+        help_text='Number of uses allowed per period. Leave empty for unlimited.',
+    )
+    period = models.CharField(
+        _('Period'), max_length=20, choices=PlanService.Period.choices, default=PlanService.Period.MONTHLY
+    )
+    sort_order = models.IntegerField(_('Sort Order'), default=0)
+
+    class Meta:
+        verbose_name = _('Plan Service Limit')
+        verbose_name_plural = _('Plan Service Limits')
+        unique_together = ('plan', 'service')
+        ordering = ['sort_order', 'id']
+
+    def __str__(self):
+        return f"{self.plan} - {self.service} ({self.limit if self.limit is not None else '∞'} / {self.period})"
+
+
+class ServiceUsage(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='service_usages')
+    service = models.ForeignKey(PlanService, on_delete=models.CASCADE, related_name='usages')
+    period_key = models.CharField(_('Period Key'), max_length=16)
+    used_count = models.PositiveIntegerField(_('Used Count'), default=0)
+
+    class Meta:
+        verbose_name = _('Service Usage')
+        verbose_name_plural = _('Service Usages')
+        unique_together = ('user', 'service', 'period_key')
+
+    def __str__(self):
+        return f"{self.user} - {self.service} ({self.period_key}: {self.used_count})"

@@ -1,3 +1,4 @@
+import contextlib
 import json
 
 from django.conf import settings
@@ -14,6 +15,7 @@ from apps.ai.models import AIRun
 from apps.ai.services import PromptBuilderService
 from apps.ai.services import generate_lesson_plan as ai_generate
 from apps.ai.services import refine_lesson_plan as ai_refine
+from apps.subscriptions.services import record_usage, usage_allowed
 
 from .models import LessonPlan, LessonPlanRefinement
 from .serializers import LessonPlanDetailSerializer, LessonPlanSerializer
@@ -94,6 +96,13 @@ def generate_lesson_plan(request):
     if not prompt_text:
         return Response({'error': 'Lesson description is required'}, status=status.HTTP_400_BAD_REQUEST)
 
+    allowed, used, limit = usage_allowed(request.user, 'ai_lesson_plans')
+    if not allowed:
+        return Response(
+            {'error': 'usage_limit_reached', 'used': used, 'limit': limit},
+            status=status.HTTP_402_PAYMENT_REQUIRED,
+        )
+
     subject_obj = None
     grade_obj = None
     unit_obj = None
@@ -159,6 +168,9 @@ def generate_lesson_plan(request):
         ai_model_used=model_used,
         status='draft',
     )
+
+    with contextlib.suppress(Exception):
+        record_usage(request.user, 'ai_lesson_plans')
 
     AIRun.objects.create(
         user=request.user,

@@ -19,7 +19,10 @@
     "paymentCancelled": "تم إلغاء الدفع.",
     "paymentNotAvailable": "الدفع غير متاح حالياً.",
     "currency": "العملة",
-    "chargedNote": "أسعار العرض فقط — يتم الدفع بعملة الحساب الأساسية (ريال سعودي)."
+    "chargedNote": "أسعار العرض فقط — يتم الدفع بعملة الحساب الأساسية (ريال سعودي).",
+    "usageTitle": "استهلاك خدماتك",
+    "unlimited": "غير محدود",
+    "daily": "يومي"
   },
   "common": {
     "appName": "آفاق تكنولوجي",
@@ -567,6 +570,9 @@
     "aiRuns": "مراقبة الذكاء الاصطناعي",
     "aiRunsDesc": "مراقبة عمليات الذكاء الاصطناعي والرموز والتكاليف وأداء النماذج",
     "marketplaceSection": "السوق",
+    "subscriptionsSection": "الاشتراكات",
+    "subscriptions": "الباقات والعروض",
+    "subscriptionsDesc": "إدارة الباقات والأسعار والاشتراكات",
     "statUsers": "المستخدمون",
     "statNew7d": "جديد خلال 7 أيام",
     "statLessonPlans": "خطط الدروس",
@@ -626,7 +632,8 @@
     "featureLessonPlan": "خطة درس",
     "featureQuiz": "اختبار",
     "featureExploration": "شرح",
-    "featureChat": "محادثة"
+    "featureChat": "محادثة",
+    "unsavedChanges": "لديك تغييرات غير محفوظة في نموذج الباقة. هل تريد المغادرة؟"
   },
   "dashboard": {
     "title": "لوحة التحكم",
