@@ -23,7 +23,7 @@ def send_email(to: str | list[str], subject: str, html: str, from_email: str | N
         to = [to]
 
     payload = {
-        "from": from_email or getattr(settings, 'DEFAULT_FROM_EMAIL', 'Afaq Tech <onboarding@resend.dev>'),
+        "from": from_email or getattr(settings, 'DEFAULT_FROM_EMAIL', 'Afaq Tech <no-reply@afaq.app>'),
         "to": to,
         "subject": subject,
         "html": html,

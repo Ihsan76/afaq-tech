@@ -185,7 +185,7 @@ if SENTRY_DSN:
 GEMINI_API_KEY = env('GEMINI_API_KEY', default='')
 
 RESEND_API_KEY = env('RESEND_API_KEY', default=None)
-DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='Afaq Tech <onboarding@resend.dev>')
+DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='Afaq Tech <no-reply@afaq.app>')
 FRONTEND_URL = env('FRONTEND_URL', default='http://localhost:3000')
 
 GOOGLE_OAUTH_CLIENT_ID = env('GOOGLE_OAUTH_CLIENT_ID', default='')
