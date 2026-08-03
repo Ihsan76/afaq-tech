@@ -21,7 +21,7 @@ function escapeHtml(text: string): string {
 
 function renderInline(text: string): React.ReactNode[] {
   const parts: React.ReactNode[] = [];
-  let remaining = escapeHtml(text);
+  const remaining = escapeHtml(text);
   let key = 0;
 
   const inlineRegex = /(`[^`]+`)|(\*\*[^*]+\*\*)|(\*[^*]+\*)|(\[([^\]]+)\]\(([^)]+)\))/g;
@@ -69,7 +69,7 @@ export default function MarkdownRenderer({ content }: Props) {
   const rendered = useMemo(() => {
     const elements: React.ReactNode[] = [];
     let key = 0;
-    let lastIndex = 0;
+    const lastIndex = 0;
     let codeMatch: RegExpExecArray | null;
 
     const codeBlocks: { index: number; lang: string; code: string; length: number }[] = [];

@@ -7,6 +7,8 @@ from dataclasses import dataclass
 
 from django.conf import settings
 from django.core.cache import cache
+from django.db import ProgrammingError
+from django.db.utils import OperationalError
 from google import genai
 from openai import OpenAI
 
@@ -244,7 +246,10 @@ class ProviderRouter:
         from .models import AIModel
         from .models import AIProvider as AIProviderModel
 
-        models = AIModel.objects.filter(is_active=True)
+        try:
+            models = list(AIModel.objects.filter(is_active=True))
+        except (OperationalError, ProgrammingError):
+            models = []
         for m in models:
             prov_inst = AIProviderModel.objects.filter(
                 provider_type__code=m.provider, is_active=True

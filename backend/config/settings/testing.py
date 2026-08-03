@@ -1,7 +1,35 @@
+import base64 as _b64
 import os
+
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
 
 os.environ['SENTRY_DSN_BACKEND'] = ''
 os.environ.setdefault('RESEND_API_KEY', '')
+os.environ.setdefault('SUPABASE_URL', '')
+os.environ.setdefault('SUPABASE_KEY', '')
+
+_private = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+_public = _private.public_key()
+os.environ.setdefault(
+    'JWT_PRIVATE_KEY_B64',
+    _b64.b64encode(
+        _private.private_bytes(
+            serialization.Encoding.PEM,
+            serialization.PrivateFormat.PKCS8,
+            serialization.NoEncryption(),
+        )
+    ).decode(),
+)
+os.environ.setdefault(
+    'JWT_PUBLIC_KEY_B64',
+    _b64.b64encode(
+        _public.public_bytes(
+            serialization.Encoding.PEM,
+            serialization.PublicFormat.SubjectPublicKeyInfo,
+        )
+    ).decode(),
+)
 
 from .base import *
 

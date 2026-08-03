@@ -748,7 +748,7 @@ a:hover {
 
 /* ── Print: hide layout chrome ── */
 @media print {
-  nav:not(.print\\:block), header, footer,
+  nav:not(.print\:block), header, footer,
   [class*="navbar"], [class*="Navbar"],
   [class*="footer"], [class*="Footer"],
   [class*="chat"], [class*="Chat"] {

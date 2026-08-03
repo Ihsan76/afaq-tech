@@ -143,7 +143,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       let buffer = "";
       let newConvId = activeId;
       let fullContent = "";
-      let isNewConversation = !activeId;
+      const isNewConversation = !activeId;
 
       while (true) {
         const { done, value } = await reader.read();
