@@ -1,13 +1,18 @@
+from decimal import Decimal
+
 from rest_framework import serializers
 
 from .currencies import resolve_currency
 from .models import (
+    Currency,
     Organization,
     OrganizationMembership,
     Plan,
     PlanService,
     PlanServiceLimit,
     Subscription,
+    active_currencies,
+    base_currency_code,
 )
 
 
@@ -32,11 +37,15 @@ class PlanSerializer(serializers.ModelSerializer):
     features = serializers.SerializerMethodField()
     price = serializers.SerializerMethodField()
     currency = serializers.SerializerMethodField()
+    prices = serializers.SerializerMethodField()
+    base_currency = serializers.SerializerMethodField()
+    available_currencies = serializers.SerializerMethodField()
 
     class Meta:
         model = Plan
         fields = [
             'id', 'code', 'name', 'description', 'price', 'currency', 'prices',
+            'base_currency', 'available_currencies',
             'billing_period', 'duration_days', 'level', 'features', 'is_featured',
         ]
 
@@ -65,6 +74,46 @@ class PlanSerializer(serializers.ModelSerializer):
         currency = resolve_currency(self.context.get('request'))
         price, _ = obj.get_price(currency)
         return str(price)
+
+    def get_prices(self, obj):
+        """Resolved display prices for every active currency (override or rate-computed)."""
+        result = {}
+        for currency in active_currencies():
+            price, used = obj.get_price(currency.code)
+            result[used] = str(price)
+        return result
+
+    def get_base_currency(self, obj):
+        return base_currency_code()
+
+    def get_available_currencies(self, obj):
+        locale = _locale(self.context.get('request'))
+        return [
+            {
+                'code': c.code,
+                'name': _localized(c.name, locale),
+                'symbol': c.symbol,
+                'rate': str(c.rate),
+            }
+            for c in active_currencies()
+        ]
+
+
+class CurrencySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Currency
+        fields = '__all__'
+        read_only_fields = ['created_at', 'updated_at']
+
+    def validate(self, attrs):
+        code = str(attrs.get('code', getattr(self.instance, 'code', ''))).upper().strip()
+        if len(code) != 3:
+            raise serializers.ValidationError({'code': 'Currency code must be 3 letters'})
+        attrs['code'] = code
+        rate = attrs.get('rate', getattr(self.instance, 'rate', 1))
+        if rate is not None and Decimal(str(rate)) <= 0:
+            raise serializers.ValidationError({'rate': 'Exchange rate must be positive'})
+        return attrs
 
 
 class AdminPlanSerializer(serializers.ModelSerializer):

@@ -37,7 +37,16 @@ interface PlanServiceRow {
   period: string;
 }
 
-const CURRENCIES = ["SAR", "JOD", "USD", "AED", "EGP", "EUR", "TRY"];
+interface AdminCurrency {
+  id: number;
+  code: string;
+  name: Record<string, string>;
+  symbol: string;
+  rate: string;
+  is_base: boolean;
+  is_active: boolean;
+  sort_order: number;
+}
 
 const inputCls = "w-full px-4 py-3 border rounded-2xl focus:ring-2 transition-all";
 
@@ -79,7 +88,14 @@ export default function AdminSubscriptionsPage() {
   const [newServiceNameAr, setNewServiceNameAr] = useState("");
   const [newServiceNameEn, setNewServiceNameEn] = useState("");
 
-  useEffect(() => { fetchPlans(); fetchCatalog(); }, []);
+  const [currencies, setCurrencies] = useState<AdminCurrency[]>([]);
+  const [rateEdits, setRateEdits] = useState<Record<number, string>>({});
+  const [currencyError, setCurrencyError] = useState("");
+  const [currencyForm, setCurrencyForm] = useState({ code: "", name_ar: "", name_en: "", symbol: "", rate: "" });
+  const [currencyIsBase, setCurrencyIsBase] = useState(false);
+  const [editingCurrencyId, setEditingCurrencyId] = useState<number | null>(null);
+
+  useEffect(() => { fetchPlans(); fetchCatalog(); fetchCurrencies(); }, []);
 
   useEffect(() => {
     if (!isDirty) return;
@@ -117,6 +133,26 @@ export default function AdminSubscriptionsPage() {
     } catch {}
   };
 
+  const fetchCurrencies = async () => {
+    try {
+      const res = await api.get("/subscriptions/admin/currencies/");
+      setCurrencies(res.data.results || res.data);
+    } catch {}
+  };
+
+  const rateOf = (code: string): number => {
+    const c = currencies.find((x) => x.code === code);
+    const raw = c ? Number(c.rate) : NaN;
+    return Number.isFinite(raw) ? raw : NaN;
+  };
+
+  const computedPrice = (code: string): string | null => {
+    const rate = rateOf(code);
+    const base = Number(basePrice);
+    if (!Number.isFinite(rate) || rate <= 0 || !Number.isFinite(base)) return null;
+    return (base * rate).toFixed(2);
+  };
+
   const langName = (langCode: string) => LANGUAGES.find((l) => l.code === langCode)?.label || langCode;
 
   const resetForm = (open = false) => {
@@ -124,7 +160,7 @@ export default function AdminSubscriptionsPage() {
     setNameTranslations({});
     setDescTranslations({});
     setFeaturesByLang({});
-    setCode(""); setBasePrice("0.00"); setBaseCurrency("SAR"); setPrices({});
+    setCode(""); setBasePrice("0.00"); setBaseCurrency("JOD"); setPrices({});
     setBillingPeriod("monthly"); setDurationDays(30); setLevel(0); setSortOrder(0);
     setIsActive(true); setIsFeatured(false);
     setPlanServices([]); setSelectedServiceCode("");
@@ -147,7 +183,7 @@ export default function AdminSubscriptionsPage() {
     setFeaturesByLang(feats);
     setCode(plan.code); setBasePrice(plan.price); setBaseCurrency(plan.currency);
     const mergedPrices: Record<string, string> = { ...(plan.prices || {}) };
-    for (const c of CURRENCIES) if (mergedPrices[c] === undefined) mergedPrices[c] = "";
+    for (const c of currencies) if (mergedPrices[c.code] === undefined) mergedPrices[c.code] = "";
     setPrices(mergedPrices);
     setBillingPeriod(plan.billing_period); setDurationDays(plan.duration_days);
     setLevel(plan.level); setSortOrder(plan.sort_order);
@@ -181,12 +217,9 @@ export default function AdminSubscriptionsPage() {
     if (!code.trim()) { setError("رمز الباقة مطلوب"); return; }
     if (!nameTranslations["ar"]?.trim() && !nameTranslations["en"]?.trim()) { setError("الاسم بالعربية أو الإنجليزية مطلوب"); return; }
     const cleanPrices: Record<string, string> = {};
-    for (const c of CURRENCIES) {
-      const v = (prices[c] || "").trim();
-      if (v) cleanPrices[c] = v;
-    }
-    for (const c of Object.keys(prices)) {
-      if (!CURRENCIES.includes(c) && (prices[c] || "").trim()) cleanPrices[c] = prices[c].trim();
+    for (const c of currencies) {
+      const v = (prices[c.code] || "").trim();
+      if (v) cleanPrices[c.code] = v;
     }
     const payload = {
       code: code.trim(),
@@ -266,6 +299,82 @@ export default function AdminSubscriptionsPage() {
     try { await api.delete(`/subscriptions/admin/services/${id}/`); fetchCatalog(); } catch {}
   };
 
+  const resetCurrencyForm = () => {
+    setCurrencyForm({ code: "", name_ar: "", name_en: "", symbol: "", rate: "" });
+    setCurrencyIsBase(false);
+    setEditingCurrencyId(null);
+    setCurrencyError("");
+  };
+
+  const startEditCurrency = (c: AdminCurrency) => {
+    setEditingCurrencyId(c.id);
+    setCurrencyIsBase(c.is_base);
+    setCurrencyForm({
+      code: c.code,
+      name_ar: c.name?.ar || "",
+      name_en: c.name?.en || "",
+      symbol: c.symbol || "",
+      rate: c.rate,
+    });
+    setCurrencyError("");
+  };
+
+  const handleCurrencySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const code = currencyForm.code.trim().toUpperCase();
+    if (code.length !== 3) { setCurrencyError("رمز العملة يجب أن يكون 3 أحرف"); return; }
+    if (!Number.isFinite(Number(currencyForm.rate)) || Number(currencyForm.rate) <= 0) { setCurrencyError("معامل الصرف يجب أن يكون رقماً موجباً"); return; }
+    const payload = {
+      code,
+      name: { ar: currencyForm.name_ar.trim(), en: currencyForm.name_en.trim() },
+      symbol: currencyForm.symbol.trim(),
+      rate: currencyForm.rate.trim(),
+      is_base: currencyIsBase,
+      is_active: true,
+      sort_order: currencies.length + 1,
+    };
+    try {
+      if (editingCurrencyId) {
+        await api.put(`/subscriptions/admin/currencies/${editingCurrencyId}/`, payload);
+      } else {
+        await api.post("/subscriptions/admin/currencies/", payload);
+      }
+      resetCurrencyForm();
+      fetchCurrencies();
+    } catch (err: any) { setCurrencyError(err.response?.data ? JSON.stringify(err.response.data) : "حدث خطأ"); }
+  };
+
+  const handleRateSave = async (c: AdminCurrency) => {
+    const raw = (rateEdits[c.id] ?? "").trim();
+    if (!raw || !Number.isFinite(Number(raw)) || Number(raw) <= 0) return;
+    try {
+      await api.patch(`/subscriptions/admin/currencies/${c.id}/`, { rate: raw });
+      setRateEdits(prev => { const n = { ...prev }; delete n[c.id]; return n; });
+      fetchCurrencies();
+    } catch (err: any) { setCurrencyError(err.response?.data ? JSON.stringify(err.response.data) : "حدث خطأ"); }
+  };
+
+  const handleToggleCurrencyActive = async (c: AdminCurrency) => {
+    try {
+      await api.patch(`/subscriptions/admin/currencies/${c.id}/`, { is_active: !c.is_active });
+      fetchCurrencies();
+    } catch (err: any) { setCurrencyError(err.response?.data ? JSON.stringify(err.response.data) : "حدث خطأ"); }
+  };
+
+  const handleSetBaseCurrency = async (c: AdminCurrency) => {
+    if (c.is_base) return;
+    try {
+      await api.patch(`/subscriptions/admin/currencies/${c.id}/`, { is_base: true });
+      fetchCurrencies();
+    } catch (err: any) { setCurrencyError(err.response?.data ? JSON.stringify(err.response.data) : "حدث خطأ"); }
+  };
+
+  const handleDeleteCurrency = async (c: AdminCurrency) => {
+    if (!confirm(`حذف العملة ${c.code}؟`)) return;
+    try { await api.delete(`/subscriptions/admin/currencies/${c.id}/`); fetchCurrencies(); }
+    catch (err: any) { setCurrencyError(err.response?.data ? JSON.stringify(err.response.data) : "حدث خطأ"); }
+  };
+
   const availableServices = catalog.filter((s) => s.is_active && !planServices.some((ps) => ps.code === s.code));
   const serviceName = (code: string) => {
     const svc = catalog.find((s) => s.code === code);
@@ -298,7 +407,7 @@ export default function AdminSubscriptionsPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-semibold mb-2" style={{ color: "var(--color-text-secondary)" }}>عملة الدفع</label>
-                  <input type="text" value={baseCurrency} onChange={(e) => setBaseCurrency(e.target.value.toUpperCase())} className={inputCls} style={{ borderColor: "var(--color-border)", color: "var(--color-text)", backgroundColor: "var(--color-background)" }} placeholder="SAR" required />
+                  <input type="text" value={baseCurrency} onChange={(e) => setBaseCurrency(e.target.value.toUpperCase())} className={inputCls} style={{ borderColor: "var(--color-border)", color: "var(--color-text)", backgroundColor: "var(--color-background)" }} placeholder="JOD" required />
                 </div>
                 <div>
                   <label className="block text-sm font-semibold mb-2" style={{ color: "var(--color-text-secondary)" }}>فترة الفوترة</label>
@@ -375,18 +484,34 @@ export default function AdminSubscriptionsPage() {
 
               <div className="pt-4 border-t" style={{ borderColor: "var(--color-border)" }}>
                 <label className="block text-sm font-semibold mb-2" style={{ color: "var(--color-text-secondary)" }}>الأسعار للعرض لكل عملة</label>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  {CURRENCIES.map((c) => (
-                    <div key={c}>
-                      <label className="block text-xs font-semibold mb-1" style={{ color: "var(--color-text-muted)" }}>{c}</label>
-                      <input type="text" inputMode="decimal" value={prices[c] || ""}
-                        onChange={(e) => setPrices(prev => ({ ...prev, [c]: e.target.value }))}
-                        className={inputCls} style={{ borderColor: "var(--color-border)", color: "var(--color-text)", backgroundColor: "var(--color-background)", padding: "0.55rem 0.75rem" }}
-                        placeholder="0.00" />
-                    </div>
-                  ))}
-                </div>
-                <p className="text-xs mt-2" style={{ color: "var(--color-text-muted)" }}>أسعار العرض فقط — الدفع الفعلي يتم بعملة الحساب ({baseCurrency || "SAR"}). إذا تُرك السعر فارغاً تستخدم الأسعار الافتراضية للخطة.</p>
+                {currencies.length === 0 ? (
+                  <p className="text-xs" style={{ color: "var(--color-text-muted)" }}>لا توجد عملات — أضف العملات وأسعار الصرف من قسم «العملات وأسعار الصرف» بالأسفل.</p>
+                ) : (
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    {currencies.map((c) => {
+                      const computed = computedPrice(c.code);
+                      return (
+                        <div key={c.code}>
+                          <label className="block text-xs font-semibold mb-1" style={{ color: "var(--color-text-muted)" }}>{c.symbol ? `${c.symbol} ` : ""}{c.code}{c.is_base ? " (أساسية)" : ""}</label>
+                          <input type="text" inputMode="decimal" value={prices[c.code] || ""}
+                            onChange={(e) => setPrices(prev => ({ ...prev, [c.code]: e.target.value }))}
+                            className={inputCls} style={{ borderColor: "var(--color-border)", color: "var(--color-text)", backgroundColor: "var(--color-background)", padding: "0.55rem 0.75rem" }}
+                            placeholder={computed || "0.00"} />
+                          {!c.is_base && (
+                            <button type="button"
+                              onClick={() => { if (computed) setPrices(prev => ({ ...prev, [c.code]: computed })); }}
+                              className="mt-1 w-full text-[11px] font-semibold py-1 rounded-lg transition-all disabled:opacity-40"
+                              style={{ background: "var(--color-background-secondary)", color: "var(--color-text-secondary)", border: "1px solid var(--color-border)" }}
+                              disabled={computed === null}>
+                              استخدم المحسوب{computed ? ` (${computed})` : ""}
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+                <p className="text-xs mt-2" style={{ color: "var(--color-text-muted)" }}>السعر المحسوب = السعر الأساسي × معامل الصرف. اترك الحقل فارغاً للاستخدام المحسوب تلقائياً، أو عدّله يدوياً لتقريبه لرقم مقبول. الدفع الفعلي يتم بعملة الحساب ({baseCurrency || "JOD"}).</p>
               </div>
 
               <div className="pt-4 border-t" style={{ borderColor: "var(--color-border)" }}>
@@ -523,6 +648,100 @@ export default function AdminSubscriptionsPage() {
                       </td>
                     </tr>
                   ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-10">
+          <h2 className="text-lg font-bold mb-4" style={{ color: "var(--color-text-secondary)" }}>العملات وأسعار الصرف</h2>
+          <p className="text-xs mb-4" style={{ color: "var(--color-text-muted)" }}>معامل الصرف = كم وحدة من هذه العملة تعادل 1 وحدة من العملة الأساسية ({currencies.find(c => c.is_base)?.code || "JOD"}). تُحسب أسعار العرض تلقائياً من المعامل، ويمكن تعديلها يدوياً في كل باقة.</p>
+          {currencyError && <div className="mb-4 p-3 rounded-xl text-sm" style={{ background: "rgba(239,68,68,0.1)", color: "var(--color-error)" }}>{currencyError}</div>}
+
+          <div className="rounded-3xl shadow-xl p-5 mb-6" style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", boxShadow: "var(--card-shadow)" }}>
+            <h3 className="text-sm font-bold mb-4" style={{ color: "var(--color-text)" }}>{editingCurrencyId ? "تعديل عملة" : "إضافة عملة"}</h3>
+            <form onSubmit={handleCurrencySubmit} className="grid sm:grid-cols-2 md:grid-cols-5 gap-3 items-end">
+              <div>
+                <label className="block text-xs font-semibold mb-1" style={{ color: "var(--color-text-muted)" }}>الرمز (3 أحرف)</label>
+                <input type="text" value={currencyForm.code} maxLength={3} onChange={(e) => { setCurrencyForm(prev => ({ ...prev, code: e.target.value })); setCurrencyError(""); }} className={inputCls} style={{ borderColor: "var(--color-border)", color: "var(--color-text)", backgroundColor: "var(--color-background)", padding: "0.5rem 0.75rem" }} placeholder="SAR" />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold mb-1" style={{ color: "var(--color-text-muted)" }}>الاسم بالعربية</label>
+                <input type="text" value={currencyForm.name_ar} onChange={(e) => setCurrencyForm(prev => ({ ...prev, name_ar: e.target.value }))} className={inputCls} style={{ borderColor: "var(--color-border)", color: "var(--color-text)", backgroundColor: "var(--color-background)", padding: "0.5rem 0.75rem" }} placeholder="ريال سعودي" />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold mb-1" style={{ color: "var(--color-text-muted)" }}>الاسم بالإنجليزية</label>
+                <input type="text" value={currencyForm.name_en} onChange={(e) => setCurrencyForm(prev => ({ ...prev, name_en: e.target.value }))} className={inputCls} style={{ borderColor: "var(--color-border)", color: "var(--color-text)", backgroundColor: "var(--color-background)", padding: "0.5rem 0.75rem" }} placeholder="Saudi Riyal" />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold mb-1" style={{ color: "var(--color-text-muted)" }}>الرمز المختصر</label>
+                <input type="text" value={currencyForm.symbol} onChange={(e) => setCurrencyForm(prev => ({ ...prev, symbol: e.target.value }))} className={inputCls} style={{ borderColor: "var(--color-border)", color: "var(--color-text)", backgroundColor: "var(--color-background)", padding: "0.5rem 0.75rem" }} placeholder="ر.س" />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold mb-1" style={{ color: "var(--color-text-muted)" }}>معامل الصرف</label>
+                <input type="text" inputMode="decimal" value={currencyForm.rate} onChange={(e) => setCurrencyForm(prev => ({ ...prev, rate: e.target.value }))} className={inputCls} style={{ borderColor: "var(--color-border)", color: "var(--color-text)", backgroundColor: "var(--color-background)", padding: "0.5rem 0.75rem" }} placeholder="5.29" />
+              </div>
+              <div className="sm:col-span-2 md:col-span-5 flex items-center gap-6">
+                <label className="flex items-center gap-2 text-sm font-medium cursor-pointer" style={{ color: "var(--color-text-secondary)" }}>
+                  <input type="checkbox" checked={currencyIsBase} onChange={(e) => setCurrencyIsBase(e.target.checked)} /> عملة أساسية
+                </label>
+                <button type="submit" className="px-5 py-2.5 rounded-xl font-semibold text-white transition-all" style={{ background: "var(--btn-primary-bg)", color: "var(--btn-primary-color)", boxShadow: "var(--btn-shadow)" }}>{editingCurrencyId ? t("common.save") : "+ إضافة"}</button>
+                {editingCurrencyId && (
+                  <button type="button" onClick={resetCurrencyForm} className="px-5 py-2.5 rounded-xl font-semibold transition-all" style={{ backgroundColor: "var(--color-background-secondary)", color: "var(--color-text-secondary)" }}>{t("common.cancel")}</button>
+                )}
+              </div>
+            </form>
+          </div>
+
+          <div className="rounded-3xl shadow-xl overflow-hidden" style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", boxShadow: "var(--card-shadow)" }}>
+            <div className="overflow-auto max-h-[400px]">
+              <table className="w-full">
+                <thead className="sticky top-0" style={{ background: "var(--color-surface)" }}>
+                  <tr>
+                    <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>العملة</th>
+                    <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>الرمز</th>
+                    <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>معامل الصرف</th>
+                    <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>أساسية</th>
+                    <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>نشطة</th>
+                    <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>{t("common.actions")}</th>
+                  </tr>
+                </thead>
+                <tbody style={{ borderTop: "1px solid var(--color-border)" }}>
+                  {currencies.map((c) => (
+                    <tr key={c.id} style={{ borderTop: "1px solid var(--color-border)" }}>
+                      <td className="px-6 py-3">
+                        <p className="font-medium" style={{ color: "var(--color-text)" }}>{c.name?.ar || c.name?.en || c.code}</p>
+                        <p className="text-[11px] font-mono" style={{ color: "var(--color-text-muted)" }}>{c.code}</p>
+                      </td>
+                      <td className="px-6 py-3" style={{ color: "var(--color-text-secondary)" }}>{c.symbol || "-"}</td>
+                      <td className="px-6 py-3">
+                        <div className="flex items-center gap-2">
+                          <input type="text" inputMode="decimal" value={rateEdits[c.id] ?? c.rate}
+                            onChange={(e) => setRateEdits(prev => ({ ...prev, [c.id]: e.target.value }))}
+                            className="w-24 px-2 py-1.5 border rounded-lg font-mono text-sm" style={{ borderColor: "var(--color-border)", color: "var(--color-text)", backgroundColor: "var(--color-background)" }} />
+                          <button type="button" onClick={() => handleRateSave(c)} className="text-xs font-semibold px-2 py-1.5 rounded-lg transition-all" style={{ color: "var(--color-primary)", background: "var(--color-primary-light)" }}>حفظ</button>
+                        </div>
+                      </td>
+                      <td className="px-6 py-3">
+                        {c.is_base ? (
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ background: "var(--color-success)", color: "#FFF" }}>أساسية</span>
+                        ) : (
+                          <button type="button" onClick={() => handleSetBaseCurrency(c)} className="text-xs font-semibold transition-colors" style={{ color: "var(--color-primary)" }}>تعيين كأساس</button>
+                        )}
+                      </td>
+                      <td className="px-6 py-3">
+                        <input type="checkbox" checked={c.is_active} onChange={() => handleToggleCurrencyActive(c)} />
+                      </td>
+                      <td className="px-6 py-3 flex gap-3">
+                        <button type="button" onClick={() => startEditCurrency(c)} className="font-medium text-sm transition-colors" style={{ color: "var(--color-primary)" }}>{t("common.edit")}</button>
+                        <button type="button" onClick={() => handleDeleteCurrency(c)} className="font-medium text-sm transition-colors" style={{ color: "var(--color-error)" }} disabled={c.is_base}>{t("common.delete")}</button>
+                      </td>
+                    </tr>
+                  ))}
+                  {currencies.length === 0 && (
+                    <tr><td className="px-6 py-6 text-sm" style={{ color: "var(--color-text-muted)" }}>{t("common.noResults")}</td></tr>
+                  )}
                 </tbody>
               </table>
             </div>

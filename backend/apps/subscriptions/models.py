@@ -5,6 +5,55 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 
+class Currency(models.Model):
+    """Payment/display currencies with admin-managed exchange rates.
+
+    ``rate`` means how many units of this currency equal 1 unit of the base
+    currency (JOD). A plan's display price for a currency is either the admin
+    override stored on the plan (Plan.prices) or ``plan.price * rate``.
+    """
+
+    code = models.CharField(_('Code'), max_length=3, unique=True)
+    name = models.JSONField(_('Name (Multilingual)'), default=dict)
+    symbol = models.CharField(_('Symbol'), max_length=8, blank=True, default='')
+    rate = models.DecimalField(
+        _('Rate to Base'), max_digits=12, decimal_places=6, default=1,
+        help_text='How many units of this currency equal 1 unit of the base currency (JOD).',
+    )
+    is_base = models.BooleanField(_('Base Currency'), default=False)
+    is_active = models.BooleanField(_('Active'), default=True)
+    sort_order = models.IntegerField(_('Sort Order'), default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = _('Currency')
+        verbose_name_plural = _('Currencies')
+        ordering = ['sort_order', 'code']
+
+    def __str__(self):
+        return f"{self.code} ({self.name.get('en') or self.name.get('ar') or ''})".strip()
+
+    def save(self, *args, **kwargs):
+        if self.is_base:
+            Currency.objects.exclude(pk=self.pk).update(is_base=False)
+            self.rate = Decimal('1.0')
+        super().save(*args, **kwargs)
+
+
+def base_currency_code():
+    """Code of the base (chargeable) currency, defaulting to JOD."""
+    base = Currency.objects.filter(is_base=True, is_active=True).first()
+    if base:
+        return base.code
+    return 'JOD'
+
+
+def active_currencies():
+    """Active, orderable currencies to offer for display."""
+    return Currency.objects.filter(is_active=True).order_by('sort_order', 'code')
+
+
 class Plan(models.Model):
     class BillingPeriod(models.TextChoices):
         MONTHLY = 'monthly', _('Monthly')
@@ -14,7 +63,7 @@ class Plan(models.Model):
     name = models.JSONField(_('Name (Multilingual)'), default=dict)
     description = models.JSONField(_('Description (Multilingual)'), default=dict)
     price = models.DecimalField(_('Price'), max_digits=10, decimal_places=2, default=0)
-    currency = models.CharField(_('Currency'), max_length=3, default='SAR')
+    currency = models.CharField(_('Currency'), max_length=3, default='JOD')
     prices = models.JSONField(
         _('Prices per Currency'), default=dict, blank=True,
         help_text='Per-currency display prices, e.g. {"SAR": "9.99", "JOD": "1.90", "USD": "2.66"}. '
@@ -51,13 +100,28 @@ class Plan(models.Model):
         return self.name.get('ar') or self.name.get('en') or self.code
 
     def get_price(self, currency=''):
-        """Resolve the display price for a currency, falling back to the base price."""
+        """Resolve the display price for a currency.
+
+        Priority:
+            1. the plan's base currency (returns the base price)
+            2. an admin override stored in ``self.prices`` (a rounded/nicer value)
+            3. a live computation from the currency's exchange rate
+               (``base price * rate``)
+            4. the plan's base price as a last resort
+        """
         currency = (currency or self.currency or '').upper()
+        base = (self.currency or '').upper()
+        if base and currency == base:
+            return self.price, self.currency
         if self.prices and currency in self.prices:
             try:
                 return Decimal(str(self.prices[currency])), currency
             except (TypeError, ValueError, InvalidOperation):
                 pass
+        rate = Currency.objects.filter(code=currency, is_active=True).values_list('rate', flat=True).first()
+        if rate and Decimal(str(rate)) > 0:
+            price = (self.price * Decimal(str(rate))).quantize(Decimal('0.01'))
+            return price, currency
         return self.price, self.currency
 
 
@@ -78,7 +142,7 @@ class Subscription(models.Model):
     payment_session_id = models.CharField(_('Payment Session ID'), max_length=255, blank=True, default='')
     payment_transaction_id = models.CharField(_('Payment Transaction ID'), max_length=255, blank=True, default='')
     price_paid = models.DecimalField(_('Price Paid'), max_digits=10, decimal_places=2, default=0)
-    currency = models.CharField(_('Currency'), max_length=3, default='SAR')
+    currency = models.CharField(_('Currency'), max_length=3, default='JOD')
     display_price = models.DecimalField(_('Display Price'), max_digits=10, decimal_places=2, default=0)
     display_currency = models.CharField(_('Display Currency'), max_length=3, blank=True, default='')
     start_at = models.DateTimeField(_('Started At'), null=True, blank=True)
@@ -268,7 +332,7 @@ class SeatPurchase(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='seat_purchases')
     count = models.PositiveIntegerField(_('Seats Count'), default=1)
     price_paid = models.DecimalField(_('Price Paid'), max_digits=10, decimal_places=2, default=0)
-    currency = models.CharField(_('Currency'), max_length=3, default='SAR')
+    currency = models.CharField(_('Currency'), max_length=3, default='JOD')
     title = models.CharField(_('Title'), max_length=255, blank=True, default='')
     status = models.CharField(_('Status'), max_length=20, choices=Status.choices, default=Status.PENDING)
     payment_provider = models.CharField(_('Payment Provider'), max_length=32, blank=True, default='')

@@ -34,7 +34,7 @@ class StripeProvider(PaymentProvider):
             mode='payment',
             line_items=[{
                 'price_data': {
-                    'currency': (order.currency or 'SAR').lower(),
+                    'currency': (order.currency or 'JOD').lower(),
                     'unit_amount': int(Decimal(order.price_paid) * 100),
                     'product_data': {'name': title},
                 },

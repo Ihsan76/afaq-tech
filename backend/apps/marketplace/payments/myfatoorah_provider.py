@@ -45,7 +45,7 @@ class MyFatoorahProvider(PaymentProvider):
         payload = {
             'PaymentMethodId': int(getattr(settings, 'MYFATOORAH_PAYMENT_METHOD_ID', 0) or 0),
             'InvoiceValue': float(order.price_paid),
-            'DisplayCurrencyIso': (order.currency or 'SAR').upper(),
+            'DisplayCurrencyIso': (order.currency or 'JOD').upper(),
             'CallBackUrl': callback,
             'ErrorUrl': f"{callback}&cancelled=1",
             'Language': 'AR' if str(locale).lower().startswith('ar') else 'EN',

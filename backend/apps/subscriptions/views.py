@@ -7,6 +7,7 @@ from apps.marketplace.payments import PaymentProviderError, get_provider
 
 from .currencies import resolve_currency
 from .models import (
+    Currency,
     Organization,
     OrganizationMembership,
     Plan,
@@ -18,6 +19,7 @@ from .models import (
 from .serializers import (
     AdminOrganizationSerializer,
     AdminPlanSerializer,
+    CurrencySerializer,
     OrganizationMemberSerializer,
     OrganizationSerializer,
     PlanSerializer,
@@ -96,6 +98,25 @@ class AdminPlanDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Plan.objects.all()
     serializer_class = AdminPlanSerializer
     permission_classes = [permissions.IsAdminUser]
+
+
+class AdminCurrencyListCreateView(generics.ListCreateAPIView):
+    queryset = Currency.objects.all()
+    serializer_class = CurrencySerializer
+    permission_classes = [permissions.IsAdminUser]
+    pagination_class = None
+
+
+class AdminCurrencyDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Currency.objects.all()
+    serializer_class = CurrencySerializer
+    permission_classes = [permissions.IsAdminUser]
+
+    def destroy(self, request, *args, **kwargs):
+        currency = self.get_object()
+        if currency.is_base:
+            return Response({'error': 'cannot_delete_base_currency'}, status=status.HTTP_400_BAD_REQUEST)
+        return super().destroy(request, *args, **kwargs)
 
 
 class AdminServiceListCreateView(generics.ListCreateAPIView):

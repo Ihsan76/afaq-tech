@@ -16,6 +16,33 @@ from apps.subscriptions.services import activate_subscription
 User = get_user_model()
 
 
+@pytest.fixture(autouse=True)
+def currencies():
+    """Seed the dynamic currency table (JOD base) for every test."""
+    from apps.subscriptions.models import Currency
+
+    Currency.objects.update_or_create(code="JOD", defaults={
+        "name": {"ar": "دينار أردني", "en": "Jordanian Dinar"},
+        "symbol": "د.أ", "rate": "1.0", "is_base": True, "is_active": True,
+    })
+    Currency.objects.update_or_create(code="SAR", defaults={
+        "name": {"ar": "ريال سعودي", "en": "Saudi Riyal"},
+        "symbol": "ر.س", "rate": "5.29", "is_active": True,
+    })
+    Currency.objects.update_or_create(code="USD", defaults={
+        "name": {"ar": "دولار أمريكي", "en": "US Dollar"},
+        "symbol": "$", "rate": "1.41", "is_active": True,
+    })
+    Currency.objects.update_or_create(code="AED", defaults={
+        "name": {"ar": "درهم إماراتي", "en": "UAE Dirham"},
+        "symbol": "د.إ", "rate": "5.19", "is_active": True,
+    })
+    Currency.objects.update_or_create(code="KWD", defaults={
+        "name": {"ar": "دينار كويتي", "en": "Kuwaiti Dinar"},
+        "symbol": "د.ك", "rate": "0.43", "is_active": True,
+    })
+
+
 @pytest.fixture
 def user():
     return User.objects.create_user(
@@ -42,9 +69,9 @@ def pro_plan():
         defaults={
             "name": {"ar": "احترافي", "en": "Professional"},
             "description": {"ar": "وصف", "en": "Description"},
-            "price": "9.99",
-            "currency": "SAR",
-            "prices": {"SAR": "9.99", "JOD": "1.90", "USD": "2.66", "AED": "9.77"},
+            "price": "1.90",
+            "currency": "JOD",
+            "prices": {"JOD": "1.90", "SAR": "9.99", "USD": "2.66", "AED": "9.77"},
             "duration_days": 30,
             "level": 2,
             "features": [{"ar": "ميزة", "en": "Feature"}],
@@ -61,7 +88,7 @@ def free_plan():
         defaults={
             "name": {"ar": "مجاني", "en": "Free"},
             "price": "0.00",
-            "currency": "SAR",
+            "currency": "JOD",
             "duration_days": 30,
             "level": 0,
             "is_active": True,
@@ -98,7 +125,10 @@ def test_plans_price_localized_by_currency(pro_plan):
     pro = next(p for p in resp.json() if p["code"] == "pro")
     assert pro["price"] == "2.66"
     assert pro["currency"] == "USD"
-    assert pro["prices"] == {"SAR": "9.99", "JOD": "1.90", "USD": "2.66", "AED": "9.77"}
+    assert pro["prices"]["USD"] == "2.66"
+    assert pro["prices"]["KWD"] == "0.82"
+    assert pro["base_currency"] == "JOD"
+    assert any(c["code"] == "KWD" and c["rate"] == "0.430000" for c in pro["available_currencies"])
 
     resp = APIClient().get("/api/v1/subscriptions/plans/?currency=JOD")
     pro = next(p for p in resp.json() if p["code"] == "pro")
@@ -107,11 +137,20 @@ def test_plans_price_localized_by_currency(pro_plan):
 
 
 @pytest.mark.django_db
+def test_plans_price_rate_computed_without_override(pro_plan):
+    """Currencies without an admin override are computed from the exchange rate."""
+    resp = APIClient().get("/api/v1/subscriptions/plans/?currency=KWD")
+    pro = next(p for p in resp.json() if p["code"] == "pro")
+    assert pro["price"] == "0.82"
+    assert pro["currency"] == "KWD"
+
+
+@pytest.mark.django_db
 def test_plans_price_falls_back_to_base_currency(pro_plan):
     resp = APIClient().get("/api/v1/subscriptions/plans/?currency=XYZ")
     pro = next(p for p in resp.json() if p["code"] == "pro")
-    assert pro["price"] == "9.99"
-    assert pro["currency"] == "SAR"
+    assert pro["price"] == "1.90"
+    assert pro["currency"] == "JOD"
 
 
 @pytest.mark.django_db
@@ -168,8 +207,8 @@ def test_purchase_creates_subscription_and_checkout(client, pro_plan):
     subscription = Subscription.objects.get(id=data["id"])
     assert subscription.user.email == "student@example.com"
     assert subscription.plan == pro_plan
-    assert subscription.price_paid == Decimal("9.99")
-    assert subscription.currency == "SAR"
+    assert subscription.price_paid == Decimal("1.90")
+    assert subscription.currency == "JOD"
     assert subscription.payment_provider == "myfatoorah"
     assert subscription.payment_session_id == "888001"
     assert mocked.call_args.kwargs["json"]["UserDefinedField"] == f"subscription:{subscription.id}"
@@ -203,8 +242,8 @@ def test_purchase_with_currency_stores_display_price(client, pro_plan):
     assert data["display_price"] == "2.66"
     assert data["display_currency"] == "USD"
     subscription = Subscription.objects.get(id=data["id"])
-    assert subscription.price_paid == Decimal("9.99")
-    assert subscription.currency == "SAR"
+    assert subscription.price_paid == Decimal("1.90")
+    assert subscription.currency == "JOD"
     assert subscription.display_price == Decimal("2.66")
     assert subscription.display_currency == "USD"
 
@@ -450,6 +489,60 @@ def test_admin_services_crud(admin_client):
 
     delete = admin_client.delete(f"/api/v1/subscriptions/admin/services/{service.id}/")
     assert delete.status_code == 204
+
+
+@pytest.mark.django_db
+def test_admin_currencies_crud(admin_client, currencies, pro_plan):
+    resp = admin_client.get("/api/v1/subscriptions/admin/currencies/")
+    assert resp.status_code == 200
+    codes = [c["code"] for c in resp.json()]
+    assert "JOD" in codes and "KWD" in codes
+
+    create = admin_client.post("/api/v1/subscriptions/admin/currencies/", {
+        "code": "BHD",
+        "name": {"ar": "دينار بحريني", "en": "Bahraini Dinar"},
+        "symbol": "د.ب",
+        "rate": "0.53",
+        "is_active": True,
+    }, format="json")
+    assert create.status_code == 201
+    currency_id = create.json()["id"]
+
+    plan = Plan.objects.get(code="pro")
+    assert plan.get_price("BHD")[0] == Decimal("1.01")
+
+    update = admin_client.patch(f"/api/v1/subscriptions/admin/currencies/{currency_id}/", {
+        "rate": "0.60",
+    }, format="json")
+    assert update.status_code == 200
+    assert plan.get_price("BHD")[0] == Decimal("1.14")
+
+    delete = admin_client.delete(f"/api/v1/subscriptions/admin/currencies/{currency_id}/")
+    assert delete.status_code == 204
+
+
+@pytest.mark.django_db
+def test_admin_base_currency_protected(admin_client, currencies):
+    from apps.subscriptions.models import Currency
+
+    base = Currency.objects.get(code="JOD")
+    delete = admin_client.delete(f"/api/v1/subscriptions/admin/currencies/{base.id}/")
+    assert delete.status_code == 400
+
+
+@pytest.mark.django_db
+def test_admin_setting_base_unsets_others(admin_client, currencies):
+    from apps.subscriptions.models import Currency
+
+    sar = Currency.objects.get(code="SAR")
+    resp = admin_client.patch(f"/api/v1/subscriptions/admin/currencies/{sar.id}/", {
+        "is_base": True,
+    }, format="json")
+    assert resp.status_code == 200
+    assert Currency.objects.filter(is_base=True).count() == 1
+    sar.refresh_from_db()
+    assert sar.is_base is True
+    assert str(sar.rate) == "1.000000"
 
 
 @pytest.mark.django_db

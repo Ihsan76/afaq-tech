@@ -13,7 +13,75 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings.base')
 django.setup()
 
-from apps.subscriptions.models import Plan, PlanService, PlanServiceLimit  # noqa: E402
+from apps.subscriptions.models import Currency, Plan, PlanService, PlanServiceLimit  # noqa: E402
+
+CURRENCIES = [
+    {
+        'code': 'JOD',
+        'name': {'ar': 'دينار أردني', 'en': 'Jordanian Dinar'},
+        'symbol': 'د.أ',
+        'rate': '1.0',
+        'is_base': True,
+        'sort_order': 1,
+    },
+    {
+        'code': 'SAR',
+        'name': {'ar': 'ريال سعودي', 'en': 'Saudi Riyal'},
+        'symbol': 'ر.س',
+        'rate': '5.29',
+        'sort_order': 2,
+    },
+    {
+        'code': 'USD',
+        'name': {'ar': 'دولار أمريكي', 'en': 'US Dollar'},
+        'symbol': '$',
+        'rate': '1.41',
+        'sort_order': 3,
+    },
+    {
+        'code': 'AED',
+        'name': {'ar': 'درهم إماراتي', 'en': 'UAE Dirham'},
+        'symbol': 'د.إ',
+        'rate': '5.19',
+        'sort_order': 4,
+    },
+    {
+        'code': 'EGP',
+        'name': {'ar': 'جنيه مصري', 'en': 'Egyptian Pound'},
+        'symbol': 'ج.م',
+        'rate': '67.50',
+        'sort_order': 5,
+    },
+    {
+        'code': 'EUR',
+        'name': {'ar': 'يورو', 'en': 'Euro'},
+        'symbol': '€',
+        'rate': '1.31',
+        'sort_order': 6,
+    },
+    {
+        'code': 'TRY',
+        'name': {'ar': 'ليرة تركية', 'en': 'Turkish Lira'},
+        'symbol': '₺',
+        'rate': '48.50',
+        'sort_order': 7,
+    },
+    {
+        'code': 'KWD',
+        'name': {'ar': 'دينار كويتي', 'en': 'Kuwaiti Dinar'},
+        'symbol': 'د.ك',
+        'rate': '0.43',
+        'sort_order': 8,
+    },
+    {
+        'code': 'QAR',
+        'name': {'ar': 'ريال قطري', 'en': 'Qatari Riyal'},
+        'symbol': 'ر.ق',
+        'rate': '5.14',
+        'sort_order': 9,
+    },
+]
+
 
 SERVICES = [
     {
@@ -56,7 +124,7 @@ PLANS = [
             'en': 'Start free with no commitments.',
         },
         'price': '0.00',
-        'currency': 'SAR',
+        'currency': 'JOD',
         'prices': {},
         'billing_period': Plan.BillingPeriod.MONTHLY,
         'duration_days': 30,
@@ -77,11 +145,11 @@ PLANS = [
             'ar': 'كل الأدوات المتقدمة للمعلمين المحترفين.',
             'en': 'All advanced tools for professional educators.',
         },
-        'price': '9.99',
-        'currency': 'SAR',
+        'price': '1.90',
+        'currency': 'JOD',
         'prices': {
-            'SAR': '9.99',
             'JOD': '1.90',
+            'SAR': '9.99',
             'USD': '2.66',
             'AED': '9.77',
             'EGP': '80.00',
@@ -108,11 +176,11 @@ PLANS = [
             'ar': 'حل متكامل للمدارس والمعلمين.',
             'en': 'A complete solution for schools and teachers.',
         },
-        'price': '49.99',
-        'currency': 'SAR',
+        'price': '9.50',
+        'currency': 'JOD',
         'prices': {
-            'SAR': '49.99',
             'JOD': '9.50',
+            'SAR': '49.99',
             'USD': '13.33',
             'AED': '49.00',
             'EGP': '400.00',
@@ -122,7 +190,7 @@ PLANS = [
         'billing_period': Plan.BillingPeriod.MONTHLY,
         'duration_days': 30,
         'seats': 25,
-        'extra_seat_price': '5.00',
+        'extra_seat_price': '1.00',
         'level': 2,
         'features': [
             {'ar': 'كل ميزات الخطة الاحترافية', 'en': 'All Professional plan features'},
@@ -140,11 +208,11 @@ PLANS = [
             'ar': 'حلول مخصصة للمؤسسات التعليمية.',
             'en': 'Custom solutions for educational institutions.',
         },
-        'price': '199.00',
-        'currency': 'SAR',
+        'price': '38.00',
+        'currency': 'JOD',
         'prices': {
-            'SAR': '199.00',
             'JOD': '38.00',
+            'SAR': '199.00',
             'USD': '53.00',
             'AED': '195.00',
             'EGP': '1600.00',
@@ -154,7 +222,7 @@ PLANS = [
         'billing_period': Plan.BillingPeriod.YEARLY,
         'duration_days': 365,
         'seats': 100,
-        'extra_seat_price': '10.00',
+        'extra_seat_price': '2.00',
         'level': 3,
         'features': [
             {'ar': 'كل ميزات خطة المدارس', 'en': 'All School plan features'},
@@ -170,6 +238,15 @@ PLANS = [
 
 def main():
     created, updated = 0, 0
+    for data in CURRENCIES:
+        code = data['code']
+        _, was_created = Currency.objects.update_or_create(code=code, defaults=data)
+        if was_created:
+            created += 1
+        else:
+            updated += 1
+        print(f"  • currency {code}: {'created' if was_created else 'updated'}")
+    print(f"  • currencies: {Currency.objects.count()} total")
     for data in PLANS:
         code = data['code']
         _, was_created = Plan.objects.update_or_create(code=code, defaults=data)

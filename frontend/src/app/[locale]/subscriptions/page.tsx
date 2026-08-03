@@ -8,7 +8,7 @@ import { useAuthStore } from "@/store/auth";
 import FadeIn from "@/components/FadeIn";
 
 const LOCALE_CURRENCIES: Record<string, string> = {
-  ar: "SAR",
+  ar: "JOD",
   en: "USD",
   fr: "EUR",
   tr: "TRY",
@@ -28,6 +28,8 @@ interface Plan {
   price: string;
   currency: string;
   prices?: Record<string, string>;
+  base_currency?: string;
+  available_currencies?: { code: string; name: string; symbol: string; rate: string }[];
   billing_period: string;
   duration_days: number;
   level: number;
@@ -81,16 +83,28 @@ export default function SubscriptionsPage() {
   const [banner, setBanner] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [selectedCurrency, setSelectedCurrency] = useState<string>("");
 
-  const currency = selectedCurrency || user?.preferred_currency || LOCALE_CURRENCIES[locale] || "SAR";
-
   const availableCurrencies = useMemo(() => {
-    const set = new Set<string>();
+    const map = new Map<string, { code: string; name: string; symbol: string }>();
     plans.forEach((plan) => {
-      if (plan.currency) set.add(plan.currency);
-      Object.keys(plan.prices || {}).forEach((code) => set.add(code));
+      (plan.available_currencies || []).forEach((c) => {
+        if (!map.has(c.code)) map.set(c.code, c);
+      });
     });
-    return Array.from(set).sort();
+    if (map.size === 0) {
+      plans.forEach((plan) => {
+        if (plan.currency) map.set(plan.currency, { code: plan.currency, name: plan.currency, symbol: "" });
+        Object.keys(plan.prices || {}).forEach((code) => {
+          if (!map.has(code)) map.set(code, { code, name: code, symbol: "" });
+        });
+      });
+    }
+    return Array.from(map.values());
   }, [plans]);
+
+  const requestedCurrency = selectedCurrency || user?.preferred_currency || LOCALE_CURRENCIES[locale] || "JOD";
+  const currency = availableCurrencies.some((c) => c.code === requestedCurrency)
+    ? requestedCurrency
+    : availableCurrencies[0]?.code || requestedCurrency;
 
   const planPrice = (plan: Plan, cur: string): { price: string; currency: string } => {
     const mapped = plan.prices?.[cur];
@@ -182,8 +196,8 @@ export default function SubscriptionsPage() {
                 className="px-3 py-2 rounded-xl border bg-transparent outline-none cursor-pointer"
                 style={{ borderColor: "var(--color-border)", color: "var(--color-text)" }}
               >
-                {availableCurrencies.map((code) => (
-                  <option key={code} value={code}>{code}</option>
+                {availableCurrencies.map((c) => (
+                  <option key={c.code} value={c.code}>{c.symbol ? `${c.symbol} ` : ""}{c.code}</option>
                 ))}
               </select>
             </label>

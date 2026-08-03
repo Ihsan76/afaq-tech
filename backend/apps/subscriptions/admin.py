@@ -1,6 +1,7 @@
 from django.contrib import admin
 
 from .models import (
+    Currency,
     Organization,
     OrganizationMembership,
     Plan,
@@ -10,6 +11,14 @@ from .models import (
     ServiceUsage,
     Subscription,
 )
+
+
+@admin.register(Currency)
+class CurrencyAdmin(admin.ModelAdmin):
+    list_display = ['code', 'name', 'symbol', 'rate', 'is_base', 'is_active', 'sort_order']
+    list_editable = ['rate', 'is_active', 'sort_order']
+    list_filter = ['is_base', 'is_active']
+    search_fields = ['code', 'name']
 
 
 @admin.register(Plan)
