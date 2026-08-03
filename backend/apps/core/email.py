@@ -118,6 +118,42 @@ def verification_email(code: str, locale: str = 'ar') -> str:
     """
 
 
+def organization_invite_email(org_name: str, invite_url: str, locale: str = 'ar', role_label: str = '') -> str:
+    """HTML template for an organization (school/institution) member invite."""
+    role_ar = 'معلم' if role_label == 'teacher' else ('مدير' if role_label == 'manager' else 'عضو')
+    if locale == 'ar':
+        return f"""
+        <div dir="rtl" style="font-family: Tahoma, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="text-align: center; margin-bottom: 30px;">
+                <h1 style="color: #4F46E5; margin: 0;">آفاق تكنولوجي</h1>
+            </div>
+            <h2 style="color: #333;">دعوة للانضمام إلى {org_name}</h2>
+            <p style="color: #555; line-height: 1.8;">تمت دعوتك للانضمام إلى حساب <b>{org_name}</b> بصفة <b>{role_ar}</b>. اضغط على الزر أدناه لقبول الدعوة والبدء:</p>
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="{invite_url}" style="background: #4F46E5; color: white; padding: 14px 32px; border-radius: 12px; text-decoration: none; font-weight: bold; display: inline-block;">قبول الدعوة</a>
+            </div>
+            <p style="color: #888; font-size: 14px;">إذا لم تكن تتوقع هذه الدعوة، تجاهل هذه الرسالة.</p>
+            <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+            <p style="color: #aaa; font-size: 12px; text-align: center;">© آفاق تكنولوجي — منصة رقمية للخدمات والتعليم</p>
+        </div>
+        """
+    return f"""
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="text-align: center; margin-bottom: 30px;">
+            <h1 style="color: #4F46E5; margin: 0;">Afaq Tech</h1>
+        </div>
+        <h2 style="color: #333;">You're invited to join {org_name}</h2>
+        <p style="color: #555; line-height: 1.8;">You've been invited to join <b>{org_name}</b> as a <b>{role_label or 'member'}</b>. Click the button below to accept the invitation:</p>
+        <div style="text-align: center; margin: 30px 0;">
+            <a href="{invite_url}" style="background: #4F46E5; color: white; padding: 14px 32px; border-radius: 12px; text-decoration: none; font-weight: bold; display: inline-block;">Accept Invitation</a>
+        </div>
+        <p style="color: #888; font-size: 14px;">If you didn't expect this invitation, you can ignore this email.</p>
+        <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+        <p style="color: #aaa; font-size: 12px; text-align: center;">© Afaq Tech — Digital platform for services and education</p>
+    </div>
+    """
+
+
 def contact_notification_email(name: str, email: str, phone: str, subject: str, message: str, service: str) -> str:
     """HTML template for admin contact notification."""
     rows = "".join([

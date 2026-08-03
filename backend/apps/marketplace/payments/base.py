@@ -8,7 +8,15 @@ from ..models import Order
 
 def checkout_locale_title(checkout, locale='en'):
     """Best-effort localized line-item title for an order or subscription checkout."""
-    title = None
+    title = getattr(checkout, 'title', None)
+    if title:
+        if isinstance(title, dict):
+            for key in (locale, 'en', 'ar'):
+                if title.get(key):
+                    return title[key]
+            title = None
+        elif title is not None:
+            return title
     service = getattr(checkout, 'service', None)
     if service is not None:
         title = service.title
@@ -28,8 +36,11 @@ def checkout_buyer(checkout):
 
 def checkout_return_path(checkout, locale='en'):
     """Frontend path where the buyer returns after the hosted checkout."""
-    if getattr(checkout, 'kind', 'order') == 'subscription':
+    kind = getattr(checkout, 'kind', 'order')
+    if kind == 'subscription':
         return 'subscriptions'
+    if kind == 'seat_purchase':
+        return 'organization'
     return 'marketplace/orders'
 
 
@@ -37,7 +48,7 @@ def parse_checkout_id(raw):
     """Parse a `kind:id` reference (or a legacy raw id) into (kind, id)."""
     if isinstance(raw, str) and ':' in raw:
         prefix, _, rest = raw.partition(':')
-        if prefix in ('order', 'subscription') and rest:
+        if prefix in ('order', 'subscription', 'seat_purchase') and rest:
             return prefix, rest
     return 'order', raw
 
@@ -104,4 +115,7 @@ class PaymentProvider(ABC):
         if kind == 'subscription':
             from apps.subscriptions.services import activate_subscription
             return activate_subscription(checkout_id, transaction_id, provider_name=self.name)
+        if kind == 'seat_purchase':
+            from apps.subscriptions.services import confirm_seat_purchase
+            return confirm_seat_purchase(checkout_id, transaction_id, provider_name=self.name)
         return self.mark_order_paid(checkout_id, transaction_id)

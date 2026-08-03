@@ -66,6 +66,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { section: t("admin.subscriptionsSection"), items: [
       { href: "/admin/subscriptions", label: t("admin.subscriptions"), icon: "💳" },
     ]},
+    { section: t("admin.organizationsSection"), items: [
+      { href: "/admin/organizations", label: t("admin.organizations"), icon: "🏫" },
+    ]},
   ];
 
   const sidebarContent = (

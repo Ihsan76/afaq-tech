@@ -200,6 +200,16 @@ export default function DashboardPage() {
     });
   }
 
+  if (["school", "enterprise"].includes(user.subscription_plan || "")) {
+    actions.push({
+      href: `/${locale}/organization`,
+      icon: "🏫",
+      title: t("dashboard.manageOrg"),
+      desc: t("dashboard.manageOrgDesc"),
+      color: "var(--color-info-light, #e0f2fe)",
+    });
+  }
+
   actions.push({
     href: `/${locale}/profile`,
     icon: "👤",
