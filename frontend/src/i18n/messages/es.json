@@ -1,4 +1,24 @@
 {
+  "subscriptions": {
+    "title": "Suscripciones Afaq",
+    "subtitle": "Elige el plan que se adapte a tus necesidades. Mejora en cualquier momento.",
+    "currentPlan": "Plan actual",
+    "validUntil": "Válido hasta",
+    "active": "Activo",
+    "pending": "Pendiente",
+    "expired": "Expirado",
+    "cancelled": "Cancelado",
+    "refunded": "Reembolsado",
+    "monthly": "mes",
+    "yearly": "año",
+    "popular": "Más popular",
+    "subscribeNow": "Suscribirse",
+    "freePlan": "Plan gratuito",
+    "redirecting": "Redirigiendo al pago...",
+    "paymentSuccess": "Pago exitoso. Tu plan ahora está activo.",
+    "paymentCancelled": "Pago cancelado.",
+    "paymentNotAvailable": "Los pagos no están disponibles en este momento."
+  },
   "common": {
     "appName": "Afaq Tech",
     "loading": "Cargando...",
@@ -82,6 +102,7 @@
     "admin": "Administrador",
     "ebooks": "Libros electrónicos",
     "gamification": "Gamificación",
+    "subscriptions": "Suscripciones",
     "search": "Buscar"
   },
   "home": {

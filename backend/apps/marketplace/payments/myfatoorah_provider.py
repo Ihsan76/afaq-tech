@@ -13,6 +13,10 @@ from .base import (
     PaymentNotConfiguredError,
     PaymentProvider,
     PaymentWebhookError,
+    checkout_buyer,
+    checkout_locale_title,
+    checkout_return_path,
+    parse_checkout_id,
 )
 
 
@@ -35,7 +39,9 @@ class MyFatoorahProvider(PaymentProvider):
     def create_checkout(self, order, locale='en'):
         if not self.is_configured():
             raise PaymentNotConfiguredError('MyFatoorah is not configured')
-        callback = f"{settings.FRONTEND_URL}/{locale}/marketplace/orders/?provider=myfatoorah"
+        kind = getattr(order, 'kind', 'order')
+        return_path = checkout_return_path(order, locale)
+        callback = f"{settings.FRONTEND_URL}/{locale}/{return_path}/?provider=myfatoorah"
         payload = {
             'PaymentMethodId': int(getattr(settings, 'MYFATOORAH_PAYMENT_METHOD_ID', 0) or 0),
             'InvoiceValue': float(order.price_paid),
@@ -43,17 +49,12 @@ class MyFatoorahProvider(PaymentProvider):
             'CallBackUrl': callback,
             'ErrorUrl': f"{callback}&cancelled=1",
             'Language': 'AR' if str(locale).lower().startswith('ar') else 'EN',
-            'CustomerName': get_translation(order.buyer.translations, 'en', 'name', order.buyer.email),
-            'CustomerEmail': order.buyer.email,
+            'CustomerName': get_translation(checkout_buyer(order).translations, 'en', 'name', checkout_buyer(order).email),
+            'CustomerEmail': checkout_buyer(order).email,
             'CustomerReference': str(order.id),
-            'UserDefinedField': str(order.id),
+            'UserDefinedField': str(order.id) if kind == 'order' else f"{kind}:{order.id}",
             'InvoiceItems': [{
-                'ItemName': (
-                    order.service.title.get(locale)
-                    or order.service.title.get('en')
-                    or order.service.title.get('ar')
-                    or f'Service #{order.service_id}'
-                ),
+                'ItemName': checkout_locale_title(order, locale),
                 'Quantity': 1,
                 'UnitPrice': float(order.price_paid),
             }],
@@ -113,7 +114,8 @@ class MyFatoorahProvider(PaymentProvider):
         if transaction.get('Status') != 'SUCCESS':
             return False
 
-        order_id = invoice.get('UserDefinedField') or invoice.get('ExternalIdentifier')
-        if not order_id:
+        raw_reference = invoice.get('UserDefinedField') or invoice.get('ExternalIdentifier')
+        if not raw_reference:
             return False
-        return self.mark_order_paid(order_id, transaction.get('PaymentId') or '')
+        kind, checkout_id = parse_checkout_id(raw_reference)
+        return self.mark_paid(kind, checkout_id, transaction.get('PaymentId') or '')

@@ -1,4 +1,24 @@
 {
+  "subscriptions": {
+    "title": "اشتراک‌های آفاق",
+    "subtitle": "پلنی را انتخاب کنید که با نیازهای شما سازگار است. هر زمان ارتقا دهید.",
+    "currentPlan": "پلن فعلی",
+    "validUntil": "معتبر تا",
+    "active": "فعال",
+    "pending": "در انتظار",
+    "expired": "منقضی",
+    "cancelled": "لغو شده",
+    "refunded": "بازپرداخت",
+    "monthly": "ماه",
+    "yearly": "سال",
+    "popular": "محبوب‌ترین",
+    "subscribeNow": "هم‌اکنون اشتراک بگیرید",
+    "freePlan": "پلن رایگان",
+    "redirecting": "در حال انتقال به پرداخت...",
+    "paymentSuccess": "پرداخت موفق. پلن شما اکنون فعال است.",
+    "paymentCancelled": "پرداخت لغو شد.",
+    "paymentNotAvailable": "پرداخت در حال حاضر در دسترس نیست."
+  },
   "common": {
     "appName": "آفاق تک",
     "loading": "در حال بارگذاری...",
@@ -81,6 +101,7 @@
     "search": "جستجو",
     "marketplace": "بازارگاه",
     "gamification": "بازی‌سازی",
+    "subscriptions": "اشتراک‌ها",
     "chat": "دستیار هوش مصنوعی",
     "admin": "مدیریت"
   },

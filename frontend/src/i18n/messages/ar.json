@@ -1,4 +1,24 @@
 {
+  "subscriptions": {
+    "title": "اشتراكات آفاق",
+    "subtitle": "اختر الباقة التي تناسب احتياجاتك، وطوّر حسابك في أي وقت.",
+    "currentPlan": "باقتك الحالية",
+    "validUntil": "صالحة حتى",
+    "active": "نشطة",
+    "pending": "قيد الانتظار",
+    "expired": "منتهية",
+    "cancelled": "ملغاة",
+    "refunded": "مسترجع",
+    "monthly": "شهرياً",
+    "yearly": "سنوياً",
+    "popular": "الأكثر طلباً",
+    "subscribeNow": "اشترك الآن",
+    "freePlan": "باقة مجانية",
+    "redirecting": "جارٍ التحويل للدفع...",
+    "paymentSuccess": "تم الدفع بنجاح. باقتك الآن مفعّلة.",
+    "paymentCancelled": "تم إلغاء الدفع.",
+    "paymentNotAvailable": "الدفع غير متاح حالياً."
+  },
   "common": {
     "appName": "آفاق تكنولوجي",
     "loading": "جاري التحميل...",
@@ -81,6 +101,7 @@
     "search": "بحث",
     "marketplace": "السوق",
     "gamification": "التحديات",
+    "subscriptions": "الاشتراكات",
     "chat": "المساعد الذكي",
     "admin": "الإدارة"
   },

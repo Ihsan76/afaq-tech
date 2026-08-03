@@ -5,13 +5,16 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useScrollReveal } from "@/hooks/useScrollReveal";
 import { localizedContent } from "@/lib/i18n";
+import { useAuthStore } from "@/store/auth";
 
 export default function PricingSection({ content }: { content?: Record<string, any> }) {
   const t = useTranslations("landing");
   const pathname = usePathname();
   const locale = pathname.split("/")[1] || "en";
+  const user = useAuthStore((s) => s.user);
   const c = content || {};
   const { ref: titleRef, isVisible: titleVisible } = useScrollReveal();
+  const ctaHref = user ? `/${locale}/subscriptions` : `/${locale}/register`;
 
   const defaultPlans = [
     { key: "free", price: "$0", period: t("pricingMonth"), features: [t("freeFeature1"), t("freeFeature2"), t("freeFeature3"), t("freeFeature4")], cta: t("freeCTA"), featured: false },
@@ -60,7 +63,7 @@ export default function PricingSection({ content }: { content?: Record<string, a
                   </li>
                 ))}
               </ul>
-              <Link href={`/${locale}/register`} className={`block text-center py-3 rounded-2xl font-semibold transition-all duration-200 ${plan.featured ? 'hover:shadow-lg hover:-translate-y-0.5' : 'hover:bg-[var(--color-primary)] hover:text-white hover:border-[var(--color-primary)]'}`} style={plan.featured ? { background: "linear-gradient(135deg, var(--color-primary), var(--color-secondary))", color: "white", boxShadow: "var(--btn-shadow)" } : { border: "2px solid var(--color-primary)", color: "var(--color-primary)", backgroundColor: "transparent" }}>
+              <Link href={ctaHref} className={`block text-center py-3 rounded-2xl font-semibold transition-all duration-200 ${plan.featured ? 'hover:shadow-lg hover:-translate-y-0.5' : 'hover:bg-[var(--color-primary)] hover:text-white hover:border-[var(--color-primary)]'}`} style={plan.featured ? { background: "linear-gradient(135deg, var(--color-primary), var(--color-secondary))", color: "white", boxShadow: "var(--btn-shadow)" } : { border: "2px solid var(--color-primary)", color: "var(--color-primary)", backgroundColor: "transparent" }}>
                 {plan.cta}
               </Link>
             </div>

@@ -1,4 +1,24 @@
 {
+  "subscriptions": {
+    "title": "آفاق سبسکرپشنز",
+    "subtitle": "اپنی ضروریات کے مطابق پلان منتخب کریں۔ کسی بھی وقت اپ گریڈ کریں۔",
+    "currentPlan": "موجودہ پلان",
+    "validUntil": "درست تا",
+    "active": "فعال",
+    "pending": "زیر التواء",
+    "expired": "میعاد ختم",
+    "cancelled": "منسوخ",
+    "refunded": "واپس شدہ",
+    "monthly": "ماہ",
+    "yearly": "سال",
+    "popular": "سب سے مقبول",
+    "subscribeNow": "ابھی سبسکرائب کریں",
+    "freePlan": "مفت پلان",
+    "redirecting": "ادائیگی کی طرف رجوع کیا جا رہا ہے...",
+    "paymentSuccess": "ادائیگی کامیاب۔ آپ کا پلان اب فعال ہے۔",
+    "paymentCancelled": "ادائیگی منسوخ۔",
+    "paymentNotAvailable": "ادائیگی فی الحال دستیاب نہیں۔"
+  },
   "common": {
     "appName": "Afaq Tech",
     "loading": "لوڈ ہو رہا ہے...",
@@ -82,6 +102,7 @@
     "admin": "ایڈمن",
     "ebooks": "ای-کتابیں",
     "gamification": "گیمیفیکیشن",
+    "subscriptions": "سبسکرپشنز",
     "search": "تلاش"
   },
   "home": {

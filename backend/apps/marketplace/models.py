@@ -76,6 +76,8 @@ class ServiceAvailability(models.Model):
 
 
 class Order(models.Model):
+    kind = 'order'
+
     class Status(models.TextChoices):
         PENDING = 'pending', _('Pending')
         CONFIRMED = 'confirmed', _('Confirmed')

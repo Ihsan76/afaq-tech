@@ -8,6 +8,9 @@ from .base import (
     PaymentNotConfiguredError,
     PaymentProvider,
     PaymentWebhookError,
+    checkout_buyer,
+    checkout_locale_title,
+    checkout_return_path,
 )
 
 
@@ -21,12 +24,12 @@ class StripeProvider(PaymentProvider):
         if not self.is_configured():
             raise PaymentNotConfiguredError('Stripe is not configured')
         stripe.api_key = settings.STRIPE_SECRET_KEY
-        title = (
-            order.service.title.get(locale)
-            or order.service.title.get('en')
-            or order.service.title.get('ar')
-            or f'Service #{order.service_id}'
-        )
+        kind = getattr(order, 'kind', 'order')
+        title = checkout_locale_title(order, locale)
+        return_path = checkout_return_path(order, locale)
+        metadata = {'kind': kind, 'checkout_id': str(order.id)}
+        if kind == 'order':
+            metadata['order_id'] = str(order.id)
         session = stripe.checkout.Session.create(
             mode='payment',
             line_items=[{
@@ -37,11 +40,11 @@ class StripeProvider(PaymentProvider):
                 },
                 'quantity': 1,
             }],
-            metadata={'order_id': str(order.id)},
+            metadata=metadata,
             client_reference_id=str(order.id),
-            customer_email=order.buyer.email,
-            success_url=f"{settings.FRONTEND_URL}/{locale}/marketplace/orders/?session_id={{CHECKOUT_SESSION_ID}}",
-            cancel_url=f"{settings.FRONTEND_URL}/{locale}/marketplace/orders/?cancelled=1",
+            customer_email=checkout_buyer(order).email,
+            success_url=f"{settings.FRONTEND_URL}/{locale}/{return_path}/?session_id={{CHECKOUT_SESSION_ID}}",
+            cancel_url=f"{settings.FRONTEND_URL}/{locale}/{return_path}/?cancelled=1",
         )
         return PaymentCheckoutResult(provider=self.name, checkout_url=session.url, session_id=session.id)
 
@@ -60,7 +63,13 @@ class StripeProvider(PaymentProvider):
         if event['type'] != 'checkout.session.completed':
             return False
         session = event['data']['object']
-        order_id = session.get('metadata', {}).get('order_id') or session.get('client_reference_id')
-        if not order_id:
+        metadata = session.get('metadata', {}) or {}
+        kind = metadata.get('kind') or 'order'
+        checkout_id = (
+            metadata.get('checkout_id')
+            or metadata.get('order_id')
+            or session.get('client_reference_id')
+        )
+        if not checkout_id:
             return False
-        return self.mark_order_paid(order_id, session.get('payment_intent') or '')
+        return self.mark_paid(kind, checkout_id, session.get('payment_intent') or '')

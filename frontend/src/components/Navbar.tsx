@@ -205,6 +205,32 @@ export default function Navbar() {
 
             {user && (
               <Link
+                href={`/${locale}/subscriptions`}
+                className="px-3 xl:px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200"
+                style={{
+                  backgroundColor: isActive(`/${locale}/subscriptions`) ? "var(--color-primary-light)" : "transparent",
+                  color: isActive(`/${locale}/subscriptions`) ? "var(--color-primary)" : "var(--color-text-secondary)",
+                }}
+                onMouseEnter={(e) => {
+                  if (!isActive(`/${locale}/subscriptions`)) {
+                    e.currentTarget.style.color = "var(--color-text)";
+                    e.currentTarget.style.backgroundColor = "var(--color-muted)";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isActive(`/${locale}/subscriptions`)) {
+                    e.currentTarget.style.color = "var(--color-text-secondary)";
+                    e.currentTarget.style.backgroundColor = "transparent";
+                  }
+                }}
+              >
+                <span className="mr-1">💳</span>
+                {t("nav.subscriptions")}
+              </Link>
+            )}
+
+            {user && (
+              <Link
                 href={`/${locale}/chat`}
                 className="px-3 xl:px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200"
                 style={{
@@ -455,6 +481,17 @@ export default function Navbar() {
                   >
                     <span className="text-lg">🎮</span>
                     {t("nav.gamification")}
+                  </Link>
+                  <Link
+                    href={`/${locale}/subscriptions`}
+                    className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors"
+                    style={{
+                      backgroundColor: isActive(`/${locale}/subscriptions`) ? "var(--color-primary-light)" : "transparent",
+                      color: isActive(`/${locale}/subscriptions`) ? "var(--color-primary)" : "var(--color-text-secondary)",
+                    }}
+                  >
+                    <span className="text-lg">💳</span>
+                    {t("nav.subscriptions")}
                   </Link>
                   <Link
                     href={`/${locale}/chat`}

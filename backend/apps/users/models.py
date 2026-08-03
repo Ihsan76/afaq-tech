@@ -17,9 +17,10 @@ class User(AbstractUser):
         FREE = 'free', _('Free')
         BASIC = 'basic', _('Basic')
         PRO = 'pro', _('Pro')
+        SCHOOL = 'school', _('School')
         ENTERPRISE = 'enterprise', _('Enterprise')
 
-    PLAN_LEVELS = {'free': 0, 'basic': 1, 'pro': 2, 'enterprise': 3}
+    PLAN_LEVELS = {'free': 0, 'basic': 1, 'pro': 2, 'school': 2, 'enterprise': 3}
 
     email = models.EmailField(unique=True)
     translations = models.JSONField(_('Translations'), default=dict, blank=True)

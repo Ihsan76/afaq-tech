@@ -6,6 +6,42 @@ from django.utils import timezone
 from ..models import Order
 
 
+def checkout_locale_title(checkout, locale='en'):
+    """Best-effort localized line-item title for an order or subscription checkout."""
+    title = None
+    service = getattr(checkout, 'service', None)
+    if service is not None:
+        title = service.title
+    elif getattr(checkout, 'plan', None) is not None:
+        title = checkout.plan.name
+    if isinstance(title, dict):
+        for key in (locale, 'en', 'ar'):
+            if title.get(key):
+                return title[key]
+    return title or f"#{checkout.id}"
+
+
+def checkout_buyer(checkout):
+    """The purchasing user for an order or subscription checkout."""
+    return getattr(checkout, 'buyer', None) or getattr(checkout, 'user', None)
+
+
+def checkout_return_path(checkout, locale='en'):
+    """Frontend path where the buyer returns after the hosted checkout."""
+    if getattr(checkout, 'kind', 'order') == 'subscription':
+        return 'subscriptions'
+    return 'marketplace/orders'
+
+
+def parse_checkout_id(raw):
+    """Parse a `kind:id` reference (or a legacy raw id) into (kind, id)."""
+    if isinstance(raw, str) and ':' in raw:
+        prefix, _, rest = raw.partition(':')
+        if prefix in ('order', 'subscription') and rest:
+            return prefix, rest
+    return 'order', raw
+
+
 class PaymentProviderError(Exception):
     """Raised when a payment provider cannot complete an operation."""
 
@@ -62,3 +98,10 @@ class PaymentProvider(ABC):
             'updated_at',
         ])
         return True
+
+    def mark_paid(self, kind, checkout_id, transaction_id=""):
+        """Dispatch a successful payment to the right model by checkout kind."""
+        if kind == 'subscription':
+            from apps.subscriptions.services import activate_subscription
+            return activate_subscription(checkout_id, transaction_id, provider_name=self.name)
+        return self.mark_order_paid(checkout_id, transaction_id)

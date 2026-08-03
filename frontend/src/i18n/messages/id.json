@@ -1,4 +1,24 @@
 {
+  "subscriptions": {
+    "title": "Langganan Afaq",
+    "subtitle": "Pilih paket yang sesuai dengan kebutuhan Anda. Tingkatkan kapan saja.",
+    "currentPlan": "Paket saat ini",
+    "validUntil": "Berlaku hingga",
+    "active": "Aktif",
+    "pending": "Menunggu",
+    "expired": "Kedaluwarsa",
+    "cancelled": "Dibatalkan",
+    "refunded": "Dikembalikan",
+    "monthly": "bulan",
+    "yearly": "tahun",
+    "popular": "Paling Populer",
+    "subscribeNow": "Berlangganan Sekarang",
+    "freePlan": "Paket Gratis",
+    "redirecting": "Mengalihkan ke pembayaran...",
+    "paymentSuccess": "Pembayaran berhasil. Paket Anda sekarang aktif.",
+    "paymentCancelled": "Pembayaran dibatalkan.",
+    "paymentNotAvailable": "Pembayaran tidak tersedia saat ini."
+  },
   "common": {
     "appName": "Afaq Tech",
     "loading": "Memuat...",
@@ -82,6 +102,7 @@
     "admin": "Admin",
     "ebooks": "E-Book",
     "gamification": "Gamifikasi",
+    "subscriptions": "Langganan",
     "search": "Cari"
   },
   "home": {

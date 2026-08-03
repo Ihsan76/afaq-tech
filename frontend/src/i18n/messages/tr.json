@@ -1,4 +1,24 @@
 {
+  "subscriptions": {
+    "title": "Afaq Abonelikler",
+    "subtitle": "İhtiyaçlarınıza uygun planı seçin. İstediğiniz zaman yükseltin.",
+    "currentPlan": "Mevcut plan",
+    "validUntil": "Geçerlilik",
+    "active": "Aktif",
+    "pending": "Beklemede",
+    "expired": "Süresi doldu",
+    "cancelled": "İptal edildi",
+    "refunded": "İade edildi",
+    "monthly": "ay",
+    "yearly": "yıl",
+    "popular": "En Popüler",
+    "subscribeNow": "Şimdi Abone Ol",
+    "freePlan": "Ücretsiz Plan",
+    "redirecting": "Ödemeye yönlendiriliyor...",
+    "paymentSuccess": "Ödeme başarılı. Planınız artık aktif.",
+    "paymentCancelled": "Ödeme iptal edildi.",
+    "paymentNotAvailable": "Ödeme şu anda mevcut değil."
+  },
   "common": {
     "appName": "Afaq Tech",
     "loading": "Yükleniyor...",
@@ -82,6 +102,7 @@
     "admin": "Yönetici",
     "ebooks": "E-Kitaplar",
     "gamification": "Oyunlaştırma",
+    "subscriptions": "Abonelikler",
     "search": "Ara"
   },
   "home": {
