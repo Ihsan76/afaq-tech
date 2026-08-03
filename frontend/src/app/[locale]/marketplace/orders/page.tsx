@@ -8,7 +8,7 @@ import FadeIn from "@/components/FadeIn";
 
 interface OrderItem {
   id: number; service: number; service_title: string;
-  provider_name: string; status: string;
+  provider_name: string; status: string; payment_status: string;
   price_paid: string; currency: string;
   notes: string; scheduled_at: string | null;
   completed_at: string | null; created_at: string;
@@ -23,6 +23,13 @@ const STATUS_COLORS: Record<string, { bg: string; color: string }> = {
   refunded: { bg: "#f3e8ff", color: "#7c3aed" },
 };
 
+const PAYMENT_COLORS: Record<string, { bg: string; color: string }> = {
+  paid: { bg: "#d1fae5", color: "#059669" },
+  pending: { bg: "#fef3c7", color: "#d97706" },
+  failed: { bg: "#fee2e2", color: "#dc2626" },
+  refunded: { bg: "#f3e8ff", color: "#7c3aed" },
+};
+
 export default function OrdersPage() {
   const t = useTranslations("servicesMarketplace");
   const pathname = usePathname();
@@ -32,13 +39,37 @@ export default function OrdersPage() {
   const [orders, setOrders] = useState<OrderItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [role, setRole] = useState<"buyer" | "provider">("buyer");
+  const [banner, setBanner] = useState<{ type: "success" | "info" | "error"; text: string } | null>(null);
+  const [payingId, setPayingId] = useState<number | null>(null);
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("session_id") || params.get("paymentId")) {
+      setBanner({ type: "success", text: t("paymentSuccess") });
+      window.history.replaceState({}, "", window.location.pathname);
+    } else if (params.get("cancelled")) {
+      setBanner({ type: "error", text: t("paymentCancelled") });
+      window.history.replaceState({}, "", window.location.pathname);
+    }
     api.get(`/marketplace/orders/?role=${role}`)
       .then(r => setOrders(r.data.results || r.data))
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [role]);
+
+  const handlePay = async (id: number) => {
+    setPayingId(id);
+    try {
+      const res = await api.post(`/marketplace/orders/${id}/checkout/?locale=${locale}`);
+      if (res.data?.checkout_url) {
+        window.location.href = res.data.checkout_url;
+        return;
+      }
+      setBanner({ type: "error", text: t("paymentNotAvailable") });
+    } catch {
+      setBanner({ type: "error", text: t("paymentNotAvailable") });
+    } finally { setPayingId(null); }
+  };
 
   const handleCancel = async (id: number) => {
     try {
@@ -83,6 +114,16 @@ export default function OrdersPage() {
           ))}
         </div>
 
+        {banner && (
+          <div className="mb-6 px-4 py-3 rounded-2xl text-sm font-medium flex items-center gap-2"
+            style={{
+              background: banner.type === "success" ? "var(--color-success)" : banner.type === "error" ? "var(--color-error)" : "var(--color-primary)",
+              color: "#FFF",
+            }}>
+            {banner.type === "success" ? "✅" : banner.type === "error" ? "⚠️" : "ℹ️"} {banner.text}
+          </div>
+        )}
+
         {loading ? (
           <div className="flex items-center justify-center gap-3 py-16" style={{ color: "var(--color-text-muted)" }}>
             <svg className="animate-spin h-6 w-6" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
@@ -106,10 +147,18 @@ export default function OrdersPage() {
                           {role === "buyer" ? `${t("provider")}: ${order.provider_name}` : ""}
                         </p>
                       </div>
-                      <span className="px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap"
-                        style={{ background: sc.bg, color: sc.color }}>
-                        {t(order.status)}
-                      </span>
+                      <div className="flex flex-col items-end gap-1">
+                        <span className="px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap"
+                          style={{ background: sc.bg, color: sc.color }}>
+                          {t(order.status)}
+                        </span>
+                        {role === "buyer" && (
+                          <span className="px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap"
+                            style={{ background: (PAYMENT_COLORS[order.payment_status] || PAYMENT_COLORS.pending).bg, color: (PAYMENT_COLORS[order.payment_status] || PAYMENT_COLORS.pending).color }}>
+                            {order.payment_status === "paid" ? t("paid") : t("paymentPending")}
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm mb-3" style={{ color: "var(--color-text-secondary)" }}>
                       <span className="font-bold" style={{ color: "var(--color-primary)" }}>{order.price_paid} {order.currency}</span>
@@ -117,7 +166,14 @@ export default function OrdersPage() {
                       {order.scheduled_at && <span>⏰ {new Date(order.scheduled_at).toLocaleString()}</span>}
                     </div>
                     {order.notes && <p className="text-xs mb-3" style={{ color: "var(--color-text-muted)" }}>📝 {order.notes}</p>}
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-wrap">
+                      {role === "buyer" && order.payment_status === "pending" && order.status !== "cancelled" && (
+                        <button onClick={() => handlePay(order.id)} disabled={payingId === order.id}
+                          className="px-3 py-1.5 rounded-lg text-xs font-medium text-white transition-all disabled:opacity-50"
+                          style={{ background: "var(--color-success)" }}>
+                          {payingId === order.id ? t("redirecting") : t("payNow")}
+                        </button>
+                      )}
                       {(order.status === "pending" || order.status === "confirmed") && (
                         <button onClick={() => handleCancel(order.id)}
                           className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"

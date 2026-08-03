@@ -193,3 +193,13 @@ GOOGLE_REDIRECT_URI = env('GOOGLE_REDIRECT_URI', default='http://localhost:8003/
 GOOGLE_AUTH_URI = 'https://accounts.google.com/o/oauth2/v2/auth'
 GOOGLE_TOKEN_URI = 'https://oauth2.googleapis.com/token'
 GOOGLE_USERINFO_URI = 'https://www.googleapis.com/oauth2/v2/userinfo'
+
+STRIPE_SECRET_KEY = env('STRIPE_SECRET_KEY', default='')
+STRIPE_PUBLISHABLE_KEY = env('STRIPE_PUBLISHABLE_KEY', default='')
+STRIPE_WEBHOOK_SECRET = env('STRIPE_WEBHOOK_SECRET', default='')
+
+PAYMENT_PROVIDER = env('PAYMENT_PROVIDER', default='auto')
+MYFATOORAH_API_TOKEN = env('MYFATOORAH_API_TOKEN', default='')
+MYFATOORAH_BASE_URL = env('MYFATOORAH_BASE_URL', default='')
+MYFATOORAH_WEBHOOK_SECRET = env('MYFATOORAH_WEBHOOK_SECRET', default='')
+MYFATOORAH_PAYMENT_METHOD_ID = env('MYFATOORAH_PAYMENT_METHOD_ID', default='0')

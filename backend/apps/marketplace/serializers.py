@@ -73,8 +73,9 @@ class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = ['id', 'buyer', 'service', 'service_title', 'provider_name', 'status',
-                  'price_paid', 'currency', 'notes', 'scheduled_at', 'completed_at', 'created_at']
-        read_only_fields = ['buyer', 'status', 'price_paid', 'completed_at', 'created_at']
+                  'payment_status', 'payment_provider', 'paid_at', 'price_paid', 'currency', 'notes',
+                  'scheduled_at', 'completed_at', 'created_at']
+        read_only_fields = ['buyer', 'status', 'payment_status', 'payment_provider', 'paid_at', 'price_paid', 'completed_at', 'created_at']
 
     def get_service_title(self, obj):
         return obj.service.title.get('ar') or obj.service.title.get('en') or str(obj.service)

@@ -210,7 +210,17 @@
     "draft": "مسودة",
     "published": "منشور",
     "archived": "مؤرشف",
-    "provideService": "تقديم خدمة"
+    "provideService": "تقديم خدمة",
+    "payNow": "ادفع الآن",
+    "paymentStatus": "حالة الدفع",
+    "paid": "مدفوع",
+    "paymentPending": "بانتظار الدفع",
+    "paymentNotAvailable": "الدفع الإلكتروني غير متاح حالياً",
+    "paymentSuccess": "تم الدفع بنجاح",
+    "paymentCancelled": "تم إلغاء الدفع",
+    "retryPayment": "إعادة الدفع",
+    "proceedToPayment": "إتمام الدفع",
+    "redirecting": "جارٍ التحويل إلى صفحة الدفع..."
   },
   "admin": {
     "title": "العنوان",

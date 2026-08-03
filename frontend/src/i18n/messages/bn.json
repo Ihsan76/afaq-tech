@@ -1077,6 +1077,16 @@
     "status": "অবস্থা",
     "subtitle": "যোগ্য প্রদানকারীদের শিক্ষামূলক সেবা ব্রাউজ করুন",
     "title": "সেবা বাজার",
-    "tutoring": "প্রাইভেট টিউটরিং"
+    "tutoring": "প্রাইভেট টিউটরিং",
+    "payNow": "Pay Now",
+    "paymentStatus": "Payment Status",
+    "paid": "Paid",
+    "paymentPending": "Payment Pending",
+    "paymentNotAvailable": "Online payment is not available yet",
+    "paymentSuccess": "Payment completed successfully",
+    "paymentCancelled": "Payment was cancelled",
+    "retryPayment": "Retry Payment",
+    "proceedToPayment": "Proceed to Payment",
+    "redirecting": "Redirecting to payment..."
   }
 }

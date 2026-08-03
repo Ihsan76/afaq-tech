@@ -1,12 +1,22 @@
 from django.db import models
 from django.utils import timezone
 from rest_framework import generics, permissions, status
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import (
+    api_view,
+    authentication_classes,
+    permission_classes,
+    throttle_classes,
+)
 from rest_framework.response import Response
 
 from apps.gamification.services import PointsManager
 
 from .models import Order, Review, Service, ServiceAvailability, ServiceCategory
+from .payments import (
+    PaymentProviderError,
+    PaymentWebhookError,
+    get_provider,
+)
 from .serializers import (
     AdminOrderSerializer,
     AdminReviewSerializer,
@@ -108,6 +118,26 @@ class OrderListView(generics.ListCreateAPIView):
             return Order.objects.filter(service__provider=user).select_related('buyer', 'service')
         return Order.objects.filter(buyer=user).select_related('service')
 
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        order = serializer.save()
+        locale = request.data.get('locale') or 'en'
+        data = OrderSerializer(order, context=self.get_serializer_context()).data
+        try:
+            result = get_provider().create_checkout(order, locale)
+        except PaymentProviderError:
+            data['checkout_url'] = None
+            data['payment_available'] = False
+            return Response(data, status=status.HTTP_201_CREATED)
+        order.payment_provider = result.provider
+        order.payment_session_id = result.session_id
+        order.save(update_fields=['payment_provider', 'payment_session_id', 'updated_at'])
+        data['checkout_url'] = result.checkout_url
+        data['payment_provider'] = result.provider
+        data['payment_available'] = True
+        return Response(data, status=status.HTTP_201_CREATED)
+
 
 class OrderDetailView(generics.RetrieveUpdateAPIView):
     serializer_class = OrderSerializer
@@ -118,6 +148,44 @@ class OrderDetailView(generics.RetrieveUpdateAPIView):
         return Order.objects.filter(
             models.Q(buyer=user) | models.Q(service__provider=user)
         ).select_related('buyer', 'service')
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def order_checkout(request, pk):
+    order = generics.get_object_or_404(Order, pk=pk, buyer=request.user)
+    if order.payment_status == Order.PaymentStatus.PAID:
+        return Response({'error': 'Order already paid'}, status=status.HTTP_400_BAD_REQUEST)
+    if order.status == Order.Status.CANCELLED:
+        return Response({'error': 'Order cancelled'}, status=status.HTTP_400_BAD_REQUEST)
+    locale = request.query_params.get('locale') or 'en'
+    try:
+        result = get_provider().create_checkout(order, locale)
+    except PaymentProviderError:
+        return Response(
+            {'checkout_url': None, 'payment_available': False, 'payment_message': 'Payments are not configured yet'},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    order.payment_provider = result.provider
+    order.payment_session_id = result.session_id
+    order.save(update_fields=['payment_provider', 'payment_session_id', 'updated_at'])
+    return Response({'checkout_url': result.checkout_url, 'payment_provider': result.provider, 'payment_available': True})
+
+
+@api_view(['POST'])
+@authentication_classes([])
+@permission_classes([permissions.AllowAny])
+@throttle_classes([])
+def payment_webhook(request, provider='stripe'):
+    try:
+        payment_provider = get_provider(provider)
+    except PaymentProviderError:
+        return Response({'error': 'Provider not configured'}, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        payment_provider.handle_webhook(request)
+    except PaymentWebhookError:
+        return Response({'error': 'Invalid signature'}, status=status.HTTP_400_BAD_REQUEST)
+    return Response({'status': 'ok'})
 
 
 @api_view(['POST'])

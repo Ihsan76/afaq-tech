@@ -210,7 +210,17 @@
     "draft": "پیش‌نویس",
     "published": "منتشر شده",
     "archived": "بایگانی شده",
-    "provideService": "ارائه یک خدمت"
+    "provideService": "ارائه یک خدمت",
+    "payNow": "Pay Now",
+    "paymentStatus": "Payment Status",
+    "paid": "Paid",
+    "paymentPending": "Payment Pending",
+    "paymentNotAvailable": "Online payment is not available yet",
+    "paymentSuccess": "Payment completed successfully",
+    "paymentCancelled": "Payment was cancelled",
+    "retryPayment": "Retry Payment",
+    "proceedToPayment": "Proceed to Payment",
+    "redirecting": "Redirecting to payment..."
   },
   "admin": {
     "title": "عنوان",

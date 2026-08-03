@@ -62,8 +62,15 @@ export default function ServiceDetailPage() {
   const handleOrder = async () => {
     setOrdering(true); setOrderError("");
     try {
-      await api.post("/marketplace/orders/", { service: Number(serviceId), notes });
+      const res = await api.post("/marketplace/orders/", { service: Number(serviceId), notes, locale });
+      if (res.data?.checkout_url) {
+        window.location.href = res.data.checkout_url;
+        return;
+      }
       setOrderDone(true);
+      if (res.data?.payment_available === false) {
+        setOrderError(t("paymentNotAvailable"));
+      }
     } catch (e: any) {
       setOrderError(e.response?.data?.detail || e.response?.data || "حدث خطأ");
     } finally { setOrdering(false); }
@@ -164,8 +171,9 @@ export default function ServiceDetailPage() {
                 {orderDone ? (
                   <div className="text-center py-8">
                     <div className="text-4xl mb-3">✅</div>
-                    <p className="font-bold mb-1" style={{ color: "var(--color-text)" }}>تم تقديم الطلب</p>
+                    <p className="font-bold mb-1" style={{ color: "var(--color-text)" }}>{t("paymentPending")}</p>
                     <p className="text-sm mb-4" style={{ color: "var(--color-text-muted)" }}>{t("pending")}</p>
+                    {orderError && <p className="text-xs mb-4" style={{ color: "var(--color-warning)" }}>{typeof orderError === "string" ? orderError : JSON.stringify(orderError)}</p>}
                     <button onClick={() => router.push(`/${locale}/marketplace/orders`)}
                       className="w-full px-4 py-2.5 rounded-xl font-semibold text-white text-sm transition-all"
                       style={{ background: "var(--btn-primary-bg)" }}>
@@ -189,7 +197,7 @@ export default function ServiceDetailPage() {
                       <button onClick={handleOrder} disabled={ordering}
                         className="w-full px-4 py-3 rounded-xl font-semibold text-white transition-all disabled:opacity-50"
                         style={{ background: "var(--btn-primary-bg)" }}>
-                        {ordering ? "جاري..." : t("orderNow")}
+                        {ordering ? t("redirecting") : t("orderNow")}
                       </button>
                     </div>
                   </>

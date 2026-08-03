@@ -210,7 +210,17 @@
     "draft": "Draft",
     "published": "Published",
     "archived": "Archived",
-    "provideService": "Offer a Service"
+    "provideService": "Offer a Service",
+    "payNow": "Pay Now",
+    "paymentStatus": "Payment Status",
+    "paid": "Paid",
+    "paymentPending": "Payment Pending",
+    "paymentNotAvailable": "Online payment is not available yet",
+    "paymentSuccess": "Payment completed successfully",
+    "paymentCancelled": "Payment was cancelled",
+    "retryPayment": "Retry Payment",
+    "proceedToPayment": "Proceed to Payment",
+    "redirecting": "Redirecting to payment..."
   },
   "admin": {
     "title": "Title",

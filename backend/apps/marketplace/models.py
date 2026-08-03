@@ -84,9 +84,20 @@ class Order(models.Model):
         CANCELLED = 'cancelled', _('Cancelled')
         REFUNDED = 'refunded', _('Refunded')
 
+    class PaymentStatus(models.TextChoices):
+        PENDING = 'pending', _('Payment Pending')
+        PAID = 'paid', _('Paid')
+        FAILED = 'failed', _('Failed')
+        REFUNDED = 'refunded', _('Refunded')
+
     buyer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='purchases')
     service = models.ForeignKey(Service, on_delete=models.CASCADE, related_name='orders')
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
+    payment_status = models.CharField(max_length=20, choices=PaymentStatus.choices, default=PaymentStatus.PENDING)
+    payment_provider = models.CharField(_('Payment Provider'), max_length=32, blank=True, default='')
+    payment_session_id = models.CharField(_('Payment Session ID'), max_length=255, blank=True, default='')
+    payment_transaction_id = models.CharField(_('Payment Transaction ID'), max_length=255, blank=True, default='')
+    paid_at = models.DateTimeField(_('Paid At'), null=True, blank=True)
     price_paid = models.DecimalField(_('Price Paid'), max_digits=10, decimal_places=2)
     currency = models.CharField(_('Currency'), max_length=3, default='SAR')
     notes = models.TextField(_('Notes'), blank=True, default='')
