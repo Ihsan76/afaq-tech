@@ -17,7 +17,9 @@
     "redirecting": "Redirection vers le paiement...",
     "paymentSuccess": "Paiement réussi. Votre formule est maintenant active.",
     "paymentCancelled": "Paiement annulé.",
-    "paymentNotAvailable": "Le paiement n'est pas disponible actuellement."
+    "paymentNotAvailable": "Le paiement n'est pas disponible actuellement.",
+    "currency": "Devise",
+    "chargedNote": "Prix indicatifs — le paiement est traité dans la devise de base du compte."
   },
   "common": {
     "appName": "Afaq Tech",

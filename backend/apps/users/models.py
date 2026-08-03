@@ -31,6 +31,7 @@ class User(AbstractUser):
     input_language = models.CharField(_('Input Language'), max_length=5, default='ar')
     output_language = models.CharField(_('Output Language'), max_length=5, default='ar')
     source_locale = models.CharField(max_length=10, default='jo')
+    preferred_currency = models.CharField(_('Preferred Currency'), max_length=3, blank=True, default='')
 
     is_verified = models.BooleanField(_('Verified'), default=False)
     phone = models.CharField(_('Phone'), max_length=20, blank=True)

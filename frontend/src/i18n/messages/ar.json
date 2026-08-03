@@ -17,7 +17,9 @@
     "redirecting": "جارٍ التحويل للدفع...",
     "paymentSuccess": "تم الدفع بنجاح. باقتك الآن مفعّلة.",
     "paymentCancelled": "تم إلغاء الدفع.",
-    "paymentNotAvailable": "الدفع غير متاح حالياً."
+    "paymentNotAvailable": "الدفع غير متاح حالياً.",
+    "currency": "العملة",
+    "chargedNote": "أسعار العرض فقط — يتم الدفع بعملة الحساب الأساسية (ريال سعودي)."
   },
   "common": {
     "appName": "آفاق تكنولوجي",

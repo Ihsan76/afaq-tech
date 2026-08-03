@@ -44,6 +44,7 @@ def pro_plan():
             "description": {"ar": "وصف", "en": "Description"},
             "price": "9.99",
             "currency": "SAR",
+            "prices": {"SAR": "9.99", "JOD": "1.90", "USD": "2.66", "AED": "9.77"},
             "duration_days": 30,
             "level": 2,
             "features": [{"ar": "ميزة", "en": "Feature"}],
@@ -88,6 +89,39 @@ def test_plans_list_localized(pro_plan):
     pro = next(p for p in resp.json() if p["code"] == "pro")
     assert pro["name"] == "احترافي"
     assert pro["features"] == ["ميزة"]
+
+
+@pytest.mark.django_db
+def test_plans_price_localized_by_currency(pro_plan):
+    resp = APIClient().get("/api/v1/subscriptions/plans/?currency=USD")
+    assert resp.status_code == 200
+    pro = next(p for p in resp.json() if p["code"] == "pro")
+    assert pro["price"] == "2.66"
+    assert pro["currency"] == "USD"
+    assert pro["prices"] == {"SAR": "9.99", "JOD": "1.90", "USD": "2.66", "AED": "9.77"}
+
+    resp = APIClient().get("/api/v1/subscriptions/plans/?currency=JOD")
+    pro = next(p for p in resp.json() if p["code"] == "pro")
+    assert pro["price"] == "1.90"
+    assert pro["currency"] == "JOD"
+
+
+@pytest.mark.django_db
+def test_plans_price_falls_back_to_base_currency(pro_plan):
+    resp = APIClient().get("/api/v1/subscriptions/plans/?currency=XYZ")
+    pro = next(p for p in resp.json() if p["code"] == "pro")
+    assert pro["price"] == "9.99"
+    assert pro["currency"] == "SAR"
+
+
+@pytest.mark.django_db
+def test_plans_price_respects_user_preference(client, user, pro_plan):
+    user.preferred_currency = "USD"
+    user.save(update_fields=["preferred_currency"])
+    resp = client.get("/api/v1/subscriptions/plans/")
+    pro = next(p for p in resp.json() if p["code"] == "pro")
+    assert pro["price"] == "2.66"
+    assert pro["currency"] == "USD"
 
 
 class FakeResponse:
@@ -155,6 +189,38 @@ def test_purchase_without_provider_reports_unavailable(client, pro_plan):
     assert data["checkout_url"] is None
     subscription = Subscription.objects.get(id=data["id"])
     assert subscription.status == Subscription.Status.PENDING
+
+
+@pytest.mark.django_db
+@override_settings(PAYMENT_PROVIDER="auto", STRIPE_SECRET_KEY="", MYFATOORAH_API_TOKEN="")
+def test_purchase_with_currency_stores_display_price(client, pro_plan):
+    resp = client.post("/api/v1/subscriptions/purchase/", {
+        "plan_id": pro_plan.id,
+        "currency": "USD",
+    }, format="json")
+    assert resp.status_code == 201
+    data = resp.json()
+    assert data["display_price"] == "2.66"
+    assert data["display_currency"] == "USD"
+    subscription = Subscription.objects.get(id=data["id"])
+    assert subscription.price_paid == Decimal("9.99")
+    assert subscription.currency == "SAR"
+    assert subscription.display_price == Decimal("2.66")
+    assert subscription.display_currency == "USD"
+
+
+@pytest.mark.django_db
+@override_settings(PAYMENT_PROVIDER="auto", STRIPE_SECRET_KEY="", MYFATOORAH_API_TOKEN="")
+def test_purchase_uses_user_preferred_currency(client, user, pro_plan):
+    user.preferred_currency = "JOD"
+    user.save(update_fields=["preferred_currency"])
+    resp = client.post("/api/v1/subscriptions/purchase/", {
+        "plan_id": pro_plan.id,
+    }, format="json")
+    assert resp.status_code == 201
+    data = resp.json()
+    assert data["display_price"] == "1.90"
+    assert data["display_currency"] == "JOD"
 
 
 @pytest.mark.django_db

@@ -13,7 +13,7 @@ class PlanAdmin(admin.ModelAdmin):
 
 @admin.register(Subscription)
 class SubscriptionAdmin(admin.ModelAdmin):
-    list_display = ['user', 'plan', 'status', 'price_paid', 'currency', 'start_at', 'end_at', 'created_at']
+    list_display = ['user', 'plan', 'status', 'price_paid', 'currency', 'display_price', 'display_currency', 'start_at', 'end_at', 'created_at']
     list_filter = ['status', 'plan', 'payment_provider']
     search_fields = ['user__email', 'user__translations']
-    readonly_fields = ['user', 'plan', 'status', 'price_paid', 'currency', 'start_at', 'end_at', 'paid_at', 'created_at', 'updated_at']
+    readonly_fields = ['user', 'plan', 'status', 'price_paid', 'currency', 'display_price', 'display_currency', 'start_at', 'end_at', 'paid_at', 'created_at', 'updated_at']

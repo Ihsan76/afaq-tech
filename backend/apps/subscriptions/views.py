@@ -4,6 +4,7 @@ from rest_framework.response import Response
 
 from apps.marketplace.payments import PaymentProviderError, get_provider
 
+from .currencies import resolve_currency
 from .models import Plan, Subscription
 from .serializers import (
     AdminPlanSerializer,
@@ -37,11 +38,15 @@ def purchase_subscription(request):
     serializer.is_valid(raise_exception=True)
     plan = serializer.validated_data['plan_id']
     locale = serializer.validated_data.get('locale') or 'en'
+    display_currency = resolve_currency(request, override=serializer.validated_data.get('currency', ''))
+    display_price, _ = plan.get_price(display_currency)
     subscription = Subscription.objects.create(
         user=request.user,
         plan=plan,
         price_paid=plan.price,
         currency=plan.currency,
+        display_price=display_price,
+        display_currency=display_currency,
     )
     data = SubscriptionSerializer(subscription, context={'request': request}).data
     try:

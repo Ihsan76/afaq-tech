@@ -1,3 +1,5 @@
+from decimal import Decimal, InvalidOperation
+
 from django.conf import settings
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -13,6 +15,11 @@ class Plan(models.Model):
     description = models.JSONField(_('Description (Multilingual)'), default=dict)
     price = models.DecimalField(_('Price'), max_digits=10, decimal_places=2, default=0)
     currency = models.CharField(_('Currency'), max_length=3, default='SAR')
+    prices = models.JSONField(
+        _('Prices per Currency'), default=dict, blank=True,
+        help_text='Per-currency display prices, e.g. {"SAR": "9.99", "JOD": "1.90", "USD": "2.66"}. '
+                  'The gateway always charges in the account currency.',
+    )
     billing_period = models.CharField(
         _('Billing Period'), max_length=20, choices=BillingPeriod.choices, default=BillingPeriod.MONTHLY
     )
@@ -35,6 +42,16 @@ class Plan(models.Model):
     def __str__(self):
         return self.name.get('ar') or self.name.get('en') or self.code
 
+    def get_price(self, currency=''):
+        """Resolve the display price for a currency, falling back to the base price."""
+        currency = (currency or self.currency or '').upper()
+        if self.prices and currency in self.prices:
+            try:
+                return Decimal(str(self.prices[currency])), currency
+            except (TypeError, ValueError, InvalidOperation):
+                pass
+        return self.price, self.currency
+
 
 class Subscription(models.Model):
     class Status(models.TextChoices):
@@ -54,6 +71,8 @@ class Subscription(models.Model):
     payment_transaction_id = models.CharField(_('Payment Transaction ID'), max_length=255, blank=True, default='')
     price_paid = models.DecimalField(_('Price Paid'), max_digits=10, decimal_places=2, default=0)
     currency = models.CharField(_('Currency'), max_length=3, default='SAR')
+    display_price = models.DecimalField(_('Display Price'), max_digits=10, decimal_places=2, default=0)
+    display_currency = models.CharField(_('Display Currency'), max_length=3, blank=True, default='')
     start_at = models.DateTimeField(_('Started At'), null=True, blank=True)
     end_at = models.DateTimeField(_('Ends At'), null=True, blank=True)
     paid_at = models.DateTimeField(_('Paid At'), null=True, blank=True)

@@ -17,7 +17,9 @@
     "redirecting": "Mengalihkan ke pembayaran...",
     "paymentSuccess": "Pembayaran berhasil. Paket Anda sekarang aktif.",
     "paymentCancelled": "Pembayaran dibatalkan.",
-    "paymentNotAvailable": "Pembayaran tidak tersedia saat ini."
+    "paymentNotAvailable": "Pembayaran tidak tersedia saat ini.",
+    "currency": "Mata uang",
+    "chargedNote": "Harga tampilan saja — pembayaran diproses dalam mata uang dasar akun."
   },
   "common": {
     "appName": "Afaq Tech",

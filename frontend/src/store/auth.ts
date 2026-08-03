@@ -14,6 +14,7 @@ interface User {
   input_language: string;
   output_language: string;
   timezone: string;
+  preferred_currency: string;
   is_verified: boolean;
   phone: string;
   avatar: string;

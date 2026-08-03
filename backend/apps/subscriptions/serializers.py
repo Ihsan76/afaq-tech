@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+from .currencies import resolve_currency
 from .models import Plan, Subscription
 
 
@@ -22,11 +23,13 @@ class PlanSerializer(serializers.ModelSerializer):
     name = serializers.SerializerMethodField()
     description = serializers.SerializerMethodField()
     features = serializers.SerializerMethodField()
+    price = serializers.SerializerMethodField()
+    currency = serializers.SerializerMethodField()
 
     class Meta:
         model = Plan
         fields = [
-            'id', 'code', 'name', 'description', 'price', 'currency',
+            'id', 'code', 'name', 'description', 'price', 'currency', 'prices',
             'billing_period', 'duration_days', 'level', 'features', 'is_featured',
         ]
 
@@ -46,6 +49,16 @@ class PlanSerializer(serializers.ModelSerializer):
                 features.append(feature)
         return features
 
+    def get_currency(self, obj):
+        currency = resolve_currency(self.context.get('request'))
+        _, used_currency = obj.get_price(currency)
+        return used_currency
+
+    def get_price(self, obj):
+        currency = resolve_currency(self.context.get('request'))
+        price, _ = obj.get_price(currency)
+        return str(price)
+
 
 class AdminPlanSerializer(serializers.ModelSerializer):
     class Meta:
@@ -60,7 +73,8 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         model = Subscription
         fields = [
             'id', 'plan', 'plan_name', 'status', 'payment_provider', 'price_paid',
-            'currency', 'start_at', 'end_at', 'paid_at', 'created_at',
+            'currency', 'display_price', 'display_currency',
+            'start_at', 'end_at', 'paid_at', 'created_at',
         ]
         read_only_fields = fields
 
@@ -71,6 +85,7 @@ class SubscriptionSerializer(serializers.ModelSerializer):
 class PurchaseSerializer(serializers.Serializer):
     plan_id = serializers.IntegerField()
     locale = serializers.CharField(required=False, default='en')
+    currency = serializers.CharField(required=False, allow_blank=True, default='')
 
     def validate_plan_id(self, value):
         try:

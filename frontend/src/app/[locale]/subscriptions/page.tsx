@@ -1,11 +1,24 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { api } from "@/lib/api";
 import { useAuthStore } from "@/store/auth";
 import FadeIn from "@/components/FadeIn";
+
+const LOCALE_CURRENCIES: Record<string, string> = {
+  ar: "SAR",
+  en: "USD",
+  fr: "EUR",
+  tr: "TRY",
+  ur: "PKR",
+  es: "EUR",
+  de: "EUR",
+  id: "IDR",
+  bn: "BDT",
+  fa: "USD",
+};
 
 interface Plan {
   id: number;
@@ -14,6 +27,7 @@ interface Plan {
   description: string;
   price: string;
   currency: string;
+  prices?: Record<string, string>;
   billing_period: string;
   duration_days: number;
   level: number;
@@ -28,6 +42,8 @@ interface Subscription {
   status: string;
   price_paid: string;
   currency: string;
+  display_price: string;
+  display_currency: string;
   start_at: string | null;
   end_at: string | null;
   paid_at: string | null;
@@ -47,12 +63,31 @@ export default function SubscriptionsPage() {
   const router = useRouter();
   const locale = pathname.split("/")[1] || "en";
   const accessToken = useAuthStore((s) => s.accessToken);
+  const user = useAuthStore((s) => s.user);
 
   const [plans, setPlans] = useState<Plan[]>([]);
   const [current, setCurrent] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(true);
   const [buying, setBuying] = useState<number | null>(null);
   const [banner, setBanner] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [selectedCurrency, setSelectedCurrency] = useState<string>("");
+
+  const currency = selectedCurrency || user?.preferred_currency || LOCALE_CURRENCIES[locale] || "SAR";
+
+  const availableCurrencies = useMemo(() => {
+    const set = new Set<string>();
+    plans.forEach((plan) => {
+      if (plan.currency) set.add(plan.currency);
+      Object.keys(plan.prices || {}).forEach((code) => set.add(code));
+    });
+    return Array.from(set).sort();
+  }, [plans]);
+
+  const planPrice = (plan: Plan, cur: string): { price: string; currency: string } => {
+    const mapped = plan.prices?.[cur];
+    if (mapped !== undefined) return { price: mapped, currency: cur };
+    return { price: plan.price, currency: plan.currency };
+  };
 
   const fetchCurrent = useCallback(() => {
     if (!accessToken) return;
@@ -81,6 +116,16 @@ export default function SubscriptionsPage() {
     setLoading(false);
   }, [locale, fetchCurrent, t]);
 
+  const handleCurrencyChange = async (code: string) => {
+    setSelectedCurrency(code);
+    if (accessToken) {
+      try {
+        await api.patch("/auth/profile/", { preferred_currency: code });
+        useAuthStore.getState().loadUser();
+      } catch {}
+    }
+  };
+
   const handleBuy = async (plan: Plan) => {
     if (!accessToken) {
       router.push(`/${locale}/login`);
@@ -88,7 +133,7 @@ export default function SubscriptionsPage() {
     }
     setBuying(plan.id);
     try {
-      const res = await api.post("/subscriptions/purchase/", { plan_id: plan.id, locale });
+      const res = await api.post("/subscriptions/purchase/", { plan_id: plan.id, locale, currency });
       if (res.data?.checkout_url) {
         window.location.href = res.data.checkout_url;
         return;
@@ -114,6 +159,21 @@ export default function SubscriptionsPage() {
             <h1 className="text-3xl font-bold mb-1" style={{ color: "var(--color-text)", fontFamily: "var(--font-heading)" }}>{t("title")}</h1>
             <p className="text-sm" style={{ color: "var(--color-text-muted)" }}>{t("subtitle")}</p>
           </div>
+          {availableCurrencies.length > 1 && (
+            <label className="flex items-center gap-2 text-sm" style={{ color: "var(--color-text-muted)" }}>
+              <span>{t("currency")}</span>
+              <select
+                value={currency}
+                onChange={(e) => handleCurrencyChange(e.target.value)}
+                className="px-3 py-2 rounded-xl border bg-transparent outline-none cursor-pointer"
+                style={{ borderColor: "var(--color-border)", color: "var(--color-text)" }}
+              >
+                {availableCurrencies.map((code) => (
+                  <option key={code} value={code}>{code}</option>
+                ))}
+              </select>
+            </label>
+          )}
         </div>
 
         {banner && (
@@ -132,6 +192,11 @@ export default function SubscriptionsPage() {
               <div>
                 <p className="text-xs mb-1" style={{ color: "var(--color-text-muted)" }}>{t("currentPlan")}</p>
                 <h3 className="text-xl font-bold" style={{ color: "var(--color-text)", fontFamily: "var(--font-heading)" }}>{current.plan_name}</h3>
+                {Number(current.display_price) > 0 && (
+                  <p className="text-sm mt-1" style={{ color: "var(--color-text-secondary)" }}>
+                    {current.display_price} {current.display_currency}
+                  </p>
+                )}
                 {current.end_at && (
                   <p className="text-sm mt-1" style={{ color: "var(--color-text-secondary)" }}>
                     {t("validUntil")}: {new Date(current.end_at).toLocaleDateString()}
@@ -154,7 +219,8 @@ export default function SubscriptionsPage() {
           <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 items-stretch">
             {plans.map((plan, idx) => {
               const featured = plan.is_featured;
-              const free = Number(plan.price) <= 0;
+              const { price, currency: priceCurrency } = planPrice(plan, currency);
+              const free = Number(price) <= 0;
               return (
                 <FadeIn key={plan.id} delay={idx * 80} direction="up">
                   <div className={`relative p-6 sm:p-8 rounded-3xl flex flex-col h-full transition-all duration-300 ${featured ? 'ring-2 ring-[var(--color-primary)]' : ''}`}
@@ -170,8 +236,8 @@ export default function SubscriptionsPage() {
                       <p className="text-xs mb-4" style={{ color: "var(--color-text-muted)" }}>{plan.description}</p>
                     )}
                     <div className="flex items-baseline gap-1 mb-6">
-                      <span className="text-4xl font-bold" style={{ color: "var(--color-text)", fontFamily: "var(--font-heading)" }}>{plan.price}</span>
-                      <span className="text-sm" style={{ color: "var(--color-text-muted)" }}>{plan.currency} / {t(plan.billing_period)}</span>
+                      <span className="text-4xl font-bold" style={{ color: "var(--color-text)", fontFamily: "var(--font-heading)" }}>{price}</span>
+                      <span className="text-sm" style={{ color: "var(--color-text-muted)" }}>{priceCurrency} / {t(plan.billing_period)}</span>
                     </div>
                     <ul className="space-y-3 mb-8 flex-1">
                       {plan.features.map((feat, j) => (
@@ -192,6 +258,10 @@ export default function SubscriptionsPage() {
               );
             })}
           </div>
+        )}
+
+        {availableCurrencies.length > 1 && (
+          <p className="text-xs mt-6 text-center" style={{ color: "var(--color-text-muted)" }}>{t("chargedNote")}</p>
         )}
       </div>
     </div>

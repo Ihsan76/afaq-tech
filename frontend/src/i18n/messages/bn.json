@@ -17,7 +17,9 @@
     "redirecting": "পেমেন্টে রিডাইরেক্ট হচ্ছে...",
     "paymentSuccess": "পেমেন্ট সফল। আপনার প্ল্যান এখন সক্রিয়।",
     "paymentCancelled": "পেমেন্ট বাতিল।",
-    "paymentNotAvailable": "পেমেন্ট বর্তমানে উপলব্ধ নেই।"
+    "paymentNotAvailable": "পেমেন্ট বর্তমানে উপলব্ধ নেই।",
+    "currency": "মুদ্রা",
+    "chargedNote": "শুধুমাত্র প্রদর্শন মূল্য — অর্থপ্রদান অ্যাকাউন্টের মূল মুদ্রায় প্রক্রিয়া হয়।"
   },
   "common": {
     "appName": "Afaq Tech",

@@ -17,7 +17,9 @@
     "redirecting": "در حال انتقال به پرداخت...",
     "paymentSuccess": "پرداخت موفق. پلن شما اکنون فعال است.",
     "paymentCancelled": "پرداخت لغو شد.",
-    "paymentNotAvailable": "پرداخت در حال حاضر در دسترس نیست."
+    "paymentNotAvailable": "پرداخت در حال حاضر در دسترس نیست.",
+    "currency": "واحد پول",
+    "chargedNote": "فقط قیمت نمایشی — پرداخت به واحد پول اصلی حساب انجام میشود."
   },
   "common": {
     "appName": "آفاق تک",

@@ -23,6 +23,7 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ['id', 'email', 'name', 'role', 'subscription_plan', 'ui_language',
                   'is_verified', 'is_staff', 'phone', 'avatar', 'timezone', 'date_joined',
+                  'preferred_currency',
                   'translations', 'points', 'badges', 'lessons_created_count']
         read_only_fields = ['id', 'date_joined', 'is_verified', 'points', 'badges', 'lessons_created_count']
 

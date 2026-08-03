@@ -17,7 +17,9 @@
     "redirecting": "Redirigiendo al pago...",
     "paymentSuccess": "Pago exitoso. Tu plan ahora está activo.",
     "paymentCancelled": "Pago cancelado.",
-    "paymentNotAvailable": "Los pagos no están disponibles en este momento."
+    "paymentNotAvailable": "Los pagos no están disponibles en este momento.",
+    "currency": "Moneda",
+    "chargedNote": "Solo precios de referencia — el pago se procesa en la moneda base de la cuenta."
   },
   "common": {
     "appName": "Afaq Tech",

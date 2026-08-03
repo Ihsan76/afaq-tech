@@ -17,7 +17,9 @@
     "redirecting": "ادائیگی کی طرف رجوع کیا جا رہا ہے...",
     "paymentSuccess": "ادائیگی کامیاب۔ آپ کا پلان اب فعال ہے۔",
     "paymentCancelled": "ادائیگی منسوخ۔",
-    "paymentNotAvailable": "ادائیگی فی الحال دستیاب نہیں۔"
+    "paymentNotAvailable": "ادائیگی فی الحال دستیاب نہیں۔",
+    "currency": "کرنسی",
+    "chargedNote": "صرف ڈسپلے قیمتیں — ادائیگی اکاؤنٹ کی بنیادی کرنسی میں ہوتی ہے۔"
   },
   "common": {
     "appName": "Afaq Tech",

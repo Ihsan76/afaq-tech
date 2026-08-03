@@ -17,7 +17,9 @@
     "redirecting": "Ödemeye yönlendiriliyor...",
     "paymentSuccess": "Ödeme başarılı. Planınız artık aktif.",
     "paymentCancelled": "Ödeme iptal edildi.",
-    "paymentNotAvailable": "Ödeme şu anda mevcut değil."
+    "paymentNotAvailable": "Ödeme şu anda mevcut değil.",
+    "currency": "Para birimi",
+    "chargedNote": "Gösterim fiyatları — ödeme, hesabın baz para biriminde işlenir."
   },
   "common": {
     "appName": "Afaq Tech",
