@@ -290,15 +290,17 @@ def _fetch_google_models(api_key):
     models = client.models.list()
     result = []
     for m in models:
-        if m.supported_generation_methods and 'generateContent' in m.supported_generation_methods:
-            name = m.name.replace('models/', '') if m.name else ''
-            result.append({
-                'model_id': name,
-                'display_name': getattr(m, 'display_name', name),
-                'description': getattr(m, 'description', ''),
-                'input_token_limit': getattr(m, 'input_token_limit', 0),
-                'output_token_limit': getattr(m, 'output_token_limit', 0),
-            })
+        methods = getattr(m, 'supported_generation_methods', None)
+        if not methods or 'generateContent' in methods:
+            name = m.name.replace('models/', '') if getattr(m, 'name', None) else ''
+            if name:
+                result.append({
+                    'model_id': name,
+                    'display_name': getattr(m, 'display_name', name),
+                    'description': getattr(m, 'description', ''),
+                    'input_token_limit': getattr(m, 'input_token_limit', 0),
+                    'output_token_limit': getattr(m, 'output_token_limit', 0),
+                })
     return result
 
 
