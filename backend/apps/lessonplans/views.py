@@ -153,9 +153,17 @@ def generate_lesson_plan(request):
         return Response({'error': f'Failed to generate plan: {e}'}, status=status.HTTP_502_BAD_GATEWAY)
 
     if 'error' in plan_data:
+        err_str = plan_data.get('error', '')
+        if '429' in err_str or 'quota' in err_str.lower() or 'too many requests' in err_str.lower():
+            return Response({
+                'error': 'ai_quota_exceeded',
+                'message': 'لقد تم استنفاد الحصة المجانية لمزود الذكاء الاصطناعي (خطأ 429 - طلبات كثيرة جداً). يرجى التبديل إلى نموذج ذكاء اصطناعي آخر أو تحديث مفتاح API من لوحة التحكم.',
+                'details': err_str
+            }, status=status.HTTP_429_TOO_MANY_REQUESTS)
         return Response({
             'error': 'Failed to parse AI response in structured format',
             'raw_response': plan_data.get('raw_response', ''),
+            'details': err_str,
         }, status=status.HTTP_502_BAD_GATEWAY)
 
     lesson_plan = LessonPlan.objects.create(
