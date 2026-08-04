@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { locales } from "@/i18n/config";
 
-const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://afaq.app";
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.afaq.app";
 const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003/api/v1";
 
 const STATIC_PAGES = [

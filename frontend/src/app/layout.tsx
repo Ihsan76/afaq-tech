@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 
-const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://afaq.app";
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.afaq.app";
 const JSON_LD = {
   "@context": "https://schema.org",
   "@graph": [
