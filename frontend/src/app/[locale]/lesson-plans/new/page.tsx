@@ -119,12 +119,28 @@ export default function NewLessonPlanPage() {
       });
       router.push(`/${locale}/lesson-plans/${data.id}`);
     } catch (err: any) {
+      let errorMsg = "";
+      const status = err.response?.status;
+      const data = err.response?.data;
+
+      if (status === 429) {
+        errorMsg = locale === "ar" 
+          ? "لقد تم استنفاد الحصة المجانية لمزود الذكاء الاصطناعي (خطأ 429). يرجى التبديل إلى نموذج ذكاء اصطناعي آخر."
+          : "AI quota exceeded (429 Too Many Requests). Please switch to another AI model.";
+      } else if (status === 502 || status === 503) {
+        errorMsg = locale === "ar"
+          ? "خطأ في الاتصال بخدمة الذكاء الاصطناعي (502/503). يرجى المحاولة لاحقاً."
+          : "AI service gateway error (502/503). Please try again later.";
+      } else if (typeof data === "object" && data !== null) {
+        errorMsg = data.message || data.error || data.detail;
+      } else if (typeof data === "string" && data.length < 200) {
+        errorMsg = data;
+      }
+
       setError(
-        err.response?.data?.message ||
-        err.response?.data?.error ||
-        err.response?.data?.detail ||
-        tc("error") ||
-        "حدث خطأ أثناء توليد خطة الدرس"
+        errorMsg ||
+        err.message ||
+        (locale === "ar" ? "حدث خطأ أثناء توليد خطة الدرس. يرجى المحاولة مرة أخرى." : "An error occurred while generating the lesson plan. Please try again.")
       );
     } finally {
       setLoading(false);
