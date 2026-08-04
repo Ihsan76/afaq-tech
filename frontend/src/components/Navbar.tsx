@@ -10,9 +10,12 @@ import LanguageSwitcher from "./LanguageSwitcher";
 import { useApiList, usePrefetch } from "@/lib/useApi";
 
 interface DynamicMenuItem {
-  id: number; title: string;
+  id: number;
+  title: string;
   translations: Record<string, Record<string, string>>;
-  url: string; icon: string; badge: string;
+  url: string;
+  icon: string;
+  badge: string;
   children: DynamicMenuItem[];
 }
 
@@ -24,17 +27,25 @@ export default function Navbar() {
   const { themeId, setThemeId, themes } = useTheme();
   const [scrolled, setScrolled] = useState(false);
   const [showThemes, setShowThemes] = useState(false);
-  const [showAdminMenu, setShowAdminMenu] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const themeRef = useRef<HTMLDivElement>(null);
-  const adminRef = useRef<HTMLDivElement>(null);
-  const { data: dynamicMenus } = useApiList<DynamicMenuItem>("/pages/menu/header/", { locale });
-  const prefetch = usePrefetch(dynamicMenus.map((item) => {
-    const slug = item.url?.replace(/^\//, "") || "";
-    return slug ? `/pages/${slug}/` : null;
-  }).filter(Boolean) as string[]);
+  const userRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => { loadUser(); }, [loadUser]);
+  const { data: dynamicMenus } = useApiList<DynamicMenuItem>("/pages/menu/header/", { locale });
+  const prefetch = usePrefetch(
+    dynamicMenus
+      .map((item) => {
+        const slug = item.url?.replace(/^\//, "") || "";
+        return slug ? `/pages/${slug}/` : null;
+      })
+      .filter(Boolean) as string[]
+  );
+
+  useEffect(() => {
+    loadUser();
+  }, [loadUser]);
+
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 10);
     window.addEventListener("scroll", handleScroll);
@@ -44,15 +55,19 @@ export default function Navbar() {
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (themeRef.current && !themeRef.current.contains(e.target as Node)) setShowThemes(false);
-      if (adminRef.current && !adminRef.current.contains(e.target as Node)) setShowAdminMenu(false);
+      if (userRef.current && !userRef.current.contains(e.target as Node)) setShowUserMenu(false);
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  useEffect(() => { setMobileOpen(false); }, [pathname]);
+  useEffect(() => {
+    setMobileOpen(false);
+    setShowUserMenu(false);
+    setShowThemes(false);
+  }, [pathname]);
 
-  // Prefetch all menu pages after they load (delayed so current page renders first)
+  // Prefetch menu pages
   useEffect(() => {
     if (dynamicMenus.length === 0) return;
     const timer = setTimeout(prefetch, 500);
@@ -76,7 +91,7 @@ export default function Navbar() {
   const adminLinks = [
     { href: `/${locale}/admin`, label: t("nav.admin"), icon: "⚙️" },
     { href: `/${locale}/admin/pages`, label: t("admin.pages"), icon: "📄" },
-    { href: `/${locale}/admin/blog`, label: t("admin.blog"), icon: "📝" },
+    { href: `/${locale}/admin/posts`, label: t("admin.blog"), icon: "📝" },
     { href: `/${locale}/admin/themes`, label: t("admin.themes"), icon: "🎨" },
     { href: `/${locale}/admin/menus`, label: t("admin.menus"), icon: "📋" },
     { href: `/${locale}/admin/languages`, label: t("admin.languages"), icon: "🌐" },
@@ -85,14 +100,27 @@ export default function Navbar() {
     { href: `/${locale}/admin/settings`, label: t("admin.settings"), icon: "🔧" },
   ];
 
+  const userApps = [
+    { href: `/${locale}/dashboard`, label: t("nav.dashboard"), icon: "📊" },
+    { href: `/${locale}/gamification`, label: t("nav.gamification"), icon: "🎮" },
+    { href: `/${locale}/subscriptions`, label: t("nav.subscriptions"), icon: "💳" },
+    { href: `/${locale}/chat`, label: t("nav.chat"), icon: "🤖" },
+    { href: `/${locale}/profile`, label: t("nav.profile"), icon: "👤" },
+  ];
+
   const isActive = (href: string) => pathname === href;
   const currentTheme = themes.find((th) => th.id === themeId) || themes[0];
+  const userInitial = (user?.name_ar || user?.email || "?")[0]?.toUpperCase();
+  const userName = user?.name_ar || user?.email?.split("@")[0] || user?.email || "";
+  const roleLabel = isAdmin ? "مشرف" : user?.role === "teacher" ? "معلم" : "طالب";
 
   return (
     <nav
       className="sticky top-0 z-50 transition-all duration-300 border-b"
       style={{
-        backgroundColor: scrolled ? "color-mix(in srgb, var(--color-surface) 80%, transparent)" : "var(--color-surface)",
+        backgroundColor: scrolled
+          ? "color-mix(in srgb, var(--color-surface) 80%, transparent)"
+          : "var(--color-surface)",
         backdropFilter: scrolled ? "blur(16px) saturate(180%)" : "none",
         WebkitBackdropFilter: scrolled ? "blur(16px) saturate(180%)" : "none",
         boxShadow: scrolled ? "0 1px 3px 0 rgb(0 0 0 / 0.1)" : "none",
@@ -100,7 +128,7 @@ export default function Navbar() {
       }}
     >
       <div className="max-w-7xl mx-auto px-3 sm:px-6">
-        <div className="flex items-center justify-between h-14 sm:h-16">
+        <div className="flex items-center justify-between h-14 sm:h-16 gap-2">
           {/* Logo */}
           <Link href={`/${locale}`} className="flex items-center gap-2 group shrink-0">
             <div
@@ -122,13 +150,13 @@ export default function Navbar() {
             </span>
           </Link>
 
-          {/* Desktop Nav Links */}
-          <div className="hidden lg:flex items-center gap-1">
+          {/* Desktop CMS Nav Links ONLY */}
+          <div className="hidden lg:flex items-center gap-1 overflow-x-auto py-1 max-w-[55vw]">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className="px-3 xl:px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200"
+                className="px-3 xl:px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 shrink-0 flex items-center gap-1.5"
                 style={{
                   backgroundColor: isActive(link.href) ? "var(--color-primary-light)" : "transparent",
                   color: isActive(link.href) ? "var(--color-primary)" : "var(--color-text-secondary)",
@@ -146,185 +174,17 @@ export default function Navbar() {
                   }
                 }}
               >
-                <span className="mr-1">{link.icon}</span>
-                {link.label}
+                <span>{link.icon}</span>
+                <span>{link.label}</span>
               </Link>
             ))}
-
-            {user && (
-              <Link
-                href={`/${locale}/dashboard`}
-                className="px-3 xl:px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200"
-                style={{
-                  backgroundColor: isActive(`/${locale}/dashboard`) ? "var(--color-primary-light)" : "transparent",
-                  color: isActive(`/${locale}/dashboard`) ? "var(--color-primary)" : "var(--color-text-secondary)",
-                }}
-                onMouseEnter={(e) => {
-                  if (!isActive(`/${locale}/dashboard`)) {
-                    e.currentTarget.style.color = "var(--color-text)";
-                    e.currentTarget.style.backgroundColor = "var(--color-muted)";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isActive(`/${locale}/dashboard`)) {
-                    e.currentTarget.style.color = "var(--color-text-secondary)";
-                    e.currentTarget.style.backgroundColor = "transparent";
-                  }
-                }}
-              >
-                <span className="mr-1">📊</span>
-                {t("nav.dashboard")}
-              </Link>
-            )}
-
-            {user && (
-              <Link
-                href={`/${locale}/gamification`}
-                className="px-3 xl:px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200"
-                style={{
-                  backgroundColor: isActive(`/${locale}/gamification`) ? "var(--color-primary-light)" : "transparent",
-                  color: isActive(`/${locale}/gamification`) ? "var(--color-primary)" : "var(--color-text-secondary)",
-                }}
-                onMouseEnter={(e) => {
-                  if (!isActive(`/${locale}/gamification`)) {
-                    e.currentTarget.style.color = "var(--color-text)";
-                    e.currentTarget.style.backgroundColor = "var(--color-muted)";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isActive(`/${locale}/gamification`)) {
-                    e.currentTarget.style.color = "var(--color-text-secondary)";
-                    e.currentTarget.style.backgroundColor = "transparent";
-                  }
-                }}
-              >
-                <span className="mr-1">🎮</span>
-                {t("nav.gamification")}
-              </Link>
-            )}
-
-            {user && (
-              <Link
-                href={`/${locale}/subscriptions`}
-                className="px-3 xl:px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200"
-                style={{
-                  backgroundColor: isActive(`/${locale}/subscriptions`) ? "var(--color-primary-light)" : "transparent",
-                  color: isActive(`/${locale}/subscriptions`) ? "var(--color-primary)" : "var(--color-text-secondary)",
-                }}
-                onMouseEnter={(e) => {
-                  if (!isActive(`/${locale}/subscriptions`)) {
-                    e.currentTarget.style.color = "var(--color-text)";
-                    e.currentTarget.style.backgroundColor = "var(--color-muted)";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isActive(`/${locale}/subscriptions`)) {
-                    e.currentTarget.style.color = "var(--color-text-secondary)";
-                    e.currentTarget.style.backgroundColor = "transparent";
-                  }
-                }}
-              >
-                <span className="mr-1">💳</span>
-                {t("nav.subscriptions")}
-              </Link>
-            )}
-
-            {user && (
-              <Link
-                href={`/${locale}/chat`}
-                className="px-3 xl:px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200"
-                style={{
-                  backgroundColor: isActive(`/${locale}/chat`) ? "var(--color-primary-light)" : "transparent",
-                  color: isActive(`/${locale}/chat`) ? "var(--color-primary)" : "var(--color-text-secondary)",
-                }}
-                onMouseEnter={(e) => {
-                  if (!isActive(`/${locale}/chat`)) {
-                    e.currentTarget.style.color = "var(--color-text)";
-                    e.currentTarget.style.backgroundColor = "var(--color-muted)";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isActive(`/${locale}/chat`)) {
-                    e.currentTarget.style.color = "var(--color-text-secondary)";
-                    e.currentTarget.style.backgroundColor = "transparent";
-                  }
-                }}
-              >
-                <span className="mr-1">
-                  <svg className="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a4.5 4.5 0 00-3.09-3.09L13.5 6l1.035-.259a4.5 4.5 0 003.09-3.09L18 1.5l.259 1.035a4.5 4.5 0 003.09 3.09L22.5 6l-1.035.259a4.5 4.5 0 00-3.09 3.09z" />
-                  </svg>
-                </span>
-                {t("nav.chat")}
-              </Link>
-            )}
-
-            {user && isAdmin && (
-              <div ref={adminRef} className="relative">
-                <button
-                  onClick={() => setShowAdminMenu(!showAdminMenu)}
-                  className="px-3 xl:px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200"
-                  style={{
-                    backgroundColor: showAdminMenu || adminLinks.some((l) => isActive(l.href)) ? "var(--color-primary-light)" : "transparent",
-                    color: adminLinks.some((l) => isActive(l.href)) ? "var(--color-primary)" : "var(--color-text-secondary)",
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!adminLinks.some((l) => isActive(l.href))) {
-                      e.currentTarget.style.color = "var(--color-text)";
-                      e.currentTarget.style.backgroundColor = "var(--color-muted)";
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!adminLinks.some((l) => isActive(l.href))) {
-                      e.currentTarget.style.color = "var(--color-text-secondary)";
-                      e.currentTarget.style.backgroundColor = "transparent";
-                    }
-                  }}
-                >
-                  <span className="mr-1">⚙️</span>
-                  {t("nav.admin")}
-                </button>
-
-                {showAdminMenu && (
-                  <div
-                    className="absolute top-full mt-2 w-52 rounded-2xl shadow-2xl overflow-hidden z-50 py-1"
-                    style={{
-                      backgroundColor: "var(--color-surface)",
-                      border: "1px solid var(--color-border)",
-                      boxShadow: "0 20px 60px -15px rgb(0 0 0 / 0.3)",
-                    }}
-                  >
-                    {adminLinks.map((link) => (
-                      <Link
-                        key={link.href}
-                        href={link.href}
-                        onClick={() => setShowAdminMenu(false)}
-                        className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-colors"
-                        style={{
-                          color: isActive(link.href) ? "var(--color-primary)" : "var(--color-text)",
-                          backgroundColor: isActive(link.href) ? "var(--color-primary-light)" : "transparent",
-                        }}
-                        onMouseEnter={(e) => {
-                          if (!isActive(link.href)) e.currentTarget.style.backgroundColor = "var(--color-muted)";
-                        }}
-                        onMouseLeave={(e) => {
-                          if (!isActive(link.href)) e.currentTarget.style.backgroundColor = "transparent";
-                        }}
-                      >
-                        <span>{link.icon}</span>
-                        {link.label}
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
           </div>
 
-          {/* Right side — compact on mobile */}
+          {/* Right Tools (Language, Theme, User Menu / Auth Buttons) */}
           <div className="flex items-center gap-1 sm:gap-2 shrink-0">
             <LanguageSwitcher />
 
+            {/* Theme Selector */}
             <div ref={themeRef} className="relative">
               <button
                 onClick={() => setShowThemes(!showThemes)}
@@ -333,8 +193,12 @@ export default function Navbar() {
                   backgroundColor: showThemes ? "var(--color-primary-light)" : "transparent",
                   color: "var(--color-text-secondary)",
                 }}
-                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "var(--color-muted)"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = showThemes ? "var(--color-primary-light)" : "transparent"; }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = "var(--color-muted)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = showThemes ? "var(--color-primary-light)" : "transparent";
+                }}
                 title={currentTheme.name_ar}
               >
                 {currentTheme.icon}
@@ -342,33 +206,48 @@ export default function Navbar() {
 
               {showThemes && (
                 <div
-                  className="absolute top-full mt-2 w-56 sm:w-64 rounded-2xl shadow-2xl overflow-hidden z-50"
+                  className="absolute top-full mt-2 w-56 sm:w-64 rounded-2xl shadow-2xl overflow-hidden z-50 end-0 border"
                   style={{
                     backgroundColor: "var(--color-surface)",
-                    border: "1px solid var(--color-border)",
+                    borderColor: "var(--color-border)",
                     boxShadow: "0 20px 60px -15px rgb(0 0 0 / 0.3)",
-                    right: 0,
                   }}
                 >
-                  <div className="p-3" style={{ borderBottom: "1px solid var(--color-border)" }}>
-                    <p className="text-xs font-semibold px-1" style={{ color: "var(--color-text-muted)" }}>{t("profile.theme")}</p>
+                  <div className="p-3 border-b" style={{ borderColor: "var(--color-border)" }}>
+                    <p className="text-xs font-semibold px-1" style={{ color: "var(--color-text-muted)" }}>
+                      {t("profile.theme")}
+                    </p>
                   </div>
                   <div className="p-2 max-h-72 overflow-y-auto">
                     {themes.map((theme) => (
                       <button
                         key={theme.id}
-                        onClick={() => { setThemeId(theme.id); setShowThemes(false); }}
+                        onClick={() => {
+                          setThemeId(theme.id);
+                          setShowThemes(false);
+                        }}
                         className="w-full flex items-center gap-3 p-2.5 rounded-xl text-start transition-all duration-200"
-                        style={{ backgroundColor: theme.id === themeId ? "var(--color-primary-light)" : "transparent" }}
-                        onMouseEnter={(e) => { if (theme.id !== themeId) e.currentTarget.style.backgroundColor = "var(--color-muted)"; }}
-                        onMouseLeave={(e) => { if (theme.id !== themeId) e.currentTarget.style.backgroundColor = "transparent"; }}
+                        style={{
+                          backgroundColor: theme.id === themeId ? "var(--color-primary-light)" : "transparent",
+                        }}
+                        onMouseEnter={(e) => {
+                          if (theme.id !== themeId) e.currentTarget.style.backgroundColor = "var(--color-muted)";
+                        }}
+                        onMouseLeave={(e) => {
+                          if (theme.id !== themeId) e.currentTarget.style.backgroundColor = "transparent";
+                        }}
                       >
                         <span className="text-xl flex-shrink-0">{theme.icon}</span>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold truncate" style={{ color: theme.id === themeId ? "var(--color-primary)" : "var(--color-text)" }}>
+                          <p
+                            className="text-sm font-semibold truncate"
+                            style={{ color: theme.id === themeId ? "var(--color-primary)" : "var(--color-text)" }}
+                          >
                             {theme.name_ar}
                           </p>
-                          <p className="text-xs truncate" style={{ color: "var(--color-text-muted)" }}>{theme.description_ar}</p>
+                          <p className="text-xs truncate" style={{ color: "var(--color-text-muted)" }}>
+                            {theme.description_ar}
+                          </p>
                         </div>
                         <div className="flex gap-1 flex-shrink-0">
                           <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: theme.colors.primary }} />
@@ -376,7 +255,14 @@ export default function Navbar() {
                           <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: theme.colors.accent }} />
                         </div>
                         {theme.id === themeId && (
-                          <svg className="w-4 h-4 flex-shrink-0" style={{ color: "var(--color-primary)" }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                          <svg
+                            className="w-4 h-4 flex-shrink-0"
+                            style={{ color: "var(--color-primary)" }}
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth={3}
+                          >
                             <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                           </svg>
                         )}
@@ -387,31 +273,187 @@ export default function Navbar() {
               )}
             </div>
 
+            {/* Desktop User Profile Dropdown or Auth Buttons ONLY (hidden on mobile, managed by Hamburger) */}
             {user ? (
-              <div className="flex items-center gap-1 sm:gap-2">
-                <Link href={`/${locale}/profile`} className="hidden sm:flex items-center gap-2 pl-1" style={{ color: "var(--color-text-secondary)" }}>
+              <div ref={userRef} className="relative hidden lg:block">
+                <button
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl transition-all duration-200 border"
+                  style={{
+                    backgroundColor: showUserMenu ? "var(--color-primary-light)" : "var(--color-surface)",
+                    borderColor: showUserMenu ? "var(--color-primary)" : "var(--color-border)",
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!showUserMenu) e.currentTarget.style.backgroundColor = "var(--color-muted)";
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!showUserMenu) e.currentTarget.style.backgroundColor = "var(--color-surface)";
+                  }}
+                >
                   <div
-                    className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-sm"
+                    className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-sm shrink-0"
                     style={{ background: "linear-gradient(135deg, var(--color-primary), var(--color-secondary))" }}
                   >
-                    {(user.name_ar || user.email)?.[0]?.toUpperCase() || "?"}
+                    {userInitial}
                   </div>
-                </Link>
-                <button
-                  onClick={logout}
-                  className="hidden sm:block px-2.5 py-1.5 text-sm rounded-lg transition-colors"
-                  style={{ color: "var(--color-text-muted)" }}
-                  onMouseEnter={(e) => { e.currentTarget.style.color = "var(--color-error)"; e.currentTarget.style.backgroundColor = "var(--color-error-light)"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.color = "var(--color-text-muted)"; e.currentTarget.style.backgroundColor = "transparent"; }}
-                >
-                  {t("auth.logout")}
+                  <span
+                    className="text-xs sm:text-sm font-semibold max-w-[120px] truncate"
+                    style={{ color: "var(--color-text)" }}
+                  >
+                    {userName}
+                  </span>
+                  <svg
+                    className={`w-4 h-4 transition-transform duration-200 ${showUserMenu ? "rotate-180" : ""}`}
+                    style={{ color: "var(--color-text-muted)" }}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                  </svg>
                 </button>
+
+                {/* User Profile Dropdown Menu - Sleek, Scrollable, Modern */}
+                {showUserMenu && (
+                  <div
+                    className="absolute top-full mt-2 w-72 sm:w-80 max-h-[82vh] overflow-y-auto rounded-2xl shadow-2xl z-50 py-2 end-0 border"
+                    style={{
+                      backgroundColor: "var(--color-surface)",
+                      borderColor: "var(--color-border)",
+                      boxShadow: "0 20px 60px -15px rgb(0 0 0 / 0.3)",
+                    }}
+                  >
+                    {/* User Info Header Card */}
+                    <div
+                      className="px-3.5 py-3 mx-2 rounded-xl mb-1 border"
+                      style={{
+                        background: "linear-gradient(135deg, var(--color-primary-light), transparent)",
+                        borderColor: "var(--color-border)",
+                      }}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div
+                          className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-md shrink-0"
+                          style={{ background: "linear-gradient(135deg, var(--color-primary), var(--color-secondary))" }}
+                        >
+                          {userInitial}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-bold truncate" style={{ color: "var(--color-text)" }}>
+                            {user.name_ar || userName}
+                          </p>
+                          <p className="text-xs truncate" style={{ color: "var(--color-text-muted)" }}>
+                            {user.email}
+                          </p>
+                          <span
+                            className="inline-block mt-1 px-2 py-0.5 text-[10px] font-semibold rounded-full"
+                            style={{
+                              backgroundColor: isAdmin
+                                ? "rgba(239, 68, 68, 0.15)"
+                                : "var(--color-primary-light)",
+                              color: isAdmin ? "var(--color-error)" : "var(--color-primary)",
+                            }}
+                          >
+                            {roleLabel}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* My Apps Section */}
+                    <div className="px-1 py-1">
+                      <p className="px-3 py-1 text-[11px] font-bold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>
+                        تطبيقاتي
+                      </p>
+                      <div className="space-y-0.5">
+                        {userApps.map((item) => (
+                          <Link
+                            key={item.href}
+                            href={item.href}
+                            onClick={() => setShowUserMenu(false)}
+                            className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-colors"
+                            style={{
+                              color: isActive(item.href) ? "var(--color-primary)" : "var(--color-text)",
+                              backgroundColor: isActive(item.href) ? "var(--color-primary-light)" : "transparent",
+                            }}
+                            onMouseEnter={(e) => {
+                              if (!isActive(item.href)) e.currentTarget.style.backgroundColor = "var(--color-muted)";
+                            }}
+                            onMouseLeave={(e) => {
+                              if (!isActive(item.href)) e.currentTarget.style.backgroundColor = "transparent";
+                            }}
+                          >
+                            <span className="text-base">{item.icon}</span>
+                            <span>{item.label}</span>
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Admin Section (If Admin/Staff) - 2-Column Grid */}
+                    {isAdmin && (
+                      <>
+                        <div className="border-t my-1.5 mx-2" style={{ borderColor: "var(--color-border)" }} />
+                        <div className="px-1 py-1">
+                          <p className="px-3 py-1 text-[11px] font-bold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>
+                            {t("nav.admin")}
+                          </p>
+                          <div className="grid grid-cols-2 gap-1 px-1">
+                            {adminLinks.map((link) => (
+                              <Link
+                                key={link.href}
+                                href={link.href}
+                                onClick={() => setShowUserMenu(false)}
+                                className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-xs font-medium transition-colors"
+                                style={{
+                                  color: isActive(link.href) ? "var(--color-primary)" : "var(--color-text-secondary)",
+                                  backgroundColor: isActive(link.href) ? "var(--color-primary-light)" : "transparent",
+                                }}
+                                onMouseEnter={(e) => {
+                                  if (!isActive(link.href)) e.currentTarget.style.backgroundColor = "var(--color-muted)";
+                                }}
+                                onMouseLeave={(e) => {
+                                  if (!isActive(link.href)) e.currentTarget.style.backgroundColor = "transparent";
+                                }}
+                              >
+                                <span className="text-sm shrink-0">{link.icon}</span>
+                                <span className="truncate">{link.label}</span>
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
+                      </>
+                    )}
+
+                    {/* Logout */}
+                    <div className="border-t pt-1.5 mt-1 mx-2" style={{ borderColor: "var(--color-border)" }}>
+                      <button
+                        onClick={() => {
+                          setShowUserMenu(false);
+                          logout();
+                        }}
+                        className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-semibold transition-colors text-start"
+                        style={{ color: "var(--color-error)" }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = "rgba(239, 68, 68, 0.1)";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = "transparent";
+                        }}
+                      >
+                        <span className="text-base">🚪</span>
+                        <span>{t("auth.logout")}</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
-              <div className="flex items-center gap-1 sm:gap-2">
+              <div className="hidden lg:flex items-center gap-1 sm:gap-2">
                 <Link
                   href={`/${locale}/login`}
-                  className="hidden sm:inline-flex px-3 py-1.5 text-sm font-medium rounded-xl transition-all"
+                  className="px-3 py-1.5 text-sm font-medium rounded-xl transition-all"
                   style={{ color: "var(--color-text-secondary)" }}
                 >
                   {t("auth.login")}
@@ -426,125 +468,193 @@ export default function Navbar() {
               </div>
             )}
 
-            {/* Mobile hamburger — after all right-side buttons */}
+            {/* Mobile Toggle Button */}
             <button
-              className="lg:hidden flex flex-col gap-1 p-2 -mr-1"
+              className="lg:hidden flex flex-col items-center justify-center w-9 h-9 rounded-xl border transition-all"
+              style={{
+                borderColor: "var(--color-border)",
+                backgroundColor: mobileOpen ? "var(--color-primary-light)" : "transparent",
+              }}
               onClick={() => setMobileOpen(!mobileOpen)}
               aria-label="Toggle menu"
             >
-              <span className="w-5 h-0.5 rounded transition-all duration-200" style={{ background: "var(--color-text)", transform: mobileOpen ? "rotate(45deg) translateY(3px)" : "none" }} />
-              <span className="w-5 h-0.5 rounded transition-all duration-200" style={{ background: "var(--color-text)", opacity: mobileOpen ? 0 : 1 }} />
-              <span className="w-5 h-0.5 rounded transition-all duration-200" style={{ background: "var(--color-text)", transform: mobileOpen ? "rotate(-45deg) translateY(-3px)" : "none" }} />
+              <span
+                className="w-4 h-0.5 rounded transition-all duration-200"
+                style={{
+                  background: mobileOpen ? "var(--color-primary)" : "var(--color-text)",
+                  transform: mobileOpen ? "rotate(45deg) translateY(2.5px)" : "none",
+                }}
+              />
+              <span
+                className="w-4 h-0.5 rounded transition-all duration-200 my-0.5"
+                style={{
+                  background: "var(--color-text)",
+                  opacity: mobileOpen ? 0 : 1,
+                }}
+              />
+              <span
+                className="w-4 h-0.5 rounded transition-all duration-200"
+                style={{
+                  background: mobileOpen ? "var(--color-primary)" : "var(--color-text)",
+                  transform: mobileOpen ? "rotate(-45deg) translateY(-2.5px)" : "none",
+                }}
+              />
             </button>
           </div>
         </div>
 
-        {/* Mobile nav */}
+        {/* Mobile Drawer Navigation */}
         {mobileOpen && (
-          <div className="lg:hidden pb-4 border-t" style={{ borderColor: "var(--color-border)" }}>
-            <div className="pt-2 space-y-1">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors"
-                  style={{
-                    backgroundColor: isActive(link.href) ? "var(--color-primary-light)" : "transparent",
-                    color: isActive(link.href) ? "var(--color-primary)" : "var(--color-text-secondary)",
-                  }}
-                >
-                  <span className="text-lg">{link.icon}</span>
-                  {link.label}
-                </Link>
-              ))}
+          <div className="lg:hidden pb-6 border-t mt-1" style={{ borderColor: "var(--color-border)" }}>
+            <div className="pt-3 space-y-4 max-h-[80vh] overflow-y-auto px-1">
+              {/* User Info Card in Mobile */}
               {user && (
-                <>
-                  <div className="border-t my-2" style={{ borderColor: "var(--color-border)" }} />
-                  <Link
-                    href={`/${locale}/dashboard`}
-                    className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors"
+                <div
+                  className="p-3.5 rounded-2xl flex items-center gap-3 border"
+                  style={{ backgroundColor: "var(--color-background-secondary)", borderColor: "var(--color-border)" }}
+                >
+                  <div
+                    className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-md shrink-0"
+                    style={{ background: "linear-gradient(135deg, var(--color-primary), var(--color-secondary))" }}
+                  >
+                    {userInitial}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-bold truncate" style={{ color: "var(--color-text)" }}>
+                      {user.name_ar || userName}
+                    </p>
+                    <p className="text-xs truncate" style={{ color: "var(--color-text-muted)" }}>
+                      {user.email}
+                    </p>
+                  </div>
+                  <span
+                    className="px-2 py-0.5 text-[10px] font-semibold rounded-full shrink-0"
                     style={{
-                      backgroundColor: isActive(`/${locale}/dashboard`) ? "var(--color-primary-light)" : "transparent",
-                      color: isActive(`/${locale}/dashboard`) ? "var(--color-primary)" : "var(--color-text-secondary)",
+                      backgroundColor: isAdmin ? "rgba(239, 68, 68, 0.15)" : "var(--color-primary-light)",
+                      color: isAdmin ? "var(--color-error)" : "var(--color-primary)",
                     }}
                   >
-                    <span className="text-lg">📊</span>
-                    {t("nav.dashboard")}
-                  </Link>
-                  <Link
-                    href={`/${locale}/gamification`}
-                    className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors"
-                    style={{
-                      backgroundColor: isActive(`/${locale}/gamification`) ? "var(--color-primary-light)" : "transparent",
-                      color: isActive(`/${locale}/gamification`) ? "var(--color-primary)" : "var(--color-text-secondary)",
-                    }}
-                  >
-                    <span className="text-lg">🎮</span>
-                    {t("nav.gamification")}
-                  </Link>
-                  <Link
-                    href={`/${locale}/subscriptions`}
-                    className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors"
-                    style={{
-                      backgroundColor: isActive(`/${locale}/subscriptions`) ? "var(--color-primary-light)" : "transparent",
-                      color: isActive(`/${locale}/subscriptions`) ? "var(--color-primary)" : "var(--color-text-secondary)",
-                    }}
-                  >
-                    <span className="text-lg">💳</span>
-                    {t("nav.subscriptions")}
-                  </Link>
-                  <Link
-                    href={`/${locale}/chat`}
-                    className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors"
-                    style={{
-                      backgroundColor: isActive(`/${locale}/chat`) ? "var(--color-primary-light)" : "transparent",
-                      color: isActive(`/${locale}/chat`) ? "var(--color-primary)" : "var(--color-text-secondary)",
-                    }}
-                  >
-                    <span className="text-lg">🤖</span>
-                    {t("nav.chat")}
-                  </Link>
-                </>
+                    {roleLabel}
+                  </span>
+                </div>
               )}
-              {user && isAdmin && (
-                <>
-                  <div className="border-t my-2" style={{ borderColor: "var(--color-border)" }} />
-                  <p className="px-4 py-1 text-xs font-semibold" style={{ color: "var(--color-text-muted)" }}>{t("nav.admin")}</p>
-                  {adminLinks.map((link) => (
+
+              {/* Main Site Links */}
+              <div>
+                <p className="px-2 mb-1.5 text-[11px] font-bold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>
+                  التصفح العام
+                </p>
+                <div className="space-y-1">
+                  {navLinks.map((link) => (
                     <Link
                       key={link.href}
                       href={link.href}
-                      className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors"
+                      onClick={() => setMobileOpen(false)}
+                      className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-colors"
                       style={{
                         backgroundColor: isActive(link.href) ? "var(--color-primary-light)" : "transparent",
                         color: isActive(link.href) ? "var(--color-primary)" : "var(--color-text-secondary)",
                       }}
                     >
-                      <span className="text-lg">{link.icon}</span>
-                      {link.label}
+                      <span className="text-base">{link.icon}</span>
+                      <span>{link.label}</span>
                     </Link>
                   ))}
-                </>
-              )}
+                </div>
+              </div>
+
+              {/* Logged In Apps */}
               {user && (
-                <>
-                  <div className="border-t my-2" style={{ borderColor: "var(--color-border)" }} />
-                  <Link href={`/${locale}/profile`} className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium" style={{ color: "var(--color-text-secondary)" }}>
-                    <span className="text-lg">👤</span>
-                    {t("nav.profile")}
-                  </Link>
-                  <button onClick={logout} className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium w-full" style={{ color: "var(--color-error)" }}>
-                    <span className="text-lg">🚪</span>
-                    {t("auth.logout")}
-                  </button>
-                </>
-              )}
-              {!user && (
-                <div className="flex gap-2 px-4 pt-2">
-                  <Link href={`/${locale}/login`} className="flex-1 text-center px-4 py-2.5 text-sm font-medium rounded-xl border" style={{ borderColor: "var(--color-border)", color: "var(--color-text-secondary)" }}>{t("auth.login")}</Link>
-                  <Link href={`/${locale}/register`} className="flex-1 text-center px-4 py-2.5 text-sm font-medium text-white rounded-xl" style={{ background: "linear-gradient(135deg, var(--color-primary), var(--color-secondary))" }}>{t("auth.register")}</Link>
+                <div>
+                  <p className="px-2 mb-1.5 text-[11px] font-bold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>
+                    تطبيقاتي
+                  </p>
+                  <div className="space-y-1">
+                    {userApps.map((item) => (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        onClick={() => setMobileOpen(false)}
+                        className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-colors"
+                        style={{
+                          backgroundColor: isActive(item.href) ? "var(--color-primary-light)" : "transparent",
+                          color: isActive(item.href) ? "var(--color-primary)" : "var(--color-text-secondary)",
+                        }}
+                      >
+                        <span className="text-base">{item.icon}</span>
+                        <span>{item.label}</span>
+                      </Link>
+                    ))}
+                  </div>
                 </div>
               )}
+
+              {/* Admin Links in Mobile */}
+              {user && isAdmin && (
+                <div>
+                  <p className="px-2 mb-1.5 text-[11px] font-bold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>
+                    {t("nav.admin")}
+                  </p>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {adminLinks.map((link) => (
+                      <Link
+                        key={link.href}
+                        href={link.href}
+                        onClick={() => setMobileOpen(false)}
+                        className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium transition-colors"
+                        style={{
+                          backgroundColor: isActive(link.href) ? "var(--color-primary-light)" : "var(--color-background-secondary)",
+                          color: isActive(link.href) ? "var(--color-primary)" : "var(--color-text-secondary)",
+                          border: "1px solid var(--color-border)",
+                        }}
+                      >
+                        <span className="text-sm">{link.icon}</span>
+                        <span className="truncate">{link.label}</span>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Mobile Auth Actions */}
+              <div className="pt-2 border-t" style={{ borderColor: "var(--color-border)" }}>
+                {user ? (
+                  <button
+                    onClick={() => {
+                      setMobileOpen(false);
+                      logout();
+                    }}
+                    className="flex items-center justify-center gap-2 w-full py-2.5 text-sm font-semibold rounded-xl transition-colors border"
+                    style={{
+                      color: "var(--color-error)",
+                      borderColor: "rgba(239, 68, 68, 0.3)",
+                      backgroundColor: "rgba(239, 68, 68, 0.05)",
+                    }}
+                  >
+                    <span>🚪</span>
+                    <span>{t("auth.logout")}</span>
+                  </button>
+                ) : (
+                  <div className="flex gap-2">
+                    <Link
+                      href={`/${locale}/login`}
+                      onClick={() => setMobileOpen(false)}
+                      className="flex-1 text-center py-2.5 text-sm font-medium rounded-xl border"
+                      style={{ borderColor: "var(--color-border)", color: "var(--color-text-secondary)" }}
+                    >
+                      {t("auth.login")}
+                    </Link>
+                    <Link
+                      href={`/${locale}/register`}
+                      onClick={() => setMobileOpen(false)}
+                      className="flex-1 text-center py-2.5 text-sm font-medium text-white rounded-xl shadow-md"
+                      style={{ background: "linear-gradient(135deg, var(--color-primary), var(--color-secondary))" }}
+                    >
+                      {t("auth.register")}
+                    </Link>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}

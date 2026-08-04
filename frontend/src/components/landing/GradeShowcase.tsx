@@ -50,7 +50,7 @@ export default function GradeShowcase({ content }: { content?: Record<string, an
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {grades.map((grade, i) => {
             const isCurriculum = pathname.includes("/curriculum");
-            const href = isCurriculum ? `/${locale}/curriculum/${grade.id}` : `/${locale}/academy/${grade.id}`;
+            const href = isCurriculum ? `/${locale}/curriculum/${grade.id}` : `/${locale}/academy`;
             return (
             <Link key={grade.id} href={href} className="group p-6 rounded-3xl transition-all duration-300 hover:-translate-y-1 animate-fade-in-up" style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", boxShadow: "var(--card-shadow)", animationDelay: `${i * 0.1}s` }}>
               <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4 shadow-sm" style={{ background: gradeColors[i % gradeColors.length] }}>

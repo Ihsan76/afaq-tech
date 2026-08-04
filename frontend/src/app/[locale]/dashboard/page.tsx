@@ -407,7 +407,7 @@ export default function DashboardPage() {
               <p className="text-white/80 mb-5 max-w-xl mx-auto text-sm sm:text-base">
                 {t("dashboard.upgradeDesc")}
               </p>
-              <Link href={`/${locale}/#pricing`} className="inline-block px-8 py-3 rounded-xl font-bold bg-white transition-all hover:scale-105" style={{ color: "var(--color-primary)" }}>
+              <Link href={`/${locale}/subscriptions`} className="inline-block px-8 py-3 rounded-xl font-bold bg-white transition-all hover:scale-105" style={{ color: "var(--color-primary)" }}>
                 {t("dashboard.upgradeBtn")}
               </Link>
             </div>
