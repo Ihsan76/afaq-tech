@@ -130,6 +130,16 @@ class OpenAIProvider(BaseProvider):
             return False
 
 
+class OpenAICompatibleProvider(OpenAIProvider):
+    name = "openai_compatible"
+
+    def _client(self):
+        b_url = (self.base_url or "").rstrip("/")
+        if b_url and not b_url.endswith("/v1"):
+            b_url += "/v1"
+        return OpenAI(api_key=self.api_key or "sk-placeholder", base_url=b_url or None)
+
+
 class OllamaProvider(BaseProvider):
     name = "ollama"
     model_name = "llama3"
@@ -214,21 +224,22 @@ class TokenBucket:
 
 
 FEATURE_PREFERENCES = {
-    "lesson_plan": ["google", "openai", "ollama"],
-    "refine": ["google", "openai", "ollama"],
-    "worksheet": ["google", "openai", "ollama"],
-    "homework": ["google", "openai", "ollama"],
-    "quiz": ["openai", "google", "ollama"],
-    "assistant": ["google", "openai", "ollama"],
-    "summary": ["google", "ollama", "openai"],
-    "translation": ["google", "openai", "ollama"],
+    "lesson_plan": ["google", "openai", "openai_compatible", "ollama"],
+    "refine": ["google", "openai", "openai_compatible", "ollama"],
+    "worksheet": ["google", "openai", "openai_compatible", "ollama"],
+    "homework": ["google", "openai", "openai_compatible", "ollama"],
+    "quiz": ["openai", "openai_compatible", "google", "ollama"],
+    "assistant": ["google", "openai", "openai_compatible", "ollama"],
+    "summary": ["google", "ollama", "openai_compatible", "openai"],
+    "translation": ["google", "openai", "openai_compatible", "ollama"],
 }
 
-ALL_PROVIDERS = ["google", "openai", "ollama"]
+ALL_PROVIDERS = ["google", "openai", "openai_compatible", "ollama"]
 
 PROVIDER_RATES = {
     "google": (15, 60),
     "openai": (60, 60),
+    "openai_compatible": (60, 60),
     "ollama": (100, 60),
 }
 
@@ -280,6 +291,8 @@ class ProviderRouter:
             return GeminiProvider(api_key=api_key, base_url=base_url)
         elif provider_code == "openai":
             return OpenAIProvider(api_key=api_key, base_url=base_url)
+        elif provider_code == "openai_compatible":
+            return OpenAICompatibleProvider(api_key=api_key, base_url=base_url)
         elif provider_code == "ollama":
             return OllamaProvider(api_key=api_key, base_url=base_url)
         return None
