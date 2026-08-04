@@ -120,6 +120,7 @@ export default function NewLessonPlanPage() {
       router.push(`/${locale}/lesson-plans/${data.id}`);
     } catch (err: any) {
       setError(
+        err.response?.data?.message ||
         err.response?.data?.error ||
         err.response?.data?.detail ||
         tc("error") ||
@@ -149,16 +150,6 @@ export default function NewLessonPlanPage() {
             {t("subtitle")}
           </p>
         </div>
-
-        {error && (
-          <div className="px-4 py-3 rounded-2xl mb-6 text-sm flex items-center justify-between gap-2" style={{ backgroundColor: "var(--color-error-light)", color: "var(--color-error)", border: "1px solid var(--color-error)" }}>
-            <div className="flex items-center gap-2">
-              <span>⚠️</span>
-              <span>{error}</span>
-            </div>
-            <button onClick={() => setError("")} className="font-bold text-xs">✕</button>
-          </div>
-        )}
 
         <form onSubmit={handleSubmit} className="p-6 sm:p-8 rounded-3xl shadow-xl space-y-6" style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", boxShadow: "var(--card-shadow)" }}>
           {/* Title */}
@@ -311,6 +302,16 @@ export default function NewLessonPlanPage() {
               disabled={loading}
             />
           </div>
+
+          {error && (
+            <div className="px-4 py-3 rounded-2xl text-sm flex items-center justify-between gap-2" style={{ backgroundColor: "var(--color-error-light)", color: "var(--color-error)", border: "1px solid var(--color-error)" }}>
+              <div className="flex items-center gap-2">
+                <span>⚠️</span>
+                <span>{error}</span>
+              </div>
+              <button onClick={() => setError("")} className="font-bold text-xs">✕</button>
+            </div>
+          )}
 
           {/* Submit button */}
           <button

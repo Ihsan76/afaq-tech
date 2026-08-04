@@ -155,9 +155,14 @@ def generate_lesson_plan(request):
     if 'error' in plan_data:
         err_str = plan_data.get('error', '')
         if '429' in err_str or 'quota' in err_str.lower() or 'too many requests' in err_str.lower():
+            msg = (
+                'لقد تم استنفاد الحصة المجانية لمزود الذكاء الاصطناعي (خطأ 429). يرجى التبديل إلى نموذج ذكاء اصطناعي آخر.'
+                if language == 'ar'
+                else 'AI quota exceeded (429 Too Many Requests). Please switch to another AI model.'
+            )
             return Response({
                 'error': 'ai_quota_exceeded',
-                'message': 'لقد تم استنفاد الحصة المجانية لمزود الذكاء الاصطناعي (خطأ 429 - طلبات كثيرة جداً). يرجى التبديل إلى نموذج ذكاء اصطناعي آخر أو تحديث مفتاح API من لوحة التحكم.',
+                'message': msg,
                 'details': err_str
             }, status=status.HTTP_429_TOO_MANY_REQUESTS)
         return Response({

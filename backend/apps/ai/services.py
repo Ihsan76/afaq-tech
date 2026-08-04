@@ -305,7 +305,7 @@ def generate_lesson_plan(title, prompt_text, subject="", grade="", language="ar"
     if not ai_resp.success:
         err_msg = ai_resp.error or ""
         if "429" in err_msg or "quota" in err_msg.lower() or "too many requests" in err_msg.lower():
-            return {"raw_response": raw, "error": "AI quota exceeded (429 Too Many Requests). Please switch to another AI model or update your API key in admin settings."}, model_name, tokens, elapsed
+            return {"raw_response": raw, "error": "AI quota exceeded (429 Too Many Requests). Please switch to another AI model."}, model_name, tokens, elapsed
         return {"raw_response": raw, "error": f"AI generation failed: {ai_resp.error}"}, model_name, tokens, elapsed
 
     if raw.startswith("```"):
