@@ -227,7 +227,10 @@ def chat_stream(messages, new_message, model_id=None):
             client_base_url = (base_url or 'http://localhost:11434').rstrip('/') + '/v1'
             client_api_key = api_key or 'ollama'
         elif provider_code == 'openai_compatible':
-            client_base_url = (base_url or '').rstrip('/') + '/v1'
+            b_url = (base_url or '').rstrip('/')
+            if b_url and not b_url.endswith('/v1'):
+                b_url += '/v1'
+            client_base_url = b_url
             client_api_key = api_key or 'sk-placeholder'
         else:
             client_base_url = None

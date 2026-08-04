@@ -345,7 +345,10 @@ def _fetch_ollama_models(base_url, api_key=''):
 
 def _fetch_openai_compatible_models(base_url, api_key=''):
     from openai import OpenAI
-    client = OpenAI(api_key=api_key or 'sk-placeholder', base_url=base_url.rstrip('/') + '/v1')
+    b_url = (base_url or '').rstrip('/')
+    if b_url and not b_url.endswith('/v1'):
+        b_url += '/v1'
+    client = OpenAI(api_key=api_key or 'sk-placeholder', base_url=b_url)
     models = client.models.list()
     result = []
     for m in models:
