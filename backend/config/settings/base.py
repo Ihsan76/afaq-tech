@@ -146,11 +146,19 @@ SIMPLE_JWT = {
 CORS_ALLOWED_ORIGINS = env.list('CORS_ALLOWED_ORIGINS', default=[
     'http://localhost:3000',
     'http://127.0.0.1:3000',
+    'https://www.afaq.app',
+    'https://afaq.app',
+    'https://ihsan.afaq.app',
+    'https://academy.afaq.app',
 ])
 
 CSRF_TRUSTED_ORIGINS = env.list('CSRF_TRUSTED_ORIGINS', default=[
     'http://localhost:3000',
     'http://127.0.0.1:3000',
+    'https://www.afaq.app',
+    'https://afaq.app',
+    'https://ihsan.afaq.app',
+    'https://academy.afaq.app',
 ])
 
 SUPABASE_URL = env('SUPABASE_URL')
