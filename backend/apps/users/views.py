@@ -40,6 +40,15 @@ def _client_ip(request):
     return request.META.get('REMOTE_ADDR')
 
 
+def _frontend_base():
+    value = (getattr(settings, 'FRONTEND_URL', '') or '').strip().rstrip('/')
+    if ',' in value:
+        value = value.split(',')[0].strip().rstrip('/')
+    if value.startswith(('http://', 'https://')):
+        return value
+    return 'http://localhost:3000'
+
+
 def _record_login_attempt(email, ip, successful):
     LoginAttempt.objects.create(email=email.lower(), ip_address=ip, successful=successful)
 
@@ -207,7 +216,7 @@ class ForgotPasswordView(APIView):
             token = token_generator.make_token(user)
             uid = urlsafe_base64_encode(force_bytes(user.pk))
             locale = request.data.get('locale', 'ar')
-            frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:3000')
+            frontend_url = _frontend_base()
             reset_url = f"{frontend_url}/{locale}/reset-password?uid={uid}&token={token}"
             send_email(
                 to=email,
@@ -421,7 +430,7 @@ class GoogleCallbackView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def _redirect_frontend(self, locale, **params):
-        url = f"{settings.FRONTEND_URL}/{locale}/auth/google/callback"
+        url = f"{_frontend_base()}/{locale}/auth/google/callback"
         if params:
             url = f"{url}?{urlencode(params)}"
         return HttpResponseRedirect(url)
