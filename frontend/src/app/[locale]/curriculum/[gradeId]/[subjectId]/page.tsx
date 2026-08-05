@@ -3,7 +3,7 @@
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import useSWR from "swr";
-import { api } from "@/lib/api";
+import { api, API_URL } from "@/lib/api";
 
 const fetcher = (url: string) => api.get(url).then((r) => r.data);
 
@@ -13,7 +13,7 @@ export default function CurriculumSubjectDetailPage() {
   const gradeId = params.gradeId as string;
   const subjectId = params.subjectId as string;
 
-  const { data: documents } = useSWR(`/academics/documents/?subject=${subjectId}`, fetcher);
+  const { data: documents } = useSWR(`/academics/documents/?subject=${subjectId}&grade=${gradeId}`, fetcher);
 
   return (
     <div className="min-h-screen py-12" style={{ background: "var(--color-background)" }}>
@@ -47,14 +47,31 @@ export default function CurriculumSubjectDetailPage() {
           <h2 className="text-xl font-bold mb-4" style={{ color: "var(--color-text)", fontFamily: "var(--font-heading)" }}>
             {locale === "ar" ? "مستندات وكتب المنهاج المرفوعة" : "Uploaded Curriculum Documents"}
           </h2>
-          {documents && documents.length > 0 ? (
+          {documents?.results && documents.results.length > 0 ? (
             <ul className="space-y-3">
-              {documents.map((doc: any) => (
-                <li key={doc.id} className="p-4 rounded-xl flex items-center justify-between" style={{ background: "var(--color-surface-alt)", border: "1px solid var(--color-border)" }}>
-                  <span className="font-semibold" style={{ color: "var(--color-text)" }}>{doc.title}</span>
-                  <a href={doc.file} target="_blank" rel="noreferrer" className="text-sm px-4 py-2 rounded-lg font-medium text-white" style={{ background: "var(--color-success)" }}>
-                    {locale === "ar" ? "تحميل / معاينة الملف" : "Download / Preview"}
-                  </a>
+              {documents.results.map((doc: any) => (
+                <li key={doc.id} className="p-4 rounded-xl flex flex-col gap-3" style={{ background: "var(--color-surface-alt)", border: "1px solid var(--color-border)" }}>
+                  <div className="flex items-center justify-between gap-4">
+                    <span className="font-semibold" style={{ color: "var(--color-text)" }}>{doc.title}</span>
+                    <div className="flex gap-2 shrink-0">
+                      <a href={doc.download_url || `${API_URL}/academics/documents/${doc.id}/download/`} target="_blank" rel="noreferrer" className="text-sm px-4 py-2 rounded-lg font-medium text-white" style={{ background: "var(--color-primary)" }}>
+                        {locale === "ar" ? "معاينة" : "Preview"}
+                      </a>
+                      <a href={doc.download_url ? `${doc.download_url}?download=1` : `${API_URL}/academics/documents/${doc.id}/download/?download=1`} rel="noreferrer" className="text-sm px-4 py-2 rounded-lg font-medium text-white" style={{ background: "var(--color-success)" }}>
+                        {locale === "ar" ? "تحميل" : "Download"}
+                      </a>
+                    </div>
+                  </div>
+                  {doc.extracted_text ? (
+                    <details>
+                      <summary className="text-sm cursor-pointer font-medium" style={{ color: "var(--color-primary)" }}>
+                        {locale === "ar" ? "👁️ عرض محتوى المنهاج" : "👁️ View Curriculum Content"}
+                      </summary>
+                      <pre className="mt-3 max-h-96 overflow-auto p-4 rounded-xl text-sm whitespace-pre-wrap leading-relaxed" style={{ background: "var(--color-background)", color: "var(--color-text)", border: "1px solid var(--color-border)", direction: "rtl", textAlign: "right" }}>
+                        {doc.extracted_text}
+                      </pre>
+                    </details>
+                  ) : null}
                 </li>
               ))}
             </ul>

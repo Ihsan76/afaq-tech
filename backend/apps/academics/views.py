@@ -1,3 +1,4 @@
+from django.http import FileResponse, Http404
 from rest_framework import generics, parsers, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -99,6 +100,47 @@ class CurriculumDocumentListView(generics.ListAPIView):
     def get_queryset(self):
         curriculum_id = self.kwargs.get('curriculum_id')
         return CurriculumDocument.objects.filter(curriculum_id=curriculum_id)
+
+
+class PublicCurriculumDocumentListView(generics.ListAPIView):
+    """Public: list curriculum documents for a subject (optionally a curriculum)."""
+    serializer_class = CurriculumDocumentSerializer
+    permission_classes = [permissions.AllowAny]
+
+    def get_serializer_context(self):
+        return {'request': self.request}
+
+    def get_queryset(self):
+        qs = CurriculumDocument.objects.all()
+        subject_id = self.request.query_params.get('subject')
+        curriculum_id = self.request.query_params.get('curriculum')
+        grade_id = self.request.query_params.get('grade')
+        if subject_id:
+            qs = qs.filter(subject_id=subject_id)
+        if curriculum_id:
+            qs = qs.filter(curriculum_id=curriculum_id)
+        if grade_id:
+            qs = qs.filter(curriculum__grade_id=grade_id)
+        return qs.order_by('-created_at')
+
+
+class CurriculumDocumentDownloadView(APIView):
+    """Public: stream the stored curriculum file (inline preview or download)."""
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, pk):
+        try:
+            doc = CurriculumDocument.objects.get(pk=pk)
+        except CurriculumDocument.DoesNotExist:
+            raise Http404('Document not found')
+        try:
+            file_handle = doc.file.open('rb')
+        except FileNotFoundError:
+            raise Http404('File missing on disk')
+        response = FileResponse(file_handle)
+        as_attachment = request.query_params.get('download') == '1'
+        response['Content-Disposition'] = f'{ "attachment" if as_attachment else "inline" }; filename="{doc.file.name.split("/")[-1]}"'
+        return response
 
 
 class CurriculumDocumentCreateView(generics.CreateAPIView):

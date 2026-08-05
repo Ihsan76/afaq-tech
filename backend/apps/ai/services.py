@@ -13,6 +13,7 @@ from apps.academics.models import CurriculumDocument
 
 from .models import AIModel, AIProvider, PromptTemplate
 from .router import ProviderRouter
+from .utils import extract_json
 
 router = ProviderRouter()
 
@@ -311,14 +312,9 @@ def generate_lesson_plan(title, prompt_text, subject="", grade="", language="ar"
             return {"raw_response": raw, "error": "AI quota exceeded (429 Too Many Requests). Please switch to another AI model."}, model_name, tokens, elapsed
         return {"raw_response": raw, "error": f"AI generation failed: {ai_resp.error}"}, model_name, tokens, elapsed
 
-    if raw.startswith("```"):
-        raw = raw.split("\n", 1)[-1]
-        raw = raw.rsplit("```", 1)[0]
-    raw = raw.strip()
-
     try:
-        plan_data = json.loads(raw)
-    except json.JSONDecodeError:
+        plan_data = extract_json(raw)
+    except ValueError:
         plan_data = {"raw_response": raw, "error": "failed to parse structured JSON"}
 
     if "error" not in plan_data:
@@ -351,14 +347,9 @@ def refine_lesson_plan(current_plan_data, refinement_prompt, language="ar", mode
     if not ai_resp.success:
         return {"raw_response": raw, "error": f"Refinement failed: {ai_resp.error}"}, model_name, tokens
 
-    if raw.startswith("```"):
-        raw = raw.split("\n", 1)[-1]
-        raw = raw.rsplit("```", 1)[0]
-    raw = raw.strip()
-
     try:
-        plan_data = json.loads(raw)
-    except json.JSONDecodeError:
+        plan_data = extract_json(raw)
+    except ValueError:
         plan_data = {"raw_response": raw, "error": "failed to parse structured JSON"}
 
     return plan_data, model_name, tokens

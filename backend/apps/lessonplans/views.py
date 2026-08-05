@@ -256,6 +256,11 @@ def refine_lesson_plan_view(request, pk):
     if 'error' in updated_data:
         return Response({'error': 'Failed to parse AI response in structured format'}, status=status.HTTP_502_BAD_GATEWAY)
 
+    # Preserve any fields the model dropped, nulled, or emptied during refinement.
+    for key, orig_val in lesson_plan.plan_data.items():
+        if key not in updated_data or updated_data.get(key) in (None, '', [], {}):
+            updated_data[key] = orig_val
+
     lesson_plan.plan_data = updated_data
     lesson_plan.save()
 
@@ -338,13 +343,41 @@ def toggle_public_view(request, pk):
     return Response({'is_public': plan.is_public, 'status': plan.status}, status=status.HTTP_200_OK)
 
 
+def _generate_ai_artefact(feature, prompt, sys_prompt, model_id=""):
+    """Generate a worksheet/homework via the AI router with one retry.
+
+    Returns parsed dict, or {"error": ...} when the provider keeps failing.
+    """
+    from apps.ai.router import ProviderRouter
+    from apps.ai.utils import extract_json
+
+    last_error = ""
+    for _ in range(2):
+        router = ProviderRouter()
+        resp = router.generate(
+            prompt=prompt,
+            feature=feature,
+            system_instruction=sys_prompt,
+            use_cache=False,
+            model_id=model_id,
+        )
+        if not resp.success:
+            last_error = resp.error or 'AI generation failed'
+            continue
+        try:
+            return extract_json(resp.content)
+        except ValueError as e:
+            last_error = str(e)
+            continue
+    return {"error": last_error}
+
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def generate_worksheet_view(request, pk):
     plan = _get_plan_or_403(pk, request)
     if plan is None:
         return Response({'error': 'You do not have permission to modify this plan'}, status=status.HTTP_403_FORBIDDEN)
-    from apps.ai.router import ProviderRouter
 
     plan_data_json = json.dumps(plan.plan_data, ensure_ascii=False)
     sys_prompt, user_msg = PromptBuilderService.build_prompt(
@@ -357,24 +390,12 @@ def generate_worksheet_view(request, pk):
     if not sys_prompt:
         return Response({'error': 'Worksheet prompt template not found'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    try:
-        router = ProviderRouter()
-        resp = router.generate(
-            prompt=user_msg or "أنشئ ورقة العمل.",
-            feature="worksheet",
-            system_instruction=sys_prompt,
-            use_cache=False,
-            model_id=plan.ai_model_used or "",
-        )
-        raw = resp.content
-        if not resp.success:
-            worksheet_data = {"error": resp.error}
-        else:
-            if raw.startswith("```"):
-                raw = raw.split("\n", 1)[-1].rsplit("```", 1)[0].strip()
-            worksheet_data = json.loads(raw)
-    except Exception as e:
-        worksheet_data = {"error": str(e)}
+    worksheet_data = _generate_ai_artefact(
+        feature='worksheet',
+        prompt=user_msg or "أنشئ ورقة العمل.",
+        sys_prompt=sys_prompt,
+        model_id=plan.ai_model_used or "",
+    )
 
     plan.plan_data['worksheet'] = worksheet_data
     plan.save(update_fields=['plan_data'])
@@ -388,6 +409,7 @@ def generate_homework_view(request, pk):
     if plan is None:
         return Response({'error': 'You do not have permission to modify this plan'}, status=status.HTTP_403_FORBIDDEN)
     from apps.ai.router import ProviderRouter
+    from apps.ai.utils import extract_json
 
     plan_data_json = json.dumps(plan.plan_data, ensure_ascii=False)
     sys_prompt, user_msg = PromptBuilderService.build_prompt(
@@ -400,24 +422,12 @@ def generate_homework_view(request, pk):
     if not sys_prompt:
         return Response({'error': 'Homework prompt template not found'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    try:
-        router = ProviderRouter()
-        resp = router.generate(
-            prompt=user_msg or "أنشئ الواجب المنزلي.",
-            feature="homework",
-            system_instruction=sys_prompt,
-            use_cache=False,
-            model_id=plan.ai_model_used or "",
-        )
-        raw = resp.content
-        if not resp.success:
-            homework_data = {"error": resp.error}
-        else:
-            if raw.startswith("```"):
-                raw = raw.split("\n", 1)[-1].rsplit("```", 1)[0].strip()
-            homework_data = json.loads(raw)
-    except Exception as e:
-        homework_data = {"error": str(e)}
+    homework_data = _generate_ai_artefact(
+        feature='homework',
+        prompt=user_msg or "أنشئ الواجب المنزلي.",
+        sys_prompt=sys_prompt,
+        model_id=plan.ai_model_used or "",
+    )
 
     plan.plan_data['homework_assignment'] = homework_data
     plan.save(update_fields=['plan_data'])
@@ -518,12 +528,31 @@ def export_plan_pdf(request, pk):
         wh = f'<div style="page-break-before: always; break-before: page; height: 0;"></div><div class="section"><h2>{wst}</h2>'
         if ws.get('instructions'):
             wh += f'<p class="instructions">{_e(ws["instructions"])}</p>'
-        if ws.get('exercises') and isinstance(ws['exercises'], list):
+
+        def _ws_question(q, qnum):
+            qtext = _e(q.get('question_text') or q.get('question', ''))
+            parts = [f'<div class="exercise"><p><strong>{qnum}. {qtext}</strong></p>']
+            if q.get('options') and isinstance(q['options'], list):
+                parts.append('<ul class="options">' + ''.join(f'<li>{_e(o)}</li>' for o in q['options']) + '</ul>')
+            parts.append('<div class="answer-space"></div></div>')
+            return ''.join(parts)
+
+        sections = ws.get('sections')
+        if isinstance(sections, list) and sections:
+            counter = 0
+            for section in sections:
+                if section.get('section_title'):
+                    wh += f'<h3 class="ws-section">{_e(section["section_title"])}</h3>'
+                if section.get('section_instructions'):
+                    wh += f'<p class="instructions">{_e(section["section_instructions"])}</p>'
+                questions = section.get('questions')
+                if isinstance(questions, list):
+                    for q in questions:
+                        counter += 1
+                        wh += _ws_question(q, counter)
+        elif isinstance(ws.get('exercises'), list):
             for i, ex in enumerate(ws['exercises']):
-                wh += f'<div class="exercise"><p><strong>{i+1}. {_e(ex.get("question", ""))}</strong></p>'
-                if ex.get('options') and isinstance(ex['options'], list):
-                    wh += '<ul class="options">' + ''.join(f'<li>{_e(o)}</li>' for o in ex['options']) + '</ul>'
-                wh += '</div>'
+                wh += _ws_question(ex, i + 1)
         wh += '</div>'
         body_parts.append(wh)
 
@@ -560,6 +589,7 @@ li {{ margin-bottom: 2pt; }}
 .badge {{ font-size: 9pt; color: #64748b; }}
 .page-break {{ page-break-before: always; break-before: page; }}
 .instructions {{ margin-bottom: 10pt; font-style: italic; }}
+.ws-section {{ font-size: 11pt; font-weight: bold; margin: 10pt 0 4pt; color: #4f46e5; }}
 .exercise {{ margin-bottom: 10pt; padding: 8pt; border: 0.5pt solid #e2e8f0; border-radius: 4pt; }}
 .exercise p {{ margin-bottom: 3pt; }}
 ul.options {{ padding-{"right" if is_rtl else "left"}: 16pt; list-style: none; }}

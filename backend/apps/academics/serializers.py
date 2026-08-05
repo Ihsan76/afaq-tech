@@ -1,3 +1,4 @@
+from django.urls import reverse
 from rest_framework import serializers
 
 from apps.core.translations import get_translation
@@ -88,7 +89,16 @@ class CurriculumDetailSerializer(CurriculumSerializer):
 
 
 class CurriculumDocumentSerializer(serializers.ModelSerializer):
+    download_url = serializers.SerializerMethodField()
+
     class Meta:
         model = CurriculumDocument
-        fields = ['id', 'curriculum', 'subject', 'title', 'file', 'extracted_text', 'created_at']
+        fields = ['id', 'curriculum', 'subject', 'title', 'file', 'extracted_text', 'download_url', 'created_at']
         read_only_fields = ['extracted_text', 'created_at']
+
+    def get_download_url(self, obj):
+        request = self.context.get('request')
+        url = reverse('document-download', args=[obj.pk])
+        if request is not None:
+            return request.build_absolute_uri(url)
+        return url

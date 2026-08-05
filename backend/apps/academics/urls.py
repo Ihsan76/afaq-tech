@@ -18,6 +18,8 @@ urlpatterns = [
     path('curricula/<int:curriculum_id>/documents/', views.CurriculumDocumentListView.as_view(), name='document-list'),
     path('curricula/<int:curriculum_id>/documents/upload/', views.CurriculumDocumentCreateView.as_view(), name='document-upload'),
     path('units/<int:pk>/', views.UnitDetailView.as_view(), name='unit-detail'),
+    path('documents/', views.PublicCurriculumDocumentListView.as_view(), name='document-list-public'),
     path('documents/<int:pk>/', views.CurriculumDocumentDetailView.as_view(), name='document-detail'),
+    path('documents/<int:pk>/download/', views.CurriculumDocumentDownloadView.as_view(), name='document-download'),
     path('documents/<int:pk>/extract/', views.CurriculumDocumentExtractView.as_view(), name='document-extract'),
 ]

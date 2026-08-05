@@ -58,7 +58,10 @@ class GeminiProvider(BaseProvider):
         try:
             client = self._get_client()
             system_instruction = kwargs.get("system_instruction", "")
-            config = genai.types.GenerateContentConfig(system_instruction=system_instruction) if system_instruction else None
+            config = genai.types.GenerateContentConfig(
+                system_instruction=system_instruction,
+                response_mime_type="application/json",
+            ) if system_instruction else genai.types.GenerateContentConfig(response_mime_type="application/json")
             resp = client.models.generate_content(
                 model=self.model_name,
                 contents=prompt,
@@ -105,7 +108,11 @@ class OpenAIProvider(BaseProvider):
             if si:
                 messages.append({"role": "system", "content": si})
             messages.append({"role": "user", "content": prompt})
-            resp = client.chat.completions.create(model=self.model_name, messages=messages)
+            resp = client.chat.completions.create(
+                model=self.model_name,
+                messages=messages,
+                response_format={"type": "json_object"},
+            )
             raw = resp.choices[0].message.content.strip()
             tokens = resp.usage.total_tokens if resp.usage else 0
             elapsed = int((time.time() - start) * 1000)
@@ -355,7 +362,7 @@ class ProviderRouter:
                     self._circuit.record_success(pname)
                     self._log_ai_run(feature, prompt, response)
                     if use_cache and response.success:
-                        key = self._make_cache_key(prompt, feature, system_instruction)
+                        key = self._make_cache_key(prompt, feature, system_instruction, model_id)
                         cache.set(key, response, cache_ttl)
                     return response
                 else:
@@ -373,8 +380,8 @@ class ProviderRouter:
             success=False, error=f"All providers failed. Last error: {last_error}",
         )
 
-    def _make_cache_key(self, prompt: str, feature: str, system_instruction: str) -> str:
-        data = f"{prompt}:{feature}:{system_instruction}"
+    def _make_cache_key(self, prompt: str, feature: str, system_instruction: str, model_id: str = "") -> str:
+        data = f"{prompt}:{feature}:{system_instruction}:{model_id}"
         h = hashlib.sha256(data.encode("utf-8")).hexdigest()
         return f"ai_cache:{h}"
 
