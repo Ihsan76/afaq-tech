@@ -364,6 +364,7 @@ def generate_worksheet_view(request, pk):
             feature="worksheet",
             system_instruction=sys_prompt,
             use_cache=False,
+            model_id=plan.ai_model_used or "",
         )
         raw = resp.content
         if not resp.success:
@@ -406,6 +407,7 @@ def generate_homework_view(request, pk):
             feature="homework",
             system_instruction=sys_prompt,
             use_cache=False,
+            model_id=plan.ai_model_used or "",
         )
         raw = resp.content
         if not resp.success:

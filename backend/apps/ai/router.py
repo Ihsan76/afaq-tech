@@ -304,15 +304,26 @@ class ProviderRouter:
                 preferred.append(p)
         return preferred
 
-    def generate(self, prompt: str, feature: str = "general", system_instruction: str = "", use_cache: bool = True, cache_ttl: int = 86400) -> AIResponse:
+    def generate(self, prompt: str, feature: str = "general", system_instruction: str = "", use_cache: bool = True, cache_ttl: int = 86400, model_id: str = "") -> AIResponse:
         if use_cache:
-            cache_key = self._make_cache_key(prompt, feature, system_instruction)
+            cache_key = self._make_cache_key(prompt, feature, system_instruction, model_id)
             cached = cache.get(cache_key)
             if cached:
-                logger.info(f"Cache hit for feature={feature}")
+                logger.info(f"Cache hit for feature={feature}, model={model_id}")
                 return cached
 
         order = self.get_provider_order(feature)
+        if model_id:
+            from .models import AIModel
+            aim = AIModel.objects.filter(model_id=model_id).first()
+            if aim:
+                prov_code = aim.provider
+                if prov_code in self._providers:
+                    self._providers[prov_code].model_name = model_id
+                    if prov_code in order:
+                        order.remove(prov_code)
+                    order.insert(0, prov_code)
+
         last_error = ""
 
         for pname in order:

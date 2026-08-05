@@ -544,7 +544,34 @@ export default function LessonPlanDetailPage() {
 
           {/* AI-Generated Worksheet */}
           {data.worksheet && (() => {
-            const ws = data.worksheet as { title?: string; instructions?: string; exercises?: Array<{ question: string; options?: string[]; answer?: string }>; error?: string };
+            const ws = data.worksheet as {
+              title?: string;
+              instructions?: string;
+              exercises?: Array<{ question: string; options?: string[]; answer?: string }>;
+              sections?: Array<{
+                section_title?: string;
+                section_instructions?: string;
+                questions?: Array<{ question_number?: number; question_text?: string; type?: string; options?: string[]; answer?: string; points?: number }>;
+              }>;
+              error?: string;
+            };
+            const renderQuestion = (q: { question_text?: string; question?: string; options?: string[]; answer?: string }, idx: number) => (
+              <div key={idx} className="exercise p-3 rounded-xl border" style={{ borderColor: "var(--color-border)", backgroundColor: "var(--color-muted)" }}>
+                <p className="text-sm font-bold mb-2" style={{ color: "var(--color-text)" }}>
+                  {idx + 1}. {q.question_text || q.question}
+                </p>
+                {q.options && Array.isArray(q.options) && (
+                  <ul className="space-y-1 pr-4">
+                    {q.options.map((opt, oi) => (
+                      <li key={oi} className="text-xs" style={{ color: "var(--color-text-secondary)" }}>{opt}</li>
+                    ))}
+                  </ul>
+                )}
+                {q.answer && (
+                  <p className="print-hide-answer text-xs mt-1 font-bold" style={{ color: "var(--color-success)" }}>الإجابة: {q.answer}</p>
+                )}
+              </div>
+            );
             return (
             <div className="rounded-2xl p-5 border mt-6" style={{ borderColor: "var(--color-border)" }}>
               <div className="flex items-center justify-between mb-3">
@@ -564,26 +591,30 @@ export default function LessonPlanDetailPage() {
                 {ws.instructions && (
                   <p className="text-sm mb-4" style={{ color: "var(--color-text-secondary)" }}>{ws.instructions}</p>
                 )}
-                {ws.exercises && Array.isArray(ws.exercises) && (
-                  <div className="space-y-3">
-                    {ws.exercises.map((ex, idx) => (
-                      <div key={idx} className="exercise p-3 rounded-xl border" style={{ borderColor: "var(--color-border)", backgroundColor: "var(--color-muted)" }}>
-                        <p className="text-sm font-bold mb-2" style={{ color: "var(--color-text)" }}>
-                          {idx + 1}. {ex.question}
-                        </p>
-                        {ex.options && Array.isArray(ex.options) && (
-                          <ul className="space-y-1 pr-4">
-                            {ex.options.map((opt, oi) => (
-                              <li key={oi} className="text-xs" style={{ color: "var(--color-text-secondary)" }}>{opt}</li>
-                            ))}
-                          </ul>
+                {ws.sections && Array.isArray(ws.sections) && ws.sections.length > 0 ? (
+                  <div className="space-y-4">
+                    {ws.sections.map((section, si) => (
+                      <div key={si} className="p-3 rounded-xl border" style={{ borderColor: "var(--color-border)" }}>
+                        {section.section_title && (
+                          <p className="text-sm font-bold mb-1" style={{ color: "var(--color-text)" }}>{section.section_title}</p>
                         )}
-                        {ex.answer && (
-                          <p className="print-hide-answer text-xs mt-1 font-bold" style={{ color: "var(--color-success)" }}>الإجابة: {ex.answer}</p>
+                        {section.section_instructions && (
+                          <p className="text-xs mb-2" style={{ color: "var(--color-text-secondary)" }}>{section.section_instructions}</p>
+                        )}
+                        {section.questions && Array.isArray(section.questions) && (
+                          <div className="space-y-2">
+                            {section.questions.map((q, qi) => renderQuestion(q, qi))}
+                          </div>
                         )}
                       </div>
                     ))}
                   </div>
+                ) : (
+                  ws.exercises && Array.isArray(ws.exercises) && (
+                    <div className="space-y-3">
+                      {ws.exercises.map((ex, idx) => renderQuestion(ex, idx))}
+                    </div>
+                  )
                 )}
               </div>
             </div>
