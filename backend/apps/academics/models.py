@@ -58,7 +58,8 @@ class CurriculumDocument(models.Model):
     curriculum = models.ForeignKey(Curriculum, on_delete=models.CASCADE, related_name='documents', null=True, blank=True, verbose_name='المنهج الدراسي')
     subject = models.ForeignKey(Subject, on_delete=models.CASCADE, related_name='documents', null=True, blank=True, verbose_name='المادة الدراسية')
     title = models.CharField('عنوان المستند/الملف', max_length=255)
-    file = models.FileField('ملف المنهج (PDF/TXT)', upload_to='curricula/documents/')
+    file = models.FileField('ملف المنهج (PDF/TXT)', upload_to='curricula/documents/', null=True, blank=True)
+    external_url = models.URLField('رابط الملف الخارجي (الموقع الرسمي)', max_length=1000, blank=True, null=True)
     extracted_text = models.TextField('النص المستخرج / محتوى المنهج', blank=True)
     created_at = models.DateTimeField('تاريخ الرفع', auto_now_add=True)
 

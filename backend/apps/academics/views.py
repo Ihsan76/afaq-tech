@@ -1,4 +1,5 @@
 from django.http import FileResponse, Http404
+from django.shortcuts import redirect
 from rest_framework import generics, parsers, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -125,7 +126,7 @@ class PublicCurriculumDocumentListView(generics.ListAPIView):
 
 
 class CurriculumDocumentDownloadView(APIView):
-    """Public: stream the stored curriculum file (inline preview or download)."""
+    """Public: preview/download the document (redirects to the official site when linked externally)."""
     permission_classes = [permissions.AllowAny]
 
     def get(self, request, pk):
@@ -133,6 +134,11 @@ class CurriculumDocumentDownloadView(APIView):
             doc = CurriculumDocument.objects.get(pk=pk)
         except CurriculumDocument.DoesNotExist:
             raise Http404('Document not found')
+        if doc.external_url:
+            url = doc.external_url
+            if request.query_params.get('download') == '1' and 'download=' not in url:
+                url += ('&' if '?' in url else '?') + 'download=1'
+            return redirect(url)
         try:
             file_handle = doc.file.open('rb')
         except FileNotFoundError:

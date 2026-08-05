@@ -93,7 +93,7 @@ class CurriculumDocumentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CurriculumDocument
-        fields = ['id', 'curriculum', 'subject', 'title', 'file', 'extracted_text', 'download_url', 'created_at']
+        fields = ['id', 'curriculum', 'subject', 'title', 'file', 'external_url', 'extracted_text', 'download_url', 'created_at']
         read_only_fields = ['extracted_text', 'created_at']
 
     def get_download_url(self, obj):

@@ -54,10 +54,10 @@ export default function CurriculumSubjectDetailPage() {
                   <div className="flex items-center justify-between gap-4">
                     <span className="font-semibold" style={{ color: "var(--color-text)" }}>{doc.title}</span>
                     <div className="flex gap-2 shrink-0">
-                      <a href={doc.download_url || `${API_URL}/academics/documents/${doc.id}/download/`} target="_blank" rel="noreferrer" className="text-sm px-4 py-2 rounded-lg font-medium text-white" style={{ background: "var(--color-primary)" }}>
+                      <a href={doc.external_url || doc.download_url || `${API_URL}/academics/documents/${doc.id}/download/`} target="_blank" rel="noreferrer" className="text-sm px-4 py-2 rounded-lg font-medium text-white" style={{ background: "var(--color-primary)" }}>
                         {locale === "ar" ? "معاينة" : "Preview"}
                       </a>
-                      <a href={doc.download_url ? `${doc.download_url}?download=1` : `${API_URL}/academics/documents/${doc.id}/download/?download=1`} rel="noreferrer" className="text-sm px-4 py-2 rounded-lg font-medium text-white" style={{ background: "var(--color-success)" }}>
+                      <a href={doc.external_url || (doc.download_url ? `${doc.download_url}?download=1` : `${API_URL}/academics/documents/${doc.id}/download/?download=1`)} rel="noreferrer" className="text-sm px-4 py-2 rounded-lg font-medium text-white" style={{ background: "var(--color-success)" }}>
                         {locale === "ar" ? "تحميل" : "Download"}
                       </a>
                     </div>
