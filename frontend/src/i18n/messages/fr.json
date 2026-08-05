@@ -193,6 +193,8 @@
     "subtitle": "Saisissez le titre et la description de la leçon, choisissez la matière et le niveau, et l'IA préparera un plan complet en quelques secondes.",
     "curriculumUnitTitle": "Unité du programme officiel",
     "curriculumUnitHint": "Optionnel — choisissez une unité officielle pour cibler ses acquis, ou laissez automatique.",
+    "curriculumBooksTitle": "Livres correspondants (l'IA puisera son contenu ici)",
+    "curriculumBooksHint": "Sélectionnez les livres dont l'IA doit tenir compte lors de la rédaction du plan.",
     "allUnits": "Toutes les unités (automatique)",
     "loadingUnits": "Chargement des unités du programme..."
   },

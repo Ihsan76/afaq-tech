@@ -7,7 +7,7 @@ import { useLanguages } from "@/lib/useLanguages";
 
 interface Grade { id: number; level: number; translations: Record<string, { name: string }>; }
 interface Curriculum { id: number; translations: Record<string, { name: string }>; name?: string; country: string; year: number; grade: number; }
-interface CurriculumDocument { id: number; curriculum: number; subject: number | null; title: string; file: string; extracted_text: string; created_at: string; }
+interface CurriculumDocument { id: number; curriculum: number; subject: number | null; title: string; file: string; external_url: string; download_url: string; extracted_text: string; created_at: string; }
 
 const LABELS: Record<string, Record<string, string>> = {
   curriculaTab: { ar: "📋 المناهج", en: "📋 Curricula", fr: "📋 Programmes", tr: "📋 Müfredat", ur: "📋 نصاب", es: "📋 Planes de Estudio", de: "📋 Lehrpläne", id: "📋 Kurikulum", bn: "📋 পাঠ্যক্রম", fa: "📋 برنامههای درسی" },
@@ -448,7 +448,7 @@ export default function AdminCurriculaPage() {
                                 <tr style={{ borderTop: "1px solid var(--color-border)" }}>
                                   <td className="px-6 py-4 font-medium" style={{ color: "var(--color-text)" }}>{d.title}</td>
                                   <td className="px-6 py-4" style={{ color: "var(--color-text-muted)" }}>{subj?.label || "-"}</td>
-                                  <td className="px-6 py-4"><a href={d.file} target="_blank" rel="noopener noreferrer" className="font-medium text-sm transition-colors" style={{ color: "var(--color-primary)" }}>📄 {al(locale, "view")}</a></td>
+                                  <td className="px-6 py-4"><a href={d.download_url || d.file || d.external_url || "#"} target="_blank" rel="noopener noreferrer" className="font-medium text-sm transition-colors" style={{ color: "var(--color-primary)" }}>📄 {al(locale, "view")}</a></td>
                                   <td className="px-6 py-4" style={{ color: "var(--color-text-muted)" }}>{new Date(d.created_at).toLocaleDateString()}</td>
                                   <td className="px-6 py-4 flex gap-2 items-center">
                                     <button onClick={() => handleExtract(d.id)} disabled={extractingDoc === d.id}

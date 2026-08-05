@@ -23,6 +23,44 @@ from .serializers import LessonPlanDetailSerializer, LessonPlanSerializer
 FONT_DIR = settings.BASE_DIR / 'apps' / 'lessonplans' / 'fonts'
 
 
+def build_document_context(document_ids, subject_obj):
+    """Extract text from selected curriculum documents (books) and build AI context.
+
+    Caches the extracted text back onto the document so later generations are instant.
+    """
+    if not document_ids:
+        return ''
+    if isinstance(document_ids, str):
+        document_ids = [d for d in document_ids.replace(',', ' ').split() if d.isdigit()]
+    docs = CurriculumDocument.objects.filter(pk__in=document_ids)
+    if subject_obj:
+        docs = docs.filter(subject=subject_obj)
+
+    from apps.academics.extraction import extract_text
+
+    parts = []
+    total_budget = 50000
+    for doc in docs[:3]:
+        text = doc.extracted_text
+        if not text:
+            try:
+                text = extract_text(doc)
+                if text and len(text) > 200:
+                    CurriculumDocument.objects.filter(pk=doc.pk).update(extracted_text=text)
+            except Exception:
+                text = ''
+        if not text:
+            continue
+        block = f"[محتوى الكتاب: {doc.title}]\n{text}"
+        if len(block) > total_budget:
+            block = block[:total_budget]
+        parts.append(block)
+        total_budget -= len(block)
+        if total_budget <= 0:
+            break
+    return '\n\n'.join(parts)
+
+
 def _get_plan_or_403(pk, request):
     """Return plan if user is owner or admin, else 403."""
     plan = get_object_or_404(LessonPlan, pk=pk)
@@ -122,6 +160,11 @@ def generate_lesson_plan(request):
     curriculum_context, curriculum_label = build_curriculum_context(
         grade_obj=grade_obj, subject_obj=subject_obj, unit_obj=unit_obj, language=language,
     )
+
+    document_ids = request.data.get('document_ids') or request.data.get('documents')
+    document_context = build_document_context(document_ids, subject_obj)
+    if document_context:
+        curriculum_context = '\n\n'.join(filter(None, [curriculum_context, document_context]))
 
     curriculum_file = request.FILES.get('curriculum_file')
     if curriculum_file:

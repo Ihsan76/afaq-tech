@@ -193,6 +193,8 @@
     "subtitle": "Ders başlığını ve açıklamasını girin, ders ve sınıf seçin; yapay zeka saniyeler içinde tam bir plan hazırlasın.",
     "curriculumUnitTitle": "Resmi Müfredattan Ünite",
     "curriculumUnitHint": "İsteğe bağlı — kazanımları hedeflemek için resmi bir ünite seçin veya otomatik bırakın.",
+    "curriculumBooksTitle": "Eşleşen kitaplar (AI içeriğini buradan alacak)",
+    "curriculumBooksHint": "AI'ın planı yazarken dikkate alması gereken kitapları seçin.",
     "allUnits": "Tüm üniteler (otomatik)",
     "loadingUnits": "Resmi müfredat üniteleri yükleniyor..."
   },

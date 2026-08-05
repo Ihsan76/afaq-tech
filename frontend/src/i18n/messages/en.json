@@ -193,6 +193,8 @@
     "shareHint": "Make your plans public to appear in the marketplace",
     "curriculumUnitTitle": "Unit from Official Curriculum",
     "curriculumUnitHint": "Optional — pick an official unit so the plan targets its learning outcomes precisely, or leave it automatic.",
+    "curriculumBooksTitle": "Matching books (AI will source its content from these)",
+    "curriculumBooksHint": "Select the books the AI should take into account when writing the plan.",
     "allUnits": "All units (automatic)",
     "loadingUnits": "Loading official curriculum units..."
   },

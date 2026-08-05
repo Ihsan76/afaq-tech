@@ -193,6 +193,8 @@
     "subtitle": "Geben Sie Titel und Beschreibung der Lektion ein, wählen Sie Fach und Klasse — die KI erstellt in Sekunden einen vollständigen Plan.",
     "curriculumUnitTitle": "Einheit aus dem offiziellen Lehrplan",
     "curriculumUnitHint": "Optional — wählen Sie eine offizielle Einheit für präzise Lernziele oder automatisch lassen.",
+    "curriculumBooksTitle": "Passende Bücher (die KI nutzt diese als Quelle)",
+    "curriculumBooksHint": "Wählen Sie die Bücher, die die KI bei der Planerstellung berücksichtigen soll.",
     "allUnits": "Alle Einheiten (automatisch)",
     "loadingUnits": "Lade offizielle Lehrplaneinheiten..."
   },

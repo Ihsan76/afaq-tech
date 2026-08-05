@@ -20,6 +20,14 @@ interface UnitItem {
   outcomes: string[];
 }
 
+interface BookItem {
+  id: number;
+  title: string;
+  subject: number | null;
+  file: string | null;
+  external_url: string | null;
+}
+
 interface AIModelItem {
   id: number;
   model_id: string;
@@ -49,6 +57,8 @@ export default function NewLessonPlanPage() {
   const [grades, setGrades] = useState<AcademicItem[]>([]);
   const [models, setModels] = useState<AIModelItem[]>([]);
   const [curriculumUnits, setCurriculumUnits] = useState<UnitItem[]>([]);
+  const [curriculumBooks, setCurriculumBooks] = useState<BookItem[]>([]);
+  const [selectedBookIds, setSelectedBookIds] = useState<number[]>([]);
   const [curriculumLabel, setCurriculumLabel] = useState("");
   const [curriculumLoading, setCurriculumLoading] = useState(false);
   
@@ -77,6 +87,8 @@ export default function NewLessonPlanPage() {
   // Fetch official curriculum units when grade + subject are selected
   useEffect(() => {
     setCurriculumUnits([]);
+    setCurriculumBooks([]);
+    setSelectedBookIds([]);
     setCurriculumLabel("");
     setUnitId("");
     if (!subjectId || !gradeId) return;
@@ -90,11 +102,20 @@ export default function NewLessonPlanPage() {
           const name = first.name || "";
           const country = first.country || "";
           setCurriculumLabel(name ? `${name}${country ? " — " + country : ""}` : "");
+          const books = (first.documents || []).filter(
+            (b: BookItem) => !subjectId || b.subject === subjectId || b.subject === null
+          );
+          setCurriculumBooks(books);
+          if (books.length > 0) setSelectedBookIds([books[0].id]);
         }
       })
       .catch(() => {})
       .finally(() => setCurriculumLoading(false));
   }, [subjectId, gradeId, locale]);
+
+  const toggleBook = (id: number, checked: boolean) => {
+    setSelectedBookIds((prev) => (checked ? [...prev, id] : prev.filter((x) => x !== id)));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -111,6 +132,7 @@ export default function NewLessonPlanPage() {
       if (subjectId) formData.append("subject", subjectId.toString());
       if (gradeId) formData.append("grade", gradeId.toString());
       if (unitId) formData.append("unit", unitId.toString());
+      if (selectedBookIds.length) formData.append("document_ids", selectedBookIds.join(","));
       if (selectedModel) formData.append("model_id", selectedModel);
       if (curriculumFile) formData.append("curriculum_file", curriculumFile);
 
@@ -261,6 +283,35 @@ export default function NewLessonPlanPage() {
                     {t("curriculumUnitHint")}
                   </p>
                 </>
+              )}
+
+              {curriculumBooks.length > 0 && (
+                <div className="mt-4 pt-4" style={{ borderTop: "1px solid var(--color-border)" }}>
+                  <div className="text-sm font-bold mb-2" style={{ color: "var(--color-text)" }}>
+                    {t("curriculumBooksTitle")}
+                  </div>
+                  <div className="space-y-1.5">
+                    {curriculumBooks.map((b) => (
+                      <label
+                        key={b.id}
+                        className="flex items-start gap-2 text-sm cursor-pointer rounded-lg px-2 py-1.5 transition-colors hover:bg-black/5"
+                        style={{ color: "var(--color-text)" }}
+                      >
+                        <input
+                          type="checkbox"
+                          className="mt-0.5"
+                          checked={selectedBookIds.includes(b.id)}
+                          onChange={(e) => toggleBook(b.id, e.target.checked)}
+                          disabled={loading}
+                        />
+                        <span className="leading-snug">{b.title}</span>
+                      </label>
+                    ))}
+                  </div>
+                  <p className="text-xs mt-1.5" style={{ color: "var(--color-text-muted)" }}>
+                    {t("curriculumBooksHint")}
+                  </p>
+                </div>
               )}
             </div>
           )}

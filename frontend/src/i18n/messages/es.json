@@ -193,6 +193,8 @@
     "subtitle": "Introduce el título y la descripción de la lección, elige la materia y el grado, y la IA preparará un plan completo en segundos.",
     "curriculumUnitTitle": "Unidad del currículo oficial",
     "curriculumUnitHint": "Opcional: elige una unidad oficial para apuntar a sus resultados de aprendizaje.",
+    "curriculumBooksTitle": "Libros coincidentes (la IA tomará su contenido de aquí)",
+    "curriculumBooksHint": "Selecciona los libros que la IA debe tener en cuenta al redactar el plan.",
     "allUnits": "Todas las unidades (automático)",
     "loadingUnits": "Cargando unidades del currículo oficial..."
   },

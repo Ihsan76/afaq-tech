@@ -193,6 +193,8 @@
     "subtitle": "Masukkan judul dan deskripsi pelajaran, pilih mata pelajaran dan kelas, dan AI akan menyiapkan rencana lengkap dalam hitungan detik.",
     "curriculumUnitTitle": "Unit dari Kurikulum Resmi",
     "curriculumUnitHint": "Opsional — pilih unit resmi agar rencana menyasar capaian belajarnya, atau biarkan otomatis.",
+    "curriculumBooksTitle": "Buku yang cocok (AI akan mengambil konten dari sini)",
+    "curriculumBooksHint": "Pilih buku yang harus diperhitungkan AI saat menyusun rencana.",
     "allUnits": "Semua unit (otomatis)",
     "loadingUnits": "Memuat unit kurikulum resmi..."
   },
