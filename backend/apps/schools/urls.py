@@ -9,6 +9,9 @@ from .views import (
     SectionViewSet,
     StudentEnrollmentViewSet,
     TeacherAssignmentViewSet,
+    UserSettingsAPIView,
+    VoiceSynthesizeAPIView,
+    VoiceTranscribeAPIView,
 )
 
 router = DefaultRouter()
@@ -21,5 +24,8 @@ router.register('announcements', SchoolAnnouncementViewSet, basename='announceme
 router.register('tickets', ParentTeacherTicketViewSet, basename='ticket')
 
 urlpatterns = [
+    path('user/settings/', UserSettingsAPIView.as_view(), name='user-ai-settings'),
+    path('voice/transcribe/', VoiceTranscribeAPIView.as_view(), name='voice-transcribe'),
+    path('voice/synthesize/', VoiceSynthesizeAPIView.as_view(), name='voice-synthesize'),
     path('', include(router.urls)),
 ]

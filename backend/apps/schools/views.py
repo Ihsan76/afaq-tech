@@ -1,6 +1,7 @@
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from .models import (
     AcademicYear,
@@ -10,6 +11,7 @@ from .models import (
     Section,
     StudentEnrollment,
     TeacherAssignment,
+    UserAISetting,
 )
 from .serializers import (
     AcademicYearSerializer,
@@ -60,7 +62,6 @@ class SchoolAnnouncementViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         announcement = serializer.save(author=self.request.user)
-        # If emergency, trigger WhatsApp alert to enrolled parents in section/school
         if announcement.is_emergency:
             enrollments = StudentEnrollment.objects.filter(section=announcement.section) if announcement.section else StudentEnrollment.objects.filter(section__school=announcement.school)
             for en in enrollments:
@@ -88,8 +89,59 @@ class ParentTeacherTicketViewSet(viewsets.ModelViewSet):
             'sender': request.user.email,
             'role': request.user.role,
             'text': text,
-            'timestamp': str(request.user.date_joined) # or current ISO
+            'timestamp': str(request.user.date_joined)
         })
         ticket.messages = messages_list
         ticket.save()
         return Response(ParentTeacherTicketSerializer(ticket).data)
+
+
+class UserSettingsAPIView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        setting, _ = UserAISetting.objects.get_or_create(user=request.user)
+        return Response({
+            "language_complexity": setting.language_complexity,
+            "tone_preference": setting.tone_preference,
+            "voice_type": setting.voice_type,
+            "context_retrieval": setting.context_retrieval
+        })
+
+    def put(self, request):
+        setting, _ = UserAISetting.objects.get_or_create(user=request.user)
+        setting.language_complexity = request.data.get('language_complexity', setting.language_complexity)
+        setting.tone_preference = request.data.get('tone_preference', setting.tone_preference)
+        setting.voice_type = request.data.get('voice_type', setting.voice_type)
+        setting.context_retrieval = request.data.get('context_retrieval', setting.context_retrieval)
+        setting.save()
+        return Response({
+            "status": "updated",
+            "language_complexity": setting.language_complexity,
+            "tone_preference": setting.tone_preference,
+            "voice_type": setting.voice_type,
+            "context_retrieval": setting.context_retrieval
+        })
+
+
+class VoiceTranscribeAPIView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        audio_file = request.FILES.get('audio')
+        if not audio_file:
+            return Response({'error': 'Audio file is required'}, status=status.HTTP_400_BAD_REQUEST)
+        # STT mock or Gemini multimodal transcription integration
+        transcription = "هذا نص تجريبي تم تحويله من الصوت بنجاح عبر نظام آفاق الصوتي."
+        return Response({"text": transcription})
+
+
+class VoiceSynthesizeAPIView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        text = request.data.get('text')
+        if not text:
+            return Response({'error': 'Text is required'}, status=status.HTTP_400_BAD_REQUEST)
+        # TTS synthesis mock or audio stream return
+        return Response({"status": "success", "audio_url": "/media/audio/synthesized_mock.mp3", "text": text})

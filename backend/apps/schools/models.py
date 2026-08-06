@@ -131,3 +131,18 @@ class WhatsAppNotificationLog(models.Model):
 
     def __str__(self):
         return f"WhatsApp to {self.recipient_phone} - {self.status}"
+
+
+class UserAISetting(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='ai_setting', verbose_name='المستخدم')
+    language_complexity = models.CharField('تعقيد اللغة', max_length=50, default='simple')
+    tone_preference = models.CharField('نبرة المساعد', max_length=50, default='friendly')
+    voice_type = models.CharField('نوع الصوت', max_length=50, default='default')
+    context_retrieval = models.BooleanField('استرجاع السياق المتقدم', default=True)
+
+    class Meta:
+        verbose_name = 'إعدادات الذكاء الاصطناعي للمستخدم'
+        verbose_name_plural = 'إعدادات الذكاء الاصطناعي للمستخدمين'
+
+    def __str__(self):
+        return f"AI Settings for {self.user.email}"
