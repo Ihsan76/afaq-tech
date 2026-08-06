@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import ThemeProvider from "@/components/ThemeProvider";
 import "./globals.css";
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.afaq.app";
@@ -63,7 +64,9 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }}
         />
       </head>
-      <body>{children}</body>
+      <body>
+        <ThemeProvider>{children}</ThemeProvider>
+      </body>
     </html>
   );
 }
