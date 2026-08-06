@@ -183,6 +183,14 @@ export default function DashboardPage() {
   });
 
   actions.push({
+    href: `/${locale}/school-followup`,
+    icon: "🏫",
+    title: t("dashboard.schoolFollowUp"),
+    desc: t("dashboard.schoolFollowUpDesc"),
+    color: "var(--color-primary-light)",
+  });
+
+  actions.push({
     href: `/${locale}/ebooks`,
     icon: "📖",
     title: t("dashboard.browseEbooks"),

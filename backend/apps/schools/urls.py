@@ -3,6 +3,7 @@ from rest_framework.routers import DefaultRouter
 
 from .views import (
     AcademicYearViewSet,
+    MySchoolContextAPIView,
     ParentTeacherTicketViewSet,
     SchoolAnalyticsAPIView,
     SchoolAnnouncementViewSet,
@@ -26,6 +27,7 @@ router.register('tickets', ParentTeacherTicketViewSet, basename='ticket')
 
 urlpatterns = [
     path('user/settings/', UserSettingsAPIView.as_view(), name='user-ai-settings'),
+    path('my-context/', MySchoolContextAPIView.as_view(), name='my-school-context'),
     path('voice/transcribe/', VoiceTranscribeAPIView.as_view(), name='voice-transcribe'),
     path('voice/synthesize/', VoiceSynthesizeAPIView.as_view(), name='voice-synthesize'),
     path('analytics/', SchoolAnalyticsAPIView.as_view(), name='school-analytics'),

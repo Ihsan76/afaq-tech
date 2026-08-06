@@ -68,16 +68,16 @@ export default function AdminSchoolsPage() {
     setLoading(true);
     try {
       if (activeTab === "schools") {
-        const res = await api.get("/api/v1/schools/schools/");
+        const res = await api.get("/schools/schools/");
         setSchools(res.data.results || res.data);
       } else if (activeTab === "years") {
-        const res = await api.get("/api/v1/schools/academic-years/");
+        const res = await api.get("/schools/academic-years/");
         setAcademicYears(res.data.results || res.data);
       } else if (activeTab === "sections") {
-        const res = await api.get("/api/v1/schools/sections/");
+        const res = await api.get("/schools/sections/");
         setSections(res.data.results || res.data);
       } else if (activeTab === "announcements") {
-        const res = await api.get("/api/v1/schools/announcements/");
+        const res = await api.get("/schools/announcements/");
         setAnnouncements(res.data.results || res.data);
       }
     } catch (err) {
@@ -90,7 +90,7 @@ export default function AdminSchoolsPage() {
   const handleCreateSchool = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await api.post("/api/v1/schools/schools/", schoolForm);
+      await api.post("/schools/schools/", schoolForm);
       setShowSchoolModal(false);
       setSchoolForm({ name: "", school_code: "", directorate: "", phone: "", address: "" });
       fetchData();
@@ -102,7 +102,7 @@ export default function AdminSchoolsPage() {
   const handleCreateAnnouncement = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await api.post("/api/v1/schools/announcements/", {
+      await api.post("/schools/announcements/", {
         ...announcementForm,
         section: announcementForm.section ? Number(announcementForm.section) : null,
       });

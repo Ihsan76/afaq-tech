@@ -44,6 +44,7 @@ class Section(models.Model):
     class Meta:
         verbose_name = 'شعبة صفية'
         verbose_name_plural = 'الشعب الصفية'
+        ordering = ['school', 'grade', 'name']
         unique_together = ['school', 'grade', 'academic_year', 'name']
 
     def __str__(self):

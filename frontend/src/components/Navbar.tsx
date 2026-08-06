@@ -102,6 +102,7 @@ export default function Navbar() {
 
   const userApps = [
     { href: `/${locale}/dashboard`, label: t("nav.dashboard"), icon: "📊" },
+    { href: `/${locale}/school-followup`, label: t("nav.schoolFollowUp"), icon: "🏫" },
     { href: `/${locale}/gamification`, label: t("nav.gamification"), icon: "🎮" },
     { href: `/${locale}/subscriptions`, label: t("nav.subscriptions"), icon: "💳" },
     { href: `/${locale}/chat`, label: t("nav.chat"), icon: "🤖" },

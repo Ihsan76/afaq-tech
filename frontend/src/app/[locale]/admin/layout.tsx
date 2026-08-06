@@ -38,6 +38,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       { href: "/admin/grades", label: t("admin.grades"), icon: "🎓" },
       { href: "/admin/subjects", label: t("admin.subjects"), icon: "📚" },
       { href: "/admin/curricula", label: t("admin.curricula"), icon: "📋" },
+      { href: "/admin/schools", label: t("admin.schools") || "المدارس والمتابعة", icon: "🏫" },
     ]},
     { section: t("admin.blogSection"), items: [
       { href: "/admin/posts", label: t("admin.blog"), icon: "📝" },
