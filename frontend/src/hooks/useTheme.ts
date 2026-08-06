@@ -22,6 +22,8 @@ function applyThemeToDOM(theme: Theme) {
   root.style.setProperty("--color-secondary", c.secondary);
   root.style.setProperty("--color-secondary-hover", adjustBrightness(c.secondary, -10));
   root.style.setProperty("--color-accent", c.accent);
+  root.style.setProperty("--hero-grad-from", c.bannerFrom);
+  root.style.setProperty("--hero-grad-to", c.bannerTo);
   root.style.setProperty("--color-success", c.success);
   root.style.setProperty("--color-success-light", hexToRgba(c.success, 0.1));
   root.style.setProperty("--color-error", c.error);

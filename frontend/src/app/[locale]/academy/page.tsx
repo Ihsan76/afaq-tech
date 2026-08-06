@@ -36,7 +36,7 @@ export default function AcademyPage() {
     <div className="min-h-screen" style={{ background: "var(--color-background)" }}>
       {/* Hero */}
       <section className="relative overflow-hidden py-20 sm:py-28 text-center"
-        style={{ background: "linear-gradient(135deg, var(--color-primary), var(--color-secondary))" }}>
+        style={{ background: "linear-gradient(135deg, var(--hero-grad-from), var(--hero-grad-to))" }}>
         <div className="relative z-10 max-w-4xl mx-auto px-4">
           <div className="text-6xl mb-6">🎬</div>
           <h1 className="text-3xl sm:text-5xl font-bold mb-4 text-white" style={{ fontFamily: "var(--font-heading)" }}>
@@ -131,7 +131,7 @@ export default function AcademyPage() {
             </div>
             <div className="text-center mt-8">
               <Link href={`/${locale}/academy/courses`}
-                className="inline-flex items-center gap-2 px-8 py-3 rounded-2xl font-semibold text-white shadow-md hover:shadow-lg transition-all"
+                className="inline-flex items-center gap-2 px-8 py-3 rounded-2xl font-semibold text-white shadow-md hover:shadow-2xl hover:-translate-y-0.5 transition-all"
                 style={{ background: "linear-gradient(135deg, var(--color-primary), var(--color-secondary))" }}>
                 {t("academy.viewAllCourses")} ←
               </Link>
@@ -203,7 +203,7 @@ export default function AcademyPage() {
 
       {/* CTA */}
       <section className="py-16 text-center" style={{
-        background: "linear-gradient(135deg, var(--color-primary), var(--color-secondary))",
+        background: "linear-gradient(135deg, var(--hero-grad-from), var(--hero-grad-to))",
       }}>
         <div className="max-w-2xl mx-auto px-4">
           <h2 className="text-2xl sm:text-3xl font-bold mb-3 text-white" style={{ fontFamily: "var(--font-heading)" }}>

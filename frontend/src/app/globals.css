@@ -12,11 +12,11 @@
   --color-secondary: #7C3AED;
   --color-secondary-hover: #6D28D9;
   --color-accent: #6366F1;
-  --color-success: #10B981;
+  --color-success: #059669;
   --color-success-light: #D1FAE5;
   --color-error: #EF4444;
   --color-error-light: #FEE2E2;
-  --color-warning: #F59E0B;
+  --color-warning: #D97706;
   --color-warning-light: #FEF3C7;
   --color-background: #F8FAFC;
   --color-surface: #FFFFFF;
@@ -27,6 +27,10 @@
   --color-border: #E2E8F0;
   --color-border-light: #F1F5F9;
   --color-muted: #F1F5F9;
+
+  /* ── Hero / banner gradients (full-width sections) ── */
+  --hero-grad-from: var(--color-primary);
+  --hero-grad-to: var(--color-secondary);
 
   /* ── Buttons ── */
   --btn-radius: 0.75rem;
@@ -63,27 +67,31 @@
    Theme: آفاق مسائي (Dark)
    ═══════════════════════════════════════════════════════════════ */
 [data-theme="dark"] {
-  --color-primary: #818CF8;
-  --color-primary-hover: #6366F1;
-  --color-primary-light: #1E1B4B;
-  --color-secondary: #A78BFA;
-  --color-secondary-hover: #8B5CF6;
-  --color-accent: #C084FC;
-  --color-success: #34D399;
-  --color-success-light: #064E3B;
+  --color-primary: #6366F1;
+  --color-primary-hover: #4F46E5;
+  --color-primary-light: #1A1E42;
+  --color-secondary: #8B5CF6;
+  --color-secondary-hover: #7C3AED;
+  --color-accent: #A78BFA;
+  --color-success: #059669;
+  --color-success-light: #12352A;
   --color-error: #F87171;
-  --color-error-light: #7F1D1D;
-  --color-warning: #FBBF24;
-  --color-warning-light: #78350F;
-  --color-background: #0F0D1A;
-  --color-surface: #1A1726;
-  --color-surface-alt: #231F33;
-  --color-text: #F1F0F5;
-  --color-text-secondary: #A09BB0;
-  --color-text-muted: #6B6580;
-  --color-border: #2D2842;
-  --color-border-light: #231F33;
-  --color-muted: #1A1726;
+  --color-error-light: #3A1518;
+  --color-warning: #D97706;
+  --color-warning-light: #3A2F08;
+  --color-background: #0B0A14;
+  --color-surface: #14131F;
+  --color-surface-alt: #1D1B2B;
+  --color-text: #EDEBF4;
+  --color-text-secondary: #A6A1B8;
+  --color-text-muted: #6F6A83;
+  --color-border: #2A2737;
+  --color-border-light: #211F30;
+  --color-muted: #14131F;
+
+  /* Hero/banner gradient — dark tones so full-width banners stay dark */
+  --hero-grad-from: #312E81;
+  --hero-grad-to: #5B21B6;
 
   --btn-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3);
   --btn-hover-transform: scale(1.02);
@@ -97,25 +105,25 @@
 [data-theme="light"] {
   --color-primary: #059669;
   --color-primary-hover: #047857;
-  --color-primary-light: #ECFDF5;
-  --color-secondary: #10B981;
-  --color-secondary-hover: #059669;
-  --color-accent: #34D399;
-  --color-success: #22C55E;
+  --color-primary-light: #E7F6EF;
+  --color-secondary: #0D9488;
+  --color-secondary-hover: #0F766E;
+  --color-accent: #14B8A6;
+  --color-success: #059669;
   --color-success-light: #DCFCE7;
   --color-error: #DC2626;
   --color-error-light: #FEE2E2;
   --color-warning: #D97706;
   --color-warning-light: #FEF3C7;
-  --color-background: #FAFDF9;
+  --color-background: #F5FAF7;
   --color-surface: #FFFFFF;
-  --color-surface-alt: #F0FDF4;
-  --color-text: #14532D;
-  --color-text-secondary: #166534;
-  --color-text-muted: #86EFAC;
-  --color-border: #BBF7D0;
-  --color-border-light: #DCFCE7;
-  --color-muted: #F0FDF4;
+  --color-surface-alt: #E9F5EE;
+  --color-text: #123F35;
+  --color-text-secondary: #1B5E4F;
+  --color-text-muted: #5E8B7A;
+  --color-border: #D6E8DE;
+  --color-border-light: #E9F5EE;
+  --color-muted: #E9F5EE;
 
   --btn-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --btn-hover-transform: scale(1.02);
@@ -127,19 +135,19 @@
    Theme: آفاق محايد (Neutral)
    ═══════════════════════════════════════════════════════════════ */
 [data-theme="neutral"] {
-  --color-primary: #374151;
-  --color-primary-hover: #1F2937;
+  --color-primary: #1F2937;
+  --color-primary-hover: #111827;
   --color-primary-light: #F3F4F6;
-  --color-secondary: #6B7280;
-  --color-secondary-hover: #4B5563;
-  --color-accent: #9CA3AF;
+  --color-secondary: #4B5563;
+  --color-secondary-hover: #374151;
+  --color-accent: #6B7280;
   --color-success: #059669;
   --color-success-light: #D1FAE5;
   --color-error: #DC2626;
   --color-error-light: #FEE2E2;
   --color-warning: #D97706;
   --color-warning-light: #FEF3C7;
-  --color-background: #F9FAFB;
+  --color-background: #FAFAFB;
   --color-surface: #FFFFFF;
   --color-surface-alt: #F3F4F6;
   --color-text: #111827;
@@ -161,32 +169,32 @@
    Theme: آفاق مدرسي (Colorful)
    ═══════════════════════════════════════════════════════════════ */
 [data-theme="colorful"] {
-  --color-primary: #EC4899;
-  --color-primary-hover: #DB2777;
-  --color-primary-light: #FDF2F8;
-  --color-secondary: #8B5CF6;
-  --color-secondary-hover: #7C3AED;
+  --color-primary: #DB2777;
+  --color-primary-hover: #BE185D;
+  --color-primary-light: #FDF0F6;
+  --color-secondary: #7C3AED;
+  --color-secondary-hover: #6D28D9;
   --color-accent: #F59E0B;
-  --color-success: #10B981;
+  --color-success: #059669;
   --color-success-light: #D1FAE5;
   --color-error: #EF4444;
   --color-error-light: #FEE2E2;
-  --color-warning: #F97316;
+  --color-warning: #D97706;
   --color-warning-light: #FFEDD5;
-  --color-background: #FFF7ED;
+  --color-background: #FFF9F2;
   --color-surface: #FFFFFF;
-  --color-surface-alt: #FFFBEB;
+  --color-surface-alt: #FDEEF5;
   --color-text: #1C1917;
   --color-text-secondary: #57534E;
-  --color-text-muted: #A8A29E;
+  --color-text-muted: #A29B94;
   --color-border: #E7E5E4;
   --color-border-light: #F5F5F4;
-  --color-muted: #FFF7ED;
+  --color-muted: #FFF9F2;
 
   --btn-radius: 9999px;
   --btn-padding: 0.75rem 1.5rem;
   --btn-font-weight: 700;
-  --btn-shadow: 0 4px 6px -1px rgb(236 72 153 / 0.3), 0 2px 4px -2px rgb(236 72 153 / 0.2);
+  --btn-shadow: 0 4px 6px -1px rgb(219 39 119 / 0.3), 0 2px 4px -2px rgb(219 39 119 / 0.2);
   --btn-hover-transform: scale(1.05);
   --card-radius: 1.5rem;
   --card-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
@@ -197,31 +205,31 @@
    Theme: آفاق محيطي (Ocean)
    ═══════════════════════════════════════════════════════════════ */
 [data-theme="ocean"] {
-  --color-primary: #0891B2;
-  --color-primary-hover: #0E7490;
-  --color-primary-light: #ECFEFF;
-  --color-secondary: #06B6D4;
-  --color-secondary-hover: #0891B2;
-  --color-accent: #22D3EE;
-  --color-success: #10B981;
+  --color-primary: #0D9488;
+  --color-primary-hover: #0F766E;
+  --color-primary-light: #E5F5F4;
+  --color-secondary: #0891B2;
+  --color-secondary-hover: #0E7490;
+  --color-accent: #06B6D4;
+  --color-success: #059669;
   --color-success-light: #D1FAE5;
   --color-error: #EF4444;
   --color-error-light: #FEE2E2;
-  --color-warning: #F59E0B;
+  --color-warning: #D97706;
   --color-warning-light: #FEF3C7;
-  --color-background: #ECFEFF;
+  --color-background: #F2FAFC;
   --color-surface: #FFFFFF;
-  --color-surface-alt: #CFFAFE;
-  --color-text: #164E63;
+  --color-surface-alt: #E3F4F8;
+  --color-text: #134E4A;
   --color-text-secondary: #0E7490;
-  --color-text-muted: #67E8F9;
-  --color-border: #A5F3FC;
-  --color-border-light: #CFFAFE;
-  --color-muted: #ECFEFF;
+  --color-text-muted: #5F9FAE;
+  --color-border: #CFE7EC;
+  --color-border-light: #E3F4F8;
+  --color-muted: #E3F4F8;
 
-  --btn-shadow: 0 4px 6px -1px rgb(8 145 178 / 0.25), 0 2px 4px -2px rgb(8 145 178 / 0.15);
+  --btn-shadow: 0 4px 6px -1px rgb(13 148 136 / 0.25), 0 2px 4px -2px rgb(13 148 136 / 0.15);
   --btn-hover-transform: scale(1.02);
-  --card-shadow: 0 4px 6px -1px rgb(8 145 178 / 0.15);
+  --card-shadow: 0 4px 6px -1px rgb(13 148 136 / 0.15);
   --card-glass: 1;
 }
 
@@ -266,13 +274,15 @@ input::placeholder, textarea::placeholder {
   color: var(--color-text-muted) !important;
 }
 
-a {
-  transition: color 0.2s ease;
-  color: var(--color-primary);
-}
+@layer base {
+  a {
+    transition: color 0.2s ease;
+    color: var(--color-primary);
+  }
 
-a:hover {
-  color: var(--color-primary-hover);
+  a:hover {
+    color: var(--color-primary-hover);
+  }
 }
 
 ::selection {

@@ -42,7 +42,7 @@ export default function CountdownSection({ content }: { content?: Record<string,
   ];
 
   return (
-    <section className="py-16 sm:py-24" style={{ background: "linear-gradient(135deg, var(--color-primary), var(--color-secondary))" }}>
+    <section className="py-16 sm:py-24" style={{ background: "linear-gradient(135deg, var(--hero-grad-from), var(--hero-grad-to))" }}>
       <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">
         <h2 className="text-3xl sm:text-4xl font-bold mb-4 text-white" style={{ fontFamily: "var(--font-heading)" }}>
           {localizedContent(c, "title", locale) || t("countdownTitle")}

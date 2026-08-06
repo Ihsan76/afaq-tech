@@ -30,7 +30,7 @@ export default function CTAFooter({ content }: { content?: Record<string, any> }
 
   return (
     <section id="cta" ref={ref} className="py-20 px-4">
-      <div className={`max-w-4xl mx-auto rounded-3xl p-8 sm:p-12 lg:p-16 text-center transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`} style={{ background: "linear-gradient(135deg, var(--color-primary), var(--color-secondary))", boxShadow: "0 20px 60px -15px color-mix(in srgb, var(--color-primary) 40%, transparent)" }}>
+      <div className={`max-w-4xl mx-auto rounded-3xl p-8 sm:p-12 lg:p-16 text-center transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`} style={{ background: "linear-gradient(135deg, var(--hero-grad-from), var(--hero-grad-to))", boxShadow: "0 20px 60px -15px color-mix(in srgb, var(--color-primary) 40%, transparent)" }}>
         <h2 className="text-3xl sm:text-4xl font-bold mb-4 text-white" style={{ fontFamily: "var(--font-heading)" }}>{title}</h2>
         <p className="text-lg mb-8 max-w-xl mx-auto" style={{ color: "rgba(255,255,255,0.85)" }}>{subtitle}</p>
         {isHash ? (

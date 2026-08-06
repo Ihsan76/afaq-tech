@@ -403,7 +403,7 @@ export default function DashboardPage() {
 
         {/* Upgrade CTA — free users only */}
         {isFree && (
-          <div className="p-6 sm:p-8 rounded-3xl text-center relative overflow-hidden" style={{ background: "linear-gradient(135deg, var(--color-primary), var(--color-secondary))" }}>
+          <div className="p-6 sm:p-8 rounded-3xl text-center relative overflow-hidden" style={{ background: "linear-gradient(135deg, var(--hero-grad-from), var(--hero-grad-to))" }}>
             <div className="absolute inset-0 opacity-10">
               <div className="absolute top-4 left-4 w-32 h-32 rounded-full bg-white" />
               <div className="absolute bottom-4 right-4 w-40 h-40 rounded-full bg-white" />
