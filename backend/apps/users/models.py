@@ -35,6 +35,7 @@ class User(AbstractUser):
 
     is_verified = models.BooleanField(_('Verified'), default=False)
     phone = models.CharField(_('Phone'), max_length=20, blank=True)
+    national_id = models.CharField(_('National ID'), max_length=30, blank=True, null=True, unique=True)
     avatar = models.URLField(_('Avatar'), blank=True)
     timezone = models.CharField(_('Timezone'), max_length=50, default='Asia/Amman')
 

@@ -2,6 +2,7 @@ from django.contrib import admin
 
 from .models import (
     AcademicYear,
+    Attachment,
     ParentTeacherTicket,
     School,
     SchoolAnnouncement,
@@ -59,3 +60,19 @@ class WhatsAppNotificationLogAdmin(admin.ModelAdmin):
     list_display = ['recipient_phone', 'status', 'sent_at']
     list_filter = ['status', 'sent_at']
     search_fields = ['recipient_phone', 'message']
+
+
+@admin.register(Attachment)
+class AttachmentAdmin(admin.ModelAdmin):
+    list_display = ['kind', 'title', 'uploader', 'section', 'review_status', 'file_size', 'created_at']
+    list_filter = ['kind', 'review_status', 'created_at']
+    search_fields = ['title', 'description', 'uploader__email', 'file_name']
+    actions = ['mark_approved', 'mark_rejected']
+
+    @admin.action(description='اعتماد المرفقات المحددة')
+    def mark_approved(self, request, queryset):
+        queryset.update(review_status=Attachment.ReviewStatus.APPROVED, reviewed_by=request.user)
+
+    @admin.action(description='رفض المرفقات المحددة')
+    def mark_rejected(self, request, queryset):
+        queryset.update(review_status=Attachment.ReviewStatus.REJECTED, reviewed_by=request.user)

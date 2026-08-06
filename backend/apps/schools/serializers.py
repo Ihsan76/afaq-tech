@@ -1,13 +1,19 @@
 from rest_framework import serializers
 
 from .models import (
+    FAQ,
     AcademicYear,
+    AnnouncementReadReceipt,
+    Attachment,
+    FamilyLink,
     ParentTeacherTicket,
     School,
     SchoolAnnouncement,
     Section,
     StudentEnrollment,
+    SupportRequest,
     TeacherAssignment,
+    WeeklyReport,
 )
 
 
@@ -60,11 +66,22 @@ class TeacherAssignmentSerializer(serializers.ModelSerializer):
 
 class SchoolAnnouncementSerializer(serializers.ModelSerializer):
     author_email = serializers.CharField(source='author.email', read_only=True)
+    read_count = serializers.SerializerMethodField()
+    is_read = serializers.SerializerMethodField()
 
     class Meta:
         model = SchoolAnnouncement
         fields = '__all__'
         read_only_fields = ['author', 'created_at']
+
+    def get_read_count(self, obj):
+        return obj.read_receipts.count()
+
+    def get_is_read(self, obj):
+        user = self.context.get('request').user if self.context.get('request') else None
+        if not user or not user.is_authenticated:
+            return False
+        return obj.read_receipts.filter(user=user).exists()
 
 
 class ParentTeacherTicketSerializer(serializers.ModelSerializer):
@@ -76,3 +93,77 @@ class ParentTeacherTicketSerializer(serializers.ModelSerializer):
         model = ParentTeacherTicket
         fields = '__all__'
         read_only_fields = ['parent', 'created_at']
+
+
+class FamilyLinkSerializer(serializers.ModelSerializer):
+    parent_email = serializers.CharField(source='parent.email', read_only=True)
+    student_email = serializers.CharField(source='student.email', read_only=True)
+    student_name = serializers.SerializerMethodField()
+    relationship = serializers.CharField(required=False, allow_blank=True)
+
+    class Meta:
+        model = FamilyLink
+        fields = '__all__'
+        read_only_fields = ['parent', 'created_at']
+
+    def get_student_name(self, obj):
+        return obj.student.translations.get('ar', {}).get('name', obj.student.email)
+
+
+class AnnouncementReadReceiptSerializer(serializers.ModelSerializer):
+    user_email = serializers.CharField(source='user.email', read_only=True)
+
+    class Meta:
+        model = AnnouncementReadReceipt
+        fields = '__all__'
+        read_only_fields = ['user', 'read_at']
+
+
+class WeeklyReportSerializer(serializers.ModelSerializer):
+    student_email = serializers.CharField(source='student.email', read_only=True)
+    student_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = WeeklyReport
+        fields = '__all__'
+
+    def get_student_name(self, obj):
+        return obj.student.translations.get('ar', {}).get('name', obj.student.email)
+
+
+class FAQSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FAQ
+        fields = '__all__'
+        read_only_fields = ['id']
+
+
+class SupportRequestSerializer(serializers.ModelSerializer):
+    user_email = serializers.CharField(source='user.email', read_only=True)
+
+    class Meta:
+        model = SupportRequest
+        fields = '__all__'
+        read_only_fields = ['user', 'created_at']
+
+
+class AttachmentSerializer(serializers.ModelSerializer):
+    uploader_email = serializers.CharField(source='uploader.email', read_only=True)
+    uploader_name = serializers.SerializerMethodField()
+    section_name = serializers.CharField(source='section.name', read_only=True)
+    file_url = serializers.SerializerMethodField()
+    kind_display = serializers.CharField(source='get_kind_display', read_only=True)
+    review_status_display = serializers.CharField(source='get_review_status_display', read_only=True)
+
+    class Meta:
+        model = Attachment
+        fields = '__all__'
+        read_only_fields = ['uploader', 'file_name', 'mime_type', 'file_size', 'reviewed_by', 'reviewed_at', 'created_at']
+
+    def get_uploader_name(self, obj):
+        return obj.uploader.translations.get('ar', {}).get('name', obj.uploader.email)
+
+    def get_file_url(self, obj):
+        request = self.context.get('request')
+        url = obj.file.url if obj.file else ''
+        return request.build_absolute_uri(url) if request and url else url

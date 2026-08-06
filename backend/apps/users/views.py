@@ -8,6 +8,7 @@ from urllib.parse import urlencode
 import requests
 from django.conf import settings
 from django.contrib.auth import authenticate, get_user_model
+from django.core.exceptions import ValidationError
 from django.db.models import Sum
 from django.http import HttpResponseRedirect
 from django.utils import timezone
@@ -245,14 +246,17 @@ class ResetPasswordView(APIView):
         if not uid or not token or not password:
             return Response({'error': 'Incomplete data'}, status=status.HTTP_400_BAD_REQUEST)
 
-        if len(password) < 8:
-            return Response({'error': 'Password must be at least 8 characters'}, status=status.HTTP_400_BAD_REQUEST)
-
         try:
             user_id = force_str(urlsafe_base64_decode(uid))
             user = User.objects.get(pk=user_id)
         except (User.DoesNotExist, ValueError, TypeError, OverflowError):
             return Response({'error': 'Invalid link'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            from django.contrib.auth.password_validation import validate_password
+            validate_password(password, user=user)
+        except ValidationError as e:
+            return Response({'error': list(e.messages)}, status=status.HTTP_400_BAD_REQUEST)
 
         token_generator = PasswordResetTokenGenerator()
         if not token_generator.check_token(user, token):

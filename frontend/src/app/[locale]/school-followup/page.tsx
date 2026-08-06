@@ -50,6 +50,26 @@ interface Person {
   name: string;
 }
 
+interface Attachment {
+  id: number;
+  uploader: number;
+  uploader_email: string;
+  uploader_name: string;
+  section: number | null;
+  section_name?: string;
+  kind: string;
+  kind_display: string;
+  title: string;
+  description: string;
+  file_url: string;
+  file_name: string;
+  mime_type: string;
+  file_size: number;
+  review_status: string;
+  review_notes: string;
+  created_at: string;
+}
+
 interface MyContext {
   role: string;
   sections: Section[];
@@ -57,6 +77,7 @@ interface MyContext {
   tickets: Ticket[];
   teachers: Person[];
   students: Person[];
+  attachments: Attachment[];
   ai_settings?: {
     language_complexity: string;
     tone_preference: string;
@@ -85,7 +106,7 @@ export default function SchoolFollowUpPage() {
 
   const [context, setContext] = useState<MyContext | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"announcements" | "tickets" | "ai">("announcements");
+  const [activeTab, setActiveTab] = useState<"announcements" | "tickets" | "ai" | "attachments">("announcements");
 
   // Ticket modal state
   const [showTicketModal, setShowTicketModal] = useState(false);
@@ -108,6 +129,14 @@ export default function SchoolFollowUpPage() {
   const [speechText, setSpeechText] = useState("");
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
+
+  // Attachment upload state
+  const [attachmentForm, setAttachmentForm] = useState({ kind: "lesson", section: 0, title: "", description: "" });
+  const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadMsg, setUploadMsg] = useState("");
+  const [reviewNotes, setReviewNotes] = useState<Record<number, string>>({});
+  const [reviewing, setReviewing] = useState<number | null>(null);
 
   useEffect(() => {
     if (!loadedRef.current) {
@@ -259,6 +288,55 @@ export default function SchoolFollowUpPage() {
     }
   };
 
+  const refreshContext = async () => {
+    const r = await api.get("/schools/my-context/");
+    setContext(r.data);
+  };
+
+  const handleUploadAttachment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!attachmentFile) {
+      alert(t("chooseFile"));
+      return;
+    }
+    setUploading(true);
+    setUploadMsg("");
+    try {
+      const formData = new FormData();
+      formData.append("kind", attachmentForm.kind);
+      formData.append("title", attachmentForm.title);
+      formData.append("description", attachmentForm.description);
+      if (attachmentForm.section) formData.append("section", String(attachmentForm.section));
+      formData.append("file", attachmentFile);
+      await api.post("/schools/attachments/", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      setUploadMsg(t("uploadSuccess"));
+      setAttachmentForm({ kind: "lesson", section: 0, title: "", description: "" });
+      setAttachmentFile(null);
+      await refreshContext();
+    } catch {
+      alert(t("uploadError"));
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleReviewAttachment = async (id: number, status: string) => {
+    setReviewing(id);
+    try {
+      await api.post(`/schools/attachments/${id}/review/`, {
+        review_status: status,
+        review_notes: reviewNotes[id] || "",
+      });
+      await refreshContext();
+    } catch {
+      alert("Error updating review");
+    } finally {
+      setReviewing(null);
+    }
+  };
+
   const overviewCards = [
     { icon: "🏫", value: String(context?.sections.length ?? 0), label: t("mySections"), color: "linear-gradient(135deg, var(--color-primary), var(--color-secondary))" },
     { icon: "📢", value: String(context?.announcements.length ?? 0), label: t("announcements"), color: "linear-gradient(135deg, var(--color-success), var(--color-accent))" },
@@ -367,6 +445,16 @@ export default function SchoolFollowUpPage() {
                 }}
               >
                 🤖 {t("aiAndVoice")}
+              </button>
+              <button
+                onClick={() => setActiveTab("attachments")}
+                className={`px-5 py-2.5 rounded-t-2xl font-medium transition-all ${activeTab === "attachments" ? "text-white shadow-sm" : ""}`}
+                style={{
+                  background: activeTab === "attachments" ? "var(--color-primary)" : "transparent",
+                  color: activeTab === "attachments" ? "#FFFFFF" : "var(--color-text-secondary)",
+                }}
+              >
+                📎 {t("attachments")}
               </button>
             </div>
 
@@ -595,6 +683,184 @@ export default function SchoolFollowUpPage() {
                     </div>
                   </div>
                 </div>
+              </div>
+            )}
+
+            {/* Attachments */}
+            {activeTab === "attachments" && (
+              <div className="space-y-6">
+                {/* Upload form (teachers, students, admins) */}
+                {(user.role === "teacher" || user.role === "student" || user.role === "admin") && (
+                  <div className="p-6 rounded-3xl space-y-4" style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", boxShadow: "var(--card-shadow)" }}>
+                    <h3 className="font-bold text-lg" style={{ color: "var(--color-text)" }}>📎 {t("uploadAttachment")}</h3>
+                    <form onSubmit={handleUploadAttachment} className="grid sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("attachmentKind")}</label>
+                        <select
+                          className="w-full px-4 py-2.5 rounded-2xl border"
+                          style={{ background: "var(--color-background)", borderColor: "var(--color-border)", color: "var(--color-text)" }}
+                          value={attachmentForm.kind}
+                          onChange={(e) => setAttachmentForm({ ...attachmentForm, kind: e.target.value })}
+                        >
+                          <option value="lesson">{t("kindLesson")}</option>
+                          <option value="homework">{t("kindHomework")}</option>
+                          <option value="submission">{t("kindSubmission")}</option>
+                        </select>
+                      </div>
+                      {context && context.sections.length > 0 && (
+                        <div>
+                          <label className="block text-sm font-medium mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("section")}</label>
+                          <select
+                            className="w-full px-4 py-2.5 rounded-2xl border"
+                            style={{ background: "var(--color-background)", borderColor: "var(--color-border)", color: "var(--color-text)" }}
+                            value={attachmentForm.section}
+                            onChange={(e) => setAttachmentForm({ ...attachmentForm, section: Number(e.target.value) })}
+                          >
+                            <option value={0}>--</option>
+                            {context.sections.map((sec) => (
+                              <option key={sec.id} value={sec.id}>{sec.school_name} - {sec.name} ({sec.grade_name})</option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+                      <div>
+                        <label className="block text-sm font-medium mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("attachmentTitle")}</label>
+                        <input
+                          type="text"
+                          className="w-full px-4 py-2.5 rounded-2xl border"
+                          style={{ background: "var(--color-background)", borderColor: "var(--color-border)", color: "var(--color-text)" }}
+                          value={attachmentForm.title}
+                          onChange={(e) => setAttachmentForm({ ...attachmentForm, title: e.target.value })}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("attachmentDescription")}</label>
+                        <input
+                          type="text"
+                          className="w-full px-4 py-2.5 rounded-2xl border"
+                          style={{ background: "var(--color-background)", borderColor: "var(--color-border)", color: "var(--color-text)" }}
+                          value={attachmentForm.description}
+                          onChange={(e) => setAttachmentForm({ ...attachmentForm, description: e.target.value })}
+                        />
+                      </div>
+                      <div className="sm:col-span-2">
+                        <label className="block text-sm font-medium mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("file")}</label>
+                        <input
+                          type="file"
+                          onChange={(e) => setAttachmentFile(e.target.files?.[0] || null)}
+                          className="w-full text-sm"
+                          style={{ color: "var(--color-text-secondary)" }}
+                        />
+                      </div>
+                      <div className="sm:col-span-2 flex items-center gap-3">
+                        <button
+                          type="submit"
+                          disabled={uploading}
+                          className="px-5 py-2.5 rounded-2xl text-white font-semibold transition-all hover:opacity-90 disabled:opacity-50"
+                          style={{ background: "var(--color-primary)" }}
+                        >
+                          {uploading ? t("uploading") : "⬆️ " + t("uploadAttachment")}
+                        </button>
+                        {uploadMsg && <span className="text-sm font-semibold" style={{ color: "var(--color-success)" }}>{uploadMsg}</span>}
+                      </div>
+                    </form>
+                  </div>
+                )}
+
+                {/* Admin monitoring header */}
+                {user.role === "admin" && (
+                  <div className="p-4 rounded-3xl flex items-center justify-between gap-3" style={{ background: "var(--color-surface-alt)", border: "1px solid var(--color-border)" }}>
+                    <div className="text-sm font-semibold" style={{ color: "var(--color-text-secondary)" }}>🛡️ {t("adminMonitor")}</div>
+                    <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold" style={{ background: "var(--color-warning-light)", color: "var(--color-warning)" }}>
+                      {context?.attachments.filter((a) => a.review_status === "pending").length ?? 0} {t("attachmentsPending")}
+                    </span>
+                  </div>
+                )}
+
+                {/* List */}
+                {context && context.attachments.length === 0 && (
+                  <div className="text-center py-10 rounded-3xl" style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", color: "var(--color-text-muted)" }}>
+                    {t("noAttachments")}
+                  </div>
+                )}
+
+                {context?.attachments.map((att) => {
+                  const isImage = att.mime_type?.startsWith("image/") || /\.(png|jpe?g|gif|webp)$/i.test(att.file_name || "");
+                  const statusKey = att.review_status === "approved" ? "reviewApproved" : att.review_status === "rejected" ? "reviewRejected" : "reviewPending";
+                  return (
+                    <FadeIn key={att.id} direction="up">
+                      <div className="p-6 rounded-3xl space-y-3" style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", boxShadow: "var(--card-shadow)" }}>
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <div className="flex items-center gap-3">
+                            <span className="text-2xl">{isImage ? "🖼️" : "📄"}</span>
+                            <div>
+                              <h3 className="font-bold" style={{ color: "var(--color-text)" }}>{att.title || att.file_name}</h3>
+                              <p className="text-xs" style={{ color: "var(--color-text-muted)" }}>
+                                {att.kind_display} · {att.uploader_name} · {att.section_name || "-"} · {new Date(att.created_at).toLocaleDateString(locale === "ar" ? "ar-JO" : "en-US")}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs px-3 py-1 rounded-full font-bold" style={{
+                              background: att.review_status === "approved" ? "var(--color-success-light)" : att.review_status === "rejected" ? "rgba(239,68,68,0.12)" : "var(--color-warning-light)",
+                              color: att.review_status === "approved" ? "var(--color-success)" : att.review_status === "rejected" ? "var(--color-error)" : "var(--color-warning)",
+                            }}>
+                              {t(statusKey)}
+                            </span>
+                            <a
+                              href={att.file_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="px-3 py-1.5 rounded-xl text-xs font-semibold text-white transition-all hover:opacity-85"
+                              style={{ background: "var(--color-primary)" }}
+                            >
+                              ⬇️ {t("download")}
+                            </a>
+                          </div>
+                        </div>
+                        {att.description && <p className="text-sm" style={{ color: "var(--color-text-secondary)" }}>{att.description}</p>}
+                        {att.review_notes && (
+                          <p className="text-xs" style={{ color: "var(--color-text-muted)" }}>📝 {t("reviewNotes")}: {att.review_notes}</p>
+                        )}
+                        {isImage && att.file_url && (
+                          <a href={att.file_url} target="_blank" rel="noopener noreferrer">
+                            <img src={att.file_url} alt={att.title || att.file_name} className="rounded-2xl max-h-64 object-cover" style={{ border: "1px solid var(--color-border)" }} />
+                          </a>
+                        )}
+
+                        {/* Admin review controls */}
+                        {user.role === "admin" && (
+                          <div className="flex flex-wrap items-center gap-2 pt-2 border-t" style={{ borderColor: "var(--color-border)" }}>
+                            <input
+                              type="text"
+                              placeholder={t("reviewNotes")}
+                              value={reviewNotes[att.id] || ""}
+                              onChange={(e) => setReviewNotes((prev) => ({ ...prev, [att.id]: e.target.value }))}
+                              className="flex-1 min-w-[200px] px-3 py-2 rounded-xl text-sm border focus:outline-none"
+                              style={{ background: "var(--color-background)", borderColor: "var(--color-border)", color: "var(--color-text)" }}
+                            />
+                            <button
+                              onClick={() => handleReviewAttachment(att.id, "approved")}
+                              disabled={reviewing === att.id}
+                              className="px-4 py-2 rounded-xl text-xs font-bold text-white transition-all hover:opacity-85 disabled:opacity-50"
+                              style={{ background: "var(--color-success)" }}
+                            >
+                              ✓ {t("approve")}
+                            </button>
+                            <button
+                              onClick={() => handleReviewAttachment(att.id, "rejected")}
+                              disabled={reviewing === att.id}
+                              className="px-4 py-2 rounded-xl text-xs font-bold text-white transition-all hover:opacity-85 disabled:opacity-50"
+                              style={{ background: "var(--color-error)" }}
+                            >
+                              ✗ {t("reject")}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </FadeIn>
+                  );
+                })}
               </div>
             )}
           </>
