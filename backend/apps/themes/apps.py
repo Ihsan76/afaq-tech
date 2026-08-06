@@ -1,10 +1,10 @@
 from django.apps import AppConfig
 
 
-class PagesConfig(AppConfig):
+class ThemesConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'apps.pages'
-    verbose_name = 'الصفحات'
+    name = 'apps.themes'
+    verbose_name = 'الثيمات'
 
     def ready(self):
         from . import signals  # noqa: F401

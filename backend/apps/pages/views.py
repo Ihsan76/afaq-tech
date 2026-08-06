@@ -1,7 +1,11 @@
 from django.shortcuts import get_object_or_404
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
+from apps.core.cache import SITE_CACHE_KEY_PREFIX, SITE_CACHE_TTL
 
 from .models import (
     ContactMessage,
@@ -34,6 +38,7 @@ from .serializers import (
 # Page Views
 # ═══════════════════════════════════════════════════════════════
 
+@method_decorator(cache_page(SITE_CACHE_TTL, key_prefix=SITE_CACHE_KEY_PREFIX), name='dispatch')
 class PagePublicView(APIView):
     """جلب صفحة بالرابط slug"""
     permission_classes = [permissions.AllowAny]
@@ -130,6 +135,7 @@ class BlockReorderView(APIView):
 # Menu Views
 # ═══════════════════════════════════════════════════════════════
 
+@method_decorator(cache_page(SITE_CACHE_TTL, key_prefix=SITE_CACHE_KEY_PREFIX), name='dispatch')
 class MenuPublicView(APIView):
     """جلب قائمة بالنوع (header/footer/sidebar)"""
     permission_classes = [permissions.AllowAny]
@@ -185,6 +191,7 @@ class MenuReorderView(APIView):
 # Template Views
 # ═══════════════════════════════════════════════════════════════
 
+@method_decorator(cache_page(SITE_CACHE_TTL, key_prefix=SITE_CACHE_KEY_PREFIX), name='dispatch')
 class TemplateListView(generics.ListAPIView):
     """قائمة القوالب"""
     serializer_class = PageTemplateListSerializer
@@ -226,6 +233,7 @@ class TemplateAdminDeleteView(generics.DestroyAPIView):
 # Site Settings Views
 # ═══════════════════════════════════════════════════════════════
 
+@method_decorator(cache_page(SITE_CACHE_TTL, key_prefix=SITE_CACHE_KEY_PREFIX), name='dispatch')
 class SiteSettingsPublicView(APIView):
     """جلب إعدادات الموقع"""
     permission_classes = [permissions.AllowAny]
