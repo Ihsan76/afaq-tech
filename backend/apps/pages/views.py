@@ -1,11 +1,10 @@
 from django.shortcuts import get_object_or_404
-from django.utils.decorators import method_decorator
-from django.views.decorators.cache import cache_page
+from django.core.cache import cache
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from apps.core.cache import SITE_CACHE_KEY_PREFIX, SITE_CACHE_TTL
+from apps.core.cache import SITE_CACHE_TTL, _public_key
 
 from .models import (
     ContactMessage,
@@ -38,15 +37,20 @@ from .serializers import (
 # Page Views
 # ═══════════════════════════════════════════════════════════════
 
-@method_decorator(cache_page(SITE_CACHE_TTL, key_prefix=SITE_CACHE_KEY_PREFIX), name='dispatch')
 class PagePublicView(APIView):
-    """جلب صفحة بالرابط slug"""
+    """جلب صفحة بالرابط slug — الرد مُخزّن في Redis لكل (slug, locale)"""
     permission_classes = [permissions.AllowAny]
 
     def get(self, request, slug):
-        page = get_object_or_404(Page, slug=slug, is_published=True)
-        serializer = PageDetailSerializer(page)
-        return Response(serializer.data)
+        locale = request.query_params.get('locale', 'en')
+        key = _public_key('page', slug, locale)
+        data = cache.get(key)
+        if data is None:
+            page = get_object_or_404(Page, slug=slug, is_published=True)
+            serializer = PageDetailSerializer(page, context={'request': request})
+            data = serializer.data
+            cache.set(key, data, SITE_CACHE_TTL)
+        return Response(data)
 
 
 class PageAdminListView(generics.ListAPIView):
@@ -135,15 +139,20 @@ class BlockReorderView(APIView):
 # Menu Views
 # ═══════════════════════════════════════════════════════════════
 
-@method_decorator(cache_page(SITE_CACHE_TTL, key_prefix=SITE_CACHE_KEY_PREFIX), name='dispatch')
 class MenuPublicView(APIView):
-    """جلب قائمة بالنوع (header/footer/sidebar)"""
+    """جلب قائمة بالنوع (header/footer/sidebar) — الرد مُخزّن في Redis"""
     permission_classes = [permissions.AllowAny]
 
     def get(self, request, menu_type):
-        items = MenuItem.objects.filter(menu=menu_type, is_active=True, parent=None).order_by('order')
-        serializer = MenuItemSerializer(items, many=True, context={'request': self.request})
-        return Response(serializer.data)
+        locale = request.query_params.get('locale', 'en')
+        key = _public_key('menu', menu_type, locale)
+        data = cache.get(key)
+        if data is None:
+            items = MenuItem.objects.filter(menu=menu_type, is_active=True, parent=None).order_by('order')
+            serializer = MenuItemSerializer(items, many=True, context={'request': request})
+            data = serializer.data
+            cache.set(key, data, SITE_CACHE_TTL)
+        return Response(data)
 
 
 class MenuAdminListView(generics.ListAPIView):
@@ -191,14 +200,21 @@ class MenuReorderView(APIView):
 # Template Views
 # ═══════════════════════════════════════════════════════════════
 
-@method_decorator(cache_page(SITE_CACHE_TTL, key_prefix=SITE_CACHE_KEY_PREFIX), name='dispatch')
-class TemplateListView(generics.ListAPIView):
-    """قائمة القوالب"""
-    serializer_class = PageTemplateListSerializer
+class TemplateListView(APIView):
+    """قائمة القوالب — الرد مُخزّن في Redis"""
     permission_classes = [permissions.AllowAny]
 
-    def get_queryset(self):
-        return PageTemplate.objects.filter(is_active=True)
+    def get(self, request):
+        locale = request.query_params.get('locale', 'en')
+        key = _public_key('templates', locale)
+        data = cache.get(key)
+        if data is None:
+            serializer = PageTemplateListSerializer(
+                PageTemplate.objects.filter(is_active=True), many=True, context={'request': request}
+            )
+            data = serializer.data
+            cache.set(key, data, SITE_CACHE_TTL)
+        return Response(data)
 
 
 class TemplateAdminListView(generics.ListAPIView):
@@ -233,15 +249,20 @@ class TemplateAdminDeleteView(generics.DestroyAPIView):
 # Site Settings Views
 # ═══════════════════════════════════════════════════════════════
 
-@method_decorator(cache_page(SITE_CACHE_TTL, key_prefix=SITE_CACHE_KEY_PREFIX), name='dispatch')
 class SiteSettingsPublicView(APIView):
-    """جلب إعدادات الموقع"""
+    """جلب إعدادات الموقع — الرد مُخزّن في Redis"""
     permission_classes = [permissions.AllowAny]
 
     def get(self, request):
-        settings = SiteSettings.load()
-        serializer = SiteSettingsSerializer(settings)
-        return Response(serializer.data)
+        locale = request.query_params.get('locale', 'en')
+        key = _public_key('site-settings', locale)
+        data = cache.get(key)
+        if data is None:
+            settings = SiteSettings.load()
+            serializer = SiteSettingsSerializer(settings, context={'request': request})
+            data = serializer.data
+            cache.set(key, data, SITE_CACHE_TTL)
+        return Response(data)
 
 
 class SiteSettingsAdminView(APIView):

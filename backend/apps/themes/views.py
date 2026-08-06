@@ -1,24 +1,45 @@
-from django.utils.decorators import method_decorator
-from django.views.decorators.cache import cache_page
+from django.core.cache import cache
+from django.shortcuts import get_object_or_404
 from rest_framework import generics, permissions
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
-from apps.core.cache import SITE_CACHE_KEY_PREFIX, SITE_CACHE_TTL
+from apps.core.cache import SITE_CACHE_TTL, _public_key
 from .models import Theme
 from .serializers import ThemeListSerializer, ThemeSerializer
 
 
-@method_decorator(cache_page(SITE_CACHE_TTL, key_prefix=SITE_CACHE_KEY_PREFIX), name='dispatch')
-class ThemeListView(generics.ListAPIView):
-    queryset = Theme.objects.filter(is_active=True)
-    serializer_class = ThemeListSerializer
+class ThemeListView(APIView):
+    """قائمة الثيمات النشطة — الرد مُخزّن في Redis"""
     permission_classes = [permissions.AllowAny]
 
+    def get(self, request):
+        locale = request.query_params.get('locale', 'en')
+        key = _public_key('themes', locale)
+        data = cache.get(key)
+        if data is None:
+            serializer = ThemeListSerializer(
+                Theme.objects.filter(is_active=True), many=True, context={'request': request}
+            )
+            data = serializer.data
+            cache.set(key, data, SITE_CACHE_TTL)
+        return Response(data)
 
-@method_decorator(cache_page(SITE_CACHE_TTL, key_prefix=SITE_CACHE_KEY_PREFIX), name='dispatch')
-class ThemeDetailView(generics.RetrieveAPIView):
-    queryset = Theme.objects.all()
-    serializer_class = ThemeSerializer
+
+class ThemeDetailView(APIView):
+    """جلب ثيم — الرد مُخزّن في Redis"""
     permission_classes = [permissions.AllowAny]
+
+    def get(self, request, pk):
+        locale = request.query_params.get('locale', 'en')
+        key = _public_key('theme', pk, locale)
+        data = cache.get(key)
+        if data is None:
+            theme = get_object_or_404(Theme, pk=pk)
+            serializer = ThemeSerializer(theme, context={'request': request})
+            data = serializer.data
+            cache.set(key, data, SITE_CACHE_TTL)
+        return Response(data)
 
 
 class ThemeAdminListView(generics.ListAPIView):
