@@ -56,6 +56,8 @@ export default function AdminPage() {
       { href: `/${locale}/admin/grades`, title: t("admin.grades"), description: t("admin.gradesDesc"), icon: "🎓", gradient: "linear-gradient(135deg, var(--color-primary-light), var(--color-muted))" },
       { href: `/${locale}/admin/subjects`, title: t("admin.subjects"), description: t("admin.subjectsDesc"), icon: "📚", gradient: "linear-gradient(135deg, var(--color-success-light), var(--color-muted))" },
       { href: `/${locale}/admin/curricula`, title: t("admin.curricula"), description: t("admin.curriculaDesc"), icon: "📋", gradient: "linear-gradient(135deg, var(--color-warning-light), var(--color-muted))" },
+      { href: `/${locale}/admin/schools`, title: t("admin.schools") || "Schools & Follow-up", description: t("admin.schoolsDesc") || "Manage schools, sections, and WhatsApp alerts", icon: "🏫", gradient: "linear-gradient(135deg, var(--color-primary), var(--color-success))" },
+      { href: `/${locale}/admin/organizations`, title: t("admin.organizations") || "Organizations", description: t("admin.organizationsDesc") || "Manage educational organizations", icon: "🏢", gradient: "linear-gradient(135deg, var(--color-accent), var(--color-secondary))" },
     ]},
     { section: t("admin.blogSection"), items: [
       { href: `/${locale}/admin/posts`, title: t("admin.blog"), description: t("admin.blogDesc"), icon: "📝", gradient: "linear-gradient(135deg, var(--color-accent), var(--color-success))" },
