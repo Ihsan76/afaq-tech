@@ -1202,5 +1202,30 @@
     "role": "الدور",
     "status": "الحالة"
   },
-  "marketplace": "السوق"
+  "marketplace": "السوق",
+  "schools": {
+    "title": "المتابعة المدرسية الذكية",
+    "subtitle": "إدارة المدارس، الشعب الصفية، إسناد المعلمين، والتواصل المنظم",
+    "schoolsList": "المدارس",
+    "academicYears": "الأعوام الدراسية",
+    "sections": "الشعب الصفية",
+    "announcements": "الإعلانات والواجبات",
+    "tickets": "تذاكر الاستفسارات",
+    "emergencyAlerts": "تنبيهات الطوارئ والواتساب",
+    "schoolName": "اسم المدرسة",
+    "schoolCode": "الرمز التعريفي",
+    "directorate": "المديرية",
+    "grade": "الصف",
+    "section": "الشعبة",
+    "teacher": "المعلم",
+    "subject": "المادة",
+    "sendAnnouncement": "إرسال إعلان أو واجب",
+    "emergencyBadge": "حالة طارئة (إرسال واتساب)",
+    "newTicket": "استفسار جديد",
+    "ticketTitle": "عنوان الاستفسار",
+    "status": "الحالة",
+    "open": "مفتوح",
+    "closed": "مغلق",
+    "reply": "رد"
+  }
 }

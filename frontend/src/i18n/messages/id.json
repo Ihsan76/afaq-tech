@@ -1202,5 +1202,30 @@
     "role": "Role",
     "status": "Status"
   },
-  "marketplace": "Marketplace"
+  "marketplace": "Marketplace",
+  "schools": {
+    "title": "Smart School Follow-up",
+    "subtitle": "Manage schools, classes, teacher assignments, and structured communication",
+    "schoolsList": "Schools",
+    "academicYears": "Academic Years",
+    "sections": "Classes / Sections",
+    "announcements": "Announcements & Homework",
+    "tickets": "Support Tickets",
+    "emergencyAlerts": "Emergency & WhatsApp Alerts",
+    "schoolName": "School Name",
+    "schoolCode": "School Code",
+    "directorate": "Directorate",
+    "grade": "Grade",
+    "section": "Section",
+    "teacher": "Teacher",
+    "subject": "Subject",
+    "sendAnnouncement": "Send Announcement or Homework",
+    "emergencyBadge": "Emergency (WhatsApp Alert)",
+    "newTicket": "New Inquiry",
+    "ticketTitle": "Inquiry Title",
+    "status": "Status",
+    "open": "Open",
+    "closed": "Closed",
+    "reply": "Reply"
+  }
 }

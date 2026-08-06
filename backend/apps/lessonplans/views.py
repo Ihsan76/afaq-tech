@@ -451,8 +451,6 @@ def generate_homework_view(request, pk):
     plan = _get_plan_or_403(pk, request)
     if plan is None:
         return Response({'error': 'You do not have permission to modify this plan'}, status=status.HTTP_403_FORBIDDEN)
-    from apps.ai.router import ProviderRouter
-    from apps.ai.utils import extract_json
 
     plan_data_json = json.dumps(plan.plan_data, ensure_ascii=False)
     sys_prompt, user_msg = PromptBuilderService.build_prompt(

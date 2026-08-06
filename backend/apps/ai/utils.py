@@ -62,9 +62,7 @@ def _first_block(text):
         return None
     if i_open == -1:
         start_ch, close_ch = "[", "]"
-    elif i_ar == -1:
-        start_ch, close_ch = "{", "}"
-    elif i_open < i_ar:
+    elif i_ar == -1 or i_open < i_ar:
         start_ch, close_ch = "{", "}"
     else:
         start_ch, close_ch = "[", "]"

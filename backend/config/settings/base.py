@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'apps.gamification',
     'apps.marketplace',
     'apps.subscriptions',
+    'apps.schools',
 ]
 
 MIDDLEWARE = [

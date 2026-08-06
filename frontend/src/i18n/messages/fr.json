@@ -1202,5 +1202,30 @@
     "role": "Role",
     "status": "Status"
   },
-  "marketplace": "Marketplace"
+  "marketplace": "Marketplace",
+  "schools": {
+    "title": "Suivi Scolaire Intelligent",
+    "subtitle": "Gérer les écoles, les classes, les affectations d'enseignants et la communication",
+    "schoolsList": "Écoles",
+    "academicYears": "Années Académiques",
+    "sections": "Classes / Sections",
+    "announcements": "Annonces et Devoirs",
+    "tickets": "Tickets de Support",
+    "emergencyAlerts": "Alertes d'Urgence & WhatsApp",
+    "schoolName": "Nom de l'école",
+    "schoolCode": "Code de l'école",
+    "directorate": "Direction",
+    "grade": "Niveau",
+    "section": "Section",
+    "teacher": "Enseignant",
+    "subject": "Matière",
+    "sendAnnouncement": "Envoyer une annonce ou un devoir",
+    "emergencyBadge": "Urgence (Alerte WhatsApp)",
+    "newTicket": "Nouvelle Demande",
+    "ticketTitle": "Titre de la Demande",
+    "status": "Statut",
+    "open": "Ouvert",
+    "closed": "Fermé",
+    "reply": "Répondre"
+  }
 }
