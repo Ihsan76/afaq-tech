@@ -578,7 +578,7 @@ class WeeklySummaryAPIView(APIView):
 
 
 class BulkImportView(APIView):
-    """Bulk import (الاستيراد الجماعي) of students and teachers from CSV/Excel."""
+    """Bulk import (الاستيراد الجماعي) of schools/students/teachers from CSV/Excel."""
     permission_classes = [IsAdminRole]
 
     def post(self, request):
@@ -587,33 +587,107 @@ class BulkImportView(APIView):
         if not file:
             return Response({'error': 'file is required'}, status=status.HTTP_400_BAD_REQUEST)
 
+        rows = self._read_rows(file)
+        if rows is None:
+            return Response({'error': 'file must be CSV or XLSX'}, status=status.HTTP_400_BAD_REQUEST)
+
+        results = {'created': 0, 'updated': 0, 'skipped': 0, 'errors': []}
+
+        if kind == 'schools':
+            self._import_schools(rows, results)
+        elif kind == 'students':
+            self._import_students(rows, results)
+        elif kind == 'teachers':
+            self._import_teachers(rows, results)
+        else:
+            return Response({'error': 'kind must be schools, students or teachers'}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(results)
+
+    @staticmethod
+    def _read_rows(file):
+        """Convert an uploaded CSV or XLSX file into a list of dict rows (first row = headers)."""
+        name = (file.name or '').lower()
+        if name.endswith('.xlsx') or name.endswith('.xls'):
+            try:
+                import openpyxl
+                wb = openpyxl.load_workbook(file, read_only=True, data_only=True)
+                ws = wb[wb.sheetnames[0]]
+                iter_rows = ws.iter_rows(values_only=True)
+                try:
+                    header = [str(c).strip() if c is not None else '' for c in next(iter_rows)]
+                except StopIteration:
+                    return []
+                rows = []
+                for values in iter_rows:
+                    row = {header[i]: (values[i] if i < len(values) else None) for i in range(len(header))}
+                    rows.append(row)
+                return rows
+            except ImportError:
+                raise serializers.ValidationError({'file': 'XLSX support requires openpyxl'}) from None
+            except Exception as exc:
+                raise serializers.ValidationError({'file': f'could not parse XLSX: {exc}'}) from None
+
         try:
             decoded = file.read().decode('utf-8-sig')
         except UnicodeDecodeError:
             decoded = file.read().decode('utf-8')
+        return list(csv.DictReader(io.StringIO(decoded)))
 
-        reader = csv.DictReader(io.StringIO(decoded))
-        results = {'created': 0, 'updated': 0, 'errors': []}
+    def _import_schools(self, rows, results):
+        """Import schools from the Jordanian open-data portal (opendata.gov.jo) dataset."""
+        mapping = {
+            'رمز المؤسسة': 'school_code',
+            'اسم المؤسسة': 'name',
+            'المديرية': 'directorate',
+            'المحافظة': 'governorate',
+            'الإقليم': 'region',
+            'جنس المؤسس': 'gender',
+            'نوع التعليم': 'education_type',
+            'العنوان': 'address',
+        }
+        for raw in rows:
+            school_code = self._cell(raw, 'رمز المؤسسة') or self._cell(raw, 'school_code')
+            name = self._cell(raw, 'اسم المؤسسة') or self._cell(raw, 'name')
+            if not school_code or not name:
+                results['errors'].append({'row': raw, 'error': 'school_code and name are required'})
+                continue
+            data = {'name': name, 'school_code': school_code}
+            for src, field in mapping.items():
+                if field == 'school_code':
+                    continue
+                value = self._cell(raw, src) or self._cell(raw, field)
+                if value:
+                    data[field] = value
+            data['translations'] = {'ar': {'name': name}}
+            _, created = School.objects.update_or_create(
+                school_code=school_code,
+                defaults=data,
+            )
+            if created:
+                results['created'] += 1
+            else:
+                results['updated'] += 1
 
-        if kind == 'students':
-            self._import_students(reader, results)
-        elif kind == 'teachers':
-            self._import_teachers(reader, results)
-        else:
-            return Response({'error': 'kind must be students or teachers'}, status=status.HTTP_400_BAD_REQUEST)
+    @staticmethod
+    def _cell(row, header):
+        value = row.get(header) if isinstance(row, dict) else None
+        if value is None:
+            return ''
+        if isinstance(value, float) and value.is_integer():
+            return str(int(value))
+        return str(value).strip()
 
-        return Response(results)
-
-    def _import_students(self, reader, results):
-        for row in reader:
-            email = (row.get('email') or '').strip()
-            name = (row.get('name') or '').strip()
+    def _import_students(self, rows, results):
+        for row in rows:
+            email = self._cell(row, 'email')
+            name = self._cell(row, 'name')
             if not email:
                 results['errors'].append({'row': row, 'error': 'email is required'})
                 continue
-            national_id = (row.get('national_id') or '').strip() or None
-            phone = (row.get('phone') or '').strip()
-            parent_email = (row.get('parent_email') or '').strip()
+            national_id = self._cell(row, 'national_id') or None
+            phone = self._cell(row, 'phone')
+            parent_email = self._cell(row, 'parent_email')
 
             user, created = User.objects.get_or_create(
                 email=email,
@@ -645,10 +719,10 @@ class BulkImportView(APIView):
 
             self._enroll_by_row(user, row, results)
 
-    def _import_teachers(self, reader, results):
-        for row in reader:
-            email = (row.get('email') or '').strip()
-            name = (row.get('name') or '').strip()
+    def _import_teachers(self, rows, results):
+        for row in rows:
+            email = self._cell(row, 'email')
+            name = self._cell(row, 'name')
             if not email:
                 results['errors'].append({'row': row, 'error': 'email is required'})
                 continue
@@ -724,7 +798,21 @@ class BulkExportView(APIView):
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = f'attachment; filename="schools_{kind}.csv"'
 
-        if kind == 'students':
+        if kind == 'schools':
+            writer = csv.writer(response)
+            writer.writerow(['school_code', 'name', 'directorate', 'governorate', 'region', 'gender', 'education_type', 'address'])
+            for s in School.objects.all().order_by('school_code'):
+                writer.writerow([
+                    s.school_code,
+                    s.name,
+                    s.directorate,
+                    s.governorate,
+                    s.region,
+                    s.gender,
+                    s.education_type,
+                    s.address,
+                ])
+        elif kind == 'students':
             writer = csv.writer(response)
             writer.writerow(['email', 'name', 'national_id', 'phone', 'school_code', 'grade_level', 'section_name', 'academic_year'])
             enrollments = StudentEnrollment.objects.select_related('student', 'section', 'section__school', 'section__grade', 'section__academic_year')
@@ -753,7 +841,7 @@ class BulkExportView(APIView):
                     a.section.academic_year.name,
                 ])
         else:
-            return Response({'error': 'kind must be students or teachers'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'kind must be schools, students or teachers'}, status=status.HTTP_400_BAD_REQUEST)
 
         return response
 

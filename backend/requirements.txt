@@ -19,3 +19,4 @@ reportlab>=4.0
 weasyprint>=69.0
 stripe>=11.0
 requests>=2.31
+openpyxl>=3.1

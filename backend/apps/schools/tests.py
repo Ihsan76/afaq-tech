@@ -1,3 +1,6 @@
+import io
+
+import openpyxl
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from rest_framework.test import APITestCase
@@ -366,6 +369,63 @@ class SchoolsAdvancedFeaturesTestCase(APITestCase):
         content = res.content.decode('utf-8')
         self.assertIn('student@test.com', content)
         self.assertIn('A1', content)
+
+    def test_bulk_import_schools_from_xlsx(self):
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.append(['رمز المؤسسة', 'اسم المؤسسة', 'المديرية', 'المحافظة', 'الإقليم', 'جنس المؤسس', 'نوع التعليم', 'العنوان'])
+        ws.append(['990001', 'مدرسة الاستيراد التجريبية', 'قصبة عمان', 'العاصمة عمان', 'الوسط', 'مختلطة', 'المرحلة الأساسية', 'حي الرابية'])
+        ws.append(['990002', 'مدرسة الاستيراد الثانوية', 'اربد الأولى', 'اربد', 'الشمال', 'اناث', 'المرحلة الثانوية', 'وسط البلد'])
+        buffer = io.BytesIO()
+        wb.save(buffer)
+        uploaded = SimpleUploadedFile('schools.xlsx', buffer.getvalue(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+
+        self.auth(self.admin)
+        res = self.client.post('/api/v1/schools/bulk/import/', {'kind': 'schools', 'file': uploaded})
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.data['created'], 2)
+        school = School.objects.get(school_code='990001')
+        self.assertEqual(school.name, 'مدرسة الاستيراد التجريبية')
+        self.assertEqual(school.governorate, 'العاصمة عمان')
+        self.assertEqual(school.region, 'الوسط')
+        self.assertEqual(school.gender, 'مختلطة')
+        self.assertEqual(school.education_type, 'المرحلة الأساسية')
+        self.assertEqual(school.translations['ar']['name'], 'مدرسة الاستيراد التجريبية')
+
+    def test_bulk_import_schools_from_csv(self):
+        csv_content = (
+            "school_code,name,directorate,governorate\r\n"
+            "990003,مدرسة من ملف نصي,معان,معان\r\n"
+        ).encode()
+        uploaded = SimpleUploadedFile('schools.csv', csv_content, content_type='text/csv')
+        self.auth(self.admin)
+        res = self.client.post('/api/v1/schools/bulk/import/', {'kind': 'schools', 'file': uploaded})
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.data['created'], 1)
+        school = School.objects.get(school_code='990003')
+        self.assertEqual(school.governorate, 'معان')
+
+    def test_bulk_import_schools_skips_missing_code(self):
+        csv_content = (
+            "school_code,name\r\n"
+            ",مدرسة بدون رمز\r\n"
+        ).encode()
+        uploaded = SimpleUploadedFile('schools.csv', csv_content, content_type='text/csv')
+        self.auth(self.admin)
+        res = self.client.post('/api/v1/schools/bulk/import/', {'kind': 'schools', 'file': uploaded})
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(len(res.data['errors']), 1)
+        self.assertEqual(School.objects.filter(name='مدرسة بدون رمز').count(), 0)
+
+    def test_bulk_export_schools(self):
+        School.objects.create(name='مدرسة التصدير', school_code='990100', governorate='الزرقاء')
+        self.auth(self.admin)
+        res = self.client.get('/api/v1/schools/bulk/export/?kind=schools')
+        self.assertEqual(res.status_code, 200)
+        self.assertIn('text/csv', res['Content-Type'])
+        content = res.content.decode('utf-8')
+        self.assertIn('990100', content)
+        self.assertIn('الزرقاء', content)
 
     def test_voice_transcribe_mock_fallback(self):
         self.auth(self.student)
