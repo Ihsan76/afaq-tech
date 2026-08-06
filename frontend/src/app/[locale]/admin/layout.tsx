@@ -72,6 +72,24 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     ]},
   ];
 
+  const isRtl = ["ar", "ur", "fa", "he"].includes(locale);
+
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>(() => {
+    const active = NAV_ITEMS.find((s) => s.items.some((item) => isActive(item.href)));
+    return active ? { [active.section]: true } : {};
+  });
+
+  useEffect(() => {
+    const active = NAV_ITEMS.find((s) => s.items.some((item) => pathname.includes(item.href)));
+    if (active) {
+      setExpandedSections((prev) => (prev[active.section] ? prev : { ...prev, [active.section]: true }));
+    }
+  }, [pathname]);
+
+  const toggleSection = (section: string) => {
+    setExpandedSections((prev) => ({ ...prev, [section]: !prev[section] }));
+  };
+
   const sidebarContent = (
     <>
       {/* Logo */}
@@ -92,28 +110,46 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       {/* Nav */}
       <nav className="flex-1 overflow-y-auto py-3 px-2">
-        {NAV_ITEMS.map((section) => (
-          <div key={section.section} className="mb-4">
-            {!collapsed && (
-              <div className="px-3 mb-1.5 text-xs font-bold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>{section.section}</div>
-            )}
-            {section.items.map((item) => (
-              <Link
-                key={item.href}
-                href={`/${locale}${item.href}`}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all mb-0.5"
-                style={{
-                  background: isActive(item.href) ? "var(--color-primary)" : "transparent",
-                  color: isActive(item.href) ? "#FFFFFF" : "var(--color-text-secondary)",
-                }}
-                title={collapsed ? item.label : undefined}
-              >
-                <span className="text-lg flex-shrink-0">{item.icon}</span>
-                {!collapsed && <span>{item.label}</span>}
-              </Link>
-            ))}
-          </div>
-        ))}
+        {NAV_ITEMS.map((section) => {
+          const isExpanded = !!expandedSections[section.section];
+          const hasActive = section.items.some((item) => isActive(item.href));
+          const showItems = collapsed || isExpanded;
+          return (
+            <div key={section.section} className="mb-4">
+              {!collapsed && (
+                <button
+                  type="button"
+                  onClick={() => toggleSection(section.section)}
+                  className="w-full flex items-center justify-between px-3 py-1.5 mb-1 text-xs font-bold uppercase tracking-wider rounded-lg transition-all hover:opacity-80"
+                  style={{ color: hasActive ? "var(--color-primary)" : "var(--color-text-muted)" }}
+                >
+                  <span>{section.section}</span>
+                  <span
+                    className="text-[10px] transition-transform duration-200"
+                    style={{ transform: isExpanded ? "rotate(0deg)" : isRtl ? "rotate(90deg)" : "rotate(-90deg)" }}
+                  >
+                    ▾
+                  </span>
+                </button>
+              )}
+              {showItems && section.items.map((item) => (
+                <Link
+                  key={item.href}
+                  href={`/${locale}${item.href}`}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all mb-0.5"
+                  style={{
+                    background: isActive(item.href) ? "var(--color-primary)" : "transparent",
+                    color: isActive(item.href) ? "#FFFFFF" : "var(--color-text-secondary)",
+                  }}
+                  title={collapsed ? item.label : undefined}
+                >
+                  <span className="text-lg flex-shrink-0">{item.icon}</span>
+                  {!collapsed && <span>{item.label}</span>}
+                </Link>
+              ))}
+            </div>
+          );
+        })}
       </nav>
 
       {/* Back to site */}
