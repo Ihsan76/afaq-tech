@@ -13,3 +13,4 @@
 4. [تكامل إشعارات الواتساب الطارئة (`part-04-whatsapp/01-emergency-alerts.md`)](./part-04-whatsapp/01-emergency-alerts.md)
 5. [المساعد الذكي والمنهاج RAG (`part-05-ai-tutoring/01-copilot-rag.md`)](./part-05-ai-tutoring/01-copilot-rag.md)
 6. [مراحل وخطة التنفيذ (`part-06-implementation/01-phases.md`)](./part-06-implementation/01-phases.md)
+7. [الصوت ولوحات التحكم والدعم الفني (`part-07-voice-analytics/01-voice-dashboards.md`)](./part-07-voice-analytics/01-voice-dashboards.md)
