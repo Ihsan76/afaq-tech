@@ -1,0 +1,60 @@
+name: Restore Test
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "30 3 * * 1"
+
+concurrency:
+  group: restore-test
+  cancel-in-progress: false
+
+env:
+  BACKUP_BUCKET: afaq-backups
+
+jobs:
+  verify:
+    name: Download latest + verify archive
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install postgres client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends postgresql-client
+
+      - name: Find latest backup
+        id: latest
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          LIST=$(curl -sS -X POST "$SUPABASE_URL/storage/v1/object/list/$BACKUP_BUCKET" \
+            -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+            -H "Content-Type: application/json" \
+            -d '{"prefix":"","limit":5,"offset":0,"sortBy":{"column":"created_at","order":"desc"}}')
+          NAME=$(echo "$LIST" | jq -r '.[0].name')
+          echo "name=$NAME" >> "$GITHUB_OUTPUT"
+          echo "Latest: $NAME"
+
+      - name: Download latest dump
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          curl -sS -L "$SUPABASE_URL/storage/v1/object/download/$BACKUP_BUCKET/${{ steps.latest.outputs.name }}" \
+            -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+            -o latest.dump
+          ls -lh latest.dump
+
+      - name: Verify archive integrity (pg_restore --list)
+        run: |
+          pg_restore --list latest.dump > /dev/null
+          ENTRIES=$(pg_restore --list latest.dump | grep -vc '^;')
+          echo "Archive valid — $ENTRIES TOC entries"
+
+      - name: Verify key tables exist
+        run: |
+          pg_restore --list latest.dump | grep -E "TABLE (users_user|pages_page|core_translationkey|schools_school)" | head

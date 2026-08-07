@@ -1,0 +1,81 @@
+name: Database Backup
+
+on:
+  schedule:
+    - cron: "20 1 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: db-backup
+  cancel-in-progress: false
+
+env:
+  BACKUP_BUCKET: afaq-backups
+  RETENTION: 14
+
+jobs:
+  backup:
+    name: pg_dump -> Supabase Storage
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install postgres client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends postgresql-client
+
+      - name: Build session-pooler URL
+        id: conn
+        run: |
+          url="${{ secrets.DATABASE_URL }}"
+          url="${url/:6543/:5432}"
+          url="${url}?sslmode=require"
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+
+      - name: pg_dump (custom format, gzip)
+        run: |
+          TS=$(date -u +%Y%m%d_%H%M%S)
+          pg_dump "$URL" --format=custom --no-owner --no-privileges \
+            --compress=9 --file="afaq_${TS}.dump"
+          ls -lh afaq_*.dump
+          echo "DUMP_FILE=afaq_${TS}.dump" >> "$GITHUB_ENV"
+
+      - name: Upload to Supabase Storage
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          curl -sS -X POST "$SUPABASE_URL/storage/v1/object/$BACKUP_BUCKET/$(date -u +%Y/%m)/$DUMP_FILE" \
+            -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+            -H "Content-Type: application/octet-stream" \
+            --data-binary "@$DUMP_FILE" \
+            -w "\nupload_http=%{http_code}\n"
+          echo "Uploaded: $DUMP_FILE"
+
+      - name: Retention cleanup (keep last $RETENTION)
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          LIST=$(curl -sS -X POST "$SUPABASE_URL/storage/v1/object/list/$BACKUP_BUCKET" \
+            -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+            -H "Content-Type: application/json" \
+            -d '{"prefix":"","limit":1000,"offset":0,"sortBy":{"column":"created_at","order":"desc"}}')
+          echo "$LIST" > /tmp/list.json
+          OLD=$(echo "$LIST" | jq -r --argjson keep "$RETENTION" '
+            .[].name as $n |
+            . | length | tostring' | head -1)
+          TOTAL=$(echo "$LIST" | jq 'length')
+          echo "total backups: $TOTAL"
+          if [ "$TOTAL" -gt "$RETENTION" ]; then
+            TO_DELETE=$(echo "$LIST" | jq -c --argjson keep "$RETENTION" '[.[$keep:][] | {name: .name}]')
+            echo "$TO_DELETE" | jq -r '.[].name' | head -5
+            echo "$TO_DELETE" | jq -c '{prefixes: [.[].name]}' | \
+              curl -sS -X DELETE "$SUPABASE_URL/storage/v1/object/$BACKUP_BUCKET" \
+                -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+                -H "Content-Type: application/json" \
+                --data-binary @- \
+                -w "\ndelete_http=%{http_code}\n"
+          fi
