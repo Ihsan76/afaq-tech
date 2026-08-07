@@ -1,6 +1,7 @@
 from django.core.cache import cache
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, permissions
+from apps.users.permissions import IsSettingsAdmin
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -45,22 +46,22 @@ class ThemeDetailView(APIView):
 class ThemeAdminListView(generics.ListAPIView):
     queryset = Theme.objects.all()
     serializer_class = ThemeSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsSettingsAdmin]
 
 
 class ThemeAdminCreateView(generics.CreateAPIView):
     queryset = Theme.objects.all()
     serializer_class = ThemeSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsSettingsAdmin]
 
 
 class ThemeAdminUpdateView(generics.UpdateAPIView):
     queryset = Theme.objects.all()
     serializer_class = ThemeSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsSettingsAdmin]
 
 
 class ThemeAdminDeleteView(generics.DestroyAPIView):
     queryset = Theme.objects.all()
     serializer_class = ThemeSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsSettingsAdmin]

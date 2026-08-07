@@ -9,22 +9,40 @@ import requests
 from django.conf import settings
 from django.contrib.auth import authenticate, get_user_model
 from django.core.exceptions import ValidationError
-from django.db.models import Sum
+from django.db.models import OuterRef, Q, Subquery, Sum
 from django.http import HttpResponseRedirect
 from django.utils import timezone
 from rest_framework import generics, permissions, status
 from rest_framework.decorators import api_view, permission_classes
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from apps.core.throttling import ResilientScopedRateThrottle
 from apps.lessonplans.models import LessonPlan
+from apps.schools.models import School
+from apps.users.permissions import IsSystemAdmin, IsUsersAdmin
 
 from .models import EmailVerification, LoginAttempt
 from .serializers import RegisterSerializer, UserSerializer
 
 User = get_user_model()
+
+ALLOWED_ORDERINGS = {
+    'name': 'translations__ar__name',
+    '-name': '-translations__ar__name',
+    'email': 'email',
+    '-email': '-email',
+    'date_joined': 'date_joined',
+    '-date_joined': '-date_joined',
+    'role': 'role',
+    '-role': '-role',
+}
+
+SCHOOL_NAME_SUBQUERY = Subquery(
+    School.objects.filter(sections__students__student_id=OuterRef('pk')).values('name')[:1]
+)
 
 def get_tokens_for_user(user):
     refresh = RefreshToken.for_user(user)
@@ -143,36 +161,61 @@ class ProfileView(generics.RetrieveUpdateAPIView):
 
 # ── Admin — User Management ──
 
+class UserAdminPagination(PageNumberPagination):
+    page_size = 20
+    page_size_query_param = 'page_size'
+    max_page_size = 200
+
+
 class UserAdminListView(generics.ListAPIView):
-    """User list — admin only"""
+    """User list — admin only, with search (name/email), school filter, sorting and pagination."""
     serializer_class = UserSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsUsersAdmin]
+    pagination_class = UserAdminPagination
 
     def get_queryset(self):
-        qs = User.objects.all().order_by('-date_joined')
+        qs = User.objects.annotate(school_name=SCHOOL_NAME_SUBQUERY)
+
+        search = self.request.query_params.get('search')
+        if search:
+            qs = qs.filter(
+                Q(email__icontains=search) |
+                Q(translations__ar__name__icontains=search) |
+                Q(translations__en__name__icontains=search)
+            )
         role = self.request.query_params.get('role')
         if role:
             qs = qs.filter(role=role)
         plan = self.request.query_params.get('plan')
         if plan:
             qs = qs.filter(subscription_plan=plan)
-        search = self.request.query_params.get('search')
-        if search:
-            qs = qs.filter(email__icontains=search)
-        return qs
+        school = self.request.query_params.get('school')
+        if school:
+            qs = qs.filter(school_enrollments__section__school__name__icontains=school)
+
+        ordering = ALLOWED_ORDERINGS.get(self.request.query_params.get('ordering'), '-date_joined')
+        return qs.order_by(ordering, 'email').distinct()
 
 
 class UserAdminUpdateView(generics.RetrieveUpdateAPIView):
-    """User edit — role and subscription plan"""
+    """User edit — role, subscription plan, name, phone, national_id, etc."""
     queryset = User.objects.all()
-    permission_classes = [permissions.IsAdminUser]
+    serializer_class = UserSerializer
+    permission_classes = [IsSystemAdmin]
 
     def patch(self, request, *args, **kwargs):
         user = self.get_object()
-        allowed = ['role', 'subscription_plan', 'is_verified', 'is_active']
+        allowed = ['role', 'subscription_plan', 'is_verified', 'is_active', 'phone', 'national_id', 'translations']
         for field in allowed:
             if field in request.data:
-                setattr(user, field, request.data[field])
+                if field == 'translations':
+                    tr = request.data['translations']
+                    if isinstance(tr, dict):
+                        current = user.translations or {}
+                        current.update(tr)
+                        user.translations = current
+                else:
+                    setattr(user, field, request.data[field])
         user.save()
         return Response(UserSerializer(user, context={'request': request}).data)
 

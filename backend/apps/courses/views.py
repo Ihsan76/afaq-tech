@@ -1,6 +1,7 @@
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, permissions, status
+from apps.users.permissions import IsContentAdmin
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -137,16 +138,16 @@ class MyCompletedLessonsView(APIView):
 class CourseAdminListView(generics.ListAPIView):
     queryset = Course.objects.all()
     serializer_class = CourseListSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsContentAdmin]
 
 
 class CourseAdminCreateView(generics.CreateAPIView):
     queryset = Course.objects.all()
     serializer_class = CourseCreateUpdateSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsContentAdmin]
 
 
 class CourseAdminUpdateView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Course.objects.all()
     serializer_class = CourseCreateUpdateSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsContentAdmin]

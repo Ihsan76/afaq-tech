@@ -4,6 +4,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 
 from apps.marketplace.payments import PaymentProviderError, get_provider
+from apps.users.permissions import IsFinanceAdmin, IsOrganizationsAdmin
 
 from .currencies import resolve_currency
 from .models import (
@@ -90,27 +91,27 @@ def purchase_subscription(request):
 class AdminPlanListCreateView(generics.ListCreateAPIView):
     queryset = Plan.objects.all()
     serializer_class = AdminPlanSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsFinanceAdmin]
     pagination_class = None
 
 
 class AdminPlanDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Plan.objects.all()
     serializer_class = AdminPlanSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsFinanceAdmin]
 
 
 class AdminCurrencyListCreateView(generics.ListCreateAPIView):
     queryset = Currency.objects.all()
     serializer_class = CurrencySerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsFinanceAdmin]
     pagination_class = None
 
 
 class AdminCurrencyDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Currency.objects.all()
     serializer_class = CurrencySerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsFinanceAdmin]
 
     def destroy(self, request, *args, **kwargs):
         currency = self.get_object()
@@ -122,21 +123,21 @@ class AdminCurrencyDetailView(generics.RetrieveUpdateDestroyAPIView):
 class AdminServiceListCreateView(generics.ListCreateAPIView):
     queryset = PlanService.objects.all()
     serializer_class = PlanServiceSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsFinanceAdmin]
     pagination_class = None
 
 
 class AdminServiceDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = PlanService.objects.all()
     serializer_class = PlanServiceSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsFinanceAdmin]
 
 
 class AdminPlanServicesView(generics.RetrieveUpdateAPIView):
     """List or replace the services linked to a plan (with usage limits)."""
 
     queryset = Plan.objects.all()
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsFinanceAdmin]
 
     def retrieve(self, request, *args, **kwargs):
         plan = self.get_object()
@@ -365,7 +366,7 @@ def extra_seats_purchase(request):
 class AdminOrganizationListCreateView(generics.ListCreateAPIView):
     queryset = Organization.objects.select_related('owner', 'plan').all()
     serializer_class = AdminOrganizationSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsOrganizationsAdmin]
     pagination_class = None
 
     def perform_create(self, serializer):
@@ -381,11 +382,11 @@ class AdminOrganizationListCreateView(generics.ListCreateAPIView):
 class AdminOrganizationDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Organization.objects.select_related('owner', 'plan').all()
     serializer_class = AdminOrganizationSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsOrganizationsAdmin]
 
 
 @api_view(['GET'])
-@permission_classes([permissions.IsAdminUser])
+@permission_classes([IsOrganizationsAdmin])
 def admin_organization_members(request, pk):
     org = generics.get_object_or_404(Organization, pk=pk)
     members = org.memberships.select_related('user').order_by('created_at')

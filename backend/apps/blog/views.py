@@ -1,5 +1,6 @@
 from django.db.models import Count, Q
 from rest_framework import generics, permissions
+from apps.users.permissions import IsContentAdmin
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 
@@ -82,25 +83,25 @@ class BlogCategoryAdminListView(generics.ListAPIView):
     """All categories — admin"""
     queryset = BlogCategory.objects.all()
     serializer_class = BlogCategorySerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsContentAdmin]
 
 
 class BlogCategoryAdminCreateView(generics.CreateAPIView):
     queryset = BlogCategory.objects.all()
     serializer_class = BlogCategorySerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsContentAdmin]
 
 
 class BlogCategoryAdminUpdateView(generics.RetrieveUpdateDestroyAPIView):
     queryset = BlogCategory.objects.all()
     serializer_class = BlogCategorySerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsContentAdmin]
 
 
 class BlogPostAdminListView(generics.ListAPIView):
     """All posts — admin"""
     serializer_class = BlogPostListSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsContentAdmin]
 
     def get_queryset(self):
         return BlogPost.objects.all()
@@ -109,10 +110,10 @@ class BlogPostAdminListView(generics.ListAPIView):
 class BlogPostAdminCreateView(generics.CreateAPIView):
     queryset = BlogPost.objects.all()
     serializer_class = BlogPostCreateUpdateSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsContentAdmin]
 
 
 class BlogPostAdminUpdateView(generics.RetrieveUpdateDestroyAPIView):
     queryset = BlogPost.objects.all()
     serializer_class = BlogPostCreateUpdateSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsContentAdmin]

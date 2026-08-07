@@ -10,8 +10,20 @@ class User(AbstractUser):
     class Role(models.TextChoices):
         STUDENT = 'student', _('Student')
         TEACHER = 'teacher', _('Teacher')
+        PARENT = 'parent', _('Parent')
         CONTENT_CREATOR = 'creator', _('Content Creator')
-        ADMIN = 'admin', _('Admin')
+        ADMIN = 'admin', _('System Admin')
+        SCHOOL_ADMIN = 'school_admin', _('School Admin')
+        DEVELOPER = 'developer', _('Developer')
+        SUPPORT = 'support', _('Support')
+        CONTENT_MANAGER = 'content_manager', _('Content Manager')
+        FINANCE = 'finance', _('Finance')
+
+    # Roles allowed to enter the admin dashboard (system admin + dev team)
+    ADMIN_ROLES = (
+        Role.ADMIN, Role.DEVELOPER, Role.SUPPORT,
+        Role.CONTENT_MANAGER, Role.FINANCE,
+    )
 
     class SubscriptionPlan(models.TextChoices):
         FREE = 'free', _('Free')

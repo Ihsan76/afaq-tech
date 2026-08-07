@@ -548,9 +548,20 @@
     "changeRole": "Role",
     "changePlan": "Plan",
     "verified": "Verified",
-    "searchUsers": "Search by email...",
+    "searchUsers": "Search by name or email...",
+    "searchSchool": "Search by school...",
     "allRoles": "All Roles",
     "allPlans": "All Plans",
+    "sortBy": "Sort",
+    "sortNewest": "Newest first",
+    "sortName": "Name",
+    "sortEmail": "Email",
+    "sortJoined": "Date joined",
+    "previousPage": "Previous",
+    "nextPage": "Next",
+    "page": "Page",
+    "of": "of",
+    "perPage": "per page",
     "courses": "Courses",
     "coursesSection": "Courses",
     "coursesDesc": "Manage courses, chapters and lessons",
@@ -650,7 +661,9 @@
     "orgNameRequired": "Organization name is required",
     "ownerEmailRequired": "Owner email is required",
     "orgStatusActive": "Active",
-    "orgStatusSuspended": "Suspended"
+    "orgStatusSuspended": "Suspended",
+    "school": "School",
+    "sortNameDesc": "Name (Z-A)"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -689,7 +702,13 @@
     "manageOrgDesc": "Manage teacher seats, invitations, and shared usage",
     "myCoursesDesc": "View your enrolled courses and track your progress",
     "schoolFollowUp": "School Follow-up",
-    "schoolFollowUpDesc": "Your school announcements, homework, and teacher communication"
+    "schoolFollowUpDesc": "Your school announcements, homework, and teacher communication",
+    "roleParent": "Parent",
+    "roleDeveloper": "Developer",
+    "roleSupport": "Support",
+    "roleContentManager": "Content Manager",
+    "roleFinance": "Finance",
+    "roleSchoolAdmin": "School Admin"
   },
   "profile": {
     "title": "Profile",

@@ -1,5 +1,6 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, permissions, status
+from apps.users.permissions import IsContentAdmin
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -85,7 +86,7 @@ class EbookDownloadView(APIView):
 
 class EbookAdminListView(generics.ListAPIView):
     serializer_class = EbookListSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsContentAdmin]
     queryset = Ebook.objects.all()
 
     def get_serializer_context(self):
@@ -94,13 +95,13 @@ class EbookAdminListView(generics.ListAPIView):
 
 class EbookAdminCreateView(generics.CreateAPIView):
     serializer_class = EbookCreateUpdateSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsContentAdmin]
 
 
 class EbookAdminUpdateView(generics.RetrieveUpdateAPIView):
     queryset = Ebook.objects.all()
     serializer_class = EbookDetailSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsContentAdmin]
 
     def get_serializer_context(self):
         return {'request': self.request}
@@ -108,20 +109,20 @@ class EbookAdminUpdateView(generics.RetrieveUpdateAPIView):
 
 class EbookAdminDeleteView(generics.DestroyAPIView):
     queryset = Ebook.objects.all()
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsContentAdmin]
 
 
 class EbookCategoryAdminCreateView(generics.CreateAPIView):
     serializer_class = EbookCategorySerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsContentAdmin]
 
 
 class EbookCategoryAdminUpdateView(generics.RetrieveUpdateAPIView):
     queryset = EbookCategory.objects.all()
     serializer_class = EbookCategorySerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsContentAdmin]
 
 
 class EbookCategoryAdminDeleteView(generics.DestroyAPIView):
     queryset = EbookCategory.objects.all()
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsContentAdmin]

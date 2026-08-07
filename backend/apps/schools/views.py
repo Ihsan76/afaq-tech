@@ -9,6 +9,7 @@ from django.http import HttpResponse
 from django.utils import timezone
 from rest_framework import permissions, serializers, status, viewsets
 from rest_framework.decorators import action
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -49,11 +50,22 @@ from .whatsapp import send_whatsapp_alert
 
 
 def is_admin(user):
-    return bool(user and user.is_authenticated and (user.role == 'admin' or user.is_staff))
+    """System admin or dev-team member with schools-section access."""
+    if not (user and user.is_authenticated):
+        return False
+    if user.is_staff or user.is_superuser:
+        return True
+    from apps.users.permissions import SECTION_ROLES
+    return user.role in SECTION_ROLES.get('schools', {'admin'})
 
 
 def is_teacher(user):
     return bool(user and user.is_authenticated and user.role == 'teacher')
+
+
+def is_school_admin(user):
+    """School manager: full permissions on their own school(s) only."""
+    return bool(user and user.is_authenticated and user.role == 'school_admin')
 
 
 def user_section_ids(user):
@@ -67,10 +79,16 @@ def user_section_ids(user):
     if user.role == 'parent':
         child_ids = FamilyLink.objects.filter(parent=user).values_list('student_id', flat=True)
         return set(StudentEnrollment.objects.filter(student_id__in=child_ids).values_list('section_id', flat=True))
+    if user.role == 'school_admin':
+        return set(Section.objects.filter(school__manager=user).values_list('id', flat=True))
     return set()
 
 
 def user_school_ids(user):
+    if not user or not user.is_authenticated:
+        return set()
+    if user.role == 'school_admin':
+        return set(user.managed_schools.values_list('id', flat=True))
     section_ids = user_section_ids(user)
     if section_ids is None:
         return None
@@ -78,21 +96,21 @@ def user_school_ids(user):
 
 
 class IsAdminOrReadOnly(permissions.BasePermission):
-    """Allows read access to any user, but writes only for admins."""
+    """Read for anyone; writes for system admins or school managers (scoped via get_queryset)."""
 
     def has_permission(self, request, view):
         if request.method in permissions.SAFE_METHODS:
             return True
-        return is_admin(request.user)
+        return is_admin(request.user) or is_school_admin(request.user)
 
 
 class CanManageAnnouncements(permissions.BasePermission):
-    """Allows any authenticated user to read; only admins and teachers can create announcements."""
+    """Allows any authenticated user to read; admins, school managers and teachers can create announcements."""
 
     def has_permission(self, request, view):
         if request.method in permissions.SAFE_METHODS:
             return bool(request.user and request.user.is_authenticated)
-        return is_admin(request.user) or is_teacher(request.user)
+        return is_admin(request.user) or is_teacher(request.user) or is_school_admin(request.user)
 
 
 class IsAdminRole(permissions.BasePermission):
@@ -102,18 +120,72 @@ class IsAdminRole(permissions.BasePermission):
         return is_admin(request.user)
 
 
+class SchoolPagination(PageNumberPagination):
+    page_size = 20
+    page_size_query_param = 'page_size'
+    max_page_size = 200
+
+
 class SchoolViewSet(viewsets.ModelViewSet):
     queryset = School.objects.all()
     serializer_class = SchoolSerializer
     permission_classes = [IsAdminOrReadOnly]
+    pagination_class = SchoolPagination
 
     def get_queryset(self):
         if is_admin(self.request.user):
-            return School.objects.all()
-        school_ids = user_school_ids(self.request.user)
-        if not school_ids:
-            return School.objects.none()
-        return School.objects.filter(id__in=school_ids)
+            qs = School.objects.all()
+        else:
+            school_ids = user_school_ids(self.request.user)
+            if not school_ids:
+                qs = School.objects.none()
+            else:
+                qs = School.objects.filter(id__in=school_ids)
+
+        search = self.request.query_params.get('search')
+        if search:
+            qs = qs.filter(
+                Q(name__icontains=search) |
+                Q(school_code__icontains=search) |
+                Q(directorate__icontains=search) |
+                Q(address__icontains=search)
+            )
+        directorate = self.request.query_params.get('directorate')
+        if directorate:
+            qs = qs.filter(directorate__icontains=directorate)
+
+        ordering = self.request.query_params.get('ordering', 'id')
+        if ordering not in ['id', '-id', 'name', '-name', 'school_code', '-school_code', 'directorate', '-directorate']:
+            ordering = 'id'
+        return qs.order_by(ordering)
+
+    def create(self, request, *args, **kwargs):
+        # Only system admins may create schools (school managers can't create new ones)
+        if not is_admin(request.user):
+            return Response({'detail': 'Only system admins can create schools'}, status=status.HTTP_403_FORBIDDEN)
+        return super().create(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        if not is_admin(request.user):
+            return Response({'detail': 'Only system admins can delete schools'}, status=status.HTTP_403_FORBIDDEN)
+        return super().destroy(request, *args, **kwargs)
+
+    def perform_update(self, serializer):
+        old_manager_id = self.get_object().manager_id
+        school = serializer.save()
+        new_manager_id = school.manager_id
+        if old_manager_id == new_manager_id:
+            return
+        if new_manager_id:
+            new_manager = school.manager
+            if new_manager.role not in User.ADMIN_ROLES and new_manager.role != 'school_admin':
+                new_manager.role = 'school_admin'
+                new_manager.save(update_fields=['role'])
+        if old_manager_id:
+            old_manager = User.objects.filter(pk=old_manager_id).first()
+            if old_manager and old_manager.role == 'school_admin' and not old_manager.managed_schools.exists():
+                old_manager.role = 'student'
+                old_manager.save(update_fields=['role'])
 
 
 class AcademicYearViewSet(viewsets.ModelViewSet):
@@ -210,6 +282,20 @@ class SectionViewSet(viewsets.ModelViewSet):
         if not section_ids:
             return Section.objects.none()
         return Section.objects.filter(id__in=section_ids)
+
+    def perform_create(self, serializer):
+        if not is_admin(self.request.user):
+            school = serializer.validated_data.get('school')
+            if not school or school.manager_id != self.request.user.id:
+                raise serializers.ValidationError('يمكنك إنشاء شعب في مدرستك فقط')
+        serializer.save()
+
+    def perform_update(self, serializer):
+        if not is_admin(self.request.user):
+            school = serializer.validated_data.get('school') or self.get_object().school
+            if school.manager_id != self.request.user.id:
+                raise serializers.ValidationError('يمكنك تعديل شعب مدرستك فقط')
+        serializer.save()
 
 
 class StudentEnrollmentViewSet(viewsets.ModelViewSet):
@@ -326,8 +412,12 @@ class SchoolAnnouncementViewSet(viewsets.ModelViewSet):
         )
 
     def perform_create(self, serializer):
+        if not is_admin(self.request.user) and self.request.user.role == 'school_admin':
+            school = serializer.validated_data.get('school')
+            if not school or school.manager_id != self.request.user.id:
+                raise serializers.ValidationError({'school': 'يمكنك النشر في مدرستك فقط'})
         is_emergency = serializer.validated_data.get('is_emergency', False)
-        if is_emergency and not is_admin(self.request.user):
+        if is_emergency and not is_admin(self.request.user) and self.request.user.role != 'school_admin':
             serializer.validated_data['is_emergency'] = False
         announcement = serializer.save(author=self.request.user)
         if announcement.is_emergency:

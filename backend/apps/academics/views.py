@@ -4,6 +4,8 @@ from rest_framework import generics, parsers, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from apps.users.permissions import IsContentAdmin
+
 from .extraction import extract_text
 from .models import Curriculum, CurriculumDocument, Grade, Subject, Unit
 from .serializers import (
@@ -25,13 +27,13 @@ class GradeListView(generics.ListAPIView):
 class GradeCreateView(generics.CreateAPIView):
     queryset = Grade.objects.all()
     serializer_class = GradeSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsContentAdmin]
 
 
 class GradeDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Grade.objects.all()
     serializer_class = GradeSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsContentAdmin]
 
 
 class SubjectListView(generics.ListAPIView):
@@ -43,13 +45,13 @@ class SubjectListView(generics.ListAPIView):
 class SubjectCreateView(generics.CreateAPIView):
     queryset = Subject.objects.all()
     serializer_class = SubjectSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsContentAdmin]
 
 
 class SubjectDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Subject.objects.all()
     serializer_class = SubjectSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsContentAdmin]
 
 
 class CurriculumListView(generics.ListAPIView):
@@ -61,13 +63,13 @@ class CurriculumListView(generics.ListAPIView):
 class CurriculumCreateView(generics.CreateAPIView):
     queryset = Curriculum.objects.all()
     serializer_class = CurriculumSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsContentAdmin]
 
 
 class CurriculumDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Curriculum.objects.all()
     serializer_class = CurriculumDetailSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsContentAdmin]
 
 
 class UnitListView(generics.ListAPIView):
@@ -81,7 +83,7 @@ class UnitListView(generics.ListAPIView):
 
 class UnitCreateView(generics.CreateAPIView):
     serializer_class = UnitSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsContentAdmin]
 
     def perform_create(self, serializer):
         curriculum_id = self.kwargs.get('curriculum_id')
@@ -91,12 +93,12 @@ class UnitCreateView(generics.CreateAPIView):
 class UnitDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Unit.objects.all()
     serializer_class = UnitSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsContentAdmin]
 
 
 class CurriculumDocumentListView(generics.ListAPIView):
     serializer_class = CurriculumDocumentSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsContentAdmin]
 
     def get_queryset(self):
         curriculum_id = self.kwargs.get('curriculum_id')
@@ -152,18 +154,18 @@ class CurriculumDocumentDownloadView(APIView):
 class CurriculumDocumentCreateView(generics.CreateAPIView):
     queryset = CurriculumDocument.objects.all()
     serializer_class = CurriculumDocumentSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsContentAdmin]
     parser_classes = [parsers.MultiPartParser, parsers.FormParser]
 
 
 class CurriculumDocumentDetailView(generics.RetrieveDestroyAPIView):
     queryset = CurriculumDocument.objects.all()
     serializer_class = CurriculumDocumentSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsContentAdmin]
 
 
 class CurriculumDocumentExtractView(APIView):
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsContentAdmin]
 
     def post(self, request, pk):
         try:

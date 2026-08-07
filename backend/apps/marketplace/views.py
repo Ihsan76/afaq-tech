@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils import timezone
 from rest_framework import generics, permissions, status
+from apps.users.permissions import IsMarketplaceAdmin
 from rest_framework.decorators import (
     api_view,
     authentication_classes,
@@ -240,21 +241,21 @@ class ReviewListView(generics.ListCreateAPIView):
 class AdminServiceCategoryListCreateView(generics.ListCreateAPIView):
     queryset = ServiceCategory.objects.all()
     serializer_class = ServiceCategorySerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsMarketplaceAdmin]
     pagination_class = None
 
 
 class AdminServiceCategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = ServiceCategory.objects.all()
     serializer_class = ServiceCategorySerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsMarketplaceAdmin]
 
 
 # --- Admin: Services ---
 
 class AdminServiceListView(generics.ListCreateAPIView):
     serializer_class = AdminServiceSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsMarketplaceAdmin]
 
     def get_queryset(self):
         qs = Service.objects.select_related('provider', 'category').all()
@@ -279,14 +280,14 @@ class AdminServiceListView(generics.ListCreateAPIView):
 class AdminServiceDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Service.objects.select_related('provider', 'category').all()
     serializer_class = AdminServiceSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsMarketplaceAdmin]
 
 
 # --- Admin: Orders ---
 
 class AdminOrderListView(generics.ListAPIView):
     serializer_class = AdminOrderSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsMarketplaceAdmin]
 
     def get_queryset(self):
         qs = Order.objects.select_related('buyer', 'service', 'service__provider').all()
@@ -306,7 +307,7 @@ class AdminOrderListView(generics.ListAPIView):
 
 class AdminOrderDetailView(generics.RetrieveUpdateAPIView):
     serializer_class = AdminOrderSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsMarketplaceAdmin]
 
     def get_queryset(self):
         return Order.objects.select_related('buyer', 'service', 'service__provider').all()
@@ -331,7 +332,7 @@ class AdminOrderDetailView(generics.RetrieveUpdateAPIView):
 
 class AdminReviewListView(generics.ListAPIView):
     serializer_class = AdminReviewSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsMarketplaceAdmin]
     pagination_class = None
 
     def get_queryset(self):
@@ -348,7 +349,7 @@ class AdminReviewListView(generics.ListAPIView):
 class AdminReviewDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Review.objects.select_related('reviewer', 'service').all()
     serializer_class = AdminReviewSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsMarketplaceAdmin]
 
     def perform_update(self, serializer):
         serializer.save()

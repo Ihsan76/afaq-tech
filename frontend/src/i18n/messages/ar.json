@@ -548,9 +548,20 @@
     "changeRole": "الدور",
     "changePlan": "الباقة",
     "verified": "موثق",
-    "searchUsers": "بحث بالبريد...",
+    "searchUsers": "بحث بالاسم أو البريد...",
+    "searchSchool": "بحث بالمدرسة...",
     "allRoles": "كل الأدوار",
     "allPlans": "كل الباقات",
+    "sortBy": "الفرز",
+    "sortNewest": "الأحدث أولاً",
+    "sortName": "الاسم",
+    "sortEmail": "البريد",
+    "sortJoined": "تاريخ التسجيل",
+    "previousPage": "السابق",
+    "nextPage": "التالي",
+    "page": "صفحة",
+    "of": "من",
+    "perPage": "لكل صفحة",
     "courses": "الدورات",
     "coursesSection": "الدورات",
     "coursesDesc": "إدارة الدورات والفصول والدروس",
@@ -650,7 +661,9 @@
     "orgNameRequired": "اسم المنشأة مطلوب",
     "ownerEmailRequired": "بريد المالك مطلوب",
     "orgStatusActive": "نشطة",
-    "orgStatusSuspended": "موقوفة"
+    "orgStatusSuspended": "موقوفة",
+    "school": "المدرسة",
+    "sortNameDesc": "الاسم تنازلياً"
   },
   "dashboard": {
     "title": "لوحة التحكم",
@@ -689,7 +702,13 @@
     "manageOrgDesc": "إدارة مقاعد المعلمين، الدعوات، ومتابعة الاستخدام المشترك",
     "myCoursesDesc": "استعرض دوراتك المسجلة وتابع تقدمك",
     "schoolFollowUp": "المتابعة المدرسية",
-    "schoolFollowUpDesc": "إعلانات مدرستك وواجباتها وتواصل مع معلميك"
+    "schoolFollowUpDesc": "إعلانات مدرستك وواجباتها وتواصل مع معلميك",
+    "roleParent": "ولي أمر",
+    "roleDeveloper": "مطوّر",
+    "roleSupport": "دعم فني",
+    "roleContentManager": "مدير محتوى",
+    "roleFinance": "مشرف مالي",
+    "roleSchoolAdmin": "مدير مدرسة"
   },
   "profile": {
     "title": "الملف الشخصي",

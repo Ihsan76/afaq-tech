@@ -6,6 +6,24 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useAuthStore } from "@/store/auth";
 
+// Roles allowed into /admin (mirrors backend apps/users/permissions.py)
+const ADMIN_ROLES = ["admin", "developer", "support", "content_manager", "finance"];
+
+// Section key -> roles that may see it (admin sees all)
+const SECTION_ROLES: Record<string, string[]> = {
+  content:       ["developer", "content_manager"],
+  education:     ["developer", "content_manager"],
+  blog:          ["developer", "content_manager"],
+  ebooks:        ["developer", "content_manager"],
+  courses:       ["developer", "content_manager"],
+  marketplace:   ["developer"],
+  ai:            ["developer"],
+  messages:      ["developer", "support"],
+  users:         ["developer", "support"],
+  subscriptions: ["finance"],
+  organizations: ["developer"],
+};
+
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const locale = pathname.split("/")[1] || "en";
@@ -18,13 +36,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   useEffect(() => { loadUser().finally(() => setChecked(true)); }, [loadUser]);
   useEffect(() => { setMobileOpen(false); }, [pathname]);
 
-  const isAdmin = user?.role === "admin" || user?.is_staff;
+  const isAdmin = !!user && (ADMIN_ROLES.includes(user.role) || user.is_staff);
   const denied = checked && (!user || !isAdmin);
 
   const isActive = (href: string) => pathname.includes(href);
 
-  const NAV_ITEMS = [
-    { section: t("admin.contentSection"), items: [
+  const canSee = (section: string) =>
+    !!user && (user.is_staff || user.role === "admin" || (SECTION_ROLES[section] || []).includes(user.role));
+
+  const ALL_NAV_ITEMS = [
+    { key: "content", section: t("admin.contentSection"), items: [
       { href: "/admin/pages", label: t("admin.pages"), icon: "📄" },
       { href: "/admin/menus", label: t("admin.menus"), icon: "📋" },
       { href: "/admin/templates", label: t("admin.templates"), icon: "📝" },
@@ -34,43 +55,45 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       { href: "/admin/translations", label: t("admin.translations"), icon: "🗂️" },
       { href: "/admin/feature-flags", label: t("admin.featureFlags"), icon: "🚩" },
     ]},
-    { section: t("admin.educationSection"), items: [
+    { key: "education", section: t("admin.educationSection"), items: [
       { href: "/admin/grades", label: t("admin.grades"), icon: "🎓" },
       { href: "/admin/subjects", label: t("admin.subjects"), icon: "📚" },
       { href: "/admin/curricula", label: t("admin.curricula"), icon: "📋" },
       { href: "/admin/schools", label: t("admin.schools") || "المدارس والمتابعة", icon: "🏫" },
     ]},
-    { section: t("admin.blogSection"), items: [
+    { key: "blog", section: t("admin.blogSection"), items: [
       { href: "/admin/posts", label: t("admin.blog"), icon: "📝" },
     ]},
-    { section: t("admin.ebooksSection") || "E-Books", items: [
+    { key: "ebooks", section: t("admin.ebooksSection") || "E-Books", items: [
       { href: "/admin/ebooks", label: t("admin.ebooks") || "E-Books", icon: "📚" },
     ]},
-    { section: t("admin.coursesSection"), items: [
+    { key: "courses", section: t("admin.coursesSection"), items: [
       { href: "/admin/courses", label: t("admin.courses"), icon: "🎬" },
     ]},
-    { section: t("admin.marketplaceSection"), items: [
+    { key: "marketplace", section: t("admin.marketplaceSection"), items: [
       { href: "/admin/marketplace", label: t("admin.marketplace"), icon: "🏪" },
       { href: "/admin/ai-runs", label: t("admin.aiRuns"), icon: "🤖" },
     ]},
-    { section: "AI", items: [
+    { key: "ai", section: "AI", items: [
       { href: "/admin/ai-models", label: "نماذج AI", icon: "🤖" },
       { href: "/admin/prompts", label: "البرومبتات", icon: "📝" },
     ]},
-    { section: t("admin.messagesSection"), items: [
+    { key: "messages", section: t("admin.messagesSection"), items: [
       { href: "/admin/messages", label: t("admin.messages"), icon: "✉️" },
       { href: "/admin/newsletter", label: t("admin.newsletterSubs"), icon: "📬" },
     ]},
-    { section: t("admin.usersSection"), items: [
+    { key: "users", section: t("admin.usersSection"), items: [
       { href: "/admin/users", label: t("admin.users"), icon: "👥" },
     ]},
-    { section: t("admin.subscriptionsSection"), items: [
+    { key: "subscriptions", section: t("admin.subscriptionsSection"), items: [
       { href: "/admin/subscriptions", label: t("admin.subscriptions"), icon: "💳" },
     ]},
-    { section: t("admin.organizationsSection"), items: [
+    { key: "organizations", section: t("admin.organizationsSection"), items: [
       { href: "/admin/organizations", label: t("admin.organizations"), icon: "🏫" },
     ]},
   ];
+
+  const NAV_ITEMS = ALL_NAV_ITEMS.filter((s) => canSee(s.key));
 
   const isRtl = ["ar", "ur", "fa", "he"].includes(locale);
 

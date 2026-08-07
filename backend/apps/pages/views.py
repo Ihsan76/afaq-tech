@@ -1,6 +1,7 @@
 from django.shortcuts import get_object_or_404
 from django.core.cache import cache
 from rest_framework import generics, permissions, status
+from apps.users.permissions import IsContentAdmin
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -56,7 +57,7 @@ class PagePublicView(APIView):
 class PageAdminListView(generics.ListAPIView):
     """قامة الصفحات — للإدارة"""
     serializer_class = PageListSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsContentAdmin]
 
     def get_queryset(self):
         return Page.objects.all()
@@ -65,20 +66,20 @@ class PageAdminListView(generics.ListAPIView):
 class PageAdminCreateView(generics.CreateAPIView):
     """إنشاء صفحة جديدة"""
     serializer_class = PageCreateUpdateSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsContentAdmin]
 
 
 class PageAdminUpdateView(generics.RetrieveUpdateAPIView):
     """جلب / تعديل صفحة"""
     queryset = Page.objects.all()
     serializer_class = PageDetailSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsContentAdmin]
 
 
 class PageAdminDeleteView(generics.DestroyAPIView):
     """حذف صفحة"""
     queryset = Page.objects.all()
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsContentAdmin]
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -87,7 +88,7 @@ class PageAdminDeleteView(generics.DestroyAPIView):
 
 class BlockListCreateView(APIView):
     """جلب بلوكات الصفحة + إضافة بلوك جديد"""
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsContentAdmin]
 
     def get(self, request, page_id):
         page = get_object_or_404(Page, pk=page_id)
@@ -106,7 +107,7 @@ class BlockListCreateView(APIView):
 
 class BlockUpdateDeleteView(APIView):
     """تعديل / حذف بلوك"""
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsContentAdmin]
 
     def put(self, request, page_id, pk):
         block = get_object_or_404(PageBlock, pk=pk, page_id=page_id)
@@ -124,7 +125,7 @@ class BlockUpdateDeleteView(APIView):
 
 class BlockReorderView(APIView):
     """إعادة ترتيب البلوكات"""
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsContentAdmin]
 
     def put(self, request, page_id):
         page = get_object_or_404(Page, pk=page_id)
@@ -158,7 +159,7 @@ class MenuPublicView(APIView):
 class MenuAdminListView(generics.ListAPIView):
     """قائمة العناصر — للإدارة"""
     serializer_class = MenuItemListSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsContentAdmin]
 
     def get_queryset(self):
         menu_type = self.request.query_params.get('menu', 'header')
@@ -168,25 +169,25 @@ class MenuAdminListView(generics.ListAPIView):
 class MenuAdminCreateView(generics.CreateAPIView):
     """إضافة عنصر قائمة"""
     serializer_class = MenuItemCreateUpdateSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsContentAdmin]
 
 
 class MenuAdminUpdateView(generics.UpdateAPIView):
     """تعديل عنصر قائمة"""
     queryset = MenuItem.objects.all()
     serializer_class = MenuItemCreateUpdateSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsContentAdmin]
 
 
 class MenuAdminDeleteView(generics.DestroyAPIView):
     """حذف عنصر قائمة"""
     queryset = MenuItem.objects.all()
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsContentAdmin]
 
 
 class MenuReorderView(APIView):
     """إعادة ترتيب عناصر القائمة"""
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsContentAdmin]
 
     def put(self, request):
         order = request.data.get('order', [])
@@ -220,7 +221,7 @@ class TemplateListView(APIView):
 class TemplateAdminListView(generics.ListAPIView):
     """قائمة القوالب — للإدارة"""
     serializer_class = PageTemplateSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsContentAdmin]
 
     def get_queryset(self):
         return PageTemplate.objects.all()
@@ -229,20 +230,20 @@ class TemplateAdminListView(generics.ListAPIView):
 class TemplateAdminCreateView(generics.CreateAPIView):
     """إنشاء قالب"""
     serializer_class = PageTemplateSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsContentAdmin]
 
 
 class TemplateAdminUpdateView(generics.UpdateAPIView):
     """تعديل قالب"""
     queryset = PageTemplate.objects.all()
     serializer_class = PageTemplateSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsContentAdmin]
 
 
 class TemplateAdminDeleteView(generics.DestroyAPIView):
     """حذف قالب"""
     queryset = PageTemplate.objects.all()
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsContentAdmin]
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -267,7 +268,7 @@ class SiteSettingsPublicView(APIView):
 
 class SiteSettingsAdminView(APIView):
     """تعديل إعدادات الموقع"""
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsContentAdmin]
 
     def put(self, request):
         settings = SiteSettings.load()
@@ -327,7 +328,7 @@ class ContactMessageCreateView(generics.CreateAPIView):
 class ContactMessageAdminListView(generics.ListAPIView):
     """قائمة رسائل التواصل — للإدارة"""
     serializer_class = ContactMessageListSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsContentAdmin]
     queryset = ContactMessage.objects.all()
 
 
@@ -335,7 +336,7 @@ class ContactMessageAdminUpdateView(generics.RetrieveUpdateAPIView):
     """تعديل حالة رسالة التواصل"""
     queryset = ContactMessage.objects.all()
     serializer_class = ContactMessageListSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsContentAdmin]
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -367,5 +368,5 @@ class NewsletterSubscribeView(APIView):
 class NewsletterAdminListView(generics.ListAPIView):
     """قائمة المشتركين — للإدارة"""
     serializer_class = NewsletterSubscriberListSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsContentAdmin]
     queryset = NewsletterSubscriber.objects.all()

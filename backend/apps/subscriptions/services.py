@@ -213,10 +213,21 @@ def user_usage_summary(user):
 
 
 def manager_organization(user):
-    """The organization owned by the user (school/institution manager), or None."""
-    if user.subscription_plan not in ORGANIZATION_PLAN_CODES:
-        return None
-    return ensure_organization(user)
+    """The organization the user manages: owned (school/enterprise plan) or via an active MANAGER membership."""
+    if user.subscription_plan in ORGANIZATION_PLAN_CODES:
+        return ensure_organization(user)
+    membership = (
+        OrganizationMembership.objects
+        .select_related('organization__plan')
+        .filter(
+            user=user,
+            role=OrganizationMembership.Role.MANAGER,
+            status=OrganizationMembership.Status.ACTIVE,
+            organization__status=Organization.Status.ACTIVE,
+        )
+        .first()
+    )
+    return membership.organization if membership else None
 
 
 def invite_teacher(org, email, inviter, role=OrganizationMembership.Role.TEACHER):

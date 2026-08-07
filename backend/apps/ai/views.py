@@ -6,6 +6,7 @@ from django.http import StreamingHttpResponse
 from django.shortcuts import get_object_or_404
 from google import genai
 from rest_framework import generics, permissions, status
+from apps.users.permissions import IsAIAdmin
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 
@@ -40,7 +41,7 @@ from .services import chat_stream
 
 class AIRunAdminListView(generics.ListAPIView):
     serializer_class = AIRunAdminSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsAIAdmin]
 
     def get_queryset(self):
         from django.db.models import Q
@@ -69,7 +70,7 @@ class AIRunAdminListView(generics.ListAPIView):
 
 
 @api_view(['GET'])
-@permission_classes([permissions.IsAdminUser])
+@permission_classes([IsAIAdmin])
 def air_run_stats(request):
     from django.db.models import Avg, Count, Sum
     qs = AIRun.objects.all()
@@ -228,13 +229,13 @@ def conversation_clear_view(request, pk):
 class AIModelAdminListView(generics.ListCreateAPIView):
     queryset = AIModel.objects.all()
     serializer_class = AIModelSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsAIAdmin]
 
 
 class AIModelAdminDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = AIModel.objects.all()
     serializer_class = AIModelSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsAIAdmin]
 
 
 class AIModelPublicListView(generics.ListAPIView):
@@ -249,7 +250,7 @@ class AIModelPublicListView(generics.ListAPIView):
 class ProviderTypeListView(generics.ListAPIView):
     queryset = ProviderType.objects.filter(is_active=True)
     serializer_class = ProviderTypeSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsAIAdmin]
     pagination_class = None
 
 
@@ -258,13 +259,13 @@ class ProviderTypeListView(generics.ListAPIView):
 class AIProviderListCreateView(generics.ListCreateAPIView):
     queryset = AIProvider.objects.select_related('provider_type').all()
     serializer_class = AIProviderSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsAIAdmin]
 
 
 class AIProviderDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = AIProvider.objects.select_related('provider_type').all()
     serializer_class = AIProviderSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsAIAdmin]
 
 
 def _resolve_provider_and_key(request):
@@ -363,7 +364,7 @@ def _fetch_openai_compatible_models(base_url, api_key=''):
 
 
 @api_view(['POST'])
-@permission_classes([permissions.IsAdminUser])
+@permission_classes([IsAIAdmin])
 def test_provider_connection(request):
     provider_type, api_key, base_url = _resolve_provider_and_key(request)
     try:
@@ -385,7 +386,7 @@ def test_provider_connection(request):
 
 
 @api_view(['POST'])
-@permission_classes([permissions.IsAdminUser])
+@permission_classes([IsAIAdmin])
 def fetch_provider_models(request):
     provider_type, api_key, base_url = _resolve_provider_and_key(request)
     try:
@@ -411,7 +412,7 @@ def fetch_provider_models(request):
 
 
 @api_view(['POST'])
-@permission_classes([permissions.IsAdminUser])
+@permission_classes([IsAIAdmin])
 def import_provider_models(request):
     items = request.data.get('models', [])
     if not items:
@@ -448,7 +449,7 @@ def import_provider_models(request):
 
 class PromptTemplateListView(generics.ListCreateAPIView):
     queryset = PromptTemplate.objects.all()
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsAIAdmin]
     pagination_class = None
 
     def get_serializer_class(self):
@@ -460,14 +461,14 @@ class PromptTemplateListView(generics.ListCreateAPIView):
 class PromptTemplateDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = PromptTemplate.objects.all()
     serializer_class = PromptTemplateSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsAIAdmin]
 
 
 # --- Grade Prompt Profile CRUD ---
 
 class GradePromptProfileListView(generics.ListCreateAPIView):
     queryset = GradePromptProfile.objects.select_related('grade').prefetch_related('subject_profiles__subject').all()
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsAIAdmin]
     pagination_class = None
 
     def get_serializer_class(self):
@@ -479,7 +480,7 @@ class GradePromptProfileListView(generics.ListCreateAPIView):
 class GradePromptProfileDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = GradePromptProfile.objects.select_related('grade').prefetch_related('subject_profiles__subject').all()
     serializer_class = GradePromptProfileSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsAIAdmin]
 
 
 # --- Subject Prompt Profile CRUD ---
@@ -487,11 +488,11 @@ class GradePromptProfileDetailView(generics.RetrieveUpdateDestroyAPIView):
 class SubjectPromptProfileListView(generics.ListCreateAPIView):
     queryset = SubjectPromptProfile.objects.select_related('grade_profile__grade', 'subject').all()
     serializer_class = SubjectPromptProfileSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsAIAdmin]
     pagination_class = None
 
 
 class SubjectPromptProfileDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = SubjectPromptProfile.objects.select_related('grade_profile__grade', 'subject').all()
     serializer_class = SubjectPromptProfileSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsAIAdmin]

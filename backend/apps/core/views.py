@@ -3,6 +3,8 @@ from rest_framework import generics, permissions, status
 from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.response import Response
 
+from apps.users.permissions import IsAdminRole, IsSettingsAdmin
+
 from .models import FeatureFlag, Language, TranslationKey
 from .serializers import (
     FeatureFlagSerializer,
@@ -33,24 +35,24 @@ class LanguagePublicListView(generics.ListAPIView):
 class LanguageAdminListView(generics.ListAPIView):
     queryset = Language.objects.all()
     serializer_class = LanguageSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsSettingsAdmin]
     pagination_class = None
 
 
 class LanguageAdminCreateView(generics.CreateAPIView):
     queryset = Language.objects.all()
     serializer_class = LanguageSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsSettingsAdmin]
 
 
 class LanguageAdminUpdateView(generics.RetrieveUpdateAPIView):
     queryset = Language.objects.all()
     serializer_class = LanguageSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsSettingsAdmin]
 
 
 @api_view(['DELETE'])
-@permission_classes([permissions.IsAdminUser])
+@permission_classes([IsSettingsAdmin])
 def language_delete(request, pk):
     language = get_object_or_404(Language, pk=pk)
     if language.is_default:
@@ -76,7 +78,7 @@ class TranslationPublicListView(generics.ListAPIView):
 
 class TranslationAdminListView(generics.ListAPIView):
     serializer_class = TranslationSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsSettingsAdmin]
     pagination_class = None
 
     def get_queryset(self):
@@ -93,17 +95,17 @@ class TranslationAdminListView(generics.ListAPIView):
 class TranslationAdminCreateView(generics.CreateAPIView):
     queryset = TranslationKey.objects.all()
     serializer_class = TranslationSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsSettingsAdmin]
 
 
 class TranslationAdminUpdateView(generics.RetrieveUpdateAPIView):
     queryset = TranslationKey.objects.all()
     serializer_class = TranslationSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsSettingsAdmin]
 
 
 @api_view(['DELETE'])
-@permission_classes([permissions.IsAdminUser])
+@permission_classes([IsSettingsAdmin])
 def translation_delete(request, pk):
     translation = get_object_or_404(TranslationKey, pk=pk)
     translation.delete()
@@ -120,24 +122,24 @@ class FeatureFlagPublicListView(generics.ListAPIView):
 class FeatureFlagAdminListView(generics.ListAPIView):
     queryset = FeatureFlag.objects.all()
     serializer_class = FeatureFlagSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsSettingsAdmin]
     pagination_class = None
 
 
 class FeatureFlagAdminCreateView(generics.CreateAPIView):
     queryset = FeatureFlag.objects.all()
     serializer_class = FeatureFlagSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsSettingsAdmin]
 
 
 class FeatureFlagAdminUpdateView(generics.RetrieveUpdateAPIView):
     queryset = FeatureFlag.objects.all()
     serializer_class = FeatureFlagSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsSettingsAdmin]
 
 
 @api_view(['DELETE'])
-@permission_classes([permissions.IsAdminUser])
+@permission_classes([IsSettingsAdmin])
 def feature_flag_delete(request, pk):
     flag = get_object_or_404(FeatureFlag, pk=pk)
     flag.delete()
@@ -145,7 +147,7 @@ def feature_flag_delete(request, pk):
 
 
 @api_view(['GET'])
-@permission_classes([permissions.IsAdminUser])
+@permission_classes([IsAdminRole])
 def admin_stats(request):
     from datetime import timedelta
 

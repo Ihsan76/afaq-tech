@@ -18,10 +18,11 @@ def _locale(request):
 
 class UserSerializer(serializers.ModelSerializer):
     name = serializers.SerializerMethodField()
+    school_name = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ['id', 'email', 'name', 'role', 'subscription_plan', 'ui_language',
+        fields = ['id', 'email', 'name', 'school_name', 'role', 'subscription_plan', 'ui_language',
                   'is_verified', 'is_staff', 'phone', 'avatar', 'timezone', 'date_joined',
                   'preferred_currency',
                   'translations', 'points', 'badges', 'lessons_created_count']
@@ -30,6 +31,9 @@ class UserSerializer(serializers.ModelSerializer):
     def get_name(self, obj):
         loc = _locale(self.context.get('request'))
         return get_translation(obj.translations, loc, 'name', obj.email)
+
+    def get_school_name(self, obj):
+        return getattr(obj, 'school_name', None) or ''
 
 
 class RegisterSerializer(serializers.ModelSerializer):

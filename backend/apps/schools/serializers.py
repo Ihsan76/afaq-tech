@@ -18,9 +18,17 @@ from .models import (
 
 
 class SchoolSerializer(serializers.ModelSerializer):
+    manager_email = serializers.CharField(source='manager.email', read_only=True, default='')
+    manager_name = serializers.SerializerMethodField()
+
     class Meta:
         model = School
         fields = '__all__'
+
+    def get_manager_name(self, obj):
+        if not obj.manager:
+            return ''
+        return obj.manager.translations.get('ar', {}).get('name') or obj.manager.email
 
 
 class AcademicYearSerializer(serializers.ModelSerializer):

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { api } from "@/lib/api";
 
@@ -11,6 +11,18 @@ interface School {
   directorate: string;
   phone: string;
   address: string;
+  gender?: string;
+  education_type?: string;
+  manager?: number | null;
+  manager_email?: string;
+  manager_name?: string;
+}
+
+interface UserSuggestion {
+  id: number;
+  email: string;
+  name: string;
+  role: string;
 }
 
 interface AcademicYear {
@@ -41,36 +53,77 @@ interface Announcement {
   created_at: string;
 }
 
+const PAGE_SIZES = [20, 50, 100];
+const SORTS = [
+  { value: "id", label: "ID" },
+  { value: "name", label: "اسم المدرسة (أ-ي)" },
+  { value: "-name", label: "اسم المدرسة (ي-أ)" },
+  { value: "school_code", label: "رمز المدرسة" },
+  { value: "directorate", label: "المديرية" },
+];
+
 export default function AdminSchoolsPage() {
   const t = useTranslations("schools");
   const commonT = useTranslations("common");
   const locale = useLocale();
 
   const [activeTab, setActiveTab] = useState<"schools" | "years" | "sections" | "announcements">("schools");
+  const [loading, setLoading] = useState(true);
+
+  // Schools list state + pagination/search/sort
   const [schools, setSchools] = useState<School[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [search, setSearch] = useState("");
+  const [directorateFilter, setDirectorateFilter] = useState("");
+  const [ordering, setOrdering] = useState("id");
+
+  // Other tabs state
   const [academicYears, setAcademicYears] = useState<AcademicYear[]>([]);
   const [sections, setSections] = useState<Section[]>([]);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  // Form states
+  // Modals
   const [showSchoolModal, setShowSchoolModal] = useState(false);
-  const [schoolForm, setSchoolForm] = useState({ name: "", school_code: "", directorate: "", phone: "", address: "" });
+  const [editingSchoolId, setEditingSchoolId] = useState<number | null>(null);
+  const [schoolForm, setSchoolForm] = useState({ name: "", school_code: "", directorate: "", phone: "", address: "", gender: "", education_type: "" });
+
+  // Manager assignment
+  const [currentManager, setCurrentManager] = useState<{ id: number; email: string; name: string } | null>(null);
+  const [managerQuery, setManagerQuery] = useState("");
+  const [managerSuggestions, setManagerSuggestions] = useState<UserSuggestion[]>([]);
+  const [managerSearching, setManagerSearching] = useState(false);
 
   const [showAnnouncementModal, setShowAnnouncementModal] = useState(false);
   const [announcementForm, setAnnouncementForm] = useState({ school: 0, section: "", title: "", content: "", is_emergency: false });
 
-  useEffect(() => {
-    fetchData();
-  }, [activeTab]);
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
 
-  const fetchData = async () => {
+  const fetchSchools = useCallback(async () => {
     setLoading(true);
     try {
-      if (activeTab === "schools") {
-        const res = await api.get("/schools/schools/");
-        setSchools(res.data.results || res.data);
-      } else if (activeTab === "years") {
+      const params = new URLSearchParams();
+      if (search) params.set("search", search);
+      if (directorateFilter) params.set("directorate", directorateFilter);
+      if (ordering) params.set("ordering", ordering);
+      params.set("page", String(page));
+      params.set("page_size", String(pageSize));
+
+      const res = await api.get(`/schools/schools/?${params.toString()}`);
+      setSchools(res.data.results || res.data);
+      setTotalCount(res.data.count ?? (res.data.results || res.data).length);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }, [search, directorateFilter, ordering, page, pageSize]);
+
+  const fetchOtherTab = async () => {
+    setLoading(true);
+    try {
+      if (activeTab === "years") {
         const res = await api.get("/schools/academic-years/");
         setAcademicYears(res.data.results || res.data);
       } else if (activeTab === "sections") {
@@ -87,15 +140,107 @@ export default function AdminSchoolsPage() {
     }
   };
 
-  const handleCreateSchool = async (e: React.FormEvent) => {
+  useEffect(() => {
+    if (activeTab === "schools") {
+      fetchSchools();
+    } else {
+      fetchOtherTab();
+    }
+  }, [activeTab, fetchSchools]);
+
+  // Lock body scroll while a modal is open
+  useEffect(() => {
+    const modalOpen = showSchoolModal || showAnnouncementModal;
+    document.body.style.overflow = modalOpen ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [showSchoolModal, showAnnouncementModal]);
+
+  const handleOpenCreateModal = () => {
+    setEditingSchoolId(null);
+    setCurrentManager(null);
+    setManagerQuery("");
+    setManagerSuggestions([]);
+    setSchoolForm({ name: "", school_code: "", directorate: "", phone: "", address: "", gender: "", education_type: "" });
+    setShowSchoolModal(true);
+  };
+
+  const handleOpenEditModal = (school: School) => {
+    setEditingSchoolId(school.id);
+    setCurrentManager(school.manager ? { id: school.manager, email: school.manager_email || "", name: school.manager_name || "" } : null);
+    setManagerQuery("");
+    setManagerSuggestions([]);
+    setSchoolForm({
+      name: school.name || "",
+      school_code: school.school_code || "",
+      directorate: school.directorate || "",
+      phone: school.phone || "",
+      address: school.address || "",
+      gender: school.gender || "",
+      education_type: school.education_type || "",
+    });
+    setShowSchoolModal(true);
+  };
+
+  const searchManagers = async (q: string) => {
+    setManagerQuery(q);
+    if (q.trim().length < 2) { setManagerSuggestions([]); return; }
+    setManagerSearching(true);
+    try {
+      const res = await api.get(`/auth/admin/list/?search=${encodeURIComponent(q)}&page_size=8`);
+      setManagerSuggestions(res.data.results || []);
+    } catch {
+      setManagerSuggestions([]);
+    } finally {
+      setManagerSearching(false);
+    }
+  };
+
+  const assignManager = async (u: UserSuggestion) => {
+    if (!editingSchoolId) return;
+    try {
+      await api.patch(`/schools/schools/${editingSchoolId}/`, { manager: u.id });
+      setCurrentManager({ id: u.id, email: u.email, name: u.name });
+      setManagerQuery("");
+      setManagerSuggestions([]);
+      fetchSchools();
+    } catch {
+      alert("تعذر تعيين المدير");
+    }
+  };
+
+  const removeManager = async () => {
+    if (!editingSchoolId) return;
+    try {
+      await api.patch(`/schools/schools/${editingSchoolId}/`, { manager: null });
+      setCurrentManager(null);
+      fetchSchools();
+    } catch {
+      alert("تعذر إزالة المدير");
+    }
+  };
+
+  const handleDeleteSchool = async (id: number) => {
+    if (!confirm("هل أنت متأكد من حذف هذه المدرسة؟")) return;
+    try {
+      await api.delete(`/schools/schools/${id}/`);
+      fetchSchools();
+    } catch (err) {
+      alert("حدث خطأ أثناء الحذف");
+    }
+  };
+
+  const handleSaveSchool = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await api.post("/schools/schools/", schoolForm);
+      if (editingSchoolId) {
+        await api.patch(`/schools/schools/${editingSchoolId}/`, schoolForm);
+      } else {
+        await api.post("/schools/schools/", schoolForm);
+      }
       setShowSchoolModal(false);
-      setSchoolForm({ name: "", school_code: "", directorate: "", phone: "", address: "" });
-      fetchData();
+      fetchSchools();
     } catch (err) {
-      alert("Error creating school");
+      alert("حدث خطأ أثناء حفظ المدرسة");
     }
   };
 
@@ -108,24 +253,26 @@ export default function AdminSchoolsPage() {
       });
       setShowAnnouncementModal(false);
       setAnnouncementForm({ school: schools[0]?.id || 0, section: "", title: "", content: "", is_emergency: false });
-      fetchData();
+      fetchOtherTab();
     } catch (err) {
       alert("Error publishing announcement");
     }
   };
 
+  const inputCls = "px-4 py-2.5 rounded-xl text-sm border outline-none";
+
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-8" dir={locale === "ar" ? "rtl" : "ltr"}>
+    <div className="p-4 sm:p-8 max-w-7xl mx-auto space-y-6" dir={locale === "ar" ? "rtl" : "ltr"}>
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-[var(--color-surface)] p-6 rounded-3xl shadow-sm border border-[var(--color-border)]">
         <div>
-          <h1 className="text-3xl font-bold text-[var(--color-text)]">{t("title")}</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-[var(--color-text)]">{t("title")}</h1>
           <p className="text-[var(--color-text-muted)] mt-1">{t("subtitle")}</p>
         </div>
         <div className="flex gap-3">
           {activeTab === "schools" && (
             <button
-              onClick={() => setShowSchoolModal(true)}
+              onClick={handleOpenCreateModal}
               className="px-5 py-2.5 bg-[var(--color-primary)] text-white rounded-2xl hover:opacity-90 font-medium transition-all shadow-sm"
             >
               + {commonT("add")} {t("schoolsList")}
@@ -143,9 +290,9 @@ export default function AdminSchoolsPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 border-b border-[var(--color-border)] pb-2">
+      <div className="flex flex-wrap gap-2 border-b border-[var(--color-border)] pb-2">
         <button
-          onClick={() => setActiveTab("schools")}
+          onClick={() => { setActiveTab("schools"); setPage(1); }}
           className={`px-5 py-2.5 rounded-2xl font-medium transition-all ${
             activeTab === "schools" ? "bg-[var(--color-primary)] text-white shadow-sm" : "bg-[var(--color-muted)] text-[var(--color-text-secondary)] hover:bg-[var(--color-border-light)]"
           }`}
@@ -180,28 +327,144 @@ export default function AdminSchoolsPage() {
 
       {/* Content */}
       <div className="bg-[var(--color-surface)] rounded-3xl shadow-sm border border-[var(--color-border)] p-6">
+        {/* Schools Tab Controls: Search, Directorate Filter, Sorting */}
+        {activeTab === "schools" && (
+          <div className="flex flex-col sm:flex-row flex-wrap items-center justify-between gap-3 mb-6">
+            <div className="flex flex-wrap gap-2 w-full sm:w-auto flex-1">
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+                placeholder="بحث بالاسم أو الكود أو العنوان..."
+                className={`${inputCls} flex-1 min-w-[240px]`}
+                style={{ background: "var(--color-surface)", color: "var(--color-text)", borderColor: "var(--color-border)" }}
+              />
+              <input
+                type="text"
+                value={directorateFilter}
+                onChange={(e) => { setDirectorateFilter(e.target.value); setPage(1); }}
+                placeholder="فلتر المديرية..."
+                className={`${inputCls} sm:w-48`}
+                style={{ background: "var(--color-surface)", color: "var(--color-text)", borderColor: "var(--color-border)" }}
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <select
+                value={ordering}
+                onChange={(e) => setOrdering(e.target.value)}
+                className={inputCls}
+                style={{ background: "var(--color-surface)", color: "var(--color-text)", borderColor: "var(--color-border)" }}
+              >
+                {SORTS.map((s) => (
+                  <option key={s.value} value={s.value}>{s.label}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+        )}
+
         {loading ? (
           <div className="text-center py-12 text-[var(--color-text-muted)]">{commonT("loading")}</div>
         ) : (
           <>
-            {/* Schools Tab */}
+            {/* Schools Tab - Table View with Scrolling */}
             {activeTab === "schools" && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {schools.map((school) => (
-                  <div key={school.id} className="p-6 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-alt)] space-y-3">
-                    <div className="flex justify-between items-start">
-                      <h3 className="font-bold text-lg text-[var(--color-text)]">{school.name}</h3>
-                      <span className="text-xs bg-[var(--color-primary-light)] text-[var(--color-primary)] px-3 py-1 rounded-full font-semibold">
-                        {school.school_code}
-                      </span>
-                    </div>
-                    {school.directorate && <p className="text-sm text-[var(--color-text-secondary)]">🏢 {school.directorate}</p>}
-                    {school.phone && <p className="text-sm text-[var(--color-text-secondary)]">📞 {school.phone}</p>}
-                    {school.address && <p className="text-sm text-[var(--color-text-muted)]">📍 {school.address}</p>}
+              <>
+                <div className="rounded-2xl border overflow-auto max-h-[650px]" style={{ background: "var(--color-surface)", borderColor: "var(--color-border)" }}>
+                  <table className="w-full min-w-[900px] border-collapse">
+                    <thead className="sticky top-0 z-10">
+                      <tr className="border-b text-sm font-bold" style={{ borderColor: "var(--color-border)", background: "var(--color-surface-alt)", color: "var(--color-text-secondary)" }}>
+                        <th className="px-4 py-3.5 text-right">#</th>
+                        <th className="px-4 py-3.5 text-right">{t("schoolCode")}</th>
+                        <th className="px-4 py-3.5 text-right">{t("schoolName")}</th>
+                        <th className="px-4 py-3.5 text-right">{t("directorate")}</th>
+                        <th className="px-4 py-3.5 text-right">المدير</th>
+                        <th className="px-4 py-3.5 text-right">الهاتف</th>
+                        <th className="px-4 py-3.5 text-right">العنوان</th>
+                        <th className="px-4 py-3.5 text-center">الإجراءات</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y text-sm" style={{ borderColor: "var(--color-border)" }}>
+                      {schools.map((school) => (
+                        <tr key={school.id} className="transition-colors hover:bg-[var(--color-surface-alt)]">
+                          <td className="px-4 py-3.5 text-[var(--color-text-muted)]">{school.id}</td>
+                          <td className="px-4 py-3.5 font-semibold" style={{ color: "var(--color-primary)" }}>{school.school_code}</td>
+                          <td className="px-4 py-3.5 font-bold text-[var(--color-text)]">{school.name}</td>
+                          <td className="px-4 py-3.5 text-[var(--color-text-secondary)]">{school.directorate || "—"}</td>
+                          <td className="px-4 py-3.5">
+                            {school.manager_name ? (
+                              <div className="min-w-0">
+                                <div className="text-xs font-bold truncate" style={{ color: "var(--color-text)" }}>{school.manager_name}</div>
+                                <div className="text-[10px] truncate" style={{ color: "var(--color-text-muted)" }}>{school.manager_email}</div>
+                              </div>
+                            ) : (
+                              <span className="text-xs" style={{ color: "var(--color-text-muted)" }}>—</span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3.5 text-[var(--color-text-secondary)]" dir="ltr">{school.phone || "—"}</td>
+                          <td className="px-4 py-3.5 text-[var(--color-text-muted)] truncate max-w-xs">{school.address || "—"}</td>
+                          <td className="px-4 py-3.5 text-center space-x-2 space-x-reverse">
+                            <button
+                              onClick={() => handleOpenEditModal(school)}
+                              className="px-3 py-1 rounded-xl text-xs font-bold border hover:opacity-85 transition-all"
+                              style={{ background: "var(--color-info-light)", color: "var(--color-info)", borderColor: "var(--color-info)" }}
+                            >
+                              تعديل
+                            </button>
+                            <button
+                              onClick={() => handleDeleteSchool(school.id)}
+                              className="px-3 py-1 rounded-xl text-xs font-bold border hover:opacity-85 transition-all"
+                              style={{ background: "var(--color-error-light)", color: "var(--color-error)", borderColor: "var(--color-error)" }}
+                            >
+                              حذف
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                      {schools.length === 0 && (
+                        <tr>
+                          <td colSpan={8} className="text-center py-12 text-[var(--color-text-muted)]">
+                            {commonT("noResults")}
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Pagination */}
+                <div className="flex flex-wrap items-center justify-between gap-3 mt-6">
+                  <div className="text-sm" style={{ color: "var(--color-text-muted)" }}>
+                    إجمالي المدارس: {totalCount.toLocaleString()} | صفحة {page} من {totalPages}
                   </div>
-                ))}
-                {schools.length === 0 && <div className="text-[var(--color-text-muted)] col-span-full text-center py-8">{commonT("noResults")}</div>}
-              </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setPage((p) => Math.max(1, p - 1))}
+                      disabled={page <= 1}
+                      className="px-4 py-2 rounded-xl text-sm font-bold border disabled:opacity-40"
+                      style={{ background: "var(--color-surface)", color: "var(--color-text)", borderColor: "var(--color-border)" }}
+                    >
+                      السابق
+                    </button>
+                    <button
+                      onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                      disabled={page >= totalPages}
+                      className="px-4 py-2 rounded-xl text-sm font-bold border disabled:opacity-40"
+                      style={{ background: "var(--color-surface)", color: "var(--color-text)", borderColor: "var(--color-border)" }}
+                    >
+                      التالي
+                    </button>
+                    <select
+                      value={pageSize}
+                      onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }}
+                      className={inputCls}
+                      style={{ background: "var(--color-surface)", color: "var(--color-text)", borderColor: "var(--color-border)" }}
+                    >
+                      {PAGE_SIZES.map((s) => <option key={s} value={s}>{s} لكل صفحة</option>)}
+                    </select>
+                  </div>
+                </div>
+              </>
             )}
 
             {/* Academic Years Tab */}
@@ -220,23 +483,23 @@ export default function AdminSchoolsPage() {
 
             {/* Sections Tab */}
             {activeTab === "sections" && (
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto max-h-[650px] overflow-y-auto">
                 <table className="w-full text-right border-collapse">
-                  <thead>
+                  <thead className="sticky top-0 z-10 bg-[var(--color-surface-alt)]">
                     <tr className="border-b text-[var(--color-text-muted)] text-sm">
-                      <th className="pb-3">{t("schoolName")}</th>
-                      <th className="pb-3">{t("grade")}</th>
-                      <th className="pb-3">{t("section")}</th>
-                      <th className="pb-3">{t("academicYears")}</th>
+                      <th className="p-3">{t("schoolName")}</th>
+                      <th className="p-3">{t("grade")}</th>
+                      <th className="p-3">{t("section")}</th>
+                      <th className="p-3">{t("academicYears")}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y text-[var(--color-text-secondary)] text-sm">
                     {sections.map((sec) => (
                       <tr key={sec.id}>
-                        <td className="py-4 font-medium">{sec.school_name}</td>
-                        <td className="py-4">{sec.grade_name}</td>
-                        <td className="py-4 font-bold text-[var(--color-primary)]">{sec.name}</td>
-                        <td className="py-4 text-[var(--color-text-muted)]">{sec.academic_year_name}</td>
+                        <td className="py-4 px-3 font-medium">{sec.school_name}</td>
+                        <td className="py-4 px-3">{sec.grade_name}</td>
+                        <td className="py-4 px-3 font-bold text-[var(--color-primary)]">{sec.name}</td>
+                        <td className="py-4 px-3 text-[var(--color-text-muted)]">{sec.academic_year_name}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -246,7 +509,7 @@ export default function AdminSchoolsPage() {
 
             {/* Announcements & Emergency Alerts Tab */}
             {activeTab === "announcements" && (
-              <div className="space-y-4">
+              <div className="space-y-4 max-h-[650px] overflow-y-auto">
                 {announcements.map((ann) => (
                   <div key={ann.id} className={`p-6 rounded-2xl border ${ann.is_emergency ? "border-[var(--color-error-light)] bg-[var(--color-error-light)]" : "border-[var(--color-border)] bg-[var(--color-surface-alt)]"} space-y-2`}>
                     <div className="flex justify-between items-center">
@@ -271,18 +534,20 @@ export default function AdminSchoolsPage() {
         )}
       </div>
 
-      {/* School Modal */}
+      {/* School Modal (Create / Edit) */}
       {showSchoolModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-[var(--color-surface)] rounded-3xl max-w-lg w-full p-6 space-y-6 shadow-xl">
-            <h2 className="text-xl font-bold text-[var(--color-text)]">{commonT("add")} {t("schoolsList")}</h2>
-            <form onSubmit={handleCreateSchool} className="space-y-4">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto" onClick={(e) => e.target === e.currentTarget && setShowSchoolModal(false)}>
+          <div className="bg-[var(--color-surface)] rounded-3xl max-w-lg w-full p-6 space-y-6 shadow-xl max-h-[90vh] overflow-y-auto my-auto">
+            <h2 className="text-xl font-bold text-[var(--color-text)]">
+              {editingSchoolId ? "تعديل بيانات المدرسة" : `${commonT("add")} ${t("schoolsList")}`}
+            </h2>
+            <form onSubmit={handleSaveSchool} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">{t("schoolName")}</label>
                 <input
                   type="text"
                   required
-                  className="w-full px-4 py-3 border border-[var(--color-border)] rounded-2xl"
+                  className="w-full px-4 py-3 border border-[var(--color-border)] rounded-2xl outline-none"
                   value={schoolForm.name}
                   onChange={(e) => setSchoolForm({ ...schoolForm, name: e.target.value })}
                 />
@@ -292,7 +557,7 @@ export default function AdminSchoolsPage() {
                 <input
                   type="text"
                   required
-                  className="w-full px-4 py-3 border border-[var(--color-border)] rounded-2xl"
+                  className="w-full px-4 py-3 border border-[var(--color-border)] rounded-2xl outline-none"
                   value={schoolForm.school_code}
                   onChange={(e) => setSchoolForm({ ...schoolForm, school_code: e.target.value })}
                 />
@@ -301,7 +566,7 @@ export default function AdminSchoolsPage() {
                 <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">{t("directorate")}</label>
                 <input
                   type="text"
-                  className="w-full px-4 py-3 border border-[var(--color-border)] rounded-2xl"
+                  className="w-full px-4 py-3 border border-[var(--color-border)] rounded-2xl outline-none"
                   value={schoolForm.directorate}
                   onChange={(e) => setSchoolForm({ ...schoolForm, directorate: e.target.value })}
                 />
@@ -310,7 +575,7 @@ export default function AdminSchoolsPage() {
                 <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Phone</label>
                 <input
                   type="text"
-                  className="w-full px-4 py-3 border border-[var(--color-border)] rounded-2xl"
+                  className="w-full px-4 py-3 border border-[var(--color-border)] rounded-2xl outline-none"
                   value={schoolForm.phone}
                   onChange={(e) => setSchoolForm({ ...schoolForm, phone: e.target.value })}
                 />
@@ -318,11 +583,64 @@ export default function AdminSchoolsPage() {
               <div>
                 <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Address</label>
                 <textarea
-                  className="w-full px-4 py-3 border border-[var(--color-border)] rounded-2xl"
+                  className="w-full px-4 py-3 border border-[var(--color-border)] rounded-2xl outline-none"
                   value={schoolForm.address}
                   onChange={(e) => setSchoolForm({ ...schoolForm, address: e.target.value })}
                 />
               </div>
+
+              {/* School Manager */}
+              {editingSchoolId && (
+                <div className="rounded-2xl border p-4 space-y-3" style={{ borderColor: "var(--color-border)", background: "var(--color-surface-alt)" }}>
+                  <label className="block text-sm font-bold" style={{ color: "var(--color-text)" }}>👤 مدير المدرسة</label>
+                  {currentManager ? (
+                    <div className="flex items-center justify-between gap-3 p-3 rounded-xl border" style={{ background: "var(--color-surface)", borderColor: "var(--color-border)" }}>
+                      <div className="min-w-0">
+                        <div className="text-sm font-bold truncate" style={{ color: "var(--color-text)" }}>{currentManager.name || currentManager.email}</div>
+                        <div className="text-xs truncate" style={{ color: "var(--color-text-muted)" }}>{currentManager.email}</div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={removeManager}
+                        className="px-3 py-1.5 rounded-xl text-xs font-bold border shrink-0 hover:opacity-85"
+                        style={{ background: "var(--color-error-light)", color: "var(--color-error)", borderColor: "var(--color-error)" }}
+                      >
+                        إزالة
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={managerQuery}
+                        onChange={(e) => searchManagers(e.target.value)}
+                        placeholder="ابحث بالبريد أو الاسم لتعيين مدير..."
+                        className="w-full px-4 py-3 border border-[var(--color-border)] rounded-2xl outline-none"
+                        style={{ background: "var(--color-surface)", color: "var(--color-text)" }}
+                      />
+                      {managerSearching && <div className="text-xs mt-1" style={{ color: "var(--color-text-muted)" }}>جاري البحث...</div>}
+                      {managerSuggestions.length > 0 && (
+                        <div className="absolute z-20 inset-x-0 mt-1 rounded-xl border shadow-lg overflow-hidden" style={{ background: "var(--color-surface)", borderColor: "var(--color-border)" }}>
+                          {managerSuggestions.map((u) => (
+                            <button
+                              key={u.id}
+                              type="button"
+                              onClick={() => assignManager(u)}
+                              className="w-full text-right px-4 py-2.5 text-sm hover:opacity-80 transition-all border-b last:border-b-0"
+                              style={{ color: "var(--color-text)", borderColor: "var(--color-border)" }}
+                            >
+                              <span className="font-semibold">{u.name || u.email}</span>
+                              <span className="text-xs block" style={{ color: "var(--color-text-muted)" }}>{u.email} — {u.role}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  <p className="text-xs" style={{ color: "var(--color-text-muted)" }}>تعيين المدير يمنحه دور school_admin بصلاحيات كاملة على هذه المدرسة فقط.</p>
+                </div>
+              )}
+
               <div className="flex justify-end gap-3 pt-2">
                 <button
                   type="button"
@@ -345,15 +663,15 @@ export default function AdminSchoolsPage() {
 
       {/* Announcement Modal */}
       {showAnnouncementModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-[var(--color-surface)] rounded-3xl max-w-lg w-full p-6 space-y-6 shadow-xl">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto" onClick={(e) => e.target === e.currentTarget && setShowAnnouncementModal(false)}>
+          <div className="bg-[var(--color-surface)] rounded-3xl max-w-lg w-full p-6 space-y-6 shadow-xl max-h-[90vh] overflow-y-auto my-auto">
             <h2 className="text-xl font-bold text-[var(--color-text)]">{t("sendAnnouncement")}</h2>
             <form onSubmit={handleCreateAnnouncement} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">{t("schoolName")}</label>
                 <select
                   required
-                  className="w-full px-4 py-3 border border-[var(--color-border)] rounded-2xl bg-[var(--color-surface)]"
+                  className="w-full px-4 py-3 border border-[var(--color-border)] rounded-2xl bg-[var(--color-surface)] outline-none"
                   value={announcementForm.school}
                   onChange={(e) => setAnnouncementForm({ ...announcementForm, school: Number(e.target.value) })}
                 >
@@ -368,7 +686,7 @@ export default function AdminSchoolsPage() {
                 <input
                   type="text"
                   required
-                  className="w-full px-4 py-3 border border-[var(--color-border)] rounded-2xl"
+                  className="w-full px-4 py-3 border border-[var(--color-border)] rounded-2xl outline-none"
                   value={announcementForm.title}
                   onChange={(e) => setAnnouncementForm({ ...announcementForm, title: e.target.value })}
                 />
@@ -378,7 +696,7 @@ export default function AdminSchoolsPage() {
                 <textarea
                   required
                   rows={4}
-                  className="w-full px-4 py-3 border border-[var(--color-border)] rounded-2xl"
+                  className="w-full px-4 py-3 border border-[var(--color-border)] rounded-2xl outline-none"
                   value={announcementForm.content}
                   onChange={(e) => setAnnouncementForm({ ...announcementForm, content: e.target.value })}
                 />

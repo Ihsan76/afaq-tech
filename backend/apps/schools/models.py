@@ -15,6 +15,10 @@ class School(models.Model):
     translations = models.JSONField('الترجمات', default=dict, blank=True)
     phone = models.CharField('رقم الهاتف', max_length=50, blank=True)
     address = models.TextField('العنوان', blank=True)
+    manager = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='managed_schools', verbose_name='مدير المدرسة',
+    )
 
     class Meta:
         verbose_name = 'مدرسة'
