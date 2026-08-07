@@ -63,4 +63,5 @@ jobs:
 
       - name: Verify key tables exist
         run: |
-          /usr/lib/postgresql/17/bin/pg_restore --list latest.dump | grep -E "TABLE (users_user|pages_page|core_translationkey|schools_school)" | head
+          /usr/lib/postgresql/17/bin/pg_restore --list latest.dump | grep -E "users_user|pages_page|core_translationkey|schools_school|schools_studentenrollment" | head
+          echo "key-tables-check: $([ $? -eq 0 ] && echo PASS || echo FAIL)"
