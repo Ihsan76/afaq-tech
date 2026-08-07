@@ -137,6 +137,13 @@ class PromptBuilderService:
         user_msg = ""
         if template_obj.user_message_template:
             user_msg = Template(template_obj.user_message_template).render(Context(variables))
+        elif feature_key == 'lesson_plan':
+            subj = variables.get('subject', '')
+            grd = variables.get('grade', '')
+            ttl = variables.get('title', '')
+            desc = variables.get('prompt_text', '')
+            curr = variables.get('curriculum_context', '')
+            user_msg = f"يرجى الالتزام التام والتطابق الحرفي مع البيانات التالية وعدم تغيير المادة أو المرحلة أو الموضوع:\n- المادة الدراسية: {subj}\n- المرحلة الدراسية: {grd}\n- عنوان الدرس: {ttl}\n- وصف الدرس: {desc}\n\n{curr}\n\nقم بإنشاء خطة الدرس المطلوبة حصرياً وفق هذا السياق والمادة والمرحلة."
         return system, user_msg
 
     @classmethod
