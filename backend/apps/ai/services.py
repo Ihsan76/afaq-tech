@@ -315,6 +315,11 @@ def generate_lesson_plan(title, prompt_text, subject="", grade="", language="ar"
 
     try:
         plan_data = extract_json(raw)
+        if isinstance(plan_data, dict):
+            if 'lesson_plan' in plan_data and isinstance(plan_data['lesson_plan'], dict):
+                plan_data = plan_data['lesson_plan']
+            elif 'plan' in plan_data and isinstance(plan_data['plan'], dict):
+                plan_data = plan_data['plan']
     except ValueError:
         plan_data = {"raw_response": raw, "error": "failed to parse structured JSON"}
 

@@ -231,8 +231,9 @@ export default function LessonPlanDetailPage() {
 
   if (!plan) return null;
 
-  const data = plan.plan_data || {};
-  const isStructured = data.objectives || data.main_activity || data.introduction;
+  const rawData = plan.plan_data || {};
+  const data = (rawData as any).lesson_plan || (rawData as any).plan || rawData;
+  const isStructured = data.objectives || data.main_activity || data.introduction || data.procedures;
 
   const safeText = (value: unknown): string => {
     if (typeof value === "string") return value;
@@ -411,7 +412,7 @@ export default function LessonPlanDetailPage() {
                     <span>🎯</span> الأهداف التعليمية
                   </h2>
                   <ul className="space-y-2">
-                    {data.objectives?.map((obj, idx) => (
+                    {data.objectives?.map((obj: unknown, idx: number) => (
                       <li key={idx} className="flex items-start gap-2.5 text-sm" style={{ color: "var(--color-text)" }}>
                         <span className="text-green-600 font-bold shrink-0 mt-0.5">✓</span>
                         <span className="leading-relaxed">{safeText(obj)}</span>
@@ -429,7 +430,7 @@ export default function LessonPlanDetailPage() {
                       <span>🛠️</span> الأدوات والوسائل التعليمية
                     </h3>
                     <div className="flex flex-wrap gap-2">
-                      {data.materials_needed?.map((mat, idx) => (
+                      {data.materials_needed?.map((mat: unknown, idx: number) => (
                         <span key={idx} className="px-3 py-1.5 rounded-xl text-xs font-medium" style={{ backgroundColor: "var(--color-background)", border: "1px solid var(--color-border)", color: "var(--color-text)" }}>
                           {safeText(mat)}
                         </span>
@@ -444,7 +445,7 @@ export default function LessonPlanDetailPage() {
                       <span>💡</span> طرق واستراتيجيات التدريس
                     </h3>
                     <div className="flex flex-wrap gap-2">
-                      {data.teaching_methods?.map((method, idx) => (
+                      {data.teaching_methods?.map((method: unknown, idx: number) => (
                         <span key={idx} className="px-3 py-1.5 rounded-xl text-xs font-medium" style={{ backgroundColor: "var(--color-primary-light)", color: "var(--color-primary)" }}>
                           {safeText(method)}
                         </span>
@@ -473,7 +474,7 @@ export default function LessonPlanDetailPage() {
                     <span>📌</span> الأنشطة السير في الدرس (خطوة بخطوة)
                   </h2>
                   <div className="space-y-3">
-                    {data.main_activity?.map((step, idx) => (
+                    {data.main_activity?.map((step: any, idx: number) => (
                       <div key={idx} className="rounded-2xl p-4 sm:p-5 border relative overflow-hidden" style={{ borderColor: "var(--color-border)", backgroundColor: "var(--color-surface)" }}>
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-2">
@@ -528,7 +529,7 @@ export default function LessonPlanDetailPage() {
               {Boolean(data.tags?.length) && (
                 <div className="flex flex-wrap items-center gap-2 pt-4 border-t" style={{ borderColor: "var(--color-border)" }}>
                   <span className="text-xs font-bold" style={{ color: "var(--color-text-muted)" }}>الوسوم:</span>
-                  {data.tags?.map((tag, idx) => (
+                  {data.tags?.map((tag: unknown, idx: number) => (
                     <span key={idx} className="px-2.5 py-1 rounded-lg text-xs" style={{ backgroundColor: "var(--color-muted)", color: "var(--color-text-muted)" }}>
                       #{safeText(tag)}
                     </span>
