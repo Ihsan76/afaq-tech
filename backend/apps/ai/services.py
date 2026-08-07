@@ -140,14 +140,16 @@ class PromptBuilderService:
         elif feature_key in ('lesson_plan', 'worksheet', 'homework'):
             subj = variables.get('subject', '')
             grd = variables.get('grade', '')
+            extra_inst = variables.get('extra_instructions', '')
+            topic_rules = variables.get('topic_rules', '')
             if feature_key == 'lesson_plan':
                 ttl = variables.get('title', '')
                 desc = variables.get('prompt_text', '')
                 curr = variables.get('curriculum_context', '')
-                user_msg = f"يرجى الالتزام التام والتطابق الحرفي مع البيانات التالية وعدم تغيير المادة أو المرحلة أو الموضوع:\n- المادة الدراسية: {subj}\n- المرحلة الدراسية: {grd}\n- عنوان الدرس: {ttl}\n- وصف الدرس: {desc}\n\n{curr}\n\nقم بإنشاء خطة الدرس المطلوبة حصرياً وفق هذا السياق والمادة والمرحلة."
+                user_msg = f"المادة الدراسية: {subj}\nالمرحلة الدراسية: {grd}\nعنوان الدرس: {ttl}\nوصف الدرس: {desc}\n\n{curr}\n\n{topic_rules}\n{extra_inst}\n\nيرجى الالتزام التام بالمادة والمرحلة والمنهاج الرسمي."
             else:
                 plan_json = variables.get('plan_data', '')
-                user_msg = f"يرجى الالتزام التام بالمستوى الأكاديمي والعمري للطلاب ودقة الأسئلة والتمارين:\n- المادة: {subj}\n- المرحلة: {grd}\n\nخطة الدرس:\n{plan_json}\n\nقم بإنشاء {feature_key} باحترافية عالية ودقة رياضية/علمية تامة."
+                user_msg = f"المادة: {subj}\nالمرحلة: {grd}\n\nخطة الدرس:\n{plan_json}\n\n{topic_rules}\n{extra_inst}\n\nقم بإنشاء {feature_key} باحترافية عالية ودقة أكاديمية تامة."
         return system, user_msg
 
     @classmethod
