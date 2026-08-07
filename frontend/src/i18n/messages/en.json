@@ -934,6 +934,81 @@
     "contactSend": "Send Message",
     "newsletterError": "Something went wrong. Please try again."
   },
+  "services": {
+    "backToHome": "Back to home",
+    "featuresTitle": "What's included?",
+    "featuresSubtitle": "Everything you need to bring your idea to life",
+    "processTitle": "How we work together?",
+    "processSubtitle": "Clear steps from idea to launch",
+    "step1": "Consultation & planning",
+    "step1Desc": "We understand your needs and define goals",
+    "step2": "Design & preparation",
+    "step2Desc": "We design the solution and prepare content",
+    "step3": "Development",
+    "step3Desc": "We build and develop with high quality",
+    "step4": "Launch & support",
+    "step4Desc": "We launch and provide ongoing support",
+    "ctaTitle": "Ready to start your project?",
+    "ctaSubtitle": "Contact us today and get a free consultation",
+    "ctaButton": "Order this service",
+    "otherServicesTitle": "Other services you may like",
+    "web-design": {
+      "features": [
+        "Responsive design that works on all devices",
+        "Fast loading and excellent performance",
+        "Search-engine optimized (SEO)",
+        "Easy content management dashboard"
+      ]
+    },
+    "social-media": {
+      "features": [
+        "Monthly content plan tailored to your brand",
+        "Professional posts and stories design",
+        "Comments and messages management",
+        "Periodic performance reports and tips"
+      ]
+    },
+    "landing-pages": {
+      "features": [
+        "Conversion-focused page design",
+        "Compelling headlines and marketing copy",
+        "Lead capture forms and data collection",
+        "Integration with payment and marketing systems"
+      ]
+    },
+    "forms": {
+      "features": [
+        "Fully customized forms for your needs",
+        "Smart fields with instant data validation",
+        "Detailed response analytics and reports",
+        "Integration with email and other systems"
+      ]
+    },
+    "ebooks": {
+      "features": [
+        "Professional book design and layout",
+        "Full formatting with images and graphics",
+        "Turning your expertise into organized content",
+        "Publishing across all devices and platforms"
+      ]
+    },
+    "ad-campaigns": {
+      "features": [
+        "Goal-driven advertising strategy",
+        "Precise targeting of the right audience",
+        "Daily campaign management and monitoring",
+        "Results and ROAS reporting"
+      ]
+    },
+    "brand-identity": {
+      "features": [
+        "Logo and complete visual identity",
+        "Brand and color usage guide",
+        "Strategic consulting for business growth",
+        "Consistent marketing materials"
+      ]
+    }
+  },
   "contact": {
     "title": "Contact Us",
     "subtitle": "We'd love to hear from you",

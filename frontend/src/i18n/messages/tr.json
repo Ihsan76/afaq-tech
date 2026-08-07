@@ -853,6 +853,81 @@
     "newsletterSuccess": "Teşekkürler! En kısa sürede size döneceğiz.",
     "newsletterTitle": "Bültenimize Abone Olun"
   },
+  "services": {
+    "backToHome": "Ana sayfaya dön",
+    "featuresTitle": "Neler dahil?",
+    "featuresSubtitle": "Fikrinizi hayata geçirmek için ihtiyacınız olan her şey",
+    "processTitle": "Birlikte nasıl çalışırız?",
+    "processSubtitle": "Fikirden lansmana net adımlar",
+    "step1": "Danışmanlık ve planlama",
+    "step1Desc": "İhtiyaçlarınızı anlar ve hedefleri belirleriz",
+    "step2": "Tasarım ve hazırlık",
+    "step2Desc": "Çözümü tasarlar ve içeriği hazırlarız",
+    "step3": "Geliştirme",
+    "step3Desc": "Yüksek kalitede inşa eder ve geliştiririz",
+    "step4": "Lansman ve destek",
+    "step4Desc": "Başlatır ve sürekli destek sağlarız",
+    "ctaTitle": "Projenize başlamaya hazır mısınız?",
+    "ctaSubtitle": "Bugün bize ulaşın ve ücretsiz danışmanlık alın",
+    "ctaButton": "Bu hizmeti sipariş et",
+    "otherServicesTitle": "İlginizi çekebilecek diğer hizmetler",
+    "web-design": {
+      "features": [
+        "Tüm cihazlarda çalışan duyarlı tasarım",
+        "Hızlı yükleme ve mükemmel performans",
+        "Arama motoru optimizasyonu (SEO)",
+        "Kolay içerik yönetim paneli"
+      ]
+    },
+    "social-media": {
+      "features": [
+        "Markanıza uygun aylık içerik planı",
+        "Profesyonel gönderi ve hikaye tasarımı",
+        "Yorum ve mesaj yönetimi",
+        "Dönemsel performans raporları ve öneriler"
+      ]
+    },
+    "landing-pages": {
+      "features": [
+        "Dönüşüme odaklı sayfa tasarımı",
+        "İkna edici başlıklar ve pazarlama metinleri",
+        "Ziyaretçi verisi toplama formları",
+        "Ödeme ve pazarlama sistemleriyle entegrasyon"
+      ]
+    },
+    "forms": {
+      "features": [
+        "İhtiyacınıza tamamen özel formlar",
+        "Anında doğrulamalı akıllı alanlar",
+        "Ayrıntılı yanıt analizleri ve raporlar",
+        "E-posta ve diğer sistemlerle entegrasyon"
+      ]
+    },
+    "ebooks": {
+      "features": [
+        "Profesyonel kitap tasarımı ve mizanpaj",
+        "Görsel ve grafik destekli tam biçimlendirme",
+        "Uzmanlığınızı düzenli içeriğe dönüştürme",
+        "Tüm cihaz ve platformlarda yayın"
+      ]
+    },
+    "ad-campaigns": {
+      "features": [
+        "Hedefe dayalı reklam stratejisi",
+        "Doğru kitleyi hassas hedefleme",
+        "Günlük kampanya yönetimi ve takip",
+        "Sonuç ve ROAS raporlaması"
+      ]
+    },
+    "brand-identity": {
+      "features": [
+        "Logo ve eksiksiz görsel kimlik",
+        "Marka ve renk kullanım kılavuzu",
+        "İş büyümesi için stratejik danışmanlık",
+        "Kimlikle uyumlu tutarlı pazarlama materyalleri"
+      ]
+    }
+  },
   "blog": {
     "title": "Blog",
     "subtitle": "Bilgi ve Teknoloji Ufukları — En son makaleleri ve ipuçlarını keşfedin",

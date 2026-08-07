@@ -853,6 +853,81 @@
     "newsletterSuccess": "Vielen Dank! Wir melden uns in Kürze.",
     "newsletterTitle": "Abonnieren Sie unseren Newsletter"
   },
+  "services": {
+    "backToHome": "Zurück zur Startseite",
+    "featuresTitle": "Was ist enthalten?",
+    "featuresSubtitle": "Alles, was Sie brauchen, um Ihre Idee umzusetzen",
+    "processTitle": "Wie arbeiten wir zusammen?",
+    "processSubtitle": "Klare Schritte von der Idee bis zum Start",
+    "step1": "Beratung & Planung",
+    "step1Desc": "Wir verstehen Ihre Bedürfnisse und definieren Ziele",
+    "step2": "Design & Vorbereitung",
+    "step2Desc": "Wir gestalten die Lösung und bereiten Inhalte vor",
+    "step3": "Entwicklung",
+    "step3Desc": "Wir entwickeln in hoher Qualität",
+    "step4": "Start & Support",
+    "step4Desc": "Wir starten und unterstützen Sie weiterhin",
+    "ctaTitle": "Bereit, Ihr Projekt zu starten?",
+    "ctaSubtitle": "Kontaktieren Sie uns und erhalten Sie eine kostenlose Beratung",
+    "ctaButton": "Diesen Service bestellen",
+    "otherServicesTitle": "Weitere Services, die Sie interessieren könnten",
+    "web-design": {
+      "features": [
+        "Responsives Design für alle Geräte",
+        "Schnelle Ladezeiten und Top-Performance",
+        "Suchmaschinenoptimierung (SEO)",
+        "Einfaches Content-Management"
+      ]
+    },
+    "social-media": {
+      "features": [
+        "Monatlicher Content-Plan passend zur Marke",
+        "Professionelle Posts und Storys",
+        "Verwaltung von Kommentaren und Nachrichten",
+        "Regelmäßige Performance-Berichte und Tipps"
+      ]
+    },
+    "landing-pages": {
+      "features": [
+        "Konversionsorientiertes Seitendesign",
+        "Überzeugende Überschriften und Marketingtexte",
+        "Formulare zur Lead-Erfassung",
+        "Integration mit Zahlungs- und Marketing-Systemen"
+      ]
+    },
+    "forms": {
+      "features": [
+        "Vollständig anpassbare Formulare",
+        "Intelligente Felder mit sofortiger Validierung",
+        "Detaillierte Antwort-Analysen und Berichte",
+        "Integration mit E-Mail und anderen Systemen"
+      ]
+    },
+    "ebooks": {
+      "features": [
+        "Professionelles Buchdesign und Layout",
+        "Vollständige Formatierung mit Bildern und Grafiken",
+        "Expertenwissen in strukturierte Inhalte verwandeln",
+        "Veröffentlichung auf allen Geräten und Plattformen"
+      ]
+    },
+    "ad-campaigns": {
+      "features": [
+        "Zielorientierte Werbestrategie",
+        "Präzise Zielgruppenansprache",
+        "Tägliche Kampagnenverwaltung und Monitoring",
+        "Ergebnis- und ROAS-Berichte"
+      ]
+    },
+    "brand-identity": {
+      "features": [
+        "Logo und vollständige visuelle Identität",
+        "Marken- und Farbleitfaden",
+        "Strategische Beratung für Wachstum",
+        "Konsistente Marketingmaterialien"
+      ]
+    }
+  },
   "blog": {
     "title": "Blog",
     "subtitle": "Wissens- und Technologiehorizonte — Entdecken Sie die neuesten Artikel und Tipps",

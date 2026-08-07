@@ -853,6 +853,81 @@
     "newsletterSuccess": "Terima kasih! Kami akan segera menghubungi Anda.",
     "newsletterTitle": "Berlangganan Buletin Kami"
   },
+  "services": {
+    "backToHome": "Kembali ke beranda",
+    "featuresTitle": "Apa saja yang termasuk?",
+    "featuresSubtitle": "Semua yang Anda butuhkan untuk mewujudkan ide Anda",
+    "processTitle": "Bagaimana kami bekerja sama?",
+    "processSubtitle": "Langkah jelas dari ide hingga peluncuran",
+    "step1": "Konsultasi & perencanaan",
+    "step1Desc": "Kami memahami kebutuhan dan menentukan tujuan",
+    "step2": "Desain & persiapan",
+    "step2Desc": "Kami mendesain solusi dan menyiapkan konten",
+    "step3": "Pengembangan",
+    "step3Desc": "Kami membangun dengan kualitas tinggi",
+    "step4": "Peluncuran & dukungan",
+    "step4Desc": "Kami meluncurkan dan memberikan dukungan berkelanjutan",
+    "ctaTitle": "Siap memulai proyek Anda?",
+    "ctaSubtitle": "Hubungi kami hari ini dan dapatkan konsultasi gratis",
+    "ctaButton": "Pesan layanan ini",
+    "otherServicesTitle": "Layanan lain yang mungkin Anda suka",
+    "web-design": {
+      "features": [
+        "Desain responsif yang bekerja di semua perangkat",
+        "Muat cepat dan performa luar biasa",
+        "Optimasi mesin pencari (SEO)",
+        "Panel manajemen konten yang mudah"
+      ]
+    },
+    "social-media": {
+      "features": [
+        "Rencana konten bulanan sesuai merek Anda",
+        "Desain postingan dan stories profesional",
+        "Manajemen komentar dan pesan",
+        "Laporan performa berkala dan saran"
+      ]
+    },
+    "landing-pages": {
+      "features": [
+        "Desain halaman fokus konversi",
+        "Judul dan copy marketing yang menarik",
+        "Formulir pengumpulan data pengunjung",
+        "Integrasi dengan sistem pembayaran dan pemasaran"
+      ]
+    },
+    "forms": {
+      "features": [
+        "Formulir sepenuhnya sesuai kebutuhan Anda",
+        "Kolom cerdas dengan validasi instan",
+        "Analisis dan laporan respons terperinci",
+        "Integrasi dengan email dan sistem lain"
+      ]
+    },
+    "ebooks": {
+      "features": [
+        "Desain dan tata letak buku profesional",
+        "Pemformatan lengkap dengan gambar dan grafik",
+        "Mengubah keahlian Anda menjadi konten terstruktur",
+        "Publikasi di semua perangkat dan platform"
+      ]
+    },
+    "ad-campaigns": {
+      "features": [
+        "Strategi iklan berbasis tujuan",
+        "Penargetan tepat untuk audiens yang tepat",
+        "Manajemen dan pemantauan kampanye harian",
+        "Laporan hasil dan ROAS"
+      ]
+    },
+    "brand-identity": {
+      "features": [
+        "Logo dan identitas visual lengkap",
+        "Panduan penggunaan merek dan warna",
+        "Konsultasi strategis untuk pertumbuhan bisnis",
+        "Materi pemasaran yang konsisten"
+      ]
+    }
+  },
   "blog": {
     "title": "Blog",
     "subtitle": "Horison Pengetahuan & Teknologi — Temukan artikel dan tips terbaru",

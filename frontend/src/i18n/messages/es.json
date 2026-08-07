@@ -853,6 +853,81 @@
     "newsletterSuccess": "¡Gracias! Nos pondremos en contacto pronto.",
     "newsletterTitle": "Suscríbete a nuestro boletín"
   },
+  "services": {
+    "backToHome": "Volver al inicio",
+    "featuresTitle": "¿Qué incluye?",
+    "featuresSubtitle": "Todo lo que necesitas para hacer realidad tu idea",
+    "processTitle": "¿Cómo trabajamos juntos?",
+    "processSubtitle": "Pasos claros desde la idea hasta el lanzamiento",
+    "step1": "Consultoría y planificación",
+    "step1Desc": "Entendemos tus necesidades y definimos objetivos",
+    "step2": "Diseño y preparación",
+    "step2Desc": "Diseñamos la solución y preparamos el contenido",
+    "step3": "Desarrollo",
+    "step3Desc": "Construimos y desarrollamos con alta calidad",
+    "step4": "Lanzamiento y soporte",
+    "step4Desc": "Lanzamos y ofrecemos soporte continuo",
+    "ctaTitle": "¿Listo para comenzar tu proyecto?",
+    "ctaSubtitle": "Contáctanos hoy y obtén una consulta gratuita",
+    "ctaButton": "Solicitar este servicio",
+    "otherServicesTitle": "Otros servicios que te pueden interesar",
+    "web-design": {
+      "features": [
+        "Diseño responsivo que funciona en todos los dispositivos",
+        "Carga rápida y excelente rendimiento",
+        "Optimización para buscadores (SEO)",
+        "Panel de gestión de contenido fácil"
+      ]
+    },
+    "social-media": {
+      "features": [
+        "Plan de contenido mensual para tu marca",
+        "Diseño profesional de publicaciones e historias",
+        "Gestión de comentarios y mensajes",
+        "Informes periódicos de rendimiento y consejos"
+      ]
+    },
+    "landing-pages": {
+      "features": [
+        "Diseño centrado en la conversión",
+        "Titulares y textos de marketing convincentes",
+        "Formularios de captura de leads",
+        "Integración con sistemas de pago y marketing"
+      ]
+    },
+    "forms": {
+      "features": [
+        "Formularios totalmente personalizados",
+        "Campos inteligentes con validación instantánea",
+        "Análisis e informes detallados de respuestas",
+        "Integración con correo y otros sistemas"
+      ]
+    },
+    "ebooks": {
+      "features": [
+        "Diseño y maquetación profesional de libros",
+        "Formato completo con imágenes y gráficos",
+        "Convertir tu experiencia en contenido organizado",
+        "Publicación en todos los dispositivos y plataformas"
+      ]
+    },
+    "ad-campaigns": {
+      "features": [
+        "Estrategia publicitaria orientada a objetivos",
+        "Segmentación precisa de la audiencia adecuada",
+        "Gestión y monitoreo diario de campañas",
+        "Informes de resultados y ROAS"
+      ]
+    },
+    "brand-identity": {
+      "features": [
+        "Logotipo e identidad visual completa",
+        "Guía de marca y uso de colores",
+        "Consultoría estratégica para el crecimiento",
+        "Materiales de marketing consistentes"
+      ]
+    }
+  },
   "blog": {
     "title": "Blog",
     "subtitle": "Horizontes de conocimiento y tecnología — Descubre los últimos artículos y consejos",
