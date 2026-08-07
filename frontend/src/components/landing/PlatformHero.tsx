@@ -4,7 +4,7 @@ import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { localizedContent } from "@/lib/i18n";
+import { localizedContent, resolveLink } from "@/lib/i18n";
 
 export default function PlatformHero({ content }: { content?: Record<string, any> }) {
   const t = useTranslations("landing");
@@ -17,9 +17,9 @@ export default function PlatformHero({ content }: { content?: Record<string, any
   const heading = localizedContent(c, "heading", locale, t("platformHeroTitle"));
   const subtitle = localizedContent(c, "subtitle", locale, t("platformHeroSubtitle"));
   const ctaText = localizedContent(c, "cta_text", locale, t("platformHeroCTA"));
-  const ctaLink = localizedContent(c, "cta_link", locale, "/register");
+  const ctaLink = resolveLink(locale, localizedContent(c, "cta_link", locale, "/register"));
   const secText = localizedContent(c, "secondary_cta", locale, t("platformHeroServices"));
-  const secLink = localizedContent(c, "secondary_cta_link", locale, "#services");
+  const secLink = resolveLink(locale, localizedContent(c, "secondary_cta_link", locale, "#services"));
   const defaultBadges = [
     { text: { en: "Free forever", ar: "مجاني تماماً" } },
     { text: { en: "Free consultation", ar: "استشارة مجانية" } },
@@ -77,7 +77,7 @@ export default function PlatformHero({ content }: { content?: Record<string, any
               </span>
             </button>
           ) : (
-            <Link href={`/${locale}${ctaLink}`} className="group btn-primary px-6 sm:px-10 py-3 sm:py-4 text-base sm:text-lg">
+            <Link href={ctaLink} className="group btn-primary px-6 sm:px-10 py-3 sm:py-4 text-base sm:text-lg">
               <span className="flex items-center gap-2">
                 {ctaText}
                 <span className="transition-transform group-hover:translate-x-1 rtl:group-hover:-translate-x-1">←</span>
@@ -87,7 +87,7 @@ export default function PlatformHero({ content }: { content?: Record<string, any
           {isHash(secLink) ? (
             <button onClick={() => scrollToSection(secLink)} className="btn-secondary px-6 sm:px-10 py-3 sm:py-4 text-base sm:text-lg hover:bg-[var(--color-primary)] hover:text-white hover:border-[var(--color-primary)]">{secText}</button>
           ) : (
-            <Link href={`/${locale}${secLink}`} className="btn-secondary px-6 sm:px-10 py-3 sm:py-4 text-base sm:text-lg hover:bg-[var(--color-primary)] hover:text-white hover:border-[var(--color-primary)]">{secText}</Link>
+            <Link href={secLink} className="btn-secondary px-6 sm:px-10 py-3 sm:py-4 text-base sm:text-lg hover:bg-[var(--color-primary)] hover:text-white hover:border-[var(--color-primary)]">{secText}</Link>
           )}
         </div>
 

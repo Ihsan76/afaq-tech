@@ -4,7 +4,7 @@ import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useScrollReveal } from "@/hooks/useScrollReveal";
-import { localizedContent } from "@/lib/i18n";
+import { localizedContent, resolveLink } from "@/lib/i18n";
 
 export default function CTAFooter({ content }: { content?: Record<string, any> }) {
   const t = useTranslations("landing");
@@ -16,7 +16,7 @@ export default function CTAFooter({ content }: { content?: Record<string, any> }
   const title = localizedContent(c, "title", locale, t("ctaTitle"));
   const subtitle = localizedContent(c, "subtitle", locale, t("ctaSubtitle"));
   const ctaText = localizedContent(c, "cta_text", locale, t("ctaButton"));
-  const ctaLink = localizedContent(c, "cta_link", locale, "/register");
+  const ctaLink = resolveLink(locale, localizedContent(c, "cta_link", locale, "/register"));
 
   const scrollToSection = (hash: string) => {
     const el = document.getElementById(hash.replace("#", ""));
@@ -41,7 +41,7 @@ export default function CTAFooter({ content }: { content?: Record<string, any> }
             </span>
           </button>
         ) : (
-          <Link href={`/${locale}${ctaLink}`} className="group inline-block px-6 sm:px-10 py-3 sm:py-4 rounded-2xl font-bold text-base sm:text-lg transition-all duration-300 hover:-translate-y-1 hover:scale-105 hover:shadow-2xl" style={{ backgroundColor: "white", color: "var(--color-primary)", boxShadow: "0 4px 15px rgba(0,0,0,0.2)" }}>
+          <Link href={ctaLink} className="group inline-block px-6 sm:px-10 py-3 sm:py-4 rounded-2xl font-bold text-base sm:text-lg transition-all duration-300 hover:-translate-y-1 hover:scale-105 hover:shadow-2xl" style={{ backgroundColor: "white", color: "var(--color-primary)", boxShadow: "0 4px 15px rgba(0,0,0,0.2)" }}>
             <span className="flex items-center gap-2">
               {ctaText}
               <span className="transition-transform group-hover:translate-x-1 rtl:group-hover:-translate-x-1">←</span>

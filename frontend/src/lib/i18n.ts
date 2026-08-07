@@ -28,6 +28,21 @@ export function localized(
  * content shape: { heading: { en: "...", ar: "..." }, show_particles: true }
  * Also supports: { translations: { heading: { en: "...", ar: "..." } }, ... }
  */
+/**
+ * Resolve a CMS-provided link into a locale-prefixed internal path.
+ * Absolute URLs (http, https, mailto, tel, etc.) and hash links pass through unchanged.
+ */
+export function resolveLink(locale: string, raw?: string, fallback = "/"): string {
+  const link = raw || fallback;
+  if (!link) return fallback;
+  if (link.startsWith("#")) return link;
+  if (/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(link)) return link;
+  if (link.startsWith("//")) return link;
+  if (link === `/${locale}` || link.startsWith(`/${locale}/`)) return link;
+  if (link.startsWith("/")) return `/${locale}${link}`;
+  return link;
+}
+
 export function localizedContent(
   content: Record<string, any> | undefined | null,
   field: string,

@@ -4,7 +4,7 @@ import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useScrollReveal } from "@/hooks/useScrollReveal";
-import { localizedContent } from "@/lib/i18n";
+import { localizedContent, resolveLink } from "@/lib/i18n";
 import useSWR from "swr";
 import { api } from "@/lib/api";
 
@@ -58,9 +58,9 @@ export default function FeaturesSection({ content }: { content?: Record<string, 
             return localizedContent(p, "text", locale) || localizedContent(p, "ar", locale) || p?.ar || p?.en || p?.translations?.ar?.text || "";
           })
         : [],
-      href: item.link ? `/${locale}${item.link}` : (defaultFeatures[i]?.href || "#"),
+      link: item.link ? resolveLink(locale, item.link) : null,
     };
-  }) || defaultFeatures;
+  }) || defaultFeatures.map((f: any) => ({ ...f, link: f.href }));
 
   return (
     <section id="features" ref={sectionRef} className="py-16 sm:py-24" style={{ background: "var(--color-background)" }}>
@@ -75,23 +75,40 @@ export default function FeaturesSection({ content }: { content?: Record<string, 
         </div>
 
         <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-8 stagger-children">
-          {features.map((feat: any, i: number) => (
-            <Link key={i} href={feat.href} className="group p-6 sm:p-8 rounded-3xl hover-lift transition-all duration-300" style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", boxShadow: "var(--card-shadow)" }}>
-              <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6 shadow-sm group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300" style={{ background: feat.color }}>
-                <span className="text-3xl">{feat.icon}</span>
+          {features.map((feat: any, i: number) =>
+            feat.link ? (
+              <Link key={i} href={feat.link} className="group p-6 sm:p-8 rounded-3xl hover-lift transition-all duration-300" style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", boxShadow: "var(--card-shadow)" }}>
+                <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6 shadow-sm group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300" style={{ background: feat.color }}>
+                  <span className="text-3xl">{feat.icon}</span>
+                </div>
+                <h3 className="text-xl font-bold mb-3" style={{ fontFamily: "var(--font-heading)", color: "var(--color-text)" }}>{feat.title}</h3>
+                <p className="mb-5 leading-relaxed" style={{ color: "var(--color-text-muted)" }}>{feat.desc}</p>
+                <ul className="space-y-2 mb-6">
+                  {(feat.points || []).map((point: string, j: number) => (
+                    <li key={j} className="flex items-center gap-2 text-sm" style={{ color: "var(--color-text-secondary)" }}>
+                      <span className="text-[var(--color-success)] transition-transform group-hover:scale-125">✓</span>{point}
+                    </li>
+                  ))}
+                </ul>
+                <span className="text-sm font-semibold transition-all group-hover:translate-x-1 rtl:group-hover:-translate-x-1" style={{ color: "var(--color-primary)" }}>{t("learnMore")} →</span>
+              </Link>
+            ) : (
+              <div key={i} className="p-6 sm:p-8 rounded-3xl transition-all duration-300" style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", boxShadow: "var(--card-shadow)" }}>
+                <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6 shadow-sm" style={{ background: feat.color }}>
+                  <span className="text-3xl">{feat.icon}</span>
+                </div>
+                <h3 className="text-xl font-bold mb-3" style={{ fontFamily: "var(--font-heading)", color: "var(--color-text)" }}>{feat.title}</h3>
+                <p className="mb-5 leading-relaxed" style={{ color: "var(--color-text-muted)" }}>{feat.desc}</p>
+                <ul className="space-y-2 mb-6">
+                  {(feat.points || []).map((point: string, j: number) => (
+                    <li key={j} className="flex items-center gap-2 text-sm" style={{ color: "var(--color-text-secondary)" }}>
+                      <span className="text-[var(--color-success)]">✓</span>{point}
+                    </li>
+                  ))}
+                </ul>
               </div>
-              <h3 className="text-xl font-bold mb-3" style={{ fontFamily: "var(--font-heading)", color: "var(--color-text)" }}>{feat.title}</h3>
-              <p className="mb-5 leading-relaxed" style={{ color: "var(--color-text-muted)" }}>{feat.desc}</p>
-              <ul className="space-y-2 mb-6">
-                {(feat.points || []).map((point: string, j: number) => (
-                  <li key={j} className="flex items-center gap-2 text-sm" style={{ color: "var(--color-text-secondary)" }}>
-                    <span className="text-[var(--color-success)] transition-transform group-hover:scale-125">✓</span>{point}
-                  </li>
-                ))}
-              </ul>
-              <span className="text-sm font-semibold transition-all group-hover:translate-x-1 rtl:group-hover:-translate-x-1" style={{ color: "var(--color-primary)" }}>{t("learnMore")} →</span>
-            </Link>
-          ))}
+            )
+          )}
         </div>
       </div>
     </section>

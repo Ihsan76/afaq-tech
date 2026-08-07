@@ -4,7 +4,7 @@ import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { localizedContent } from "@/lib/i18n";
+import { localizedContent, resolveLink } from "@/lib/i18n";
 import useSWR from "swr";
 import { api } from "@/lib/api";
 
@@ -27,8 +27,9 @@ export default function HeroSection({ content }: { content?: Record<string, any>
   if (ctaLink.startsWith("mailto:") && settings?.email) {
     ctaLink = `mailto:${settings.email}`;
   }
+  ctaLink = resolveLink(locale, ctaLink);
   const secText = localizedContent(c, "secondary_cta", locale, t("heroDemo"));
-  const secLink = localizedContent(c, "secondary_cta_link", locale, "#services");
+  const secLink = resolveLink(locale, localizedContent(c, "secondary_cta_link", locale, "#services"));
   const defaultBadges = [
     { text: { en: "Free forever", ar: "مجاني تماماً" } },
     { text: { en: "No credit card required", ar: "بدون بطاقة ائتمان" } },
@@ -95,7 +96,7 @@ export default function HeroSection({ content }: { content?: Record<string, any>
               </span>
             </button>
           ) : (
-            <Link href={`/${locale}${ctaLink}`} className="group px-6 sm:px-10 py-3 sm:py-4 rounded-2xl font-bold text-base sm:text-lg text-white transition-all duration-300 hover:-translate-y-1 hover:scale-105 hover:shadow-2xl" style={{ background: "linear-gradient(135deg, var(--color-primary), var(--color-secondary))", boxShadow: "var(--btn-shadow), 0 0 40px color-mix(in srgb, var(--color-primary) 25%, transparent)" }}>
+            <Link href={ctaLink} className="group px-6 sm:px-10 py-3 sm:py-4 rounded-2xl font-bold text-base sm:text-lg text-white transition-all duration-300 hover:-translate-y-1 hover:scale-105 hover:shadow-2xl" style={{ background: "linear-gradient(135deg, var(--color-primary), var(--color-secondary))", boxShadow: "var(--btn-shadow), 0 0 40px color-mix(in srgb, var(--color-primary) 25%, transparent)" }}>
               <span className="flex items-center gap-2">
                 {ctaText}
                 <span className="transition-transform group-hover:translate-x-1 rtl:group-hover:-translate-x-1">←</span>
@@ -107,7 +108,7 @@ export default function HeroSection({ content }: { content?: Record<string, any>
               {secText}
             </button>
           ) : (
-            <Link href={`/${locale}${secLink}`} className="group px-6 sm:px-10 py-3 sm:py-4 rounded-2xl font-bold text-base sm:text-lg transition-all duration-300 hover:-translate-y-1 hover:bg-[var(--color-primary)] hover:text-white hover:border-[var(--color-primary)]" style={{ border: "2px solid var(--color-primary)", color: "var(--color-primary)", backgroundColor: "transparent" }}>
+            <Link href={secLink} className="group px-6 sm:px-10 py-3 sm:py-4 rounded-2xl font-bold text-base sm:text-lg transition-all duration-300 hover:-translate-y-1 hover:bg-[var(--color-primary)] hover:text-white hover:border-[var(--color-primary)]" style={{ border: "2px solid var(--color-primary)", color: "var(--color-primary)", backgroundColor: "transparent" }}>
               {secText}
             </Link>
           )}
