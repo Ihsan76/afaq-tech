@@ -10,20 +10,23 @@ const fetcher = (url: string) => api.get(url).then((r) => r.data);
 
 export default function CurriculumSubjectDetailPage() {
   const params = useParams();
-  const locale = params.locale as string;
-  const gradeId = params.gradeId as string;
-  const subjectId = params.subjectId as string;
+  const locale = (params?.locale as string) || "ar";
+  const gradeId = params?.gradeId as string;
+  const subjectId = params?.subjectId as string;
 
   const [selectedCountry, setSelectedCountry] = useState("");
   const [selectedCurriculum, setSelectedCurriculum] = useState("");
 
-  const { data: curricula } = useSWR(`/academics/curricula/`, fetcher);
+  const { data: curriculaData } = useSWR(`/academics/curricula/`, fetcher);
   
   const documentsQuery = `/academics/documents/?subject=${subjectId}&grade=${gradeId}${selectedCountry ? `&country=${encodeURIComponent(selectedCountry)}` : ""}${selectedCurriculum ? `&curriculum=${selectedCurriculum}` : ""}`;
-  const { data: documents, isLoading } = useSWR(documentsQuery, fetcher);
+  const { data: documentsData, isLoading } = useSWR(documentsQuery, fetcher);
 
-  const countries = Array.from(new Set((curricula || []).map((c: any) => c.country).filter(Boolean)));
-  const filteredCurricula = (curricula || []).filter((c: any) => !selectedCountry || c.country === selectedCountry);
+  const curriculaList = Array.isArray(curriculaData) ? curriculaData : (curriculaData?.results || []);
+  const documentsList = Array.isArray(documentsData) ? documentsData : (documentsData?.results || []);
+
+  const countries = Array.from(new Set(curriculaList.map((c: any) => c?.country).filter(Boolean)));
+  const filteredCurricula = curriculaList.filter((c: any) => !selectedCountry || c?.country === selectedCountry);
 
   return (
     <div className="min-h-screen py-12" style={{ background: "var(--color-background)" }}>
@@ -84,8 +87,8 @@ export default function CurriculumSubjectDetailPage() {
             >
               <option value="">{locale === "ar" ? "جميع المناهج" : "All Curricula"}</option>
               {filteredCurricula.map((curr: any) => (
-                <option key={curr.id} value={curr.id}>
-                  {curr.translations?.[locale]?.name || curr.translations?.ar?.name || curr.name || `Curriculum ${curr.id}`} ({curr.year})
+                <option key={curr?.id} value={curr?.id}>
+                  {curr?.translations?.[locale]?.name || curr?.translations?.ar?.name || curr?.name || `Curriculum ${curr?.id}`} ({curr?.year})
                 </option>
               ))}
             </select>
@@ -102,29 +105,29 @@ export default function CurriculumSubjectDetailPage() {
             <div className="text-center py-12" style={{ color: "var(--color-text-muted)" }}>
               {locale === "ar" ? "جاري تحميل المستندات..." : "Loading documents..."}
             </div>
-          ) : documents?.results && documents.results.length > 0 ? (
+          ) : documentsList.length > 0 ? (
             <div className="max-h-[550px] overflow-y-auto pr-2 space-y-3">
-              {documents.results.map((doc: any) => (
-                <div key={doc.id} className="p-4 rounded-xl flex flex-col gap-3" style={{ background: "var(--color-surface-alt)", border: "1px solid var(--color-border)" }}>
+              {documentsList.map((doc: any) => (
+                <div key={doc?.id} className="p-4 rounded-xl flex flex-col gap-3" style={{ background: "var(--color-surface-alt)", border: "1px solid var(--color-border)" }}>
                   <div className="flex items-center justify-between gap-4">
                     <div>
-                      <span className="font-semibold block" style={{ color: "var(--color-text)" }}>{doc.title}</span>
-                      {doc.curriculum && (
+                      <span className="font-semibold block" style={{ color: "var(--color-text)" }}>{doc?.title}</span>
+                      {doc?.curriculum && (
                         <span className="text-xs mt-0.5 inline-block px-2 py-0.5 rounded-md" style={{ background: "var(--color-primary-light)", color: "var(--color-primary)" }}>
                           منهاج معتمد
                         </span>
                       )}
                     </div>
                     <div className="flex gap-2 shrink-0">
-                      <a href={doc.external_url || doc.download_url || `${API_URL}/academics/documents/${doc.id}/download/`} target="_blank" rel="noreferrer" className="text-sm px-4 py-2 rounded-lg font-medium text-white" style={{ background: "var(--color-primary)" }}>
+                      <a href={doc?.external_url || doc?.download_url || `${API_URL}/academics/documents/${doc?.id}/download/`} target="_blank" rel="noreferrer" className="text-sm px-4 py-2 rounded-lg font-medium text-white" style={{ background: "var(--color-primary)" }}>
                         {locale === "ar" ? "معاينة" : "Preview"}
                       </a>
-                      <a href={doc.external_url || (doc.download_url ? `${doc.download_url}?download=1` : `${API_URL}/academics/documents/${doc.id}/download/?download=1`)} rel="noreferrer" className="text-sm px-4 py-2 rounded-lg font-medium text-white" style={{ background: "var(--color-success)" }}>
+                      <a href={doc?.external_url || (doc?.download_url ? `${doc.download_url}?download=1` : `${API_URL}/academics/documents/${doc?.id}/download/?download=1`)} rel="noreferrer" className="text-sm px-4 py-2 rounded-lg font-medium text-white" style={{ background: "var(--color-success)" }}>
                         {locale === "ar" ? "تحميل" : "Download"}
                       </a>
                     </div>
                   </div>
-                  {doc.extracted_text ? (
+                  {doc?.extracted_text ? (
                     <details>
                       <summary className="text-sm cursor-pointer font-medium" style={{ color: "var(--color-primary)" }}>
                         {locale === "ar" ? "👁️ عرض محتوى المنهاج" : "👁️ View Curriculum Content"}
