@@ -33,16 +33,15 @@ export default function NotificationBell() {
   useEffect(() => {
     if (!user) return;
     fetchUnread();
-    loadItems();
-    loadPushState();
     const interval = setInterval(fetchUnread, 30000);
     return () => clearInterval(interval);
-  }, [user, fetchUnread, loadItems, loadPushState]);
+  }, [user, fetchUnread]);
 
   useEffect(() => {
     if (!open) return;
     loadItems();
-  }, [open, loadItems]);
+    loadPushState();
+  }, [open, loadItems, loadPushState]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
