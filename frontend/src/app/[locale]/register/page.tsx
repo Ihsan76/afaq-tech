@@ -6,9 +6,11 @@ import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useAuthStore } from "@/store/auth";
 import GoogleButton from "@/components/GoogleButton";
+import { extractApiError, apiErrorKey } from "@/lib/apiErrors";
 
 export default function RegisterPage() {
   const t = useTranslations("auth");
+  const te = useTranslations("errors");
   const tc = useTranslations("common");
   const router = useRouter();
   const pathname = usePathname();
@@ -25,7 +27,11 @@ export default function RegisterPage() {
     e.preventDefault();
     setLocalError("");
     if (password !== confirmPassword) { setLocalError(t("confirmPassword") + " ≠"); return; }
-    try { await register(email, name, password); router.push(`/${locale}/verify-email?email=${encodeURIComponent(email)}`); } catch {}
+    try { await register(email, name, password); router.push(`/${locale}/verify-email?email=${encodeURIComponent(email)}`); } catch (err: any) {
+      const errMsg = extractApiError(err);
+      const key = apiErrorKey(errMsg);
+      setLocalError(key ? te(key) : errMsg || t("loginError"));
+    }
   };
 
   const displayError = localError || error;

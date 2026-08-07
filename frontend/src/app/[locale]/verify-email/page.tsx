@@ -4,9 +4,11 @@ import { useState } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useAuthStore } from "@/store/auth";
+import { extractApiError, apiErrorKey } from "@/lib/apiErrors";
 
 export default function VerifyEmailPage() {
   const t = useTranslations("auth");
+  const te = useTranslations("errors");
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -29,8 +31,9 @@ export default function VerifyEmailPage() {
       setMessage(t("verificationSuccess"));
       setTimeout(() => router.push(`/${locale}/dashboard`), 1200);
     } catch (err: any) {
-      const errMsg = err?.response?.data?.error;
-      setError(errMsg === "Code expired or already used" ? t("codeExpired") : errMsg === "Invalid code" ? t("codeInvalid") : t("codeInvalid"));
+      const errMsg = extractApiError(err);
+      const key = apiErrorKey(errMsg);
+      setError(key ? te(key) : errMsg || t("codeInvalid"));
     }
   };
 

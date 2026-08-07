@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { api } from "@/lib/api";
+import { extractApiError } from "@/lib/apiErrors";
 
 interface User {
   id: number;
@@ -51,7 +52,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       localStorage.setItem("refreshToken", data.refresh);
       set({ user: data.user, accessToken: data.access, refreshToken: data.refresh, isLoading: false });
     } catch (err: any) {
-      set({ error: err.response?.data?.error || "حدث خطأ", isLoading: false });
+      set({ error: extractApiError(err) || "حدث خطأ", isLoading: false });
       throw err;
     }
   },
@@ -64,12 +65,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       localStorage.setItem("refreshToken", data.refresh);
       set({ user: data.user, accessToken: data.access, refreshToken: data.refresh, isLoading: false });
     } catch (err: any) {
-      const errorData = err.response?.data;
-      let msg = "حدث خطأ";
-      if (errorData) {
-        msg = Object.values(errorData).flat().join(", ");
-      }
-      set({ error: msg, isLoading: false });
+      set({ error: extractApiError(err) || "حدث خطأ", isLoading: false });
       throw err;
     }
   },
