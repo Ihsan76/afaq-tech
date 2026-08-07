@@ -398,7 +398,7 @@ export default function AdminSubscriptionsPage() {
             <form onSubmit={handleSubmit} onChange={() => setIsDirty(true)} className="space-y-6">
               <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-semibold mb-2" style={{ color: "var(--color-text-secondary)" }}>الرمز (Code)</label>
+                  <label className="block text-sm font-semibold mb-2" style={{ color: "var(--color-text-secondary)" }}>الرمز التعريفي</label>
                   <input type="text" value={code} onChange={(e) => setCode(e.target.value)} className={inputCls} style={{ borderColor: "var(--color-border)", color: "var(--color-text)", backgroundColor: "var(--color-background)" }} placeholder="pro" required />
                 </div>
                 <div>

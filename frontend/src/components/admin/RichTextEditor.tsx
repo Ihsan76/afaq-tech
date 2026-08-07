@@ -8,6 +8,7 @@ import TextAlign from "@tiptap/extension-text-align";
 import Placeholder from "@tiptap/extension-placeholder";
 import Underline from "@tiptap/extension-underline";
 import { useEffect, useCallback } from "react";
+import { useTranslations } from "next-intl";
 
 interface RichTextEditorProps {
   value: string;
@@ -65,6 +66,7 @@ export default function RichTextEditor({
   dir = "ltr",
   minHeight = "200px",
 }: RichTextEditorProps) {
+  const t = useTranslations("editor");
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -107,7 +109,7 @@ export default function RichTextEditor({
   const setLink = useCallback(() => {
     if (!editor) return;
     const previousUrl = editor.getAttributes("link").href;
-    const url = window.prompt("URL", previousUrl);
+    const url = window.prompt(t("promptUrl"), previousUrl);
     if (url === null) return;
     if (url === "") {
       editor.chain().focus().extendMarkRange("link").unsetLink().run();
@@ -118,7 +120,7 @@ export default function RichTextEditor({
 
   const addImage = useCallback(() => {
     if (!editor) return;
-    const url = window.prompt("Image URL");
+    const url = window.prompt(t("promptImageUrl"));
     if (url) editor.chain().focus().setImage({ src: url }).run();
   }, [editor]);
 
@@ -141,28 +143,28 @@ export default function RichTextEditor({
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleBold().run()}
           active={editor.isActive("bold")}
-          title="Bold"
+          title={t("bold")}
         >
           <strong>B</strong>
         </ToolbarButton>
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleItalic().run()}
           active={editor.isActive("italic")}
-          title="Italic"
+          title={t("italic")}
         >
           <em>I</em>
         </ToolbarButton>
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleUnderline().run()}
           active={editor.isActive("underline")}
-          title="Underline"
+          title={t("underline")}
         >
           <span className="underline">U</span>
         </ToolbarButton>
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleStrike().run()}
           active={editor.isActive("strike")}
-          title="Strikethrough"
+          title={t("strikethrough")}
         >
           <span className="line-through">S</span>
         </ToolbarButton>
@@ -173,21 +175,21 @@ export default function RichTextEditor({
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
           active={editor.isActive("heading", { level: 1 })}
-          title="Heading 1"
+          title={t("heading1")}
         >
           H1
         </ToolbarButton>
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
           active={editor.isActive("heading", { level: 2 })}
-          title="Heading 2"
+          title={t("heading2")}
         >
           H2
         </ToolbarButton>
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
           active={editor.isActive("heading", { level: 3 })}
-          title="Heading 3"
+          title={t("heading3")}
         >
           H3
         </ToolbarButton>
@@ -198,21 +200,21 @@ export default function RichTextEditor({
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleBulletList().run()}
           active={editor.isActive("bulletList")}
-          title="Bullet List"
+          title={t("bulletList")}
         >
           •≡
         </ToolbarButton>
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
           active={editor.isActive("orderedList")}
-          title="Numbered List"
+          title={t("numberedList")}
         >
           1.
         </ToolbarButton>
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleBlockquote().run()}
           active={editor.isActive("blockquote")}
-          title="Quote"
+          title={t("quote")}
         >
           &ldquo;
         </ToolbarButton>
@@ -223,21 +225,21 @@ export default function RichTextEditor({
         <ToolbarButton
           onClick={() => editor.chain().focus().setTextAlign("left").run()}
           active={editor.isActive({ textAlign: "left" })}
-          title="Align Left"
+          title={t("alignLeft")}
         >
           ≡←
         </ToolbarButton>
         <ToolbarButton
           onClick={() => editor.chain().focus().setTextAlign("center").run()}
           active={editor.isActive({ textAlign: "center" })}
-          title="Align Center"
+          title={t("alignCenter")}
         >
           ≡↔
         </ToolbarButton>
         <ToolbarButton
           onClick={() => editor.chain().focus().setTextAlign("right").run()}
           active={editor.isActive({ textAlign: "right" })}
-          title="Align Right"
+          title={t("alignRight")}
         >
           →≡
         </ToolbarButton>
@@ -248,11 +250,11 @@ export default function RichTextEditor({
         <ToolbarButton
           onClick={setLink}
           active={editor.isActive("link")}
-          title="Insert Link"
+          title={t("insertLink")}
         >
           🔗
         </ToolbarButton>
-        <ToolbarButton onClick={addImage} title="Insert Image">
+        <ToolbarButton onClick={addImage} title={t("insertImage")}>
           🖼️
         </ToolbarButton>
 
@@ -262,14 +264,14 @@ export default function RichTextEditor({
         <ToolbarButton
           onClick={() => editor.chain().focus().undo().run()}
           disabled={!editor.can().undo()}
-          title="Undo"
+          title={t("undo")}
         >
           ↩
         </ToolbarButton>
         <ToolbarButton
           onClick={() => editor.chain().focus().redo().run()}
           disabled={!editor.can().redo()}
-          title="Redo"
+          title={t("redo")}
         >
           ↪
         </ToolbarButton>
@@ -277,7 +279,7 @@ export default function RichTextEditor({
         {/* Clear formatting */}
         <ToolbarButton
           onClick={() => editor.chain().focus().clearNodes().unsetAllMarks().run()}
-          title="Clear Formatting"
+          title={t("clearFormatting")}
         >
           ✕
         </ToolbarButton>

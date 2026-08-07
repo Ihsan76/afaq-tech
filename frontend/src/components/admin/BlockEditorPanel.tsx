@@ -834,7 +834,7 @@ export default function BlockEditorPanel({
       default:
         return (
           <Section title={t("البيانات", "Data")} defaultOpen>
-            <label className={labelCls} style={{ color: "var(--color-text-muted)" }}>Content JSON</label>
+            <label className={labelCls} style={{ color: "var(--color-text-muted)" }}>{t("محتوى JSON", "Content JSON")}</label>
             <textarea
               value={JSON.stringify(c, null, 2)}
               onChange={(e) => { try { onUpdate("content", JSON.parse(e.target.value)); } catch {} }}

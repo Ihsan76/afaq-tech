@@ -577,7 +577,7 @@ function renderContentFields(block: Block, updateContent: (k: string, v: any) =>
     default:
       return (
         <Section title={t("البيانات", "Data")} defaultOpen>
-          <label className={labelCls} style={{ color: "var(--color-text-muted)" }}>Content JSON</label>
+          <label className={labelCls} style={{ color: "var(--color-text-muted)" }}>{t("محتوى JSON", "Content JSON")}</label>
           <textarea
             value={JSON.stringify(c, null, 2)}
             onChange={(e) => { try { /* will be handled by parent */ } catch {} }}

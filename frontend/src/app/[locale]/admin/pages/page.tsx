@@ -234,11 +234,11 @@ export default function AdminPagesPage() {
                 <div>
                   <label className="text-xs font-bold uppercase tracking-wider mb-1 block" style={{ color: "var(--color-text-secondary)" }}>{t("admin.template")}</label>
                   <select value={template} onChange={(e) => setTemplate(e.target.value)} className={inputCls} style={formStyle}>
-                    <option value="default">Default</option>
-                    <option value="landing">Landing</option>
-                    <option value="about">About</option>
-                    <option value="contact">Contact</option>
-                    <option value="custom">Custom</option>
+                    <option value="default">{t("admin.templateCatDefault")}</option>
+                    <option value="landing">{t("admin.templateCatLanding")}</option>
+                    <option value="about">{t("admin.templateCatAbout")}</option>
+                    <option value="contact">{t("admin.templateCatContact")}</option>
+                    <option value="custom">{t("admin.templateCatCustom")}</option>
                   </select>
                 </div>
               </div>

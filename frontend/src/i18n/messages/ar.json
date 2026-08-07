@@ -58,7 +58,9 @@
     "all": "الكل",
     "none": "بدون",
     "noBlocksPreview": "لا توجد بلوكات للمعاينة",
-    "unknownBlock": "بلوك غير معروف"
+    "unknownBlock": "بلوك غير معروف",
+    "name": "الاسم",
+    "you": "أنت"
   },
   "auth": {
     "login": "تسجيل الدخول",
@@ -91,7 +93,8 @@
     "codeInvalid": "الرمز غير صحيح",
     "googleNotConfigured": "تسجيل الدخول بحساب جوجل غير متاح بعد",
     "verifyYourEmail": "تحقق من عنوان بريدك الإلكتروني",
-    "loginLocked": "محاولات كثيرة فاشلة. حاول مجدداً بعد 15 دقيقة"
+    "loginLocked": "محاولات كثيرة فاشلة. حاول مجدداً بعد 15 دقيقة",
+    "or": "أو"
   },
   "nav": {
     "home": "الرئيسية",
@@ -442,10 +445,10 @@
     "contentEn": "المحتوى (إنجليزي) — HTML",
     "contentAr": "المحتوى (عربي) — HTML",
     "tags": "الوسوم",
-    "readTime": "وقت القراءة (دقيقة)",
+    "readTime": "وقت القراءة (دقائق)",
     "authorEn": "الكاتب (إنجليزي)",
     "authorAr": "الكاتب (عربي)",
-    "relatedService": "رابط الخدمة المرتبطة",
+    "relatedService": "الخدمة المرتبطة (رابط)",
     "featured": "مميز",
     "views": "المشاهدات",
     "noPosts": "لا توجد مقالات بعد",
@@ -649,8 +652,8 @@
     "featureChat": "محادثة",
     "unsavedChanges": "لديك تغييرات غير محفوظة في نموذج الباقة. هل تريد المغادرة؟",
     "organizationsSection": "المنشآت",
-    "organizations": "المنشآت",
-    "organizationsDesc": "إدارة حسابات المدارس والمؤسسات والمقاعد والأعضاء",
+    "organizations": "المنظمات",
+    "organizationsDesc": "إدارة المنظمات التعليمية",
     "createOrganization": "إنشاء منشأة",
     "organizationName": "اسم المنشأة",
     "organizationOwnerEmail": "بريد المدير (المالك)",
@@ -663,7 +666,13 @@
     "orgStatusActive": "نشطة",
     "orgStatusSuspended": "موقوفة",
     "school": "المدرسة",
-    "sortNameDesc": "الاسم تنازلياً"
+    "sortNameDesc": "الاسم تنازلياً",
+    "schools": "المدارس والمتابعة",
+    "schoolsDesc": "إدارة المدارس والشعب الصفية وتنبيهات الواتساب",
+    "author": "المؤلف",
+    "templateCatDefault": "الافتراضي",
+    "templateCatAbout": "من نحن",
+    "templateCatContact": "اتصل بنا"
   },
   "dashboard": {
     "title": "لوحة التحكم",
@@ -708,7 +717,8 @@
     "roleSupport": "دعم فني",
     "roleContentManager": "مدير محتوى",
     "roleFinance": "مشرف مالي",
-    "roleSchoolAdmin": "مدير مدرسة"
+    "roleSchoolAdmin": "مدير مدرسة",
+    "planSchool": "مدرسة"
   },
   "profile": {
     "title": "الملف الشخصي",
@@ -1045,7 +1055,8 @@
     "browseCourses": "تصفح الدورات",
     "freePreview": "معاينة مجانية",
     "loginRequired": "سجّل الدخول لتتبع تقدمك",
-    "paidComingSoon": "الدفع الإلكتروني قريباً"
+    "paidComingSoon": "الدفع الإلكتروني قريباً",
+    "courses": "دورات"
   },
   "gamification": {
     "title": "التلعيب",
@@ -1322,6 +1333,41 @@
     "adminMonitor": "متابعة الإدارة للمرفقات",
     "uploader": "الرافع",
     "file": "الملف",
-    "download": "تحميل"
+    "download": "تحميل",
+    "phone": "الهاتف",
+    "address": "العنوان",
+    "content": "المحتوى",
+    "currentYear": "العام الحالي",
+    "selectSchool": "اختر المدرسة",
+    "emergencyAlertBadge": "تنبيه طوارئ عبر واتساب",
+    "by": "بواسطة:",
+    "manager": "مدير المدرسة",
+    "managerPlaceholder": "ابحث بالبريد أو الاسم لتعيين مدير...",
+    "managerSearching": "جاري البحث...",
+    "removeManager": "إزالة",
+    "managerAssignHint": "تعيين المدير يمنحه دور مدير المدرسة بصلاحيات كاملة على هذه المدرسة فقط."
+  },
+  "editor": {
+    "bold": "عريض",
+    "italic": "مائل",
+    "underline": "تسطير",
+    "strikethrough": "يتوسطه خط",
+    "heading1": "عنوان 1",
+    "heading2": "عنوان 2",
+    "heading3": "عنوان 3",
+    "bulletList": "قائمة نقطية",
+    "numberedList": "قائمة مرقمة",
+    "quote": "اقتباس",
+    "alignLeft": "محاذاة لليسار",
+    "alignCenter": "محاذاة للوسط",
+    "alignRight": "محاذاة لليمين",
+    "insertLink": "إدراج رابط",
+    "insertImage": "إدراج صورة",
+    "undo": "تراجع",
+    "redo": "إعادة",
+    "clearFormatting": "مسح التنسيق",
+    "placeholder": "ابدأ الكتابة هنا...",
+    "promptUrl": "الرابط",
+    "promptImageUrl": "رابط الصورة"
   }
 }

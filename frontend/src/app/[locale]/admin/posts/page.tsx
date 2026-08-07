@@ -198,12 +198,12 @@ export default function AdminBlogPage() {
             <div>
               <label className="block text-sm font-medium mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("admin.category") || "Category"}</label>
               <select value={formCategory} onChange={(e) => { setFormCategory(e.target.value ? Number(e.target.value) : ""); markDirty(); }} className={inputCls} style={style}>
-                <option value="">— None —</option>
+                <option value="">{t("common.none")}</option>
                 {categories.map((c) => <option key={c.id} value={c.id}>{localized(c.translations, locale, "name")}</option>)}
               </select>
             </div>
             <div className="sm:col-span-2">
-              <label className="block text-sm font-medium mb-1" style={{ color: "var(--color-text-secondary)" }}>Excerpt ({formLocale.toUpperCase()})</label>
+              <label className="block text-sm font-medium mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("admin.excerptAr")}</label>
               <textarea value={formTranslations[formLocale]?.excerpt || ""} onChange={(e) => updateTranslation(formLocale, "excerpt", e.target.value)} className={inputCls + " h-16"} style={style} dir={isRtl ? "rtl" : "ltr"} />
             </div>
             <div className="sm:col-span-2">
@@ -219,7 +219,7 @@ export default function AdminBlogPage() {
               <input type="number" value={formReadTime} onChange={(e) => { setFormReadTime(Number(e.target.value)); markDirty(); }} className={inputCls} style={style} min={1} />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1" style={{ color: "var(--color-text-secondary)" }}>Author ({formLocale.toUpperCase()})</label>
+              <label className="block text-sm font-medium mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("admin.author")} ({formLocale.toUpperCase()})</label>
               <input value={formTranslations[formLocale]?.author_name || ""} onChange={(e) => updateTranslation(formLocale, "author_name", e.target.value)} className={inputCls} style={style} dir={isRtl ? "rtl" : "ltr"} />
             </div>
             <div>

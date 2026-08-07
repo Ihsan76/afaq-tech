@@ -58,7 +58,9 @@
     "all": "All",
     "none": "None",
     "noBlocksPreview": "No blocks to preview",
-    "unknownBlock": "Unknown block"
+    "unknownBlock": "Unknown block",
+    "name": "Name",
+    "you": "You"
   },
   "auth": {
     "login": "Login",
@@ -91,7 +93,8 @@
     "codeInvalid": "Invalid code",
     "googleNotConfigured": "Google sign-in is not available yet",
     "verifyYourEmail": "Verify your email address",
-    "loginLocked": "Too many failed attempts. Try again in 15 minutes."
+    "loginLocked": "Too many failed attempts. Try again in 15 minutes.",
+    "or": "OR"
   },
   "nav": {
     "home": "Home",
@@ -650,7 +653,7 @@
     "unsavedChanges": "You have unsaved changes in the plan form. Leave anyway?",
     "organizationsSection": "Organizations",
     "organizations": "Organizations",
-    "organizationsDesc": "Manage school and institution accounts, seats and members",
+    "organizationsDesc": "Manage educational organizations",
     "createOrganization": "Create organization",
     "organizationName": "Organization name",
     "organizationOwnerEmail": "Owner email",
@@ -663,7 +666,13 @@
     "orgStatusActive": "Active",
     "orgStatusSuspended": "Suspended",
     "school": "School",
-    "sortNameDesc": "Name (Z-A)"
+    "sortNameDesc": "Name (Z-A)",
+    "schools": "Schools & Follow-up",
+    "schoolsDesc": "Manage schools, sections, and WhatsApp alerts",
+    "author": "Author",
+    "templateCatDefault": "Default",
+    "templateCatAbout": "About",
+    "templateCatContact": "Contact"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -708,7 +717,8 @@
     "roleSupport": "Support",
     "roleContentManager": "Content Manager",
     "roleFinance": "Finance",
-    "roleSchoolAdmin": "School Admin"
+    "roleSchoolAdmin": "School Admin",
+    "planSchool": "School"
   },
   "profile": {
     "title": "Profile",
@@ -1045,7 +1055,8 @@
     "browseCourses": "Browse Courses",
     "freePreview": "Free Preview",
     "loginRequired": "Log in to track your progress",
-    "paidComingSoon": "Payment integration coming soon"
+    "paidComingSoon": "Payment integration coming soon",
+    "courses": "courses"
   },
   "gamification": {
     "title": "Gamification",
@@ -1322,6 +1333,41 @@
     "adminMonitor": "Admin monitoring of attachments",
     "uploader": "Uploader",
     "file": "File",
-    "download": "Download"
+    "download": "Download",
+    "phone": "Phone",
+    "address": "Address",
+    "content": "Content",
+    "currentYear": "Current Year",
+    "selectSchool": "Select School",
+    "emergencyAlertBadge": "WhatsApp Emergency Alert",
+    "by": "By:",
+    "manager": "School Manager",
+    "managerPlaceholder": "Search by email or name to assign a manager...",
+    "managerSearching": "Searching...",
+    "removeManager": "Remove",
+    "managerAssignHint": "Assigning a manager grants them full School Admin access limited to this school only."
+  },
+  "editor": {
+    "bold": "Bold",
+    "italic": "Italic",
+    "underline": "Underline",
+    "strikethrough": "Strikethrough",
+    "heading1": "Heading 1",
+    "heading2": "Heading 2",
+    "heading3": "Heading 3",
+    "bulletList": "Bullet List",
+    "numberedList": "Numbered List",
+    "quote": "Quote",
+    "alignLeft": "Align Left",
+    "alignCenter": "Align Center",
+    "alignRight": "Align Right",
+    "insertLink": "Insert Link",
+    "insertImage": "Insert Image",
+    "undo": "Undo",
+    "redo": "Redo",
+    "clearFormatting": "Clear Formatting",
+    "placeholder": "Start writing...",
+    "promptUrl": "URL",
+    "promptImageUrl": "Image URL"
   }
 }

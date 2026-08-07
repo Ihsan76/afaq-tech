@@ -7,8 +7,21 @@ import Link from "next/link";
 import { api } from "@/lib/api";
 import { useAuthStore } from "@/store/auth";
 
-const ROLES = ["student", "teacher", "parent", "creator", "admin", "developer", "support", "content_manager", "finance"];
+const ROLES = ["student", "teacher", "parent", "creator", "admin", "school_admin", "developer", "support", "content_manager", "finance"];
 const PLANS = ["free", "basic", "pro", "school", "enterprise"];
+
+const ROLE_LABEL_KEYS: Record<string, string> = {
+  student: "roleStudent",
+  teacher: "roleTeacher",
+  parent: "roleParent",
+  creator: "roleCreator",
+  admin: "roleAdmin",
+  school_admin: "roleSchoolAdmin",
+  developer: "roleDeveloper",
+  support: "roleSupport",
+  content_manager: "roleContentManager",
+  finance: "roleFinance",
+};
 
 export default function AdminUserEditPage() {
   const pathname = usePathname();
@@ -19,6 +32,9 @@ export default function AdminUserEditPage() {
   const t = useTranslations();
   const { user: currentUser } = useAuthStore();
   const canEdit = !!currentUser && (currentUser.is_staff || currentUser.role === "admin");
+
+  const roleLabel = (r: string) => t(`dashboard.${ROLE_LABEL_KEYS[r] || "roleStudent"}`);
+  const planLabel = (p: string) => t(`dashboard.plan${p.charAt(0).toUpperCase() + p.slice(1)}`);
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -149,7 +165,7 @@ export default function AdminUserEditPage() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-bold mb-1" style={{ color: "var(--color-text-secondary)" }}>الدور (Role)</label>
+            <label className="block text-xs font-bold mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("admin.changeRole")}</label>
             <select
               value={formData.role}
               onChange={(e) => setFormData({ ...formData, role: e.target.value })}
@@ -158,13 +174,13 @@ export default function AdminUserEditPage() {
               style={{ background: "var(--color-surface)", color: "var(--color-text)", borderColor: "var(--color-border)" }}
             >
               {ROLES.map((r) => (
-                <option key={r} value={r}>{r}</option>
+                <option key={r} value={r}>{roleLabel(r)}</option>
               ))}
             </select>
           </div>
 
           <div>
-            <label className="block text-xs font-bold mb-1" style={{ color: "var(--color-text-secondary)" }}>الباقة (Plan)</label>
+            <label className="block text-xs font-bold mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("admin.changePlan")}</label>
             <select
               value={formData.subscription_plan}
               onChange={(e) => setFormData({ ...formData, subscription_plan: e.target.value })}
@@ -173,7 +189,7 @@ export default function AdminUserEditPage() {
               style={{ background: "var(--color-surface)", color: "var(--color-text)", borderColor: "var(--color-border)" }}
             >
               {PLANS.map((p) => (
-                <option key={p} value={p}>{p}</option>
+                <option key={p} value={p}>{planLabel(p)}</option>
               ))}
             </select>
           </div>
@@ -214,7 +230,7 @@ export default function AdminUserEditPage() {
               disabled={!canEdit}
               className="w-4 h-4 rounded"
             />
-            <span className="text-sm font-medium" style={{ color: "var(--color-text)" }}>مؤكد (Verified)</span>
+            <span className="text-sm font-medium" style={{ color: "var(--color-text)" }}>{t("admin.verified")}</span>
           </label>
 
           <label className="flex items-center gap-2 cursor-pointer">
@@ -225,7 +241,7 @@ export default function AdminUserEditPage() {
               disabled={!canEdit}
               className="w-4 h-4 rounded"
             />
-            <span className="text-sm font-medium" style={{ color: "var(--color-text)" }}>نشط (Active)</span>
+            <span className="text-sm font-medium" style={{ color: "var(--color-text)" }}>{t("admin.active")}</span>
           </label>
         </div>
 

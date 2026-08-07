@@ -91,7 +91,7 @@ export default function LoginPage() {
 
           <div className="flex items-center gap-4 my-6">
             <div className="flex-1" style={{ borderTop: "1px solid var(--color-border)" }} />
-            <span className="text-sm" style={{ color: "var(--color-text-muted)" }}>OR</span>
+            <span className="text-sm" style={{ color: "var(--color-text-muted)" }}>{t("or")}</span>
             <div className="flex-1" style={{ borderTop: "1px solid var(--color-border)" }} />
           </div>
 

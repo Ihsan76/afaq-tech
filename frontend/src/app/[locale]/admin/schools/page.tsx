@@ -65,7 +65,11 @@ const SORTS = [
 export default function AdminSchoolsPage() {
   const t = useTranslations("schools");
   const commonT = useTranslations("common");
+  const dashT = useTranslations("dashboard");
   const locale = useLocale();
+
+  const roleLabel = (r: string) =>
+    dashT(`role${r.charAt(0).toUpperCase() + r.slice(1).replace(/_(.)/g, (_, c) => c.toUpperCase())}`, { fallback: r });
 
   const [activeTab, setActiveTab] = useState<"schools" | "years" | "sections" | "announcements">("schools");
   const [loading, setLoading] = useState(true);
@@ -474,7 +478,7 @@ export default function AdminSchoolsPage() {
                   <div key={y.id} className="flex justify-between items-center p-4 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-alt)]">
                     <span className="font-bold text-[var(--color-text)]">{y.name}</span>
                     {y.is_current && (
-                      <span className="bg-[var(--color-success-light)] text-[var(--color-success)] text-xs px-3 py-1 rounded-full font-medium">Current Year</span>
+                      <span className="bg-[var(--color-success-light)] text-[var(--color-success)] text-xs px-3 py-1 rounded-full font-medium">{t("currentYear")}</span>
                     )}
                   </div>
                 ))}
@@ -517,14 +521,14 @@ export default function AdminSchoolsPage() {
                         <h3 className="font-bold text-lg text-[var(--color-text)]">{ann.title}</h3>
                         {ann.is_emergency && (
                           <span className="bg-[var(--color-error)] text-white text-xs px-3 py-1 rounded-full font-bold animate-pulse">
-                            🚨 WhatsApp Emergency Alert
+                            🚨 {t("emergencyAlertBadge")}
                           </span>
                         )}
                       </div>
                       <span className="text-xs text-[var(--color-text-muted)]">{new Date(ann.created_at).toLocaleDateString()}</span>
                     </div>
                     <p className="text-[var(--color-text-secondary)] text-sm whitespace-pre-line">{ann.content}</p>
-                    <div className="text-xs text-[var(--color-text-muted)] pt-2 border-t">By: {ann.author_email}</div>
+                    <div className="text-xs text-[var(--color-text-muted)] pt-2 border-t">{t("by")} {ann.author_email}</div>
                   </div>
                 ))}
                 {announcements.length === 0 && <div className="text-[var(--color-text-muted)] text-center py-8">{commonT("noResults")}</div>}
@@ -572,7 +576,7 @@ export default function AdminSchoolsPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Phone</label>
+                <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">{t("phone")}</label>
                 <input
                   type="text"
                   className="w-full px-4 py-3 border border-[var(--color-border)] rounded-2xl outline-none"
@@ -581,7 +585,7 @@ export default function AdminSchoolsPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Address</label>
+                <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">{t("address")}</label>
                 <textarea
                   className="w-full px-4 py-3 border border-[var(--color-border)] rounded-2xl outline-none"
                   value={schoolForm.address}
@@ -592,7 +596,7 @@ export default function AdminSchoolsPage() {
               {/* School Manager */}
               {editingSchoolId && (
                 <div className="rounded-2xl border p-4 space-y-3" style={{ borderColor: "var(--color-border)", background: "var(--color-surface-alt)" }}>
-                  <label className="block text-sm font-bold" style={{ color: "var(--color-text)" }}>👤 مدير المدرسة</label>
+                  <label className="block text-sm font-bold" style={{ color: "var(--color-text)" }}>👤 {t("manager")}</label>
                   {currentManager ? (
                     <div className="flex items-center justify-between gap-3 p-3 rounded-xl border" style={{ background: "var(--color-surface)", borderColor: "var(--color-border)" }}>
                       <div className="min-w-0">
@@ -605,7 +609,7 @@ export default function AdminSchoolsPage() {
                         className="px-3 py-1.5 rounded-xl text-xs font-bold border shrink-0 hover:opacity-85"
                         style={{ background: "var(--color-error-light)", color: "var(--color-error)", borderColor: "var(--color-error)" }}
                       >
-                        إزالة
+                        {t("removeManager")}
                       </button>
                     </div>
                   ) : (
@@ -614,11 +618,11 @@ export default function AdminSchoolsPage() {
                         type="text"
                         value={managerQuery}
                         onChange={(e) => searchManagers(e.target.value)}
-                        placeholder="ابحث بالبريد أو الاسم لتعيين مدير..."
+                        placeholder={t("managerPlaceholder")}
                         className="w-full px-4 py-3 border border-[var(--color-border)] rounded-2xl outline-none"
                         style={{ background: "var(--color-surface)", color: "var(--color-text)" }}
                       />
-                      {managerSearching && <div className="text-xs mt-1" style={{ color: "var(--color-text-muted)" }}>جاري البحث...</div>}
+                      {managerSearching && <div className="text-xs mt-1" style={{ color: "var(--color-text-muted)" }}>{t("managerSearching")}</div>}
                       {managerSuggestions.length > 0 && (
                         <div className="absolute z-20 inset-x-0 mt-1 rounded-xl border shadow-lg overflow-hidden" style={{ background: "var(--color-surface)", borderColor: "var(--color-border)" }}>
                           {managerSuggestions.map((u) => (
@@ -630,14 +634,14 @@ export default function AdminSchoolsPage() {
                               style={{ color: "var(--color-text)", borderColor: "var(--color-border)" }}
                             >
                               <span className="font-semibold">{u.name || u.email}</span>
-                              <span className="text-xs block" style={{ color: "var(--color-text-muted)" }}>{u.email} — {u.role}</span>
+                              <span className="text-xs block" style={{ color: "var(--color-text-muted)" }}>{u.email} — {roleLabel(u.role)}</span>
                             </button>
                           ))}
                         </div>
                       )}
                     </div>
                   )}
-                  <p className="text-xs" style={{ color: "var(--color-text-muted)" }}>تعيين المدير يمنحه دور school_admin بصلاحيات كاملة على هذه المدرسة فقط.</p>
+                  <p className="text-xs" style={{ color: "var(--color-text-muted)" }}>{t("managerAssignHint")}</p>
                 </div>
               )}
 
@@ -675,7 +679,7 @@ export default function AdminSchoolsPage() {
                   value={announcementForm.school}
                   onChange={(e) => setAnnouncementForm({ ...announcementForm, school: Number(e.target.value) })}
                 >
-                  <option value="">-- Select School --</option>
+                  <option value="">{t("selectSchool")}</option>
                   {schools.map((s) => (
                     <option key={s.id} value={s.id}>{s.name}</option>
                   ))}
@@ -692,7 +696,7 @@ export default function AdminSchoolsPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Content</label>
+                <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">{t("content")}</label>
                 <textarea
                   required
                   rows={4}
