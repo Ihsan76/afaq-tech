@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import Link from "next/link";
@@ -117,10 +117,10 @@ export default function NewLessonPlanPage() {
     setSelectedBookIds((prev) => (checked ? [...prev, id] : prev.filter((x) => x !== id)));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!title.trim() || !prompt.trim()) return;
+  const [isRetrying, setIsRetrying] = useState(false);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
+  const executeGeneration = async (attempt = 1) => {
     setLoading(true);
     setError("");
 
@@ -139,20 +139,54 @@ export default function NewLessonPlanPage() {
       const { data } = await api.post("/lesson-plans/generate/", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
+      setIsRetrying(false);
       router.push(`/${locale}/lesson-plans/${data.id}`);
     } catch (err: any) {
-      let errorMsg = "";
       const status = err.response?.status;
       const data = err.response?.data;
 
+      if ((status === 502 || status === 503) && attempt < 5) {
+        const nextAttempt = attempt + 1;
+        const waitSeconds = nextAttempt * 5;
+        setIsRetrying(true);
+        setLoading(false);
+
+        setError(
+          locale === "ar"
+            ? `⚠️ خطأ في الاتصال (502/503). جاري إعادة المحاولة تلقائياً (محاولة ${nextAttempt}/5) خلال ${waitSeconds} ثانية...`
+            : `⚠️ AI service error (502/503). Retrying automatically (Attempt ${nextAttempt}/5) in ${waitSeconds}s...`
+        );
+
+        if (timerRef.current) clearInterval(timerRef.current);
+        let currentSeconds = waitSeconds;
+        timerRef.current = setInterval(() => {
+          currentSeconds -= 1;
+          if (currentSeconds <= 0) {
+            if (timerRef.current) clearInterval(timerRef.current);
+            setIsRetrying(false);
+            executeGeneration(nextAttempt);
+          } else {
+            setError(
+              locale === "ar"
+                ? `⚠️ خطأ في الاتصال (502/503). جاري إعادة المحاولة تلقائياً (محاولة ${nextAttempt}/5) خلال ${currentSeconds} ثانية...`
+                : `⚠️ AI service error (502/503). Retrying automatically (Attempt ${nextAttempt}/5) in ${currentSeconds}s...`
+            );
+          }
+        }, 1000);
+        return;
+      }
+
+      setIsRetrying(false);
+      setLoading(false);
+      let errorMsg = "";
       if (status === 429) {
         errorMsg = locale === "ar" 
           ? "لقد تم استنفاد الحصة المجانية لمزود الذكاء الاصطناعي (خطأ 429). يرجى التبديل إلى نموذج ذكاء اصطناعي آخر."
           : "AI quota exceeded (429 Too Many Requests). Please switch to another AI model.";
       } else if (status === 502 || status === 503) {
         errorMsg = locale === "ar"
-          ? "خطأ في الاتصال بخدمة الذكاء الاصطناعي (502/503). يرجى المحاولة لاحقاً."
-          : "AI service gateway error (502/503). Please try again later.";
+          ? "خطأ في الاتصال بخدمة الذكاء الاصطناعي (502/503). فشلت جميع محاولات إعادة الاتصال التلقائي (5 محاولات). يرجى المحاولة لاحقاً."
+          : "AI service gateway error (502/503). All automatic retry attempts (5) failed. Please try again later.";
       } else if (typeof data === "object" && data !== null) {
         errorMsg = data.message || data.error || data.detail;
       } else if (typeof data === "string" && data.length < 200) {
@@ -164,9 +198,15 @@ export default function NewLessonPlanPage() {
         err.message ||
         (locale === "ar" ? "حدث خطأ أثناء توليد خطة الدرس. يرجى المحاولة مرة أخرى." : "An error occurred while generating the lesson plan. Please try again.")
       );
-    } finally {
-      setLoading(false);
     }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!title.trim() || !prompt.trim()) return;
+    if (timerRef.current) clearInterval(timerRef.current);
+    setIsRetrying(false);
+    executeGeneration(1);
   };
 
   return (
