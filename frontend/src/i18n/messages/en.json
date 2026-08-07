@@ -1387,13 +1387,17 @@
     "subscribeNow": "Subscribe Now"
   },
   "search": {
-    "title": "Search",
-    "placeholder": "Search for articles, e-books...",
+    "title": "Advanced Search",
+    "placeholder": "Search for courses, articles, e-books...",
     "button": "Search",
     "resultsFor": "Results for",
     "found": "results found",
     "noResults": "No results found. Try different keywords.",
-    "noResultsHint": "We couldn't find anything matching your search."
+    "noResultsHint": "We couldn't find anything matching your search.",
+    "all": "All",
+    "courses": "Courses",
+    "blog": "Blog",
+    "ebooks": "E-Books"
   },
   "blog": {
     "title": "Blog",

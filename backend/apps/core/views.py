@@ -208,3 +208,70 @@ def admin_stats(request):
             'badges_issued': UserBadge.objects.count(),
         },
     })
+
+
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def search_autocomplete_view(request):
+    """إكمال تلقائي للبحث الشامل (الدورات، المقالات، الكتب الإلكترونية)"""
+    q = request.GET.get('q', '').strip()
+    locale = request.GET.get('locale', 'ar')
+    if not q or len(q) < 2:
+        return Response({'courses': [], 'blog': [], 'ebooks': []})
+
+    from django.db.models import Q
+    from apps.courses.models import Course
+    from apps.blog.models import BlogPost
+    from apps.ebooks.models import Ebook
+
+    courses = Course.objects.filter(is_published=True).filter(
+        Q(translations__en__title__icontains=q) |
+        Q(translations__ar__title__icontains=q) |
+        Q(slug__icontains=q)
+    )[:5]
+
+    posts = BlogPost.objects.filter(is_published=True).filter(
+        Q(translations__en__title__icontains=q) |
+        Q(translations__ar__title__icontains=q) |
+        Q(slug__icontains=q)
+    )[:5]
+
+    ebooks = Ebook.objects.filter(is_published=True).filter(
+        Q(translations__en__title__icontains=q) |
+        Q(translations__ar__title__icontains=q) |
+        Q(slug__icontains=q) |
+        Q(tags__icontains=q)
+    )[:5]
+
+    return Response({
+        'courses': [
+            {
+                'title': c.translations.get(locale, {}).get('title') or c.translations.get('ar', {}).get('title') or c.slug,
+                'slug': c.slug,
+                'type': 'course',
+                'thumbnail': c.thumbnail,
+                'url': f"/{locale}/academy/courses/{c.slug}"
+            }
+            for c in courses
+        ],
+        'blog': [
+            {
+                'title': p.translations.get(locale, {}).get('title') or p.translations.get('ar', {}).get('title') or p.slug,
+                'slug': p.slug,
+                'type': 'blog',
+                'thumbnail': p.featured_image,
+                'url': f"/{locale}/blog/{p.slug}"
+            }
+            for p in posts
+        ],
+        'ebooks': [
+            {
+                'title': e.translations.get(locale, {}).get('title') or e.translations.get('ar', {}).get('title') or e.slug,
+                'slug': e.slug,
+                'type': 'ebook',
+                'thumbnail': e.cover_image if hasattr(e, 'cover_image') else '',
+                'url': f"/{locale}/ebooks/{e.slug}"
+            }
+            for e in ebooks
+        ],
+    })
