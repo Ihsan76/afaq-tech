@@ -383,13 +383,13 @@ export default function AdminPromptsPage() {
               <thead>
                 <tr className="sticky top-0" style={{ borderBottom: "1px solid var(--color-border)", background: "var(--color-surface)" }}>
                   <th className="p-3 text-right font-semibold">الاسم</th>
-                  <th className="hidden md:table-cell p-3 text-right font-semibold">الميزة</th>
+                  <th className="col-hide-md p-3 text-right font-semibold">الميزة</th>
                   <th className="p-3 text-right font-semibold">اللغة</th>
-                  <th className="hidden md:table-cell p-3 text-right font-semibold">المرحلة</th>
-                  <th className="hidden sm:table-cell p-3 text-right font-semibold">الأولوية</th>
-                  <th className="hidden sm:table-cell p-3 text-right font-semibold">افتراضي</th>
+                  <th className="col-hide-md p-3 text-right font-semibold">المرحلة</th>
+                  <th className="col-hide-sm p-3 text-right font-semibold">الأولوية</th>
+                  <th className="col-hide-sm p-3 text-right font-semibold">افتراضي</th>
                   <th className="p-3 text-right font-semibold">نشط</th>
-                  <th className="hidden sm:table-cell p-3 text-right font-semibold">الإصدار</th>
+                  <th className="col-hide-sm p-3 text-right font-semibold">الإصدار</th>
                   <th className="p-3 text-right font-semibold"></th>
                 </tr>
               </thead>
@@ -399,13 +399,13 @@ export default function AdminPromptsPage() {
                 ) : (langFilter ? templates.filter(t => t.language === langFilter) : templates).map((t) => (
                   <tr key={t.id} style={{ borderBottom: "1px solid var(--color-border)" }}>
                     <td className="p-3 font-medium">{t.name}</td>
-                    <td className="hidden md:table-cell p-3">{t.feature_key}</td>
+                    <td className="col-hide-md p-3">{t.feature_key}</td>
                     <td className="p-3">{LANGUAGES.find(l => l.code === t.language)?.label || t.language}</td>
-                    <td className="hidden md:table-cell p-3">{STAGES.find(s => s.value === t.learner_stage)?.label || t.learner_stage}</td>
-                    <td className="hidden sm:table-cell p-3">{t.priority}</td>
-                    <td className="hidden sm:table-cell p-3">{t.is_default ? "✅" : "❌"}</td>
+                    <td className="col-hide-md p-3">{STAGES.find(s => s.value === t.learner_stage)?.label || t.learner_stage}</td>
+                    <td className="col-hide-sm p-3">{t.priority}</td>
+                    <td className="col-hide-sm p-3">{t.is_default ? "✅" : "❌"}</td>
                     <td className="p-3">{t.is_active ? "✅" : "❌"}</td>
-                    <td className="hidden sm:table-cell p-3">{t.version}</td>
+                    <td className="col-hide-sm p-3">{t.version}</td>
                     <td className="p-3">
                       <div className="flex gap-2">
                         <button onClick={() => openTemplateEdit(t)} className="px-3 py-1 rounded-lg text-xs font-semibold transition-all hover:opacity-80"
@@ -482,9 +482,9 @@ export default function AdminPromptsPage() {
               <thead>
                 <tr className="sticky top-0" style={{ borderBottom: "1px solid var(--color-border)", background: "var(--color-surface)" }}>
                   <th className="p-3 text-right font-semibold">الصف</th>
-                  <th className="hidden md:table-cell p-3 text-right font-semibold">المرحلة</th>
+                  <th className="col-hide-md p-3 text-right font-semibold">المرحلة</th>
                   <th className="p-3 text-right font-semibold">نشط</th>
-                  <th className="hidden md:table-cell p-3 text-right font-semibold">آخر تحديث</th>
+                  <th className="col-hide-md p-3 text-right font-semibold">آخر تحديث</th>
                   <th className="p-3 text-right font-semibold"></th>
                 </tr>
               </thead>
@@ -494,9 +494,9 @@ export default function AdminPromptsPage() {
                 ) : gradeProfiles.map((p) => (
                   <tr key={p.id} style={{ borderBottom: "1px solid var(--color-border)" }}>
                     <td className="p-3 font-medium">{p.grade_name}</td>
-                    <td className="hidden md:table-cell p-3">{STAGES.find(s => s.value === p.learner_stage)?.label || p.learner_stage}</td>
+                    <td className="col-hide-md p-3">{STAGES.find(s => s.value === p.learner_stage)?.label || p.learner_stage}</td>
                     <td className="p-3">{p.is_active ? "✅" : "❌"}</td>
-                    <td className="hidden md:table-cell p-3">{p.updated_at ? new Date(p.updated_at).toLocaleDateString() : "—"}</td>
+                    <td className="col-hide-md p-3">{p.updated_at ? new Date(p.updated_at).toLocaleDateString() : "—"}</td>
                     <td className="p-3">
                       <div className="flex gap-2">
                         <button onClick={() => openGradeEdit(p)} className="px-3 py-1 rounded-lg text-xs font-semibold transition-all hover:opacity-80"

@@ -359,8 +359,8 @@ export default function AdminCurriculaPage() {
                   <thead style={{ backgroundColor: "var(--color-background-secondary)" }}>
                     <tr>
                       <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>{al(locale, "name")}</th>
-                      <th className="hidden md:table-cell px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>{al(locale, "country")}</th>
-                      <th className="hidden sm:table-cell px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>{al(locale, "year")}</th>
+                      <th className="col-hide-md px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>{al(locale, "country")}</th>
+                      <th className="col-hide-sm px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>{al(locale, "year")}</th>
                       <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>{al(locale, "grade")}</th>
                       <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>{t("common.actions")}</th>
                     </tr>
@@ -369,8 +369,8 @@ export default function AdminCurriculaPage() {
                     {curricula.map((c) => (
                       <tr key={c.id} style={{ borderTop: "1px solid var(--color-border)" }}>
                         <td className="px-6 py-4 font-medium" style={{ color: "var(--color-text)" }}>{c.translations?.[locale]?.name || c.translations?.ar?.name || c.name || "-"}</td>
-                        <td className="hidden md:table-cell px-6 py-4" style={{ color: "var(--color-text-muted)" }}>{c.country}</td>
-                        <td className="hidden sm:table-cell px-6 py-4" style={{ color: "var(--color-text-muted)" }}>{c.year}</td>
+                        <td className="col-hide-md px-6 py-4" style={{ color: "var(--color-text-muted)" }}>{c.country}</td>
+                        <td className="col-hide-sm px-6 py-4" style={{ color: "var(--color-text-muted)" }}>{c.year}</td>
                         <td className="px-6 py-4"><span className="px-2.5 py-1 rounded-full text-xs font-semibold" style={{ background: "var(--color-primary-light)", color: "var(--color-primary)" }}>{getGradeName(c.grade)}</span></td>
                         <td className="px-6 py-4 flex gap-3">
                           <button onClick={() => startEdit(c)} className="font-medium text-sm transition-colors" style={{ color: "var(--color-primary)" }}>{t("common.edit")}</button>
@@ -434,9 +434,9 @@ export default function AdminCurriculaPage() {
                         <thead className="sticky top-0" style={{ background: "var(--color-surface)" }}>
                           <tr>
                             <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>{al(locale, "title")}</th>
-                            <th className="hidden md:table-cell px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>{al(locale, "subject")}</th>
+                            <th className="col-hide-md px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>{al(locale, "subject")}</th>
                             <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>{al(locale, "file")}</th>
-                            <th className="hidden sm:table-cell px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>{al(locale, "dateUploaded")}</th>
+                            <th className="col-hide-sm px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>{al(locale, "dateUploaded")}</th>
                             <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}></th>
                           </tr>
                         </thead>
@@ -447,9 +447,9 @@ export default function AdminCurriculaPage() {
                               <Fragment key={d.id}>
                                 <tr style={{ borderTop: "1px solid var(--color-border)" }}>
                                   <td className="px-6 py-4 font-medium" style={{ color: "var(--color-text)" }}>{d.title}</td>
-                                  <td className="hidden md:table-cell px-6 py-4" style={{ color: "var(--color-text-muted)" }}>{subj?.label || "-"}</td>
+                                  <td className="col-hide-md px-6 py-4" style={{ color: "var(--color-text-muted)" }}>{subj?.label || "-"}</td>
                                   <td className="px-6 py-4"><a href={d.download_url || d.file || d.external_url || "#"} target="_blank" rel="noopener noreferrer" className="font-medium text-sm transition-colors" style={{ color: "var(--color-primary)" }}>📄 {al(locale, "view")}</a></td>
-                                  <td className="hidden sm:table-cell px-6 py-4" style={{ color: "var(--color-text-muted)" }}>{new Date(d.created_at).toLocaleDateString()}</td>
+                                  <td className="col-hide-sm px-6 py-4" style={{ color: "var(--color-text-muted)" }}>{new Date(d.created_at).toLocaleDateString()}</td>
                                   <td className="px-6 py-4 flex gap-2 items-center">
                                     <button onClick={() => handleExtract(d.id)} disabled={extractingDoc === d.id}
                                       className="font-medium text-sm transition-colors disabled:opacity-50"
@@ -556,7 +556,7 @@ export default function AdminCurriculaPage() {
                       <tr>
                         <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>{al(locale, "level")}</th>
                         <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>{al(locale, "nameAr")}</th>
-                        <th className="hidden md:table-cell px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>{al(locale, "nameEn")}</th>
+                        <th className="col-hide-md px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>{al(locale, "nameEn")}</th>
                         <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>{t("common.actions")}</th>
                       </tr>
                     </thead>
@@ -565,7 +565,7 @@ export default function AdminCurriculaPage() {
                         <tr key={g.id} style={{ borderTop: "1px solid var(--color-border)" }}>
                           <td className="px-6 py-4 font-medium" style={{ color: "var(--color-text)" }}>{g.level}</td>
                           <td className="px-6 py-4" style={{ color: "var(--color-text)" }}>{g.translations?.ar?.name || "-"}</td>
-                          <td className="hidden md:table-cell px-6 py-4" style={{ color: "var(--color-text-muted)" }}>{g.translations?.en?.name || "-"}</td>
+                          <td className="col-hide-md px-6 py-4" style={{ color: "var(--color-text-muted)" }}>{g.translations?.en?.name || "-"}</td>
                           <td className="px-6 py-4 flex gap-3">
                             <button onClick={() => openGradeForm(g)} className="font-medium text-sm transition-colors" style={{ color: "var(--color-primary)" }}>{t("common.edit")}</button>
                             <button onClick={() => handleDeleteGrade(g.id)} className="font-medium text-sm transition-colors" style={{ color: "var(--color-error)" }}>{t("common.delete")}</button>

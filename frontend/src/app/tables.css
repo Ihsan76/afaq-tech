@@ -1,0 +1,15 @@
+/* ═══════════════════════════════════════════════════════════════
+   Responsive Table Column Utilities
+   تُستخدم على <th>/<td> لإخفاء عمود تحت حدّ معيّن:
+   col-hide-sm = يظهر من 640px فصاعداً (مخفي على الموبايل)
+   col-hide-md = يظهر من 768px فصاعداً
+   col-hide-lg = يظهر من 1024px فصاعداً
+   ═══════════════════════════════════════════════════════════════ */
+
+.col-hide-sm { display: none; }
+.col-hide-md { display: none; }
+.col-hide-lg { display: none; }
+
+@media (min-width: 40rem) { .col-hide-sm { display: table-cell; } }
+@media (min-width: 48rem) { .col-hide-md { display: table-cell; } }
+@media (min-width: 64rem) { .col-hide-lg { display: table-cell; } }

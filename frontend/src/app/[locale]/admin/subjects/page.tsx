@@ -142,7 +142,7 @@ export default function AdminSubjectsPage() {
                   <tr>
                     <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>{t("common.icon")}</th>
                     <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>{t("common.name")}</th>
-                    <th className="hidden md:table-cell px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>{t("common.nameAr")}</th>
+                    <th className="col-hide-md px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>{t("common.nameAr")}</th>
                     <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>{t("common.actions")}</th>
                   </tr>
                 </thead>
@@ -151,7 +151,7 @@ export default function AdminSubjectsPage() {
                     <tr key={subject.id} style={{ borderTop: "1px solid var(--color-border)" }}>
                       <td className="px-6 py-4 text-2xl">{subject.icon}</td>
                       <td className="px-6 py-4 font-medium" style={{ color: "var(--color-text)" }}>{getCurrSubjectName(subject)}</td>
-                      <td className="hidden md:table-cell px-6 py-4" style={{ color: "var(--color-text-muted)" }}>{subject.translations?.ar?.name || "-"}</td>
+                      <td className="col-hide-md px-6 py-4" style={{ color: "var(--color-text-muted)" }}>{subject.translations?.ar?.name || "-"}</td>
                       <td className="px-6 py-4 flex gap-3">
                         <button onClick={() => startEdit(subject)} className="font-medium text-sm transition-colors" style={{ color: "var(--color-primary)" }}>{t("common.edit")}</button>
                         <button onClick={() => handleDelete(subject.id)} className="font-medium text-sm transition-colors" style={{ color: "var(--color-error)" }}>{t("common.delete")}</button>

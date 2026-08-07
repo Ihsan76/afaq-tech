@@ -620,9 +620,9 @@ export default function AdminAIModelsPage() {
               <thead>
                 <tr style={{ backgroundColor: "var(--color-muted)" }}>
                   <th className="text-right p-3 font-semibold" style={{ color: "var(--color-text)" }}>الاسم</th>
-                  <th className="text-right p-3 font-semibold hidden md:table-cell" style={{ color: "var(--color-text)" }}>النموذج</th>
-                  <th className="text-right p-3 font-semibold hidden sm:table-cell" style={{ color: "var(--color-text)" }}>المزود</th>
-                  <th className="text-right p-3 font-semibold hidden lg:table-cell" style={{ color: "var(--color-text)" }}>الرموز</th>
+                  <th className="text-right p-3 font-semibold col-hide-md" style={{ color: "var(--color-text)" }}>النموذج</th>
+                  <th className="text-right p-3 font-semibold col-hide-sm" style={{ color: "var(--color-text)" }}>المزود</th>
+                  <th className="text-right p-3 font-semibold col-hide-lg" style={{ color: "var(--color-text)" }}>الرموز</th>
                   <th className="text-center p-3 font-semibold" style={{ color: "var(--color-text)" }}>مفعل</th>
                   <th className="text-center p-3 font-semibold" style={{ color: "var(--color-text)" }}>افتراضي</th>
                   <th className="text-left p-3 font-semibold" style={{ color: "var(--color-text)" }}>إجراءات</th>
@@ -635,11 +635,11 @@ export default function AdminAIModelsPage() {
                       <div className="font-medium" style={{ color: "var(--color-text)" }}>{m.name?.ar || m.name_ar}</div>
                       <div className="text-xs" style={{ color: "var(--color-text-muted)" }}>{m.name?.en || m.name_en}</div>
                     </td>
-                    <td className="p-3 hidden md:table-cell">
+                    <td className="p-3 col-hide-md">
                       <code className="px-2 py-0.5 rounded text-xs" style={{ backgroundColor: "var(--color-muted)", color: "var(--color-primary)" }}>{m.model_id}</code>
                     </td>
-                    <td className="p-3 hidden sm:table-cell" style={{ color: "var(--color-text-secondary)" }}>{m.provider}</td>
-                    <td className="p-3 hidden lg:table-cell" style={{ color: "var(--color-text-secondary)" }}>{m.max_tokens.toLocaleString()}</td>
+                    <td className="p-3 col-hide-sm" style={{ color: "var(--color-text-secondary)" }}>{m.provider}</td>
+                    <td className="p-3 col-hide-lg" style={{ color: "var(--color-text-secondary)" }}>{m.max_tokens.toLocaleString()}</td>
                     <td className="p-3 text-center">
                       <button onClick={() => handleToggleActive(m)}
                         className={`w-8 h-8 rounded-lg text-xs font-bold transition-all ${m.is_active ? "text-green-600 bg-green-100" : "text-red-600 bg-red-100"}`}

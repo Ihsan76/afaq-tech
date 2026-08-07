@@ -140,11 +140,11 @@ export default function AdminAIRunsPage() {
               <tr className="border-b" style={{ borderColor: "var(--color-border)", background: "var(--color-surface-alt)" }}>
                 <th className="px-6 py-4 text-right text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("admin.userCol")}</th>
                 <th className="px-6 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("admin.featureCol")}</th>
-                <th className="hidden md:table-cell px-6 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("admin.modelCol")}</th>
-                <th className="hidden sm:table-cell px-6 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("admin.tokensCol")}</th>
-                <th className="hidden sm:table-cell px-6 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("admin.costCol")}</th>
-                <th className="hidden lg:table-cell px-6 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("admin.durationCol")}</th>
-                <th className="hidden md:table-cell px-6 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("admin.createdCol")}</th>
+                <th className="col-hide-md px-6 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("admin.modelCol")}</th>
+                <th className="col-hide-sm px-6 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("admin.tokensCol")}</th>
+                <th className="col-hide-sm px-6 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("admin.costCol")}</th>
+                <th className="col-hide-lg px-6 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("admin.durationCol")}</th>
+                <th className="col-hide-md px-6 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("admin.createdCol")}</th>
                 <th className="px-6 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("admin.promptCol")}</th>
               </tr>
             </thead>
@@ -159,11 +159,11 @@ export default function AdminAIRunsPage() {
                     <td className="px-6 py-4 text-center">
                       <span className="px-3 py-1 rounded-full text-xs font-bold" style={{ background: featureColor(run.feature), color: "var(--color-text-secondary)" }}>{run.feature_display}</span>
                     </td>
-                    <td className="hidden md:table-cell px-6 py-4 text-center text-xs" style={{ color: "var(--color-text-muted)" }}>{run.model_used}</td>
-                    <td className="hidden sm:table-cell px-6 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text)" }}>{fmtTokens(run.tokens_used)}</td>
-                    <td className="hidden sm:table-cell px-6 py-4 text-center text-xs" style={{ color: "var(--color-text-muted)" }}>{fmtCost(run.cost)}</td>
-                    <td className="hidden lg:table-cell px-6 py-4 text-center text-xs" style={{ color: "var(--color-text-muted)" }}>{fmtMs(run.duration_ms)}</td>
-                    <td className="hidden md:table-cell px-6 py-4 text-center text-xs" style={{ color: "var(--color-text-muted)" }}>
+                    <td className="col-hide-md px-6 py-4 text-center text-xs" style={{ color: "var(--color-text-muted)" }}>{run.model_used}</td>
+                    <td className="col-hide-sm px-6 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text)" }}>{fmtTokens(run.tokens_used)}</td>
+                    <td className="col-hide-sm px-6 py-4 text-center text-xs" style={{ color: "var(--color-text-muted)" }}>{fmtCost(run.cost)}</td>
+                    <td className="col-hide-lg px-6 py-4 text-center text-xs" style={{ color: "var(--color-text-muted)" }}>{fmtMs(run.duration_ms)}</td>
+                    <td className="col-hide-md px-6 py-4 text-center text-xs" style={{ color: "var(--color-text-muted)" }}>
                       {run.created_at ? new Date(run.created_at).toLocaleString(locale === "ar" ? "ar-JO" : "en-US", { dateStyle: "medium", timeStyle: "short" }) : ""}
                     </td>
                     <td className="px-6 py-4 text-center text-xs" style={{ color: "var(--color-primary)" }}>

@@ -984,7 +984,7 @@ export default function GamificationPage() {
                 <thead>
                   <tr style={{ borderBottom: "1px solid var(--color-border)", background: "var(--color-surface)" }}>
                     <th className="px-4 py-3 text-start font-semibold" style={{ color: "var(--color-text-muted)" }}>{t("gamification.points.activity")}</th>
-                    <th className="px-4 py-3 text-start font-semibold hidden sm:table-cell" style={{ color: "var(--color-text-muted)" }}>{t("gamification.points.date")}</th>
+                    <th className="px-4 py-3 text-start font-semibold col-hide-sm" style={{ color: "var(--color-text-muted)" }}>{t("gamification.points.date")}</th>
                     <th className="px-4 py-3 text-end font-semibold" style={{ color: "var(--color-text-muted)" }}>{t("gamification.points.points")}</th>
                   </tr>
                 </thead>
@@ -1001,7 +1001,7 @@ export default function GamificationPage() {
                           )}
                         </div>
                       </td>
-                      <td className="px-4 py-3 hidden sm:table-cell" style={{ color: "var(--color-text-secondary)" }}>
+                      <td className="px-4 py-3 col-hide-sm" style={{ color: "var(--color-text-secondary)" }}>
                         {new Date(tx.created_at).toLocaleDateString(locale === "ar" ? "ar-SA" : "en-US", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
                       </td>
                       <td className="px-4 py-3 text-end">

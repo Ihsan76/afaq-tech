@@ -166,7 +166,7 @@ export default function AdminFeatureFlagsPage() {
                 <tr style={{ borderBottom: "1px solid var(--color-border)" }}>
                   <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>{t("admin.featureFlagKey")}</th>
                   <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>{t("admin.featureFlagName")}</th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider hidden md:table-cell" style={{ color: "var(--color-text-muted)" }}>{t("admin.featureFlagDescription")}</th>
+                  <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider col-hide-md" style={{ color: "var(--color-text-muted)" }}>{t("admin.featureFlagDescription")}</th>
                   <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>{t("admin.featureFlagActive")}</th>
                   <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>{t("common.actions")}</th>
                 </tr>
@@ -176,7 +176,7 @@ export default function AdminFeatureFlagsPage() {
                   <tr key={item.id} style={{ borderTop: "1px solid var(--color-border)" }}>
                     <td className="px-4 py-3 font-mono text-xs whitespace-nowrap" style={{ color: "var(--color-primary)" }} dir="ltr">{item.key}</td>
                     <td className="px-4 py-3 text-sm font-medium" style={{ color: "var(--color-text)" }}>{item.name}</td>
-                    <td className="px-4 py-3 text-sm hidden md:table-cell" style={{ color: "var(--color-text-muted)" }}>{item.description || "—"}</td>
+                    <td className="px-4 py-3 text-sm col-hide-md" style={{ color: "var(--color-text-muted)" }}>{item.description || "—"}</td>
                     <td className="px-4 py-3">
                       <button
                         onClick={() => toggleActive(item)}

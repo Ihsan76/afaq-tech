@@ -204,11 +204,11 @@ export default function AdminOrganizationsPage() {
                 <thead className="sticky top-0" style={{ background: "var(--color-surface)" }}>
                   <tr>
                     <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>{t("admin.organizationName")}</th>
-                    <th className="hidden lg:table-cell px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>{t("admin.organizationOwnerEmail")}</th>
-                    <th className="hidden md:table-cell px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>{t("admin.organizationPlan")}</th>
-                    <th className="hidden sm:table-cell px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>{t("admin.organizationExtraSeats")}</th>
+                    <th className="col-hide-lg px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>{t("admin.organizationOwnerEmail")}</th>
+                    <th className="col-hide-md px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>{t("admin.organizationPlan")}</th>
+                    <th className="col-hide-sm px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>{t("admin.organizationExtraSeats")}</th>
                     <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>{t("admin.organizationStatus")}</th>
-                    <th className="hidden md:table-cell px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>{t("admin.organizationMembers")}</th>
+                    <th className="col-hide-md px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>{t("admin.organizationMembers")}</th>
                     <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>{t("common.actions")}</th>
                   </tr>
                 </thead>
@@ -219,19 +219,19 @@ export default function AdminOrganizationsPage() {
                         <p className="font-medium" style={{ color: "var(--color-text)" }}>{org.name}</p>
                         <p className="text-xs" style={{ color: "var(--color-text-muted)" }}>{org.owner_name}</p>
                       </td>
-                      <td className="hidden lg:table-cell px-6 py-4 text-sm" style={{ color: "var(--color-text-secondary)" }}>{org.owner_email}</td>
-                      <td className="hidden md:table-cell px-6 py-4">
+                      <td className="col-hide-lg px-6 py-4 text-sm" style={{ color: "var(--color-text-secondary)" }}>{org.owner_email}</td>
+                      <td className="col-hide-md px-6 py-4">
                         <p className="text-sm font-medium" style={{ color: "var(--color-text)" }}>{org.plan_name}</p>
                         <p className="text-[11px] font-mono" style={{ color: "var(--color-text-muted)" }}>{org.plan_code}</p>
                       </td>
-                      <td className="hidden sm:table-cell px-6 py-4 font-mono text-sm" style={{ color: "var(--color-text-secondary)" }}>+{org.extra_seats}</td>
+                      <td className="col-hide-sm px-6 py-4 font-mono text-sm" style={{ color: "var(--color-text-secondary)" }}>+{org.extra_seats}</td>
                       <td className="px-6 py-4">
                         <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold ${org.status === "active" ? "" : "opacity-70"}`}
                           style={{ background: org.status === "active" ? "var(--color-success)" : "var(--color-error)", color: "#FFF" }}>
                           {statusLabel(org.status)}
                         </span>
                       </td>
-                      <td className="hidden md:table-cell px-6 py-4">
+                      <td className="col-hide-md px-6 py-4">
                         <button onClick={() => loadMembers(org)} className="font-medium text-sm transition-colors" style={{ color: "var(--color-primary)" }}>
                           {org.member_count} {t("admin.organizationMembers")}
                         </button>
