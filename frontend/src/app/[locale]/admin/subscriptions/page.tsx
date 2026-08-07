@@ -574,10 +574,10 @@ export default function AdminSubscriptionsPage() {
                 <thead className="sticky top-0" style={{ background: "var(--color-surface)" }}>
                   <tr>
                     <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>الاسم</th>
-                    <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>الرمز</th>
+                    <th className="hidden sm:table-cell px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>الرمز</th>
                     <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>السعر</th>
-                    <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>الفترة</th>
-                    <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>المستوى</th>
+                    <th className="hidden md:table-cell px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>الفترة</th>
+                    <th className="hidden md:table-cell px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>المستوى</th>
                     <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>{t("common.actions")}</th>
                   </tr>
                 </thead>
@@ -591,10 +591,10 @@ export default function AdminSubscriptionsPage() {
                           {plan.is_active ? <span className="text-[var(--color-success)]">نشط</span> : <span className="text-[var(--color-error)]">معطل</span>}
                         </p>
                       </td>
-                      <td className="px-6 py-4 font-mono text-sm" style={{ color: "var(--color-text-secondary)" }}>{plan.code}</td>
+                      <td className="hidden sm:table-cell px-6 py-4 font-mono text-sm" style={{ color: "var(--color-text-secondary)" }}>{plan.code}</td>
                       <td className="px-6 py-4 font-medium" style={{ color: "var(--color-text)" }}>{plan.price} {plan.currency}</td>
-                      <td className="px-6 py-4" style={{ color: "var(--color-text-muted)" }}>{t(`subscriptions.${plan.billing_period}`)}</td>
-                      <td className="px-6 py-4" style={{ color: "var(--color-text-muted)" }}>{plan.level}</td>
+                      <td className="hidden md:table-cell px-6 py-4" style={{ color: "var(--color-text-muted)" }}>{t(`subscriptions.${plan.billing_period}`)}</td>
+                      <td className="hidden md:table-cell px-6 py-4" style={{ color: "var(--color-text-muted)" }}>{plan.level}</td>
                       <td className="px-6 py-4 flex gap-3">
                         <button onClick={() => startEdit(plan)} className="font-medium text-sm transition-colors" style={{ color: "var(--color-primary)" }}>{t("common.edit")}</button>
                         <button onClick={() => handleDelete(plan.id)} className="font-medium text-sm transition-colors" style={{ color: "var(--color-error)" }}>{t("common.delete")}</button>
@@ -700,7 +700,7 @@ export default function AdminSubscriptionsPage() {
                 <thead className="sticky top-0" style={{ background: "var(--color-surface)" }}>
                   <tr>
                     <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>العملة</th>
-                    <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>الرمز</th>
+                    <th className="hidden md:table-cell px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>الرمز</th>
                     <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>معامل الصرف</th>
                     <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>أساسية</th>
                     <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>نشطة</th>
@@ -714,7 +714,7 @@ export default function AdminSubscriptionsPage() {
                         <p className="font-medium" style={{ color: "var(--color-text)" }}>{c.name?.ar || c.name?.en || c.code}</p>
                         <p className="text-[11px] font-mono" style={{ color: "var(--color-text-muted)" }}>{c.code}</p>
                       </td>
-                      <td className="px-6 py-3" style={{ color: "var(--color-text-secondary)" }}>{c.symbol || "-"}</td>
+                      <td className="hidden md:table-cell px-6 py-3" style={{ color: "var(--color-text-secondary)" }}>{c.symbol || "-"}</td>
                       <td className="px-6 py-3">
                         <div className="flex items-center gap-2">
                           <input type="text" inputMode="decimal" value={rateEdits[c.id] ?? c.rate}

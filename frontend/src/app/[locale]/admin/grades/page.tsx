@@ -134,7 +134,7 @@ export default function AdminGradesPage() {
                   <tr>
                     <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>{t("common.level")}</th>
                     <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>{t("common.nameAr")}</th>
-                    <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>{t("common.nameEn")}</th>
+                    <th className="hidden md:table-cell px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>{t("common.nameEn")}</th>
                     <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>{t("common.actions")}</th>
                   </tr>
                 </thead>
@@ -143,7 +143,7 @@ export default function AdminGradesPage() {
                     <tr key={grade.id} style={{ borderTop: "1px solid var(--color-border)" }}>
                       <td className="px-6 py-4 font-medium" style={{ color: "var(--color-text)" }}>{grade.level}</td>
                       <td className="px-6 py-4 font-medium" style={{ color: "var(--color-text)" }}>{grade.translations?.ar?.name || "-"}</td>
-                      <td className="px-6 py-4" style={{ color: "var(--color-text-muted)" }}>{grade.translations?.en?.name || "-"}</td>
+                      <td className="hidden md:table-cell px-6 py-4" style={{ color: "var(--color-text-muted)" }}>{grade.translations?.en?.name || "-"}</td>
                       <td className="px-6 py-4 flex gap-3">
                         <button onClick={() => startEdit(grade)} className="font-medium text-sm transition-colors" style={{ color: "var(--color-primary)" }}>{t("common.edit")}</button>
                         <button onClick={() => handleDelete(grade.id)} className="font-medium text-sm transition-colors" style={{ color: "var(--color-error)" }}>{t("common.delete")}</button>

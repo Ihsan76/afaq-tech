@@ -230,24 +230,24 @@ export default function AdminMarketplacePage() {
         <div className="text-center py-12" style={{ color: "var(--color-text-muted)" }}>{t("admin.loading")}</div>
       ) : (
         <div className="rounded-3xl border overflow-x-auto" style={{ background: "var(--color-surface)", borderColor: "var(--color-border)", boxShadow: "var(--card-shadow)" }}>
-          <table className="w-full min-w-[750px]">
+          <table className="w-full">
             <thead>
               <tr className="border-b" style={{ borderColor: "var(--color-border)", background: "var(--color-surface-alt)" }}>
                 {tab === "services" && (
                   <>
                     <th className="px-6 py-4 text-right text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("servicesMarketplace.title")}</th>
-                    <th className="px-6 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("servicesMarketplace.provider")}</th>
-                    <th className="px-6 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("servicesMarketplace.categories")}</th>
-                    <th className="px-6 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("servicesMarketplace.price")}</th>
+                    <th className="hidden md:table-cell px-6 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("servicesMarketplace.provider")}</th>
+                    <th className="hidden md:table-cell px-6 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("servicesMarketplace.categories")}</th>
+                    <th className="hidden sm:table-cell px-6 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("servicesMarketplace.price")}</th>
                     <th className="px-6 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("admin.statusCol")}</th>
-                    <th className="px-6 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("admin.featuredCol")}</th>
+                    <th className="hidden md:table-cell px-6 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("admin.featuredCol")}</th>
                     <th className="px-6 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("admin.actionsCol")}</th>
                   </>
                 )}
                 {tab === "categories" && (
                   <>
                     <th className="px-6 py-4 text-right text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("servicesMarketplace.categories")}</th>
-                    <th className="px-6 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("admin.iconCol")}</th>
+                    <th className="hidden sm:table-cell px-6 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("admin.iconCol")}</th>
                     <th className="px-6 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("admin.active")}</th>
                     <th className="px-6 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("admin.actionsCol")}</th>
                   </>
@@ -255,20 +255,20 @@ export default function AdminMarketplacePage() {
                 {tab === "orders" && (
                   <>
                     <th className="px-6 py-4 text-right text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("admin.orderIdCol")}</th>
-                    <th className="px-6 py-4 text-right text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("servicesMarketplace.buyer")}</th>
+                    <th className="hidden md:table-cell px-6 py-4 text-right text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("servicesMarketplace.buyer")}</th>
                     <th className="px-6 py-4 text-right text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("servicesMarketplace.title")}</th>
-                    <th className="px-6 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("servicesMarketplace.price")}</th>
+                    <th className="hidden sm:table-cell px-6 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("servicesMarketplace.price")}</th>
                     <th className="px-6 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("admin.statusCol")}</th>
-                    <th className="px-6 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("dashboard.memberSince")}</th>
+                    <th className="hidden lg:table-cell px-6 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("dashboard.memberSince")}</th>
                   </>
                 )}
                 {tab === "reviews" && (
                   <>
                     <th className="px-6 py-4 text-right text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("servicesMarketplace.reviews")}</th>
-                    <th className="px-6 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("servicesMarketplace.title")}</th>
+                    <th className="hidden md:table-cell px-6 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("servicesMarketplace.title")}</th>
                     <th className="px-6 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("admin.ratingCol")}</th>
                     <th className="px-6 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("admin.approvedCol")}</th>
-                    <th className="px-6 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("dashboard.memberSince")}</th>
+                    <th className="hidden lg:table-cell px-6 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("dashboard.memberSince")}</th>
                   </>
                 )}
               </tr>
@@ -285,15 +285,15 @@ export default function AdminMarketplacePage() {
                       <div className="font-semibold text-sm" style={{ color: "var(--color-text)" }}>{title(s.title, `#${s.id}`)}</div>
                       <div className="text-xs" style={{ color: "var(--color-text-muted)" }}>{s.service_type}</div>
                     </td>
-                    <td className="px-6 py-4 text-center text-sm" style={{ color: "var(--color-text-secondary)" }}>{s.provider_name}</td>
-                    <td className="px-6 py-4 text-center text-sm" style={{ color: "var(--color-text-secondary)" }}>{s.category_name || "—"}</td>
-                    <td className="px-6 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text)" }}>{s.price} {s.currency}</td>
+                    <td className="hidden md:table-cell px-6 py-4 text-center text-sm" style={{ color: "var(--color-text-secondary)" }}>{s.provider_name}</td>
+                    <td className="hidden md:table-cell px-6 py-4 text-center text-sm" style={{ color: "var(--color-text-secondary)" }}>{s.category_name || "—"}</td>
+                    <td className="hidden sm:table-cell px-6 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text)" }}>{s.price} {s.currency}</td>
                     <td className="px-6 py-4 text-center">
                       <select value={s.status} onChange={(e) => updateService(s, { status: e.target.value })} className={selectCls} style={{ background: sc.bg, color: sc.color, borderColor: sc.color }}>
                         {SERVICE_STATUSES.map((st) => <option key={st} value={st}>{t(`servicesMarketplace.${st}`)}</option>)}
                       </select>
                     </td>
-                    <td className="px-6 py-4 text-center">
+                    <td className="hidden md:table-cell px-6 py-4 text-center">
                       <button onClick={() => updateService(s, { is_featured: !s.is_featured })} className={`px-3 py-1 rounded-full text-xs font-bold ${s.is_featured ? "text-white" : ""}`} style={s.is_featured ? { background: "var(--color-warning)" } : { background: "var(--color-surface-alt)", color: "var(--color-text-muted)" }}>
                         {s.is_featured ? t("admin.featuredYes") : t("admin.featuredNo")}
                       </button>
@@ -316,7 +316,7 @@ export default function AdminMarketplacePage() {
                       <div className="text-xs" style={{ color: "var(--color-text-muted)" }}>{c.name.en} / {c.name.ar}</div>
                     )}
                   </td>
-                  <td className="px-6 py-4 text-center text-lg">{c.icon || "🗂️"}</td>
+                  <td className="hidden sm:table-cell px-6 py-4 text-center text-lg">{c.icon || "🗂️"}</td>
                   <td className="px-6 py-4 text-center">
                     <button onClick={() => updateCategory(c, { is_active: !c.is_active })} className={`px-3 py-1 rounded-full text-xs font-bold ${c.is_active ? "text-white" : ""}`} style={c.is_active ? { background: "var(--color-success)" } : { background: "var(--color-surface-alt)", color: "var(--color-text-muted)" }}>
                       {c.is_active ? t("admin.active") : t("admin.inactive")}
@@ -336,18 +336,18 @@ export default function AdminMarketplacePage() {
                 return (
                   <tr key={o.id} className="border-b transition-colors hover:opacity-90" style={{ borderColor: "var(--color-border)" }}>
                     <td className="px-6 py-4 font-bold text-sm" style={{ color: "var(--color-text)" }}>#{o.id}</td>
-                    <td className="px-6 py-4">
+                    <td className="hidden md:table-cell px-6 py-4">
                       <div className="font-semibold text-sm" style={{ color: "var(--color-text)" }}>{o.buyer_name}</div>
                       <div className="text-xs" style={{ color: "var(--color-text-muted)" }}>{o.buyer_email}</div>
                     </td>
                     <td className="px-6 py-4 text-sm" style={{ color: "var(--color-text-secondary)" }}>{o.service_title}</td>
-                    <td className="px-6 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text)" }}>{o.price_paid} {o.currency}</td>
+                    <td className="hidden sm:table-cell px-6 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text)" }}>{o.price_paid} {o.currency}</td>
                     <td className="px-6 py-4 text-center">
                       <select value={o.status} onChange={(e) => updateOrder(o, e.target.value)} className={selectCls} style={{ background: oc.bg, color: oc.color, borderColor: oc.color }}>
                         {ORDER_STATUSES.map((st) => <option key={st} value={st}>{t(`servicesMarketplace.${st}`)}</option>)}
                       </select>
                     </td>
-                    <td className="px-6 py-4 text-center text-xs" style={{ color: "var(--color-text-muted)" }}>
+                    <td className="hidden lg:table-cell px-6 py-4 text-center text-xs" style={{ color: "var(--color-text-muted)" }}>
                       {o.created_at ? new Date(o.created_at).toLocaleDateString(locale === "ar" ? "ar-JO" : "en-US") : ""}
                     </td>
                   </tr>
@@ -363,14 +363,14 @@ export default function AdminMarketplacePage() {
                     <div className="font-semibold text-sm" style={{ color: "var(--color-text)" }}>{r.reviewer_name}</div>
                     <div className="text-xs max-w-[260px] truncate" style={{ color: "var(--color-text-muted)" }}>{r.comment || "—"}</div>
                   </td>
-                  <td className="px-6 py-4 text-center text-sm" style={{ color: "var(--color-text-secondary)" }}>{r.service_title || `#${r.service}`}</td>
+                  <td className="hidden md:table-cell px-6 py-4 text-center text-sm" style={{ color: "var(--color-text-secondary)" }}>{r.service_title || `#${r.service}`}</td>
                   <td className="px-6 py-4 text-center text-sm font-bold" style={{ color: "var(--color-warning)" }}>{"★".repeat(Math.min(5, Math.max(0, r.rating)))}</td>
                   <td className="px-6 py-4 text-center">
                     <button onClick={() => updateReview(r, !r.is_approved)} className={`px-3 py-1 rounded-full text-xs font-bold ${r.is_approved ? "text-white" : ""}`} style={r.is_approved ? { background: "var(--color-success)" } : { background: "var(--color-surface-alt)", color: "var(--color-text-muted)" }}>
                       {r.is_approved ? t("admin.approvedYes") : t("admin.approvedNo")}
                     </button>
                   </td>
-                  <td className="px-6 py-4 text-center text-xs" style={{ color: "var(--color-text-muted)" }}>
+                  <td className="hidden lg:table-cell px-6 py-4 text-center text-xs" style={{ color: "var(--color-text-muted)" }}>
                     {r.created_at ? new Date(r.created_at).toLocaleDateString(locale === "ar" ? "ar-JO" : "en-US") : ""}
                   </td>
                 </tr>

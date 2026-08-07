@@ -167,15 +167,15 @@ export default function AdminUsersPage() {
       ) : (
         <>
         <div className="rounded-3xl border overflow-auto max-h-[650px]" style={{ background: "var(--color-surface)", borderColor: "var(--color-border)", boxShadow: "var(--card-shadow)" }}>
-          <table className="w-full min-w-[850px] border-collapse">
+          <table className="w-full border-collapse">
             <thead className="sticky top-0 z-10">
               <tr className="border-b" style={{ borderColor: "var(--color-border)", background: "var(--color-surface-alt)" }}>
                 <th className="px-6 py-4 text-right text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("admin.email")}</th>
-                <th className="px-6 py-4 text-right text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("admin.school")}</th>
+                <th className="hidden lg:table-cell px-6 py-4 text-right text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("admin.school")}</th>
                 <th className="px-6 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("admin.changeRole")}</th>
-                <th className="px-6 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("admin.changePlan")}</th>
+                <th className="hidden md:table-cell px-6 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("admin.changePlan")}</th>
                 <th className="px-6 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("admin.verified")}</th>
-                <th className="px-6 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("dashboard.memberSince")}</th>
+                <th className="hidden lg:table-cell px-6 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("dashboard.memberSince")}</th>
               </tr>
             </thead>
             <tbody>
@@ -197,7 +197,7 @@ export default function AdminUsersPage() {
                           </div>
                         </div>
                       </td>
-                    <td className="px-6 py-4 text-xs" style={{ color: "var(--color-text-secondary)" }}>
+                    <td className="hidden lg:table-cell px-6 py-4 text-xs" style={{ color: "var(--color-text-secondary)" }}>
                       {user.school_name || <span style={{ color: "var(--color-text-muted)" }}>—</span>}
                     </td>
                     <td className="px-6 py-4 text-center">
@@ -220,7 +220,7 @@ export default function AdminUsersPage() {
                         </span>
                       )}
                     </td>
-                    <td className="px-6 py-4 text-center">
+                    <td className="hidden md:table-cell px-6 py-4 text-center">
                       {canEdit ? (
                         <select
                           value={user.subscription_plan}
@@ -245,7 +245,7 @@ export default function AdminUsersPage() {
                         <span className="text-sm" style={{ color: "var(--color-text-muted)" }}>—</span>
                       )}
                     </td>
-                    <td className="px-6 py-4 text-center text-xs" style={{ color: "var(--color-text-muted)" }}>
+                    <td className="hidden lg:table-cell px-6 py-4 text-center text-xs" style={{ color: "var(--color-text-muted)" }}>
                       {user.date_joined ? new Date(user.date_joined).toLocaleDateString(locale === "ar" ? "ar-JO" : "en-US") : ""}
                     </td>
                   </tr>

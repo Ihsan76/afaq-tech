@@ -268,13 +268,13 @@ export default function AdminCoursesPage() {
         </div>
       ) : (
         <div className="rounded-3xl border overflow-x-auto" style={{ ...style, boxShadow: "var(--card-shadow)" }}>
-          <table className="w-full min-w-[750px]">
+          <table className="w-full">
             <thead>
               <tr className="border-b" style={{ borderColor: "var(--color-border)", background: "var(--color-surface-alt)" }}>
-                <th className="px-4 py-4"></th>
+                <th className="hidden sm:table-cell px-4 py-4"></th>
                 <th className="px-4 py-4 text-right text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("admin.title")}</th>
-                <th className="px-4 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("admin.level")}</th>
-                <th className="px-4 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("admin.chapters")}</th>
+                <th className="hidden md:table-cell px-4 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("admin.level")}</th>
+                <th className="hidden md:table-cell px-4 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("admin.chapters")}</th>
                 <th className="px-4 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("common.status")}</th>
                 <th className="px-4 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("common.actions")}</th>
               </tr>
@@ -282,7 +282,7 @@ export default function AdminCoursesPage() {
             <tbody>
               {courses.map((course) => (
                 <tr key={course.id} className="border-b transition-colors hover:opacity-90" style={{ borderColor: "var(--color-border)" }}>
-                  <td className="px-4 py-4">
+                  <td className="hidden sm:table-cell px-4 py-4">
                     {course.thumbnail ? (
                       <img src={course.thumbnail} alt="" className="w-20 h-12 rounded-lg object-cover" style={{ border: "1px solid var(--color-border)" }} />
                     ) : (
@@ -295,8 +295,8 @@ export default function AdminCoursesPage() {
                     </div>
                     <div className="text-xs" style={{ color: "var(--color-text-muted)" }}>/courses/{course.slug} • {course.language.toUpperCase()}</div>
                   </td>
-                  <td className="px-4 py-4 text-center text-xs" style={{ color: "var(--color-text-secondary)" }}>{t(`courses.${course.level}`)}</td>
-                  <td className="px-4 py-4 text-center text-sm" style={{ color: "var(--color-text-secondary)" }}>{course.lessons_count}</td>
+                  <td className="hidden md:table-cell px-4 py-4 text-center text-xs" style={{ color: "var(--color-text-secondary)" }}>{t(`courses.${course.level}`)}</td>
+                  <td className="hidden md:table-cell px-4 py-4 text-center text-sm" style={{ color: "var(--color-text-secondary)" }}>{course.lessons_count}</td>
                   <td className="px-4 py-4 text-center">
                     <span className="px-2 py-1 rounded-full text-xs font-bold" style={{
                       background: course.is_published ? "var(--color-success-light)" : "var(--color-surface-alt)",

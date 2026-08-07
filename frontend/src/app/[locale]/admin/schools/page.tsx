@@ -375,27 +375,27 @@ export default function AdminSchoolsPage() {
             {activeTab === "schools" && (
               <>
                 <div className="rounded-2xl border overflow-auto max-h-[650px]" style={{ background: "var(--color-surface)", borderColor: "var(--color-border)" }}>
-                  <table className="w-full min-w-[900px] border-collapse">
+                  <table className="w-full border-collapse">
                     <thead className="sticky top-0 z-10">
                       <tr className="border-b text-sm font-bold" style={{ borderColor: "var(--color-border)", background: "var(--color-surface-alt)", color: "var(--color-text-secondary)" }}>
-                        <th className="px-4 py-3.5 text-right">#</th>
-                        <th className="px-4 py-3.5 text-right">{t("schoolCode")}</th>
+                        <th className="hidden md:table-cell px-4 py-3.5 text-right">#</th>
+                        <th className="hidden sm:table-cell px-4 py-3.5 text-right">{t("schoolCode")}</th>
                         <th className="px-4 py-3.5 text-right">{t("schoolName")}</th>
-                        <th className="px-4 py-3.5 text-right">{t("directorate")}</th>
-                        <th className="px-4 py-3.5 text-right">المدير</th>
-                        <th className="px-4 py-3.5 text-right">الهاتف</th>
-                        <th className="px-4 py-3.5 text-right">العنوان</th>
+                        <th className="hidden md:table-cell px-4 py-3.5 text-right">{t("directorate")}</th>
+                        <th className="hidden lg:table-cell px-4 py-3.5 text-right">المدير</th>
+                        <th className="hidden md:table-cell px-4 py-3.5 text-right">الهاتف</th>
+                        <th className="hidden md:table-cell px-4 py-3.5 text-right">العنوان</th>
                         <th className="px-4 py-3.5 text-center">الإجراءات</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y text-sm" style={{ borderColor: "var(--color-border)" }}>
                       {schools.map((school) => (
                         <tr key={school.id} className="transition-colors hover:bg-[var(--color-surface-alt)]">
-                          <td className="px-4 py-3.5 text-[var(--color-text-muted)]">{school.id}</td>
-                          <td className="px-4 py-3.5 font-semibold" style={{ color: "var(--color-primary)" }}>{school.school_code}</td>
+                          <td className="hidden md:table-cell px-4 py-3.5 text-[var(--color-text-muted)]">{school.id}</td>
+                          <td className="hidden sm:table-cell px-4 py-3.5 font-semibold" style={{ color: "var(--color-primary)" }}>{school.school_code}</td>
                           <td className="px-4 py-3.5 font-bold text-[var(--color-text)]">{school.name}</td>
-                          <td className="px-4 py-3.5 text-[var(--color-text-secondary)]">{school.directorate || "—"}</td>
-                          <td className="px-4 py-3.5">
+                          <td className="hidden md:table-cell px-4 py-3.5 text-[var(--color-text-secondary)]">{school.directorate || "—"}</td>
+                          <td className="hidden lg:table-cell px-4 py-3.5">
                             {school.manager_name ? (
                               <div className="min-w-0">
                                 <div className="text-xs font-bold truncate" style={{ color: "var(--color-text)" }}>{school.manager_name}</div>
@@ -405,8 +405,8 @@ export default function AdminSchoolsPage() {
                               <span className="text-xs" style={{ color: "var(--color-text-muted)" }}>—</span>
                             )}
                           </td>
-                          <td className="px-4 py-3.5 text-[var(--color-text-secondary)]" dir="ltr">{school.phone || "—"}</td>
-                          <td className="px-4 py-3.5 text-[var(--color-text-muted)] truncate max-w-xs">{school.address || "—"}</td>
+                          <td className="hidden md:table-cell px-4 py-3.5 text-[var(--color-text-secondary)]" dir="ltr">{school.phone || "—"}</td>
+                          <td className="hidden md:table-cell px-4 py-3.5 text-[var(--color-text-muted)] truncate max-w-xs">{school.address || "—"}</td>
                           <td className="px-4 py-3.5 text-center space-x-2 space-x-reverse">
                             <button
                               onClick={() => handleOpenEditModal(school)}
@@ -492,7 +492,7 @@ export default function AdminSchoolsPage() {
                   <thead className="sticky top-0 z-10 bg-[var(--color-surface-alt)]">
                     <tr className="border-b text-[var(--color-text-muted)] text-sm">
                       <th className="p-3">{t("schoolName")}</th>
-                      <th className="p-3">{t("grade")}</th>
+                      <th className="hidden md:table-cell p-3">{t("grade")}</th>
                       <th className="p-3">{t("section")}</th>
                       <th className="p-3">{t("academicYears")}</th>
                     </tr>
@@ -501,7 +501,7 @@ export default function AdminSchoolsPage() {
                     {sections.map((sec) => (
                       <tr key={sec.id}>
                         <td className="py-4 px-3 font-medium">{sec.school_name}</td>
-                        <td className="py-4 px-3">{sec.grade_name}</td>
+                        <td className="hidden md:table-cell py-4 px-3">{sec.grade_name}</td>
                         <td className="py-4 px-3 font-bold text-[var(--color-primary)]">{sec.name}</td>
                         <td className="py-4 px-3 text-[var(--color-text-muted)]">{sec.academic_year_name}</td>
                       </tr>

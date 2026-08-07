@@ -397,7 +397,7 @@ export default function AdminLanguagesPage() {
                   <tr>
                     <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>{t("admin.langCode")}</th>
                     <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>{t("admin.langName")}</th>
-                    <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>{t("admin.langNativeName")}</th>
+                    <th className="hidden md:table-cell px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>{t("admin.langNativeName")}</th>
                     <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>{t("admin.langStatus")}</th>
                     <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>{t("common.actions")}</th>
                   </tr>
@@ -407,7 +407,7 @@ export default function AdminLanguagesPage() {
                     <tr key={lang.id} style={{ borderTop: "1px solid var(--color-border)" }}>
                       <td className="px-6 py-4 font-medium" style={{ color: "var(--color-text)" }} dir="ltr">{lang.code}</td>
                       <td className="px-6 py-4" style={{ color: "var(--color-text-secondary)" }}>{lang.name}</td>
-                      <td className="px-6 py-4 font-medium" style={{ color: "var(--color-text)" }}>
+                      <td className="hidden md:table-cell px-6 py-4 font-medium" style={{ color: "var(--color-text)" }}>
                         <span className="mr-1">{lang.flag}</span> {lang.native_name}
                       </td>
                       <td className="px-6 py-4">

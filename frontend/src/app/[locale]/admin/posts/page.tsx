@@ -275,21 +275,21 @@ export default function AdminBlogPage() {
         </div>
       ) : (
         <div className="rounded-3xl border overflow-x-auto" style={{ ...style, boxShadow: "var(--card-shadow)" }}>
-          <table className="w-full min-w-[700px]">
+          <table className="w-full">
             <thead>
               <tr className="border-b" style={{ borderColor: "var(--color-border)", background: "var(--color-surface-alt)" }}>
-                <th className="px-6 py-4 text-right text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}></th>
+                <th className="hidden sm:table-cell px-6 py-4 text-right text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}></th>
                 <th className="px-6 py-4 text-right text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("admin.title") || "Title"}</th>
-                <th className="px-6 py-4 text-right text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("admin.category") || "Category"}</th>
-                <th className="px-6 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("admin.readTime") || "Read"}</th>
-                <th className="px-6 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("admin.views") || "Views"}</th>
+                <th className="hidden md:table-cell px-6 py-4 text-right text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("admin.category") || "Category"}</th>
+                <th className="hidden md:table-cell px-6 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("admin.readTime") || "Read"}</th>
+                <th className="hidden sm:table-cell px-6 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("admin.views") || "Views"}</th>
                 <th className="px-6 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("common.actions")}</th>
               </tr>
             </thead>
             <tbody>
               {posts.map((post) => (
                 <tr key={post.id} className="border-b transition-colors hover:opacity-90" style={{ borderColor: "var(--color-border)" }}>
-                  <td className="px-6 py-4">
+                  <td className="hidden sm:table-cell px-6 py-4">
                     {(post as any).featured_image ? (
                       <img src={(post as any).featured_image} alt="" className="w-16 h-10 rounded-lg object-cover" style={{ border: "1px solid var(--color-border)" }} />
                     ) : (
@@ -307,11 +307,11 @@ export default function AdminBlogPage() {
                     )}
                     <div className="text-xs" style={{ color: "var(--color-text-muted)" }}>/blog/{post.slug}</div>
                   </td>
-                  <td className="px-6 py-4 text-sm" style={{ color: "var(--color-text-secondary)" }}>
+                  <td className="hidden md:table-cell px-6 py-4 text-sm" style={{ color: "var(--color-text-secondary)" }}>
                     {post.category_name ? localized(post.category_name, locale, "name") : "—"}
                   </td>
-                  <td className="px-6 py-4 text-center text-sm" style={{ color: "var(--color-text-secondary)" }}>{post.read_time}m</td>
-                  <td className="px-6 py-4 text-center text-sm" style={{ color: "var(--color-text-secondary)" }}>{post.views}</td>
+                  <td className="hidden md:table-cell px-6 py-4 text-center text-sm" style={{ color: "var(--color-text-secondary)" }}>{post.read_time}m</td>
+                  <td className="hidden sm:table-cell px-6 py-4 text-center text-sm" style={{ color: "var(--color-text-secondary)" }}>{post.views}</td>
                   <td className="px-6 py-4 text-center">
                     <div className="flex gap-2 justify-center">
                       <button onClick={() => openEdit(post)} className="px-3 py-1.5 rounded-lg text-xs font-bold text-white" style={{ background: "var(--color-primary)" }}>{t("common.edit")}</button>

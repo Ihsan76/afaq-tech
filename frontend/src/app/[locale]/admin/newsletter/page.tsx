@@ -86,13 +86,13 @@ export default function AdminNewsletterPage() {
         </div>
       ) : (
         <div className="rounded-3xl border overflow-x-auto" style={{ background: "var(--color-surface)", borderColor: "var(--color-border)", boxShadow: "var(--card-shadow)" }}>
-          <table className="w-full min-w-[500px]">
+          <table className="w-full">
             <thead>
               <tr className="border-b" style={{ borderColor: "var(--color-border)", background: "var(--color-surface-alt)" }}>
                 <th className="px-6 py-4 text-right text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("admin.email")}</th>
-                <th className="px-6 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("admin.language")}</th>
+                <th className="hidden sm:table-cell px-6 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("admin.language")}</th>
                 <th className="px-6 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("common.status")}</th>
-                <th className="px-6 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("admin.receivedAt")}</th>
+                <th className="hidden md:table-cell px-6 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("admin.receivedAt")}</th>
               </tr>
             </thead>
             <tbody>
@@ -102,7 +102,7 @@ export default function AdminNewsletterPage() {
                     <div className="font-semibold text-sm" style={{ color: "var(--color-text)" }}>{sub.email}</div>
                     {sub.name && <div className="text-xs" style={{ color: "var(--color-text-muted)" }}>{sub.name}</div>}
                   </td>
-                  <td className="px-6 py-4 text-center text-sm" style={{ color: "var(--color-text-secondary)" }}>{sub.locale}</td>
+                  <td className="hidden sm:table-cell px-6 py-4 text-center text-sm" style={{ color: "var(--color-text-secondary)" }}>{sub.locale}</td>
                   <td className="px-6 py-4 text-center">
                     <span className="px-2 py-1 rounded-full text-xs font-bold" style={{
                       background: sub.status === "active" ? "var(--color-success-light)" : "var(--color-surface-alt)",
@@ -111,7 +111,7 @@ export default function AdminNewsletterPage() {
                       {t(`admin.status${sub.status.charAt(0).toUpperCase() + sub.status.slice(1)}`)}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-center text-xs" style={{ color: "var(--color-text-muted)" }}>
+                  <td className="hidden md:table-cell px-6 py-4 text-center text-xs" style={{ color: "var(--color-text-muted)" }}>
                     {sub.created_at ? new Date(sub.created_at).toLocaleDateString(locale === "ar" ? "ar-JO" : "en-US") : ""}
                   </td>
                 </tr>

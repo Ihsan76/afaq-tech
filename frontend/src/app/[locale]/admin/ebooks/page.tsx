@@ -266,14 +266,14 @@ export default function AdminEbooksPage() {
         </div>
       ) : (
         <div className="rounded-3xl border overflow-x-auto" style={{ ...style, boxShadow: "var(--card-shadow)" }}>
-          <table className="w-full min-w-[900px]">
+          <table className="w-full">
             <thead>
               <tr className="border-b" style={{ borderColor: "var(--color-border)", background: "var(--color-surface-alt)" }}>
                 <th className="px-4 py-4 text-right text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("admin.title")}</th>
-                <th className="px-4 py-4 text-right text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("admin.category")}</th>
-                <th className="px-4 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("admin.accessLevel")}</th>
+                <th className="hidden md:table-cell px-4 py-4 text-right text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("admin.category")}</th>
+                <th className="hidden md:table-cell px-4 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("admin.accessLevel")}</th>
                 <th className="px-4 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("common.status")}</th>
-                <th className="px-4 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("ebooks.downloads")}</th>
+                <th className="hidden sm:table-cell px-4 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("ebooks.downloads")}</th>
                 <th className="px-4 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text-secondary)" }}>{t("common.actions")}</th>
               </tr>
             </thead>
@@ -288,10 +288,10 @@ export default function AdminEbooksPage() {
                       </div>
                       <div className="text-xs" style={{ color: "var(--color-text-muted)" }}>/ebooks/{ebook.slug}</div>
                     </td>
-                    <td className="px-4 py-4 text-sm" style={{ color: "var(--color-text-secondary)" }}>
+                    <td className="hidden md:table-cell px-4 py-4 text-sm" style={{ color: "var(--color-text-secondary)" }}>
                       {cat ? `${cat.icon} ${getCategoryName(cat)}` : "—"}
                     </td>
-                    <td className="px-4 py-4 text-center">
+                    <td className="hidden md:table-cell px-4 py-4 text-center">
                       <span className="px-2 py-1 rounded-full text-xs font-bold" style={{
                         background: ebook.access_level === "free" ? "var(--color-success-light)" : ebook.access_level === "basic" ? "var(--color-info-light, #e0f2fe)" : "var(--color-warning-light)",
                         color: ebook.access_level === "free" ? "var(--color-success)" : ebook.access_level === "basic" ? "var(--color-info, #0284c7)" : "var(--color-warning)"
@@ -307,7 +307,7 @@ export default function AdminEbooksPage() {
                         {ebook.is_published ? t("admin.published") : t("admin.draft")}
                       </span>
                     </td>
-                    <td className="px-4 py-4 text-center text-sm" style={{ color: "var(--color-text-secondary)" }}>{ebook.download_count}</td>
+                    <td className="hidden sm:table-cell px-4 py-4 text-center text-sm" style={{ color: "var(--color-text-secondary)" }}>{ebook.download_count}</td>
                     <td className="px-4 py-4 text-center">
                       <div className="flex gap-2 justify-center">
                         <button onClick={() => openEdit(ebook)} className="px-3 py-1.5 rounded-lg text-xs font-bold text-white" style={{ background: "var(--color-primary)" }}>{t("common.edit")}</button>
