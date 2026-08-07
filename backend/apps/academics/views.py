@@ -143,7 +143,43 @@ class CurriculumDocumentDownloadView(APIView):
             url = doc.external_url
             if request.query_params.get('download') == '1' and 'download=' not in url:
                 url += ('&' if '?' in url else '?') + 'download=1'
+            
+            # Check if external URL is reachable, fallback to extracted text view if 500/error occurs
+            try:
+                import requests
+                resp = requests.head(url, timeout=2, allow_redirects=True, headers={'User-Agent': 'Mozilla/5.0'})
+                if resp.status_code >= 400:
+                    raise Exception(f"External status {resp.status_code}")
+            except Exception:
+                if doc.extracted_text:
+                    from django.http import HttpResponse
+                    html = f"""
+                    <html dir="rtl">
+                    <head><title>{doc.title}</title>
+                    <style>body{{font-family:Tahoma,sans-serif;padding:30px;background:#f9fafb;color:#1f2937;}}
+                    .box{{background:#fff;padding:25px;border-radius:16px;box-shadow:0 4px 12px rgba(0,0,0,0.1);max-width:900px;margin:auto;}}
+                    .alert{{background:#fffbeb;border:1px solid #f59e0b;color:#b45309;padding:15px;border-radius:10px;margin-bottom:20px;font-size:14px;line-height:1.6;}}
+                    h2{{margin-top:0;color:#111827;}}
+                    pre{{white-space:pre-wrap;background:#f3f4f6;padding:20px;border-radius:12px;max-height:600px;overflow:auto;font-size:13px;line-height:1.7;color:#374151;}}
+                    .btn{{display:inline-block;margin-top:15px;padding:10px 20px;background:#2563eb;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;}}
+                    </style></head>
+                    <body>
+                    <div class="box">
+                    <div class="alert">
+                    <strong>⚠️ تنبيه:</strong> رابط المصدر الخارجي الرسمي (موقع عين / وزارة التعليم) غير متاح مؤقتاً من المصدر (خطأ 500 أو انقطاع في الخادم الخارجي). 
+                    ولكن اطمئن، <strong>محتوى المنهاج مستخرج بالكامل ومحفوظ في منصة آفاق</strong> ويمكنك استخدامه لتوليد خطط الدروس والأنشطة بكل دقة.
+                    </div>
+                    <h2>{doc.title}</h2>
+                    <p style="color:#6b7280;font-size:13px;">الرابط الأصلي المتعذر الوصول إليه: <a href="{url}" target="_blank" style="color:#2563eb;">{url}</a></p>
+                    <h3 style="margin-top:20px;font-size:16px;">محتوى المنهاج المستخرج:</h3>
+                    <pre>{doc.extracted_text}</pre>
+                    <a href="javascript:history.back()" class="btn">العودة للخلف</a>
+                    </div></body></html>
+                    """
+                    return HttpResponse(html)
+
             return redirect(url)
+
         try:
             file_handle = doc.file.open('rb')
         except FileNotFoundError:
