@@ -15,6 +15,7 @@ const nextConfig: NextConfig = {
     ],
   },
   async headers() {
+    const isDev = process.env.NODE_ENV === "development";
     const csp = [
       "default-src 'self'",
       "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
@@ -22,13 +23,15 @@ const nextConfig: NextConfig = {
       "img-src 'self' data: blob: https://*.supabase.co https://images.unsplash.com https://i.ytimg.com https://img.youtube.com",
       "font-src 'self' data:",
       "media-src 'self' blob:",
-      "connect-src 'self' https://api.afaq.app https://*.supabase.co https://www.google.com",
+      // Dev: allow the local Django API + Next HMR websocket. Prod: HTTPS only.
+      `connect-src 'self' https://api.afaq.app https://*.supabase.co https://www.google.com${isDev ? " http://localhost:8003 http://127.0.0.1:8003 ws://localhost:3000" : ""}`,
       "frame-src 'self' https://www.youtube.com https://youtube.com",
       "object-src 'none'",
       "base-uri 'self'",
       "form-action 'self'",
       "frame-ancestors 'none'",
-      "upgrade-insecure-requests",
+      // Never upgrade in dev — local API is plain http://localhost:8003.
+      ...(isDev ? [] : ["upgrade-insecure-requests"]),
     ].join("; ");
     return [
       {
@@ -39,7 +42,10 @@ const nextConfig: NextConfig = {
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           { key: "X-DNS-Prefetch-Control", value: "on" },
-          { key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains; preload" },
+          // HSTS is meaningless (and harmful) on plain-http localhost.
+          ...(isDev
+            ? []
+            : [{ key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains; preload" }]),
           { key: "Permissions-Policy", value: "geolocation=(), interest-cohort=()" },
         ],
       },
