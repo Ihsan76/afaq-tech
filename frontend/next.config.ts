@@ -14,6 +14,37 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async headers() {
+    const csp = [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data: blob: https://*.supabase.co https://images.unsplash.com https://i.ytimg.com https://img.youtube.com",
+      "font-src 'self' data:",
+      "media-src 'self' blob:",
+      "connect-src 'self' https://api.afaq.app https://*.supabase.co https://www.google.com",
+      "frame-src 'self' https://www.youtube.com https://youtube.com",
+      "object-src 'none'",
+      "base-uri 'self'",
+      "form-action 'self'",
+      "frame-ancestors 'none'",
+      "upgrade-insecure-requests",
+    ].join("; ");
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          { key: "Content-Security-Policy", value: csp },
+          { key: "X-Frame-Options", value: "DENY" },
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          { key: "X-DNS-Prefetch-Control", value: "on" },
+          { key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains; preload" },
+          { key: "Permissions-Policy", value: "geolocation=(), interest-cohort=()" },
+        ],
+      },
+    ];
+  },
   async redirects() {
     const localeRedirects = ["ar", "en", "fr", "tr", "ur", "es", "de", "id", "bn"].flatMap((locale) => [
       { source: `/${locale}/courses`, destination: `/${locale}/academy/courses`, permanent: true },
