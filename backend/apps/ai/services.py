@@ -299,6 +299,7 @@ def generate_lesson_plan(title, prompt_text, subject="", grade="", language="ar"
         prompt=user_msg or "قم بإنشاء خطة الدرس المطلوبة.",
         feature="lesson_plan",
         system_instruction=lesson_prompt,
+        model_id=model_id,
     )
 
     raw = ai_resp.content
@@ -338,6 +339,7 @@ def refine_lesson_plan(current_plan_data, refinement_prompt, language="ar", mode
         prompt=user_msg or "قم بتعديل خطة الدرس المطلوبة.",
         feature="refine",
         system_instruction=refine_prompt_body,
+        model_id=model_id,
     )
 
     raw = ai_resp.content
