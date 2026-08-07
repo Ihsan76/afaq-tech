@@ -935,78 +935,415 @@
     "newsletterError": "Something went wrong. Please try again."
   },
   "services": {
-    "backToHome": "Back to home",
-    "featuresTitle": "What's included?",
-    "featuresSubtitle": "Everything you need to bring your idea to life",
-    "processTitle": "How we work together?",
-    "processSubtitle": "Clear steps from idea to launch",
-    "step1": "Consultation & planning",
-    "step1Desc": "We understand your needs and define goals",
-    "step2": "Design & preparation",
-    "step2Desc": "We design the solution and prepare content",
-    "step3": "Development",
-    "step3Desc": "We build and develop with high quality",
-    "step4": "Launch & support",
-    "step4Desc": "We launch and provide ongoing support",
-    "ctaTitle": "Ready to start your project?",
-    "ctaSubtitle": "Contact us today and get a free consultation",
-    "ctaButton": "Order this service",
-    "otherServicesTitle": "Other services you may like",
     "web-design": {
+      "hero": {
+        "title": "Professional Web Design",
+        "subtitle": "We create stunning, responsive websites that convert visitors into customers",
+        "cta": "Get a Quote",
+        "badges": [
+          "Custom Design",
+          "SEO Optimized",
+          "Mobile First"
+        ]
+      },
+      "featuresTitle": "What We Offer",
+      "featuresSubtitle": "Complete web design solutions that open new horizons",
       "features": [
-        "Responsive design that works on all devices",
-        "Fast loading and excellent performance",
-        "Search-engine optimized (SEO)",
-        "Easy content management dashboard"
-      ]
+        {
+          "title": "Custom Design",
+          "desc": "Unique designs tailored to your brand identity",
+          "points": [
+            "Unique brand-aligned visuals",
+            "Wireframes & mockups included",
+            "Unlimited revisions"
+          ]
+        },
+        {
+          "title": "Responsive",
+          "desc": "Looks perfect on desktop, tablet, and mobile",
+          "points": [
+            "Mobile-first approach",
+            "Tested on all browsers",
+            "Pixel-perfect rendering"
+          ]
+        },
+        {
+          "title": "Fast Performance",
+          "desc": "Optimized loading speed for better user experience",
+          "points": [
+            "Core Web Vitals optimized",
+            "Image optimization included",
+            "CDN & caching setup"
+          ]
+        }
+      ],
+      "stepsTitle": "How We Work",
+      "stepsSubtitle": "Our proven process for delivering exceptional websites",
+      "steps": [
+        {
+          "title": "Discovery & Planning",
+          "desc": "We understand your goals, audience, and requirements"
+        },
+        {
+          "title": "Design & Development",
+          "desc": "Our team creates a stunning, functional website"
+        },
+        {
+          "title": "Launch & Support",
+          "desc": "We launch your site and provide ongoing support"
+        }
+      ],
+      "testimonialsTitle": "What Our Clients Say",
+      "testimonialsSubtitle": "Real feedback from businesses we've helped",
+      "testimonials": [
+        {
+          "name": "Ahmed Al-Rashid",
+          "role": "CEO, TechStore",
+          "text": "Our new website increased conversions by 200%"
+        },
+        {
+          "name": "Sara Al-Ali",
+          "role": "Founder, EduStart",
+          "text": "Beautiful design that perfectly represents our brand"
+        }
+      ],
+      "cta": {
+        "title": "Ready to Transform Your Online Presence?",
+        "subtitle": "Let's create a website that opens new horizons for your business",
+        "text": "Start Your Project"
+      }
     },
     "social-media": {
+      "hero": {
+        "title": "Social Media That Opens New Horizons",
+        "subtitle": "We manage your social media presence to drive real results and growth",
+        "cta": "Get Started",
+        "badges": [
+          "Content Strategy",
+          "Growth Guaranteed",
+          "Analytics Reports"
+        ]
+      },
+      "featuresTitle": "Our Services Include",
+      "featuresSubtitle": "Comprehensive social media management solutions",
       "features": [
-        "Monthly content plan tailored to your brand",
-        "Professional posts and stories design",
-        "Comments and messages management",
-        "Periodic performance reports and tips"
-      ]
+        {
+          "title": "Content Planning",
+          "desc": "Strategic content calendars aligned with your goals",
+          "points": [
+            "Monthly content calendar",
+            "Hashtag research",
+            "Competitor analysis"
+          ]
+        },
+        {
+          "title": "Content Creation",
+          "desc": "Professional posts, stories, and reels",
+          "points": [
+            "Professional copywriting",
+            "Custom graphics & videos",
+            "A/B testing for content"
+          ]
+        },
+        {
+          "title": "Growth & Analytics",
+          "desc": "Track growth and optimize performance",
+          "points": [
+            "Weekly performance reports",
+            "Audience insights",
+            "ROI tracking"
+          ]
+        }
+      ],
+      "stepsTitle": "Our Process",
+      "stepsSubtitle": "A systematic approach to social media success",
+      "steps": [
+        {
+          "title": "Audit & Strategy",
+          "desc": "We analyze your current presence and create a plan"
+        },
+        {
+          "title": "Create & Publish",
+          "desc": "Our team creates and publishes engaging content"
+        },
+        {
+          "title": "Analyze & Optimize",
+          "desc": "We measure results and continuously optimize"
+        }
+      ],
+      "cta": {
+        "title": "Ready to Dominate Social Media?",
+        "subtitle": "Let us manage your social media and drive real results",
+        "text": "Start Now"
+      }
     },
     "landing-pages": {
+      "hero": {
+        "title": "Landing Pages That Convert",
+        "subtitle": "Every visitor is a new opportunity — we design pages that turn clicks into customers",
+        "cta": "Build My Page",
+        "badges": [
+          "A/B Testing",
+          "Conversion Focused",
+          "Fast Delivery"
+        ]
+      },
+      "featuresTitle": "Why Our Landing Pages Work",
+      "featuresSubtitle": "Designed with conversion psychology and data-driven approach",
       "features": [
-        "Conversion-focused page design",
-        "Compelling headlines and marketing copy",
-        "Lead capture forms and data collection",
-        "Integration with payment and marketing systems"
-      ]
+        {
+          "title": "Targeted Design",
+          "desc": "Each page is designed for a specific audience and goal",
+          "points": [
+            "Audience persona research",
+            "Competitor page analysis",
+            "Conversion funnel mapping"
+          ]
+        },
+        {
+          "title": "A/B Testing",
+          "desc": "We test different versions to maximize conversions",
+          "points": [
+            "Headline & CTA variations",
+            "Layout split testing",
+            "Continuous optimization"
+          ]
+        },
+        {
+          "title": "Analytics Driven",
+          "desc": "Data-driven decisions for better results",
+          "points": [
+            "Heatmap tracking",
+            "Conversion rate monitoring",
+            "Monthly performance reports"
+          ]
+        }
+      ],
+      "testimonialsTitle": "Results That Speak",
+      "testimonialsSubtitle": "See the impact of our landing pages",
+      "testimonials": [
+        {
+          "name": "Mohammed Khaled",
+          "role": "Marketing Director",
+          "text": "Conversion rate increased by 350% with their landing pages"
+        },
+        {
+          "name": "Fatima Hassan",
+          "role": "E-commerce Owner",
+          "text": "Best investment in our online marketing"
+        }
+      ],
+      "cta": {
+        "title": "Need a High-Converting Landing Page?",
+        "subtitle": "Let us design a page that turns visitors into customers",
+        "text": "Get Started"
+      }
     },
     "forms": {
+      "hero": {
+        "title": "Smart Electronic Forms",
+        "subtitle": "Collect data efficiently with forms designed for conversion",
+        "cta": "Build My Form",
+        "badges": [
+          "Smart Logic",
+          "Easy Integration",
+          "Mobile Friendly"
+        ]
+      },
+      "featuresTitle": "Form Features",
+      "featuresSubtitle": "Everything you need for efficient data collection",
       "features": [
-        "Fully customized forms for your needs",
-        "Smart fields with instant data validation",
-        "Detailed response analytics and reports",
-        "Integration with email and other systems"
-      ]
+        {
+          "title": "Smart Logic",
+          "desc": "Conditional fields that adapt to user input",
+          "points": [
+            "Multi-step forms",
+            "Conditional visibility rules",
+            "File upload support"
+          ]
+        },
+        {
+          "title": "Integrations",
+          "desc": "Connect with CRM, email, and other tools",
+          "points": [
+            "Zapier & Make.com integration",
+            "Google Sheets sync",
+            "Email notifications"
+          ]
+        },
+        {
+          "title": "Analytics",
+          "desc": "Track submissions and analyze responses",
+          "points": [
+            "Submission tracking dashboard",
+            "Response rate analytics",
+            "Export to CSV/Excel"
+          ]
+        }
+      ],
+      "cta": {
+        "title": "Ready to Collect Data Smarter?",
+        "subtitle": "Let us build forms that open new horizons for your data",
+        "text": "Get Started"
+      }
     },
     "ebooks": {
+      "hero": {
+        "title": "Professional E-Books",
+        "subtitle": "Transform your expertise into digital books that establish your authority",
+        "cta": "Create My E-Book",
+        "badges": [
+          "Professional Design",
+          "Multi-Format",
+          "Publishing Support"
+        ]
+      },
+      "featuresTitle": "Our E-Book Services",
+      "featuresSubtitle": "End-to-end e-book production services",
       "features": [
-        "Professional book design and layout",
-        "Full formatting with images and graphics",
-        "Turning your expertise into organized content",
-        "Publishing across all devices and platforms"
-      ]
+        {
+          "title": "Writing & Editing",
+          "desc": "Professional writing and editing services",
+          "points": [
+            "Professional ghostwriting",
+            "Proofreading & editing",
+            "SEO-optimized content"
+          ]
+        },
+        {
+          "title": "Design & Layout",
+          "desc": "Beautiful layouts and cover designs",
+          "points": [
+            "Custom cover design",
+            "Interior layout & formatting",
+            "Brand-consistent styling"
+          ]
+        },
+        {
+          "title": "Publishing",
+          "desc": "Publish on Amazon, Apple Books, and more",
+          "points": [
+            "Amazon KDP publishing",
+            "Multi-format export (PDF, EPUB, MOBI)",
+            "Marketing strategy included"
+          ]
+        }
+      ],
+      "cta": {
+        "title": "Ready to Publish Your E-Book?",
+        "subtitle": "Let us transform your expertise into a professional e-book",
+        "text": "Start Now"
+      }
     },
     "ad-campaigns": {
+      "hero": {
+        "title": "Ad Campaigns That Deliver Results",
+        "subtitle": "Targeted advertising campaigns that maximize your ROI",
+        "cta": "Launch Campaign",
+        "badges": [
+          "Google Ads",
+          "Meta Ads",
+          "ROI Focused"
+        ]
+      },
+      "featuresTitle": "Campaign Platforms",
+      "featuresSubtitle": "We manage campaigns across all major platforms",
       "features": [
-        "Goal-driven advertising strategy",
-        "Precise targeting of the right audience",
-        "Daily campaign management and monitoring",
-        "Results and ROAS reporting"
-      ]
+        {
+          "title": "Google Ads",
+          "desc": "Search, display, and YouTube campaigns",
+          "points": [
+            "Search & Shopping ads",
+            "YouTube pre-roll ads",
+            "Display network campaigns"
+          ]
+        },
+        {
+          "title": "Social Ads",
+          "desc": "Facebook, Instagram, TikTok, and Snapchat",
+          "points": [
+            "Meta Ads (FB & IG)",
+            "TikTok & Snapchat ads",
+            "Retargeting campaigns"
+          ]
+        },
+        {
+          "title": "Analytics & Optimization",
+          "desc": "Track ROI and optimize campaigns in real-time",
+          "points": [
+            "Real-time dashboard",
+            "Cost-per-acquisition tracking",
+            "Weekly optimization reports"
+          ]
+        }
+      ],
+      "cta": {
+        "title": "Ready to Scale Your Advertising?",
+        "subtitle": "Let us manage your campaigns for maximum impact",
+        "text": "Get Started"
+      }
     },
     "brand-identity": {
+      "hero": {
+        "title": "Brand Identity That Stands Out",
+        "subtitle": "We craft unique brand identities that set you apart from competitors",
+        "cta": "Build My Brand",
+        "badges": [
+          "Logo Design",
+          "Brand Guidelines",
+          "Strategic Consulting"
+        ]
+      },
+      "featuresTitle": "Our Branding Services",
+      "featuresSubtitle": "Complete branding solutions for businesses of all sizes",
       "features": [
-        "Logo and complete visual identity",
-        "Brand and color usage guide",
-        "Strategic consulting for business growth",
-        "Consistent marketing materials"
-      ]
+        {
+          "title": "Logo & Visual Identity",
+          "desc": "Memorable logos and complete visual systems",
+          "points": [
+            "Multiple logo concepts",
+            "Color palette & typography",
+            "Business cards & stationery"
+          ]
+        },
+        {
+          "title": "Brand Guidelines",
+          "desc": "Comprehensive brand books for consistency",
+          "points": [
+            "50+ page brand book",
+            "Usage rules & examples",
+            "Digital asset templates"
+          ]
+        },
+        {
+          "title": "Strategic Consulting",
+          "desc": "Expert guidance on brand positioning",
+          "points": [
+            "Market research & analysis",
+            "Brand positioning strategy",
+            "Competitor differentiation"
+          ]
+        }
+      ],
+      "testimonialsTitle": "Brands We've Transformed",
+      "testimonialsSubtitle": "See how our branding helped businesses grow",
+      "testimonials": [
+        {
+          "name": "Omar Saleh",
+          "role": "Startup Founder",
+          "text": "Our new brand identity tripled our recognition"
+        },
+        {
+          "name": "Lina Mohammed",
+          "role": "Restaurant Owner",
+          "text": "The rebranding transformed our business completely"
+        }
+      ],
+      "cta": {
+        "title": "Ready to Transform Your Brand?",
+        "subtitle": "Let us create a brand identity that opens new horizons",
+        "text": "Start Your Project"
+      }
     }
   },
   "contact": {

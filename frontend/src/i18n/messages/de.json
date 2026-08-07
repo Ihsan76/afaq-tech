@@ -854,78 +854,415 @@
     "newsletterTitle": "Abonnieren Sie unseren Newsletter"
   },
   "services": {
-    "backToHome": "Zurück zur Startseite",
-    "featuresTitle": "Was ist enthalten?",
-    "featuresSubtitle": "Alles, was Sie brauchen, um Ihre Idee umzusetzen",
-    "processTitle": "Wie arbeiten wir zusammen?",
-    "processSubtitle": "Klare Schritte von der Idee bis zum Start",
-    "step1": "Beratung & Planung",
-    "step1Desc": "Wir verstehen Ihre Bedürfnisse und definieren Ziele",
-    "step2": "Design & Vorbereitung",
-    "step2Desc": "Wir gestalten die Lösung und bereiten Inhalte vor",
-    "step3": "Entwicklung",
-    "step3Desc": "Wir entwickeln in hoher Qualität",
-    "step4": "Start & Support",
-    "step4Desc": "Wir starten und unterstützen Sie weiterhin",
-    "ctaTitle": "Bereit, Ihr Projekt zu starten?",
-    "ctaSubtitle": "Kontaktieren Sie uns und erhalten Sie eine kostenlose Beratung",
-    "ctaButton": "Diesen Service bestellen",
-    "otherServicesTitle": "Weitere Services, die Sie interessieren könnten",
     "web-design": {
+      "hero": {
+        "title": "Professionelles Webdesign",
+        "subtitle": "Wir erstellen atemberaubende, responsive Websites, die Besucher in Kunden verwandeln",
+        "cta": "Angebot anfordern",
+        "badges": [
+          "Individuelles Design",
+          "SEO-optimiert",
+          "Mobile First"
+        ]
+      },
+      "featuresTitle": "Was wir anbieten",
+      "featuresSubtitle": "Komplette Webdesign-Lösungen, die neue Horizonte eröffnen",
       "features": [
-        "Responsives Design für alle Geräte",
-        "Schnelle Ladezeiten und Top-Performance",
-        "Suchmaschinenoptimierung (SEO)",
-        "Einfaches Content-Management"
-      ]
+        {
+          "title": "Individuelles Design",
+          "desc": "Einzigartige Designs, die auf Ihre Markenidentität zugeschnitten sind",
+          "points": [
+            "Markenkonforme Optik",
+            "Wireframes & Mockups inklusive",
+            "Unbegrenzte Revisionen"
+          ]
+        },
+        {
+          "title": "Responsiv",
+          "desc": "Perfekt auf Desktop, Tablet und Smartphone",
+          "points": [
+            "Mobile-First-Ansatz",
+            "Auf allen Browsern getestet",
+            "Pixelgenaue Darstellung"
+          ]
+        },
+        {
+          "title": "Schnelle Leistung",
+          "desc": "Optimierte Ladezeiten für eine bessere Nutzererfahrung",
+          "points": [
+            "Core Web Vitals optimiert",
+            "Bildoptimierung inklusive",
+            "CDN & Caching-Setup"
+          ]
+        }
+      ],
+      "stepsTitle": "So arbeiten wir",
+      "stepsSubtitle": "Unser bewährtes Verfahren für außergewöhnliche Websites",
+      "steps": [
+        {
+          "title": "Analyse & Planung",
+          "desc": "Wir verstehen Ihre Ziele, Zielgruppe und Anforderungen"
+        },
+        {
+          "title": "Design & Entwicklung",
+          "desc": "Unser Team erstellt eine ansprechende, funktionale Website"
+        },
+        {
+          "title": "Launch & Support",
+          "desc": "Wir bringen Ihre Website online und unterstützen Sie dauerhaft"
+        }
+      ],
+      "testimonialsTitle": "Das sagen unsere Kunden",
+      "testimonialsSubtitle": "Echtes Feedback von Unternehmen, denen wir geholfen haben",
+      "testimonials": [
+        {
+          "name": "Ahmed Al-Rashid",
+          "role": "CEO, TechStore",
+          "text": "Unsere neue Website hat die Konversionen um 200 % gesteigert"
+        },
+        {
+          "name": "Sara Al-Ali",
+          "role": "Gründerin, EduStart",
+          "text": "Ein wunderschönes Design, das unsere Marke perfekt repräsentiert"
+        }
+      ],
+      "cta": {
+        "title": "Bereit, Ihre Online-Präsenz zu transformieren?",
+        "subtitle": "Lassen Sie uns eine Website erstellen, die neue Horizonte für Ihr Unternehmen eröffnet",
+        "text": "Projekt starten"
+      }
     },
     "social-media": {
+      "hero": {
+        "title": "Social Media, das neue Horizonte öffnet",
+        "subtitle": "Wir erweitern Ihre digitale Präsenz und verwandeln soziale Plattformen in eine Quelle für Verkäufe und Wachstum",
+        "cta": "Loslegen",
+        "badges": [
+          "Content-Strategie",
+          "Garantiertes Wachstum",
+          "Analyse-Berichte"
+        ]
+      },
+      "featuresTitle": "Unsere Leistungen",
+      "featuresSubtitle": "Umfassendes Social-Media-Management, das Ihre Präsenz erweitert",
       "features": [
-        "Monatlicher Content-Plan passend zur Marke",
-        "Professionelle Posts und Storys",
-        "Verwaltung von Kommentaren und Nachrichten",
-        "Regelmäßige Performance-Berichte und Tipps"
-      ]
+        {
+          "title": "Content-Planung",
+          "desc": "Strategische Content-Kalender, abgestimmt auf Ihre Ziele",
+          "points": [
+            "Monatlicher Content-Kalender",
+            "Hashtag-Recherche",
+            "Wettbewerbsanalyse"
+          ]
+        },
+        {
+          "title": "Content-Erstellung",
+          "desc": "Professionelle Posts, Stories und Reels",
+          "points": [
+            "Professionelles Texten",
+            "Individuelle Grafiken & Videos",
+            "A/B-Tests für Content"
+          ]
+        },
+        {
+          "title": "Wachstum & Analyse",
+          "desc": "Wachstum verfolgen und Performance optimieren",
+          "points": [
+            "Wöchentliche Leistungsberichte",
+            "Zielgruppen-Einblicke",
+            "ROI-Tracking"
+          ]
+        }
+      ],
+      "stepsTitle": "Unser Prozess",
+      "stepsSubtitle": "Ein systematischer Ansatz für Social-Media-Erfolg",
+      "steps": [
+        {
+          "title": "Audit & Strategie",
+          "desc": "Wir analysieren Ihre Präsenz und erstellen einen Plan"
+        },
+        {
+          "title": "Erstellen & Veröffentlichen",
+          "desc": "Unser Team erstellt und veröffentlicht ansprechende Inhalte"
+        },
+        {
+          "title": "Analysieren & Optimieren",
+          "desc": "Wir messen Ergebnisse und optimieren kontinuierlich"
+        }
+      ],
+      "cta": {
+        "title": "Bereit, Social Media zu dominieren?",
+        "subtitle": "Lassen Sie uns Ihre Social-Media-Kanäle verwalten und echte Ergebnisse erzielen",
+        "text": "Jetzt starten"
+      }
     },
     "landing-pages": {
+      "hero": {
+        "title": "Landing Pages, die konvertieren",
+        "subtitle": "Jeder Besucher ist eine neue Chance – wir gestalten Seiten, die Klicks in Kunden verwandeln",
+        "cta": "Meine Seite erstellen",
+        "badges": [
+          "A/B-Testing",
+          "Konversionsorientiert",
+          "Schnelle Lieferung"
+        ]
+      },
+      "featuresTitle": "Warum unsere Landing Pages funktionieren",
+      "featuresSubtitle": "Entworfen mit Konversionspsychologie und einem datengetriebenen Ansatz",
       "features": [
-        "Konversionsorientiertes Seitendesign",
-        "Überzeugende Überschriften und Marketingtexte",
-        "Formulare zur Lead-Erfassung",
-        "Integration mit Zahlungs- und Marketing-Systemen"
-      ]
+        {
+          "title": "Zielgerichtetes Design",
+          "desc": "Jede Seite ist für eine bestimmte Zielgruppe und ein bestimmtes Ziel konzipiert",
+          "points": [
+            "Zielgruppen-Recherche",
+            "Analyse der Wettbewerbsseiten",
+            "Conversion-Funnel-Mapping"
+          ]
+        },
+        {
+          "title": "A/B-Testing",
+          "desc": "Wir testen verschiedene Versionen, um Konversionen zu maximieren",
+          "points": [
+            "Headline- & CTA-Varianten",
+            "Layout-Split-Tests",
+            "Kontinuierliche Optimierung"
+          ]
+        },
+        {
+          "title": "Datengesteuert",
+          "desc": "Datengestützte Entscheidungen für bessere Ergebnisse",
+          "points": [
+            "Heatmap-Tracking",
+            "Conversion-Rate-Monitoring",
+            "Monatliche Leistungsberichte"
+          ]
+        }
+      ],
+      "testimonialsTitle": "Ergebnisse, die für sich sprechen",
+      "testimonialsSubtitle": "Sehen Sie die Wirkung unserer Landing Pages",
+      "testimonials": [
+        {
+          "name": "Mohammed Khaled",
+          "role": "Marketingdirektor",
+          "text": "Die Conversion-Rate stieg mit ihren Landing Pages um 350 %"
+        },
+        {
+          "name": "Fatima Hassan",
+          "role": "E-Commerce-Inhaberin",
+          "text": "Beste Investition in unser Online-Marketing"
+        }
+      ],
+      "cta": {
+        "title": "Brauchen Sie eine konvertierende Landing Page?",
+        "subtitle": "Lassen Sie uns eine Seite gestalten, die Besucher in Kunden verwandelt",
+        "text": "Loslegen"
+      }
     },
     "forms": {
+      "hero": {
+        "title": "Intelligente Online-Formulare",
+        "subtitle": "Sammeln Sie Daten effizient mit Formularen, die auf Konversion ausgelegt sind",
+        "cta": "Mein Formular erstellen",
+        "badges": [
+          "Intelligente Logik",
+          "Einfache Integration",
+          "Mobilfreundlich"
+        ]
+      },
+      "featuresTitle": "Formular-Funktionen",
+      "featuresSubtitle": "Alles, was Sie für eine effiziente Datenerfassung brauchen",
       "features": [
-        "Vollständig anpassbare Formulare",
-        "Intelligente Felder mit sofortiger Validierung",
-        "Detaillierte Antwort-Analysen und Berichte",
-        "Integration mit E-Mail und anderen Systemen"
-      ]
+        {
+          "title": "Intelligente Logik",
+          "desc": "Bedingte Felder, die sich an die Nutzereingabe anpassen",
+          "points": [
+            "Mehrstufige Formulare",
+            "Bedingte Anzeigeregeln",
+            "Datei-Upload-Support"
+          ]
+        },
+        {
+          "title": "Integrationen",
+          "desc": "Verbindung mit CRM, E-Mail und anderen Tools",
+          "points": [
+            "Zapier- & Make.com-Integration",
+            "Google-Sheets-Synchronisierung",
+            "E-Mail-Benachrichtigungen"
+          ]
+        },
+        {
+          "title": "Analysen",
+          "desc": "Übermittlungen verfolgen und Antworten analysieren",
+          "points": [
+            "Übermittlungs-Dashboard",
+            "Antwortraten-Analyse",
+            "CSV/Excel-Export"
+          ]
+        }
+      ],
+      "cta": {
+        "title": "Bereit, Daten intelligenter zu sammeln?",
+        "subtitle": "Lassen Sie uns Formulare erstellen, die neue Horizonte für Ihre Daten öffnen",
+        "text": "Loslegen"
+      }
     },
     "ebooks": {
+      "hero": {
+        "title": "Professionelle E-Books",
+        "subtitle": "Verwandeln Sie Ihre Expertise in digitale Bücher, die Ihre Autorität etablieren",
+        "cta": "Mein E-Book erstellen",
+        "badges": [
+          "Professionelles Design",
+          "Multi-Format",
+          "Verlags-Support"
+        ]
+      },
+      "featuresTitle": "Unsere E-Book-Leistungen",
+      "featuresSubtitle": "Komplette E-Book-Produktion aus einer Hand",
       "features": [
-        "Professionelles Buchdesign und Layout",
-        "Vollständige Formatierung mit Bildern und Grafiken",
-        "Expertenwissen in strukturierte Inhalte verwandeln",
-        "Veröffentlichung auf allen Geräten und Plattformen"
-      ]
+        {
+          "title": "Schreiben & Lektorat",
+          "desc": "Professionelle Schreib- und Lektoratsdienste",
+          "points": [
+            "Professionelles Ghostwriting",
+            "Korrekturlesen & Lektorat",
+            "SEO-optimierter Inhalt"
+          ]
+        },
+        {
+          "title": "Design & Layout",
+          "desc": "Ansprechende Layouts und Cover-Designs",
+          "points": [
+            "Individuelles Cover-Design",
+            "Innenlayout & Formatierung",
+            "Markenkonforme Gestaltung"
+          ]
+        },
+        {
+          "title": "Veröffentlichung",
+          "desc": "Veröffentlichen Sie auf Amazon, Apple Books und mehr",
+          "points": [
+            "Amazon-KDP-Veröffentlichung",
+            "Multi-Format-Export (PDF, EPUB, MOBI)",
+            "Marketingstrategie inklusive"
+          ]
+        }
+      ],
+      "cta": {
+        "title": "Bereit, Ihr E-Book zu veröffentlichen?",
+        "subtitle": "Lassen Sie uns Ihre Expertise in ein professionelles E-Book verwandeln",
+        "text": "Jetzt starten"
+      }
     },
     "ad-campaigns": {
+      "hero": {
+        "title": "Werbekampagnen mit Ergebnissen",
+        "subtitle": "Zielgerichtete Werbekampagnen, die Ihren ROI maximieren",
+        "cta": "Kampagne starten",
+        "badges": [
+          "Google Ads",
+          "Meta Ads",
+          "ROI-orientiert"
+        ]
+      },
+      "featuresTitle": "Kampagnen-Plattformen",
+      "featuresSubtitle": "Wir verwalten Kampagnen auf allen großen Plattformen",
       "features": [
-        "Zielorientierte Werbestrategie",
-        "Präzise Zielgruppenansprache",
-        "Tägliche Kampagnenverwaltung und Monitoring",
-        "Ergebnis- und ROAS-Berichte"
-      ]
+        {
+          "title": "Google Ads",
+          "desc": "Search-, Display- und YouTube-Kampagnen",
+          "points": [
+            "Search- & Shopping-Anzeigen",
+            "YouTube-Pre-Roll-Anzeigen",
+            "Display-Netzwerk-Kampagnen"
+          ]
+        },
+        {
+          "title": "Social Ads",
+          "desc": "Facebook, Instagram, TikTok und Snapchat",
+          "points": [
+            "Meta-Anzeigen (FB & IG)",
+            "TikTok- & Snapchat-Anzeigen",
+            "Retargeting-Kampagnen"
+          ]
+        },
+        {
+          "title": "Analyse & Optimierung",
+          "desc": "ROI in Echtzeit verfolgen und Kampagnen optimieren",
+          "points": [
+            "Echtzeit-Dashboard",
+            "Cost-per-Acquisition-Tracking",
+            "Wöchentliche Optimierungsberichte"
+          ]
+        }
+      ],
+      "cta": {
+        "title": "Bereit, Ihre Werbung zu skalieren?",
+        "subtitle": "Lassen Sie uns Ihre Kampagnen für maximale Wirkung verwalten",
+        "text": "Loslegen"
+      }
     },
     "brand-identity": {
+      "hero": {
+        "title": "Markenidentität, die hervorsticht",
+        "subtitle": "Wir gestalten einzigartige Markenidentitäten, die Sie von Wettbewerbern abheben",
+        "cta": "Meine Marke aufbauen",
+        "badges": [
+          "Logo-Design",
+          "Markenrichtlinien",
+          "Strategische Beratung"
+        ]
+      },
+      "featuresTitle": "Unsere Branding-Leistungen",
+      "featuresSubtitle": "Komplette Branding-Lösungen für Unternehmen jeder Größe",
       "features": [
-        "Logo und vollständige visuelle Identität",
-        "Marken- und Farbleitfaden",
-        "Strategische Beratung für Wachstum",
-        "Konsistente Marketingmaterialien"
-      ]
+        {
+          "title": "Logo & visuelle Identität",
+          "desc": "Unvergessliche Logos und komplette visuelle Systeme",
+          "points": [
+            "Mehrere Logo-Konzepte",
+            "Farbpalette & Typografie",
+            "Visitenkarten & Briefpapier"
+          ]
+        },
+        {
+          "title": "Markenrichtlinien",
+          "desc": "Umfassende Markenbücher für Konsistenz",
+          "points": [
+            "50+ Seiten Markenbuch",
+            "Nutzungsregeln & Beispiele",
+            "Vorlagen für digitale Assets"
+          ]
+        },
+        {
+          "title": "Strategische Beratung",
+          "desc": "Expertenberatung zur Markenpositionierung",
+          "points": [
+            "Marktforschung & Analyse",
+            "Markenpositionierungsstrategie",
+            "Abgrenzung vom Wettbewerb"
+          ]
+        }
+      ],
+      "testimonialsTitle": "Marken, die wir transformiert haben",
+      "testimonialsSubtitle": "Sehen Sie, wie unser Branding Unternehmen beim Wachstum half",
+      "testimonials": [
+        {
+          "name": "Omar Saleh",
+          "role": "Startup-Gründer",
+          "text": "Unsere neue Markenidentität hat die Wiedererkennung verdreifacht"
+        },
+        {
+          "name": "Lina Mohammed",
+          "role": "Restaurantbesitzerin",
+          "text": "Das Rebranding hat unser Geschäft völlig verändert"
+        }
+      ],
+      "cta": {
+        "title": "Bereit, Ihre Marke zu transformieren?",
+        "subtitle": "Lassen Sie uns eine Markenidentität schaffen, die neue Horizonte eröffnet",
+        "text": "Projekt starten"
+      }
     }
   },
   "blog": {

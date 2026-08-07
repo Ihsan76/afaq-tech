@@ -854,78 +854,415 @@
     "newsletterTitle": "Berlangganan Buletin Kami"
   },
   "services": {
-    "backToHome": "Kembali ke beranda",
-    "featuresTitle": "Apa saja yang termasuk?",
-    "featuresSubtitle": "Semua yang Anda butuhkan untuk mewujudkan ide Anda",
-    "processTitle": "Bagaimana kami bekerja sama?",
-    "processSubtitle": "Langkah jelas dari ide hingga peluncuran",
-    "step1": "Konsultasi & perencanaan",
-    "step1Desc": "Kami memahami kebutuhan dan menentukan tujuan",
-    "step2": "Desain & persiapan",
-    "step2Desc": "Kami mendesain solusi dan menyiapkan konten",
-    "step3": "Pengembangan",
-    "step3Desc": "Kami membangun dengan kualitas tinggi",
-    "step4": "Peluncuran & dukungan",
-    "step4Desc": "Kami meluncurkan dan memberikan dukungan berkelanjutan",
-    "ctaTitle": "Siap memulai proyek Anda?",
-    "ctaSubtitle": "Hubungi kami hari ini dan dapatkan konsultasi gratis",
-    "ctaButton": "Pesan layanan ini",
-    "otherServicesTitle": "Layanan lain yang mungkin Anda suka",
     "web-design": {
+      "hero": {
+        "title": "Desain Web Profesional",
+        "subtitle": "Kami menciptakan situs web yang memukau dan responsif yang mengubah pengunjung menjadi pelanggan",
+        "cta": "Minta Penawaran",
+        "badges": [
+          "Desain Kustom",
+          "Dioptimalkan SEO",
+          "Mobile First"
+        ]
+      },
+      "featuresTitle": "Apa yang Kami Tawarkan",
+      "featuresSubtitle": "Solusi desain web lengkap yang membuka cakrawala baru",
       "features": [
-        "Desain responsif yang bekerja di semua perangkat",
-        "Muat cepat dan performa luar biasa",
-        "Optimasi mesin pencari (SEO)",
-        "Panel manajemen konten yang mudah"
-      ]
+        {
+          "title": "Desain Kustom",
+          "desc": "Desain unik yang disesuaikan dengan identitas merek Anda",
+          "points": [
+            "Visual selaras merek",
+            "Wireframe & mockup disertakan",
+            "Revisi tanpa batas"
+          ]
+        },
+        {
+          "title": "Responsif",
+          "desc": "Tampil sempurna di desktop, tablet, dan ponsel",
+          "points": [
+            "Pendekatan mobile-first",
+            "Diuji di semua browser",
+            "Rendering presisi piksel"
+          ]
+        },
+        {
+          "title": "Performa Cepat",
+          "desc": "Kecepatan muat dioptimalkan untuk pengalaman yang lebih baik",
+          "points": [
+            "Core Web Vitals dioptimalkan",
+            "Optimasi gambar disertakan",
+            "Pengaturan CDN & caching"
+          ]
+        }
+      ],
+      "stepsTitle": "Cara Kami Bekerja",
+      "stepsSubtitle": "Proses teruji kami untuk menghadirkan situs web yang luar biasa",
+      "steps": [
+        {
+          "title": "Penemuan & Perencanaan",
+          "desc": "Kami memahami tujuan, audiens, dan kebutuhan Anda"
+        },
+        {
+          "title": "Desain & Pengembangan",
+          "desc": "Tim kami menciptakan situs web yang indah dan fungsional"
+        },
+        {
+          "title": "Peluncuran & Dukungan",
+          "desc": "Kami meluncurkan situs Anda dan memberikan dukungan berkelanjutan"
+        }
+      ],
+      "testimonialsTitle": "Kata Klien Kami",
+      "testimonialsSubtitle": "Umpan balik nyata dari bisnis yang telah kami bantu",
+      "testimonials": [
+        {
+          "name": "Ahmed Al-Rashid",
+          "role": "CEO, TechStore",
+          "text": "Situs web baru kami meningkatkan konversi sebesar 200%"
+        },
+        {
+          "name": "Sara Al-Ali",
+          "role": "Pendiri, EduStart",
+          "text": "Desain indah yang mewakili merek kami dengan sempurna"
+        }
+      ],
+      "cta": {
+        "title": "Siap Mengubah Kehadiran Online Anda?",
+        "subtitle": "Mari buat situs web yang membuka cakrawala baru bagi bisnis Anda",
+        "text": "Mulai Proyek"
+      }
     },
     "social-media": {
+      "hero": {
+        "title": "Media Sosial yang Membuka Cakrawala Baru",
+        "subtitle": "Kami memperluas kehadiran digital Anda dan mengubah platform menjadi sumber penjualan dan pertumbuhan nyata",
+        "cta": "Mulai",
+        "badges": [
+          "Strategi Konten",
+          "Pertumbuhan Terjamin",
+          "Laporan Analitik"
+        ]
+      },
+      "featuresTitle": "Layanan Kami",
+      "featuresSubtitle": "Manajemen media sosial menyeluruh yang memperluas kehadiran Anda",
       "features": [
-        "Rencana konten bulanan sesuai merek Anda",
-        "Desain postingan dan stories profesional",
-        "Manajemen komentar dan pesan",
-        "Laporan performa berkala dan saran"
-      ]
+        {
+          "title": "Perencanaan Konten",
+          "desc": "Kalender konten strategis yang selaras dengan tujuan Anda",
+          "points": [
+            "Kalender konten bulanan",
+            "Riset tagar",
+            "Analisis pesaing"
+          ]
+        },
+        {
+          "title": "Pembuatan Konten",
+          "desc": "Postingan, story, dan reels profesional yang menarik",
+          "points": [
+            "Copywriting profesional",
+            "Grafis & video kustom",
+            "Pengujian A/B konten"
+          ]
+        },
+        {
+          "title": "Pertumbuhan & Analitik",
+          "desc": "Lacak pertumbuhan dan optimalkan performa",
+          "points": [
+            "Laporan performa mingguan",
+            "Wawasan audiens",
+            "Pelacakan ROI"
+          ]
+        }
+      ],
+      "stepsTitle": "Proses Kami",
+      "stepsSubtitle": "Pendekatan sistematis untuk kesuksesan media sosial",
+      "steps": [
+        {
+          "title": "Audit & Strategi",
+          "desc": "Kami menganalisis kehadiran Anda saat ini dan membuat rencana"
+        },
+        {
+          "title": "Buat & Publikasikan",
+          "desc": "Tim kami membuat dan memublikasikan konten menarik"
+        },
+        {
+          "title": "Analisis & Optimalkan",
+          "desc": "Kami mengukur hasil dan terus mengoptimalkan"
+        }
+      ],
+      "cta": {
+        "title": "Siap Mendominasi Media Sosial?",
+        "subtitle": "Biarkan kami mengelola media sosial Anda dan hasilkan hasil nyata",
+        "text": "Mulai Sekarang"
+      }
     },
     "landing-pages": {
+      "hero": {
+        "title": "Landing Page yang Mengonversi",
+        "subtitle": "Setiap pengunjung adalah peluang baru — kami mendesain halaman yang mengubah klik menjadi pelanggan",
+        "cta": "Buat Halaman Saya",
+        "badges": [
+          "Pengujian A/B",
+          "Berfokus Konversi",
+          "Pengiriman Cepat"
+        ]
+      },
+      "featuresTitle": "Mengapa Landing Page Kami Berhasil",
+      "featuresSubtitle": "Dirancang dengan psikologi konversi dan pendekatan berbasis data",
       "features": [
-        "Desain halaman fokus konversi",
-        "Judul dan copy marketing yang menarik",
-        "Formulir pengumpulan data pengunjung",
-        "Integrasi dengan sistem pembayaran dan pemasaran"
-      ]
+        {
+          "title": "Desain Tertarget",
+          "desc": "Setiap halaman dirancang untuk audiens dan tujuan tertentu",
+          "points": [
+            "Riset persona audiens",
+            "Analisis halaman pesaing",
+            "Pemetaan funnel konversi"
+          ]
+        },
+        {
+          "title": "Pengujian A/B",
+          "desc": "Kami menguji berbagai versi untuk memaksimalkan konversi",
+          "points": [
+            "Variasi judul & CTA",
+            "Pengujian tata letak",
+            "Optimasi berkelanjutan"
+          ]
+        },
+        {
+          "title": "Berbasis Data",
+          "desc": "Keputusan berbasis data untuk hasil yang lebih baik",
+          "points": [
+            "Pelacakan heatmap",
+            "Pemantauan rasio konversi",
+            "Laporan performa bulanan"
+          ]
+        }
+      ],
+      "testimonialsTitle": "Hasil yang Berbicara",
+      "testimonialsSubtitle": "Lihat dampak landing page kami",
+      "testimonials": [
+        {
+          "name": "Mohammed Khaled",
+          "role": "Direktur Pemasaran",
+          "text": "Rasio konversi meningkat 350% dengan landing page mereka"
+        },
+        {
+          "name": "Fatima Hassan",
+          "role": "Pemilik Toko Online",
+          "text": "Investasi terbaik dalam pemasaran online kami"
+        }
+      ],
+      "cta": {
+        "title": "Butuh Landing Page Konversi Tinggi?",
+        "subtitle": "Mari desain halaman yang mengubah pengunjung menjadi pelanggan",
+        "text": "Mulai"
+      }
     },
     "forms": {
+      "hero": {
+        "title": "Formulir Elektronik Cerdas",
+        "subtitle": "Kumpulkan data secara efisien dengan formulir yang dirancang untuk konversi",
+        "cta": "Buat Formulir Saya",
+        "badges": [
+          "Logika Cerdas",
+          "Integrasi Mudah",
+          "Ramah Mobile"
+        ]
+      },
+      "featuresTitle": "Fitur Formulir",
+      "featuresSubtitle": "Semua yang Anda butuhkan untuk pengumpulan data yang efisien",
       "features": [
-        "Formulir sepenuhnya sesuai kebutuhan Anda",
-        "Kolom cerdas dengan validasi instan",
-        "Analisis dan laporan respons terperinci",
-        "Integrasi dengan email dan sistem lain"
-      ]
+        {
+          "title": "Logika Cerdas",
+          "desc": "Kolom kondisional yang beradaptasi dengan input pengguna",
+          "points": [
+            "Formulir multi-langkah",
+            "Aturan visibilitas kondisional",
+            "Dukungan unggah file"
+          ]
+        },
+        {
+          "title": "Integrasi",
+          "desc": "Terhubung dengan CRM, email, dan alat lainnya",
+          "points": [
+            "Integrasi Zapier & Make.com",
+            "Sinkronisasi Google Sheets",
+            "Notifikasi email"
+          ]
+        },
+        {
+          "title": "Analitik",
+          "desc": "Lacak kiriman dan analisis respons",
+          "points": [
+            "Dasbor pelacakan kiriman",
+            "Analisis rasio respons",
+            "Ekspor CSV/Excel"
+          ]
+        }
+      ],
+      "cta": {
+        "title": "Siap Mengumpulkan Data Lebih Cerdas?",
+        "subtitle": "Mari buat formulir yang membuka cakrawala baru untuk data Anda",
+        "text": "Mulai"
+      }
     },
     "ebooks": {
+      "hero": {
+        "title": "E-Book Profesional",
+        "subtitle": "Ubah keahlian Anda menjadi buku digital yang membangun otoritas Anda",
+        "cta": "Buat E-Book Saya",
+        "badges": [
+          "Desain Profesional",
+          "Multi-Format",
+          "Dukungan Publikasi"
+        ]
+      },
+      "featuresTitle": "Layanan E-Book Kami",
+      "featuresSubtitle": "Layanan produksi e-book end-to-end",
       "features": [
-        "Desain dan tata letak buku profesional",
-        "Pemformatan lengkap dengan gambar dan grafik",
-        "Mengubah keahlian Anda menjadi konten terstruktur",
-        "Publikasi di semua perangkat dan platform"
-      ]
+        {
+          "title": "Penulisan & Penyuntingan",
+          "desc": "Layanan penulisan dan penyuntingan profesional",
+          "points": [
+            "Ghostwriting profesional",
+            "Proofreading & penyuntingan",
+            "Konten dioptimalkan SEO"
+          ]
+        },
+        {
+          "title": "Desain & Tata Letak",
+          "desc": "Tata letak dan sampul yang indah",
+          "points": [
+            "Desain sampul kustom",
+            "Tata letak interior profesional",
+            "Gaya konsisten merek"
+          ]
+        },
+        {
+          "title": "Publikasi",
+          "desc": "Publikasikan di Amazon, Apple Books, dan lainnya",
+          "points": [
+            "Publikasi Amazon KDP",
+            "Ekspor multi-format (PDF, EPUB, MOBI)",
+            "Strategi pemasaran disertakan"
+          ]
+        }
+      ],
+      "cta": {
+        "title": "Siap Menerbitkan E-Book Anda?",
+        "subtitle": "Mari ubah keahlian Anda menjadi e-book profesional",
+        "text": "Mulai Sekarang"
+      }
     },
     "ad-campaigns": {
+      "hero": {
+        "title": "Kampanye Iklan yang Menghasilkan Hasil",
+        "subtitle": "Kampanye periklanan tertarget yang memaksimalkan ROI Anda",
+        "cta": "Luncurkan Kampanye",
+        "badges": [
+          "Google Ads",
+          "Meta Ads",
+          "Berfokus ROI"
+        ]
+      },
+      "featuresTitle": "Platform Kampanye",
+      "featuresSubtitle": "Kami mengelola kampanye di semua platform utama",
       "features": [
-        "Strategi iklan berbasis tujuan",
-        "Penargetan tepat untuk audiens yang tepat",
-        "Manajemen dan pemantauan kampanye harian",
-        "Laporan hasil dan ROAS"
-      ]
+        {
+          "title": "Google Ads",
+          "desc": "Kampanye Search, Display, dan YouTube",
+          "points": [
+            "Iklan Search & Shopping",
+            "Iklan pra-putar YouTube",
+            "Kampanye jaringan Display"
+          ]
+        },
+        {
+          "title": "Iklan Sosial",
+          "desc": "Facebook, Instagram, TikTok, dan Snapchat",
+          "points": [
+            "Meta Ads (FB & IG)",
+            "Iklan TikTok & Snapchat",
+            "Kampanye retargeting"
+          ]
+        },
+        {
+          "title": "Analisis & Optimasi",
+          "desc": "Lacak ROI dan optimalkan kampanye secara real-time",
+          "points": [
+            "Dasbor real-time",
+            "Pelacakan biaya per akuisisi",
+            "Laporan optimasi mingguan"
+          ]
+        }
+      ],
+      "cta": {
+        "title": "Siap Mengembangkan Iklan Anda?",
+        "subtitle": "Biarkan kami mengelola kampanye Anda untuk dampak maksimal",
+        "text": "Mulai"
+      }
     },
     "brand-identity": {
+      "hero": {
+        "title": "Identitas Merek yang Menonjol",
+        "subtitle": "Kami menciptakan identitas unik yang membedakan Anda dari pesaing",
+        "cta": "Bangun Merek Saya",
+        "badges": [
+          "Desain Logo",
+          "Panduan Merek",
+          "Konsultasi Strategis"
+        ]
+      },
+      "featuresTitle": "Layanan Branding Kami",
+      "featuresSubtitle": "Solusi branding lengkap untuk bisnis segala ukuran",
       "features": [
-        "Logo dan identitas visual lengkap",
-        "Panduan penggunaan merek dan warna",
-        "Konsultasi strategis untuk pertumbuhan bisnis",
-        "Materi pemasaran yang konsisten"
-      ]
+        {
+          "title": "Logo & Identitas Visual",
+          "desc": "Logo yang berkesan dan sistem visual yang lengkap",
+          "points": [
+            "Beberapa konsep logo",
+            "Palet warna & tipografi",
+            "Kartu nama & alat tulis"
+          ]
+        },
+        {
+          "title": "Panduan Merek",
+          "desc": "Buku merek menyeluruh untuk konsistensi",
+          "points": [
+            "Buku merek 50+ halaman",
+            "Aturan penggunaan & contoh",
+            "Template aset digital"
+          ]
+        },
+        {
+          "title": "Konsultasi Strategis",
+          "desc": "Panduan ahli tentang positioning merek",
+          "points": [
+            "Riset & analisis pasar",
+            "Strategi positioning merek",
+            "Diferensiasi pesaing"
+          ]
+        }
+      ],
+      "testimonialsTitle": "Merek yang Telah Kami Ubah",
+      "testimonialsSubtitle": "Lihat bagaimana branding kami membantu bisnis berkembang",
+      "testimonials": [
+        {
+          "name": "Omar Saleh",
+          "role": "Pendiri Startup",
+          "text": "Identitas baru kami melipatgandakan pengenalan merek tiga kali lipat"
+        },
+        {
+          "name": "Lina Mohammed",
+          "role": "Pemilik Restoran",
+          "text": "Rebranding mengubah bisnis kami sepenuhnya"
+        }
+      ],
+      "cta": {
+        "title": "Siap Mengubah Merek Anda?",
+        "subtitle": "Mari ciptakan identitas merek yang membuka cakrawala baru",
+        "text": "Mulai Proyek"
+      }
     }
   },
   "blog": {

@@ -854,78 +854,415 @@
     "newsletterTitle": "Bültenimize Abone Olun"
   },
   "services": {
-    "backToHome": "Ana sayfaya dön",
-    "featuresTitle": "Neler dahil?",
-    "featuresSubtitle": "Fikrinizi hayata geçirmek için ihtiyacınız olan her şey",
-    "processTitle": "Birlikte nasıl çalışırız?",
-    "processSubtitle": "Fikirden lansmana net adımlar",
-    "step1": "Danışmanlık ve planlama",
-    "step1Desc": "İhtiyaçlarınızı anlar ve hedefleri belirleriz",
-    "step2": "Tasarım ve hazırlık",
-    "step2Desc": "Çözümü tasarlar ve içeriği hazırlarız",
-    "step3": "Geliştirme",
-    "step3Desc": "Yüksek kalitede inşa eder ve geliştiririz",
-    "step4": "Lansman ve destek",
-    "step4Desc": "Başlatır ve sürekli destek sağlarız",
-    "ctaTitle": "Projenize başlamaya hazır mısınız?",
-    "ctaSubtitle": "Bugün bize ulaşın ve ücretsiz danışmanlık alın",
-    "ctaButton": "Bu hizmeti sipariş et",
-    "otherServicesTitle": "İlginizi çekebilecek diğer hizmetler",
     "web-design": {
+      "hero": {
+        "title": "Profesyonel Web Tasarımı",
+        "subtitle": "Ziyaretçileri müşteriye dönüştüren çarpıcı ve mobil uyumlu web siteleri oluşturuyoruz",
+        "cta": "Teklif Al",
+        "badges": [
+          "Özel Tasarım",
+          "SEO Optimize",
+          "Mobil Öncelikli"
+        ]
+      },
+      "featuresTitle": "Sunduğumuz Hizmetler",
+      "featuresSubtitle": "Yeni ufuklar açan kapsamlı web tasarımı çözümleri",
       "features": [
-        "Tüm cihazlarda çalışan duyarlı tasarım",
-        "Hızlı yükleme ve mükemmel performans",
-        "Arama motoru optimizasyonu (SEO)",
-        "Kolay içerik yönetim paneli"
-      ]
+        {
+          "title": "Özel Tasarım",
+          "desc": "Marka kimliğinize göre uyarlanmış benzersiz tasarımlar",
+          "points": [
+            "Markaya uygun görseller",
+            "Wireframe ve maket dahil",
+            "Sınırsız revizyon"
+          ]
+        },
+        {
+          "title": "Mobil Uyumlu",
+          "desc": "Masaüstü, tablet ve mobilde kusursuz görünüm",
+          "points": [
+            "Mobil öncelikli yaklaşım",
+            "Tüm tarayıcılarda test edildi",
+            "Piksel hassasiyetinde çıktı"
+          ]
+        },
+        {
+          "title": "Hızlı Performans",
+          "desc": "Daha iyi deneyim için optimize edilmiş yükleme hızı",
+          "points": [
+            "Core Web Vitals optimize",
+            "Görsel optimizasyonu dahil",
+            "CDN ve önbellek kurulumu"
+          ]
+        }
+      ],
+      "stepsTitle": "Nasıl Çalışıyoruz",
+      "stepsSubtitle": "Olağanüstü web siteleri sunan kanıtlanmış sürecimiz",
+      "steps": [
+        {
+          "title": "Keşif ve Planlama",
+          "desc": "Hedeflerinizi, kitlenizi ve gereksinimlerinizi anlıyoruz"
+        },
+        {
+          "title": "Tasarım ve Geliştirme",
+          "desc": "Ekibimiz etkileyici ve işlevsel bir web sitesi oluşturur"
+        },
+        {
+          "title": "Yayın ve Destek",
+          "desc": "Sitenizi yayına alıyor ve sürekli destek sunuyoruz"
+        }
+      ],
+      "testimonialsTitle": "Müşterilerimizin Görüşleri",
+      "testimonialsSubtitle": "Yardım ettiğimiz işletmelerden gerçek geri bildirimler",
+      "testimonials": [
+        {
+          "name": "Ahmed Al-Rashid",
+          "role": "CEO, TechStore",
+          "text": "Yeni web sitemiz dönüşümleri %200 artırdı"
+        },
+        {
+          "name": "Sara Al-Ali",
+          "role": "Kurucu, EduStart",
+          "text": "Markamızı mükemmel temsil eden güzel bir tasarım"
+        }
+      ],
+      "cta": {
+        "title": "Çevrimiçi varlığınızı dönüştürmeye hazır mısınız?",
+        "subtitle": "İşletmeniz için yeni ufuklar açan bir web sitesi oluşturalım",
+        "text": "Projeyi Başlat"
+      }
     },
     "social-media": {
+      "hero": {
+        "title": "Yeni Ufuklar Açan Sosyal Medya",
+        "subtitle": "Dijital varlığınızı genişletiyor ve platformları satış ve büyüme kaynağına dönüştürüyoruz",
+        "cta": "Başla",
+        "badges": [
+          "İçerik Stratejisi",
+          "Garantili Büyüme",
+          "Analitik Raporları"
+        ]
+      },
+      "featuresTitle": "Hizmetlerimiz",
+      "featuresSubtitle": "Varlığınızı genişleten kapsamlı sosyal medya yönetimi",
       "features": [
-        "Markanıza uygun aylık içerik planı",
-        "Profesyonel gönderi ve hikaye tasarımı",
-        "Yorum ve mesaj yönetimi",
-        "Dönemsel performans raporları ve öneriler"
-      ]
+        {
+          "title": "İçerik Planlama",
+          "desc": "Hedeflerinize uygun stratejik içerik takvimi",
+          "points": [
+            "Aylık içerik takvimi",
+            "Hashtag araştırması",
+            "Rakip analizi"
+          ]
+        },
+        {
+          "title": "İçerik Üretimi",
+          "desc": "Profesyonel gönderiler, hikayeler ve reels",
+          "points": [
+            "Profesyonel metin yazarlığı",
+            "Özel grafik ve videolar",
+            "İçerik A/B testi"
+          ]
+        },
+        {
+          "title": "Büyüme ve Analiz",
+          "desc": "Büyümeyi takip edin ve performansı optimize edin",
+          "points": [
+            "Haftalık performans raporları",
+            "Kitle içgörüleri",
+            "ROI takibi"
+          ]
+        }
+      ],
+      "stepsTitle": "Sürecimiz",
+      "stepsSubtitle": "Sosyal medya başarısı için sistematik yaklaşım",
+      "steps": [
+        {
+          "title": "Denetim ve Strateji",
+          "desc": "Mevcut varlığınızı analiz edip bir plan oluşturuyoruz"
+        },
+        {
+          "title": "Oluştur ve Yayınla",
+          "desc": "Ekibimiz ilgi çekici içerikler oluşturup yayınlıyor"
+        },
+        {
+          "title": "Analiz ve Optimizasyon",
+          "desc": "Sonuçları ölçüp sürekli optimize ediyoruz"
+        }
+      ],
+      "cta": {
+        "title": "Sosyal medyaya hükmetmeye hazır mısınız?",
+        "subtitle": "Sosyal medyanızı yönetelim ve gerçek sonuçlar elde edelim",
+        "text": "Şimdi Başla"
+      }
     },
     "landing-pages": {
+      "hero": {
+        "title": "Dönüştüren Açılış Sayfaları",
+        "subtitle": "Her ziyaretçi yeni bir fırsattır — tıklamaları müşteriye dönüştüren sayfalar tasarlıyoruz",
+        "cta": "Sayfamı Oluştur",
+        "badges": [
+          "A/B Testi",
+          "Dönüşüm Odaklı",
+          "Hızlı Teslim"
+        ]
+      },
+      "featuresTitle": "Sayfalarımız Neden İşe Yarıyor",
+      "featuresSubtitle": "Dönüşüm psikolojisi ve veri odaklı yaklaşımla tasarlandı",
       "features": [
-        "Dönüşüme odaklı sayfa tasarımı",
-        "İkna edici başlıklar ve pazarlama metinleri",
-        "Ziyaretçi verisi toplama formları",
-        "Ödeme ve pazarlama sistemleriyle entegrasyon"
-      ]
+        {
+          "title": "Hedefli Tasarım",
+          "desc": "Her sayfa belirli bir kitle ve hedef için tasarlanır",
+          "points": [
+            "Hedef kitle kişiliği araştırması",
+            "Rakip sayfa analizi",
+            "Dönüşüm hunisi haritalama"
+          ]
+        },
+        {
+          "title": "A/B Testi",
+          "desc": "Dönüşümü artırmak için farklı sürümleri test ediyoruz",
+          "points": [
+            "Başlık ve CTA varyasyonları",
+            "Yerleşim testleri",
+            "Sürekli optimizasyon"
+          ]
+        },
+        {
+          "title": "Veri Odaklı",
+          "desc": "Daha iyi sonuçlar için veri odaklı kararlar",
+          "points": [
+            "Isı haritası takibi",
+            "Dönüşüm oranı izleme",
+            "Aylık performans raporları"
+          ]
+        }
+      ],
+      "testimonialsTitle": "Konuşan Sonuçlar",
+      "testimonialsSubtitle": "Açılış sayfalarımızın etkisini görün",
+      "testimonials": [
+        {
+          "name": "Mohammed Khaled",
+          "role": "Pazarlama Direktörü",
+          "text": "Sayfalarıyla dönüşüm oranı %350 arttı"
+        },
+        {
+          "name": "Fatima Hassan",
+          "role": "E-ticaret Sahibi",
+          "text": "Çevrimiçi pazarlamamızdaki en iyi yatırım"
+        }
+      ],
+      "cta": {
+        "title": "Yüksek dönüşümlü bir açılış sayfası mı lazım?",
+        "subtitle": "Ziyaretçileri müşteriye dönüştüren bir sayfa tasarlayalım",
+        "text": "Başla"
+      }
     },
     "forms": {
+      "hero": {
+        "title": "Akıllı Elektronik Formlar",
+        "subtitle": "Dönüşüm için tasarlanmış formlarla verileri verimli şekilde toplayın",
+        "cta": "Formumu Oluştur",
+        "badges": [
+          "Akıllı Mantık",
+          "Kolay Entegrasyon",
+          "Mobil Uyumlu"
+        ]
+      },
+      "featuresTitle": "Form Özellikleri",
+      "featuresSubtitle": "Verimli veri toplama için ihtiyacınız olan her şey",
       "features": [
-        "İhtiyacınıza tamamen özel formlar",
-        "Anında doğrulamalı akıllı alanlar",
-        "Ayrıntılı yanıt analizleri ve raporlar",
-        "E-posta ve diğer sistemlerle entegrasyon"
-      ]
+        {
+          "title": "Akıllı Mantık",
+          "desc": "Kullanıcı girişine uyum sağlayan koşullu alanlar",
+          "points": [
+            "Çok adımlı formlar",
+            "Koşullu görünürlük kuralları",
+            "Dosya yükleme desteği"
+          ]
+        },
+        {
+          "title": "Entegrasyonlar",
+          "desc": "CRM, e-posta ve diğer araçlarla bağlanın",
+          "points": [
+            "Zapier ve Make.com entegrasyonu",
+            "Google Sheets senkronizasyonu",
+            "E-posta bildirimleri"
+          ]
+        },
+        {
+          "title": "Analitik",
+          "desc": "Gönderimleri takip edin ve yanıtları analiz edin",
+          "points": [
+            "Gönderim takip paneli",
+            "Yanıt oranı analizi",
+            "CSV/Excel dışa aktarma"
+          ]
+        }
+      ],
+      "cta": {
+        "title": "Verileri daha akıllıca toplamaya hazır mısınız?",
+        "subtitle": "Verileriniz için yeni ufuklar açan formlar oluşturalım",
+        "text": "Başla"
+      }
     },
     "ebooks": {
+      "hero": {
+        "title": "Profesyonel E-Kitaplar",
+        "subtitle": "Uzmanlığınızı otoritenizi kuran dijital kitaplara dönüştürün",
+        "cta": "E-Kitabımı Oluştur",
+        "badges": [
+          "Profesyonel Tasarım",
+          "Çoklu Format",
+          "Yayın Desteği"
+        ]
+      },
+      "featuresTitle": "E-Kitap Hizmetlerimiz",
+      "featuresSubtitle": "Uçtan uca e-kitap üretim hizmetleri",
       "features": [
-        "Profesyonel kitap tasarımı ve mizanpaj",
-        "Görsel ve grafik destekli tam biçimlendirme",
-        "Uzmanlığınızı düzenli içeriğe dönüştürme",
-        "Tüm cihaz ve platformlarda yayın"
-      ]
+        {
+          "title": "Yazım ve Editörlük",
+          "desc": "Profesyonel yazım ve düzenleme hizmetleri",
+          "points": [
+            "Profesyonel gölge yazarlık",
+            "Redaksiyon ve düzenleme",
+            "SEO uyumlu içerik"
+          ]
+        },
+        {
+          "title": "Tasarım ve Yerleşim",
+          "desc": "Güzel yerleşimler ve kapak tasarımları",
+          "points": [
+            "Özel kapak tasarımı",
+            "İç yerleşim ve biçimlendirme",
+            "Markayla tutarlı stil"
+          ]
+        },
+        {
+          "title": "Yayıncılık",
+          "desc": "Amazon, Apple Books ve daha fazlasında yayınlayın",
+          "points": [
+            "Amazon KDP yayıncılık",
+            "Çoklu format dışa aktarma (PDF, EPUB, MOBI)",
+            "Pazarlama stratejisi dahil"
+          ]
+        }
+      ],
+      "cta": {
+        "title": "E-kitabınızı yayınlamaya hazır mısınız?",
+        "subtitle": "Uzmanlığınızı profesyonel bir e-kitaba dönüştürelim",
+        "text": "Şimdi Başla"
+      }
     },
     "ad-campaigns": {
+      "hero": {
+        "title": "Sonuç Getiren Reklam Kampanyaları",
+        "subtitle": "ROI'nizi en üst düzeye çıkaran hedefli reklam kampanyaları",
+        "cta": "Kampanya Başlat",
+        "badges": [
+          "Google Ads",
+          "Meta Ads",
+          "ROI Odaklı"
+        ]
+      },
+      "featuresTitle": "Kampanya Platformları",
+      "featuresSubtitle": "Tüm büyük platformlarda kampanya yönetiyoruz",
       "features": [
-        "Hedefe dayalı reklam stratejisi",
-        "Doğru kitleyi hassas hedefleme",
-        "Günlük kampanya yönetimi ve takip",
-        "Sonuç ve ROAS raporlaması"
-      ]
+        {
+          "title": "Google Ads",
+          "desc": "Arama, Görüntülü ve YouTube kampanyaları",
+          "points": [
+            "Arama ve Alışveriş reklamları",
+            "YouTube ön-roll reklamları",
+            "Görüntülü ağ kampanyaları"
+          ]
+        },
+        {
+          "title": "Sosyal Reklamlar",
+          "desc": "Facebook, Instagram, TikTok ve Snapchat",
+          "points": [
+            "Meta Ads (FB ve IG)",
+            "TikTok ve Snapchat reklamları",
+            "Yeniden hedefleme kampanyaları"
+          ]
+        },
+        {
+          "title": "Analiz ve Optimizasyon",
+          "desc": "ROI'yi gerçek zamanlı takip edin ve optimize edin",
+          "points": [
+            "Gerçek zamanlı panel",
+            "Edinme başına maliyet takibi",
+            "Haftalık optimizasyon raporları"
+          ]
+        }
+      ],
+      "cta": {
+        "title": "Reklamlarınızı ölçeklendirmeye hazır mısınız?",
+        "subtitle": "Maksimum etki için kampanyalarınızı yönetelim",
+        "text": "Başla"
+      }
     },
     "brand-identity": {
+      "hero": {
+        "title": "Öne Çıkan Marka Kimliği",
+        "subtitle": "Sizi rakiplerinizden ayıran benzersiz marka kimlikleri oluşturuyoruz",
+        "cta": "Markamı Oluştur",
+        "badges": [
+          "Logo Tasarımı",
+          "Marka Kılavuzu",
+          "Stratejik Danışmanlık"
+        ]
+      },
+      "featuresTitle": "Marka Hizmetlerimiz",
+      "featuresSubtitle": "Her boyuttaki işletme için kapsamlı marka çözümleri",
       "features": [
-        "Logo ve eksiksiz görsel kimlik",
-        "Marka ve renk kullanım kılavuzu",
-        "İş büyümesi için stratejik danışmanlık",
-        "Kimlikle uyumlu tutarlı pazarlama materyalleri"
-      ]
+        {
+          "title": "Logo ve Görsel Kimlik",
+          "desc": "Unutulmaz logolar ve eksiksiz görsel sistemler",
+          "points": [
+            "Birden fazla logo konsepti",
+            "Renk paleti ve tipografi",
+            "Kartvizit ve kırtasiye"
+          ]
+        },
+        {
+          "title": "Marka Kılavuzu",
+          "desc": "Tutarlılık için kapsamlı marka kitapları",
+          "points": [
+            "50+ sayfa marka kitabı",
+            "Kullanım kuralları ve örnekler",
+            "Dijital varlık şablonları"
+          ]
+        },
+        {
+          "title": "Stratejik Danışmanlık",
+          "desc": "Marka konumlandırma konusunda uzman rehberlik",
+          "points": [
+            "Pazar araştırması ve analizi",
+            "Marka konumlandırma stratejisi",
+            "Rakiplerden farklılaşma"
+          ]
+        }
+      ],
+      "testimonialsTitle": "Dönüştürdüğümüz Markalar",
+      "testimonialsSubtitle": "Marka hizmetlerimizin işletmeleri nasıl büyüttüğünü görün",
+      "testimonials": [
+        {
+          "name": "Omar Saleh",
+          "role": "Startup Kurucusu",
+          "text": "Yeni kimliğimiz marka bilinirliğini üç katına çıkardı"
+        },
+        {
+          "name": "Lina Mohammed",
+          "role": "Restoran Sahibi",
+          "text": "Rebranding işimizi tamamen dönüştürdü"
+        }
+      ],
+      "cta": {
+        "title": "Markanızı dönüştürmeye hazır mısınız?",
+        "subtitle": "Yeni ufuklar açan bir marka kimliği oluşturalım",
+        "text": "Projeyi Başlat"
+      }
     }
   },
   "blog": {
