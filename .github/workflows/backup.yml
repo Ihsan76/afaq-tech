@@ -82,3 +82,5 @@ EOF
                 --data-binary @- \
                 -w "\ndelete_http=%{http_code}\n"
           fi
+
+# GitHub caches workflow triggers; this commit forces a fresh read.
