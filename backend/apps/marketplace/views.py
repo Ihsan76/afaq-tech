@@ -1,7 +1,6 @@
 from django.db import models
 from django.utils import timezone
 from rest_framework import generics, permissions, status
-from apps.users.permissions import IsMarketplaceAdmin
 from rest_framework.decorators import (
     api_view,
     authentication_classes,
@@ -11,6 +10,7 @@ from rest_framework.decorators import (
 from rest_framework.response import Response
 
 from apps.gamification.services import PointsManager
+from apps.users.permissions import IsMarketplaceAdmin
 
 from .models import Order, Review, Service, ServiceAvailability, ServiceCategory
 from .payments import (
@@ -123,6 +123,18 @@ class OrderListView(generics.ListCreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         order = serializer.save()
+        from apps.notifications.services import notify
+        notify(
+            order.service.provider,
+            type='order',
+            title={'ar': 'طلب جديد', 'en': 'New order'},
+            body={
+                'ar': f"استلمت طلباً جديداً على: {order.service.title.get('ar') or order.service.title.get('en', '')}",
+                'en': f"You received a new order for: {order.service.title.get('en') or order.service.title.get('ar', '')}",
+            },
+            link='/marketplace/orders/?role=provider',
+            icon='🛎️',
+        )
         locale = request.data.get('locale') or 'en'
         data = OrderSerializer(order, context=self.get_serializer_context()).data
         try:
@@ -201,6 +213,18 @@ def complete_order(request, pk):
     order.service.sales_count += 1
     order.service.save(update_fields=['sales_count'])
     PointsManager.award_points(request.user, 'order_completed')
+    from apps.notifications.services import notify
+    notify(
+        order.buyer,
+        type='order',
+        title={'ar': 'تم إكمال الطلب', 'en': 'Order completed'},
+        body={
+            'ar': f"تم إكمال طلبك على الخدمة: {order.service.title.get('ar') or order.service.title.get('en', '')}",
+            'en': f"Your order was completed: {order.service.title.get('en') or order.service.title.get('ar', '')}",
+        },
+        link='/marketplace/orders/',
+        icon='🎉',
+    )
     return Response(OrderSerializer(order).data)
 
 
@@ -214,6 +238,19 @@ def cancel_order(request, pk):
         return Response({'error': 'Cannot cancel in current status'}, status=status.HTTP_400_BAD_REQUEST)
     order.status = Order.Status.CANCELLED
     order.save(update_fields=['status'])
+    from apps.notifications.services import notify
+    other_party = order.service.provider if order.buyer == request.user else order.buyer
+    notify(
+        other_party,
+        type='order',
+        title={'ar': 'تم إلغاء الطلب', 'en': 'Order cancelled'},
+        body={
+            'ar': f"تم إلغاء الطلب على الخدمة: {order.service.title.get('ar') or order.service.title.get('en', '')}",
+            'en': f"Order cancelled for: {order.service.title.get('en') or order.service.title.get('ar', '')}",
+        },
+        link='/marketplace/orders/',
+        icon='❌',
+    )
     return Response(OrderSerializer(order).data)
 
 
@@ -233,7 +270,19 @@ class ReviewListView(generics.ListCreateAPIView):
         return qs
 
     def perform_create(self, serializer):
-        serializer.save(reviewer=self.request.user)
+        review = serializer.save(reviewer=self.request.user)
+        from apps.notifications.services import notify
+        notify(
+            review.service.provider,
+            type='review',
+            title={'ar': 'مراجعة جديدة', 'en': 'New review'},
+            body={
+                'ar': f"تلقيت تقييماً جديداً ({review.rating}★) على خدمتك",
+                'en': f"You received a new review ({review.rating}★) on your service",
+            },
+            link='/marketplace/orders/?role=provider',
+            icon='⭐',
+        )
 
 
 # --- Admin: Categories ---

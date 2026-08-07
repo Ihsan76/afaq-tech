@@ -109,7 +109,8 @@
     "gamification": "Oyunlaştırma",
     "subscriptions": "Abonelikler",
     "search": "Ara",
-    "schoolFollowUp": "Okul Takibi"
+    "schoolFollowUp": "Okul Takibi",
+    "notifications": "Bildirimler"
   },
   "home": {
     "subtitle": "Öğretmenlere ve öğrencilere yardımcı olmak için yapay zeka kullanan Arapça dijital eğitim platformu",
@@ -1757,5 +1758,18 @@
     "duplicateValues": "Yinelenen değerler.",
     "cannotDeleteUser": "Bu kullanıcı silinemez.",
     "unknown": "Bir şeyler ters gitti. Lütfen tekrar deneyin."
+  },
+  "notifications": {
+    "title": "Bildirimler",
+    "description": "Siparişleriniz, abonelikleriniz ve etkinlikleriniz hakkında son güncellemeler",
+    "markAllRead": "Tümünü okundu işaretle",
+    "empty": "Henüz bildirim yok",
+    "viewAll": "Tüm bildirimleri gör",
+    "open": "Aç",
+    "pushEnable": "Tarayıcı push bildirimlerini etkinleştir",
+    "filter": {
+      "all": "Tümü",
+      "unread": "Okunmamış"
+    }
   }
 }

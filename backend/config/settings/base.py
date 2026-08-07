@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'apps.marketplace',
     'apps.subscriptions',
     'apps.schools',
+    'apps.notifications',
 ]
 
 MIDDLEWARE = [
@@ -217,3 +218,7 @@ MYFATOORAH_API_TOKEN = env('MYFATOORAH_API_TOKEN', default='')
 MYFATOORAH_BASE_URL = env('MYFATOORAH_BASE_URL', default='')
 MYFATOORAH_WEBHOOK_SECRET = env('MYFATOORAH_WEBHOOK_SECRET', default='')
 MYFATOORAH_PAYMENT_METHOD_ID = env('MYFATOORAH_PAYMENT_METHOD_ID', default='0')
+
+VAPID_PUBLIC_KEY = env('VAPID_PUBLIC_KEY', default='')
+VAPID_PRIVATE_KEY = env('VAPID_PRIVATE_KEY', default='')
+VAPID_SUBJECT = env('VAPID_SUBJECT', default='mailto:no-reply@afaq.app')

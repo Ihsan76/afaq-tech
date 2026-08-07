@@ -109,7 +109,8 @@
     "gamification": "Gamification",
     "subscriptions": "Abonnements",
     "search": "Recherche",
-    "schoolFollowUp": "Suivi scolaire"
+    "schoolFollowUp": "Suivi scolaire",
+    "notifications": "Notifications"
   },
   "home": {
     "subtitle": "Une plateforme éducative numérique arabe utilisant l'IA pour aider les enseignants et les étudiants",
@@ -1757,5 +1758,18 @@
     "duplicateValues": "Valeurs en double.",
     "cannotDeleteUser": "Cet utilisateur ne peut pas être supprimé.",
     "unknown": "Une erreur est survenue. Veuillez réessayer."
+  },
+  "notifications": {
+    "title": "Notifications",
+    "description": "Dernières mises à jour sur vos commandes, abonnements et activités",
+    "markAllRead": "Tout marquer comme lu",
+    "empty": "Aucune notification pour l'instant",
+    "viewAll": "Voir toutes les notifications",
+    "open": "Ouvrir",
+    "pushEnable": "Activer les notifications push du navigateur",
+    "filter": {
+      "all": "Toutes",
+      "unread": "Non lues"
+    }
   }
 }

@@ -46,6 +46,19 @@ def activate_subscription(subscription_id, transaction_id='', provider_name=''):
         user.save(update_fields=['subscription_plan'])
     if subscription.plan.code in ORGANIZATION_PLAN_CODES:
         ensure_organization(user, subscription)
+    from apps.notifications.services import notify
+    plan_name = (subscription.plan.name or {}).get('ar') or subscription.plan.code
+    notify(
+        user,
+        type='payment',
+        title={'ar': 'تم تفعيل الباقة', 'en': 'Plan activated'},
+        body={
+            'ar': f"تم تفعيل اشتراكك في باقة: {plan_name}",
+            'en': f"Your {subscription.plan.code} plan is now active",
+        },
+        link='/subscriptions',
+        icon='💳',
+    )
     return True
 
 

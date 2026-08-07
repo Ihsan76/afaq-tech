@@ -114,6 +114,18 @@ class BadgeAwarder:
                 if badge.name not in user.badges:
                     user.badges.append(badge.name)
                     user.save(update_fields=['badges'])
+                from apps.notifications.services import notify
+                notify(
+                    user,
+                    type='badge',
+                    title={'ar': 'شارة جديدة 🏆', 'en': 'New badge 🏆'},
+                    body={
+                        'ar': f"حصلت على شارة: {badge.name}",
+                        'en': f"You earned the badge: {badge.name_en or badge.name}",
+                    },
+                    link='/gamification',
+                    icon='🏆',
+                )
                 awarded.append(badge)
         return awarded
 

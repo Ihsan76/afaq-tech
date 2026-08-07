@@ -420,6 +420,30 @@ class SchoolAnnouncementViewSet(viewsets.ModelViewSet):
         if is_emergency and not is_admin(self.request.user) and self.request.user.role != 'school_admin':
             serializer.validated_data['is_emergency'] = False
         announcement = serializer.save(author=self.request.user)
+        from apps.notifications.services import notify_many
+        students = StudentEnrollment.objects.filter(
+            section=announcement.section
+        ) if announcement.section else StudentEnrollment.objects.filter(
+            section__school=announcement.school
+        )
+        student_ids = list(students.values_list('student_id', flat=True))
+        parent_ids = list(
+            FamilyLink.objects.filter(student_id__in=student_ids).values_list('parent_id', flat=True)
+        )
+        recipients = set(student_ids) | set(parent_ids)
+        recipients.discard(announcement.author_id)
+        if recipients:
+            notify_many(
+                recipients,
+                type='announcement',
+                title={'ar': 'إعلان جديد', 'en': 'New announcement'},
+                body={
+                    'ar': f"{announcement.school.name} — {announcement.title}",
+                    'en': f"{announcement.school.name} — {announcement.title}",
+                },
+                link='/school-followup',
+                icon='🏫',
+            )
         if announcement.is_emergency:
             enrollments = StudentEnrollment.objects.filter(section=announcement.section) if announcement.section else StudentEnrollment.objects.filter(section__school=announcement.school)
             for en in enrollments:
@@ -477,6 +501,20 @@ class ParentTeacherTicketViewSet(viewsets.ModelViewSet):
         })
         ticket.messages = messages_list
         ticket.save()
+        from apps.notifications.services import notify
+        for participant in {ticket.parent, ticket.teacher, ticket.student}:
+            if participant and participant.id != request.user.id:
+                notify(
+                    participant,
+                    type='ticket',
+                    title={'ar': 'رد جديد على تذكرتك', 'en': 'New reply on your ticket'},
+                    body={
+                        'ar': f"{request.user.email}: {text[:80]}",
+                        'en': f"{request.user.email}: {text[:80]}",
+                    },
+                    link='/school-followup',
+                    icon='💬',
+                )
         return Response(ParentTeacherTicketSerializer(ticket).data)
 
 

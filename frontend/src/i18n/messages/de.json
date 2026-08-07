@@ -109,7 +109,8 @@
     "gamification": "Gamification",
     "subscriptions": "Abonnements",
     "search": "Suchen",
-    "schoolFollowUp": "Schulfolge"
+    "schoolFollowUp": "Schulfolge",
+    "notifications": "Benachrichtigungen"
   },
   "home": {
     "subtitle": "Eine arabische digitale Bildungsplattform, die KI nutzt, um Lehrern und Schülern zu helfen",
@@ -1757,5 +1758,18 @@
     "duplicateValues": "Doppelte Werte.",
     "cannotDeleteUser": "Dieser Benutzer kann nicht gelöscht werden.",
     "unknown": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut."
+  },
+  "notifications": {
+    "title": "Benachrichtigungen",
+    "description": "Neueste Updates zu Bestellungen, Abonnements und Aktivitäten",
+    "markAllRead": "Alle als gelesen markieren",
+    "empty": "Noch keine Benachrichtigungen",
+    "viewAll": "Alle Benachrichtigungen anzeigen",
+    "open": "Öffnen",
+    "pushEnable": "Browser-Push-Benachrichtigungen aktivieren",
+    "filter": {
+      "all": "Alle",
+      "unread": "Ungelesen"
+    }
   }
 }

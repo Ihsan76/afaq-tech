@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 import { useAuthStore } from "@/store/auth";
 import { useTheme } from "@/hooks/useTheme";
 import LanguageSwitcher from "./LanguageSwitcher";
+import NotificationBell from "./NotificationBell";
 import { useApiList, usePrefetch } from "@/lib/useApi";
 
 interface DynamicMenuItem {
@@ -104,6 +105,7 @@ export default function Navbar() {
     { href: `/${locale}/dashboard`, label: t("nav.dashboard"), icon: "📊" },
     { href: `/${locale}/school-followup`, label: t("nav.schoolFollowUp"), icon: "🏫" },
     { href: `/${locale}/gamification`, label: t("nav.gamification"), icon: "🎮" },
+    { href: `/${locale}/notifications`, label: t("nav.notifications"), icon: "🔔" },
     { href: `/${locale}/subscriptions`, label: t("nav.subscriptions"), icon: "💳" },
     { href: `/${locale}/chat`, label: t("nav.chat"), icon: "🤖" },
     { href: `/${locale}/profile`, label: t("nav.profile"), icon: "👤" },
@@ -184,6 +186,9 @@ export default function Navbar() {
           {/* Right Tools (Language, Theme, User Menu / Auth Buttons) */}
           <div className="flex items-center gap-1 sm:gap-2 shrink-0">
             <LanguageSwitcher />
+
+            {/* Notifications Bell (desktop) */}
+            <NotificationBell />
 
             {/* Theme Selector */}
             <div ref={themeRef} className="relative">

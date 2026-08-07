@@ -112,7 +112,8 @@
     "chat": "AI Assistant",
     "subscriptions": "Subscriptions",
     "admin": "Admin",
-    "schoolFollowUp": "School Follow-up"
+    "schoolFollowUp": "School Follow-up",
+    "notifications": "Notifications"
   },
   "home": {
     "subtitle": "An Arabic digital educational platform using AI to help teachers and students",
@@ -1822,5 +1823,18 @@
     "duplicateValues": "Duplicate values.",
     "cannotDeleteUser": "This user may not be deleted.",
     "unknown": "Something went wrong. Please try again."
+  },
+  "notifications": {
+    "title": "Notifications",
+    "description": "Latest updates about your orders, subscriptions and activity",
+    "markAllRead": "Mark all as read",
+    "empty": "No notifications yet",
+    "viewAll": "View all notifications",
+    "open": "Open",
+    "pushEnable": "Enable browser push notifications",
+    "filter": {
+      "all": "All",
+      "unread": "Unread"
+    }
   }
 }

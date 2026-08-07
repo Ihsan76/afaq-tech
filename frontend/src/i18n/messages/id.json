@@ -109,7 +109,8 @@
     "gamification": "Gamifikasi",
     "subscriptions": "Langganan",
     "search": "Cari",
-    "schoolFollowUp": "Tindak Lanjut Sekolah"
+    "schoolFollowUp": "Tindak Lanjut Sekolah",
+    "notifications": "Notifikasi"
   },
   "home": {
     "subtitle": "Platform pendidikan digital Arab yang menggunakan AI untuk membantu guru dan siswa",
@@ -1757,5 +1758,18 @@
     "duplicateValues": "Nilai duplikat.",
     "cannotDeleteUser": "Pengguna ini tidak dapat dihapus.",
     "unknown": "Terjadi kesalahan. Silakan coba lagi."
+  },
+  "notifications": {
+    "title": "Notifikasi",
+    "description": "Pembaruan terbaru tentang pesanan, langganan, dan aktivitas Anda",
+    "markAllRead": "Tandai semua sebagai dibaca",
+    "empty": "Belum ada notifikasi",
+    "viewAll": "Lihat semua notifikasi",
+    "open": "Buka",
+    "pushEnable": "Aktifkan notifikasi push browser",
+    "filter": {
+      "all": "Semua",
+      "unread": "Belum dibaca"
+    }
   }
 }

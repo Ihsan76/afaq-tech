@@ -108,6 +108,18 @@ class PaymentProvider(ABC):
             'status',
             'updated_at',
         ])
+        from apps.notifications.services import notify
+        notify(
+            order.buyer,
+            type='payment',
+            title={'ar': 'تم تأكيد الدفع', 'en': 'Payment confirmed'},
+            body={
+                'ar': f"تم الدفع بنجاح للخدمة: {order.service.title.get('ar') or order.service.title.get('en', '')}",
+                'en': f"Payment successful for: {order.service.title.get('en') or order.service.title.get('ar', '')}",
+            },
+            link='/marketplace/orders/',
+            icon='✅',
+        )
         return True
 
     def mark_paid(self, kind, checkout_id, transaction_id=""):
