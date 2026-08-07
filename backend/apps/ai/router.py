@@ -84,12 +84,7 @@ class GeminiProvider(BaseProvider):
             )
 
     def health_check(self) -> bool:
-        try:
-            client = genai.Client(api_key=self.api_key or settings.GEMINI_API_KEY)
-            client.models.generate_content(model=self.model_name, contents="test")
-            return True
-        except Exception:
-            return False
+        return bool(self.api_key or settings.GEMINI_API_KEY)
 
 
 class OpenAIProvider(BaseProvider):
@@ -305,10 +300,12 @@ class ProviderRouter:
         return None
 
     def get_provider_order(self, feature: str) -> list[str]:
-        preferred = FEATURE_PREFERENCES.get(feature, [])
+        preferred = list(FEATURE_PREFERENCES.get(feature, []))
         for p in ALL_PROVIDERS:
             if p not in preferred:
                 preferred.append(p)
+        if "google" not in preferred:
+            preferred.append("google")
         return preferred
 
     def generate(self, prompt: str, feature: str = "general", system_instruction: str = "", use_cache: bool = True, cache_ttl: int = 86400, model_id: str = "") -> AIResponse:
