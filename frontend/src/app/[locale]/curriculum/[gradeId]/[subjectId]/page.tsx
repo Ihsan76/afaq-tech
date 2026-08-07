@@ -15,18 +15,16 @@ export default function CurriculumSubjectDetailPage() {
   const subjectId = params?.subjectId as string;
 
   const [selectedCountry, setSelectedCountry] = useState("");
-  const [selectedCurriculum, setSelectedCurriculum] = useState("");
 
   const { data: curriculaData } = useSWR(`/academics/curricula/`, fetcher);
   
-  const documentsQuery = `/academics/documents/?subject=${subjectId}&grade=${gradeId}${selectedCountry ? `&country=${encodeURIComponent(selectedCountry)}` : ""}${selectedCurriculum ? `&curriculum=${selectedCurriculum}` : ""}`;
+  const documentsQuery = `/academics/documents/?subject=${subjectId}&grade=${gradeId}${selectedCountry ? `&country=${encodeURIComponent(selectedCountry)}` : ""}`;
   const { data: documentsData, isLoading } = useSWR(documentsQuery, fetcher);
 
   const curriculaList = Array.isArray(curriculaData) ? curriculaData : (curriculaData?.results || []);
   const documentsList = Array.isArray(documentsData) ? documentsData : (documentsData?.results || []);
 
   const countries = Array.from(new Set(curriculaList.map((c: any) => c?.country).filter(Boolean)));
-  const filteredCurricula = curriculaList.filter((c: any) => !selectedCountry || c?.country === selectedCountry);
 
   return (
     <div className="min-h-screen py-12" style={{ background: "var(--color-background)" }}>
@@ -56,40 +54,21 @@ export default function CurriculumSubjectDetailPage() {
           </div>
         </div>
 
-        {/* Filters Bar: Country & Curriculum */}
+        {/* Filters Bar: Country only */}
         <div className="p-6 rounded-3xl mb-8 flex flex-wrap gap-4 items-center" style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", boxShadow: "var(--card-shadow)" }}>
-          <div className="flex-1 min-w-[200px]">
+          <div className="flex-1 min-w-[250px]">
             <label className="block text-xs font-bold mb-1.5 uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>
               {locale === "ar" ? "فرز حسب الدولة" : "Filter by Country"}
             </label>
             <select
               value={selectedCountry}
-              onChange={(e) => { setSelectedCountry(e.target.value); setSelectedCurriculum(""); }}
+              onChange={(e) => setSelectedCountry(e.target.value)}
               className="w-full px-4 py-2.5 rounded-xl border outline-none text-sm"
               style={{ background: "var(--color-background)", color: "var(--color-text)", borderColor: "var(--color-border)" }}
             >
               <option value="">{locale === "ar" ? "جميع الدول" : "All Countries"}</option>
               {countries.map((c: any) => (
                 <option key={c} value={c}>{c}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex-1 min-w-[200px]">
-            <label className="block text-xs font-bold mb-1.5 uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>
-              {locale === "ar" ? "فرز حسب المنهاج" : "Filter by Curriculum"}
-            </label>
-            <select
-              value={selectedCurriculum}
-              onChange={(e) => setSelectedCurriculum(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl border outline-none text-sm"
-              style={{ background: "var(--color-background)", color: "var(--color-text)", borderColor: "var(--color-border)" }}
-            >
-              <option value="">{locale === "ar" ? "جميع المناهج" : "All Curricula"}</option>
-              {filteredCurricula.map((curr: any) => (
-                <option key={curr?.id} value={curr?.id}>
-                  {curr?.translations?.[locale]?.name || curr?.translations?.ar?.name || curr?.name || `Curriculum ${curr?.id}`} ({curr?.year})
-                </option>
               ))}
             </select>
           </div>
