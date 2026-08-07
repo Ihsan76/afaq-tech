@@ -114,16 +114,19 @@ class PublicCurriculumDocumentListView(generics.ListAPIView):
         return {'request': self.request}
 
     def get_queryset(self):
-        qs = CurriculumDocument.objects.all()
+        qs = CurriculumDocument.objects.select_related('curriculum', 'subject').defer('extracted_text').all()
         subject_id = self.request.query_params.get('subject')
         curriculum_id = self.request.query_params.get('curriculum')
         grade_id = self.request.query_params.get('grade')
+        country = self.request.query_params.get('country')
         if subject_id:
             qs = qs.filter(subject_id=subject_id)
         if curriculum_id:
             qs = qs.filter(curriculum_id=curriculum_id)
         if grade_id:
             qs = qs.filter(curriculum__grade_id=grade_id)
+        if country:
+            qs = qs.filter(curriculum__country__icontains=country)
         return qs.order_by('-created_at')
 
 

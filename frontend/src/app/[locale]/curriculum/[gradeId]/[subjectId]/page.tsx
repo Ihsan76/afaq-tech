@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import useSWR from "swr";
@@ -13,7 +14,16 @@ export default function CurriculumSubjectDetailPage() {
   const gradeId = params.gradeId as string;
   const subjectId = params.subjectId as string;
 
-  const { data: documents } = useSWR(`/academics/documents/?subject=${subjectId}&grade=${gradeId}`, fetcher);
+  const [selectedCountry, setSelectedCountry] = useState("");
+  const [selectedCurriculum, setSelectedCurriculum] = useState("");
+
+  const { data: curricula } = useSWR(`/academics/curricula/`, fetcher);
+  
+  const documentsQuery = `/academics/documents/?subject=${subjectId}&grade=${gradeId}${selectedCountry ? `&country=${encodeURIComponent(selectedCountry)}` : ""}${selectedCurriculum ? `&curriculum=${selectedCurriculum}` : ""}`;
+  const { data: documents, isLoading } = useSWR(documentsQuery, fetcher);
+
+  const countries = Array.from(new Set((curricula || []).map((c: any) => c.country).filter(Boolean)));
+  const filteredCurricula = (curricula || []).filter((c: any) => !selectedCountry || c.country === selectedCountry);
 
   return (
     <div className="min-h-screen py-12" style={{ background: "var(--color-background)" }}>
@@ -43,16 +53,68 @@ export default function CurriculumSubjectDetailPage() {
           </div>
         </div>
 
+        {/* Filters Bar: Country & Curriculum */}
+        <div className="p-6 rounded-3xl mb-8 flex flex-wrap gap-4 items-center" style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", boxShadow: "var(--card-shadow)" }}>
+          <div className="flex-1 min-w-[200px]">
+            <label className="block text-xs font-bold mb-1.5 uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>
+              {locale === "ar" ? "فرز حسب الدولة" : "Filter by Country"}
+            </label>
+            <select
+              value={selectedCountry}
+              onChange={(e) => { setSelectedCountry(e.target.value); setSelectedCurriculum(""); }}
+              className="w-full px-4 py-2.5 rounded-xl border outline-none text-sm"
+              style={{ background: "var(--color-background)", color: "var(--color-text)", borderColor: "var(--color-border)" }}
+            >
+              <option value="">{locale === "ar" ? "جميع الدول" : "All Countries"}</option>
+              {countries.map((c: any) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex-1 min-w-[200px]">
+            <label className="block text-xs font-bold mb-1.5 uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>
+              {locale === "ar" ? "فرز حسب المنهاج" : "Filter by Curriculum"}
+            </label>
+            <select
+              value={selectedCurriculum}
+              onChange={(e) => setSelectedCurriculum(e.target.value)}
+              className="w-full px-4 py-2.5 rounded-xl border outline-none text-sm"
+              style={{ background: "var(--color-background)", color: "var(--color-text)", borderColor: "var(--color-border)" }}
+            >
+              <option value="">{locale === "ar" ? "جميع المناهج" : "All Curricula"}</option>
+              {filteredCurricula.map((curr: any) => (
+                <option key={curr.id} value={curr.id}>
+                  {curr.translations?.[locale]?.name || curr.translations?.ar?.name || curr.name || `Curriculum ${curr.id}`} ({curr.year})
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Scrollable Documents List */}
         <div className="p-8 rounded-3xl" style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", boxShadow: "var(--card-shadow)" }}>
           <h2 className="text-xl font-bold mb-4" style={{ color: "var(--color-text)", fontFamily: "var(--font-heading)" }}>
             {locale === "ar" ? "مستندات وكتب المنهاج المرفوعة" : "Uploaded Curriculum Documents"}
           </h2>
-          {documents?.results && documents.results.length > 0 ? (
-            <ul className="space-y-3">
+
+          {isLoading ? (
+            <div className="text-center py-12" style={{ color: "var(--color-text-muted)" }}>
+              {locale === "ar" ? "جاري تحميل المستندات..." : "Loading documents..."}
+            </div>
+          ) : documents?.results && documents.results.length > 0 ? (
+            <div className="max-h-[550px] overflow-y-auto pr-2 space-y-3">
               {documents.results.map((doc: any) => (
-                <li key={doc.id} className="p-4 rounded-xl flex flex-col gap-3" style={{ background: "var(--color-surface-alt)", border: "1px solid var(--color-border)" }}>
+                <div key={doc.id} className="p-4 rounded-xl flex flex-col gap-3" style={{ background: "var(--color-surface-alt)", border: "1px solid var(--color-border)" }}>
                   <div className="flex items-center justify-between gap-4">
-                    <span className="font-semibold" style={{ color: "var(--color-text)" }}>{doc.title}</span>
+                    <div>
+                      <span className="font-semibold block" style={{ color: "var(--color-text)" }}>{doc.title}</span>
+                      {doc.curriculum && (
+                        <span className="text-xs mt-0.5 inline-block px-2 py-0.5 rounded-md" style={{ background: "var(--color-primary-light)", color: "var(--color-primary)" }}>
+                          منهاج معتمد
+                        </span>
+                      )}
+                    </div>
                     <div className="flex gap-2 shrink-0">
                       <a href={doc.external_url || doc.download_url || `${API_URL}/academics/documents/${doc.id}/download/`} target="_blank" rel="noreferrer" className="text-sm px-4 py-2 rounded-lg font-medium text-white" style={{ background: "var(--color-primary)" }}>
                         {locale === "ar" ? "معاينة" : "Preview"}
@@ -72,12 +134,12 @@ export default function CurriculumSubjectDetailPage() {
                       </pre>
                     </details>
                   ) : null}
-                </li>
+                </div>
               ))}
-            </ul>
+            </div>
           ) : (
-            <p className="text-sm" style={{ color: "var(--color-text-muted)" }}>
-              {locale === "ar" ? "لا توجد مستندات مرفوعة لهذه المادة حتى الآن. يمكنك رفعها من لوحة التحكم (Admin)." : "No documents uploaded for this subject yet. You can upload them from the Admin panel."}
+            <p className="text-sm py-8 text-center" style={{ color: "var(--color-text-muted)" }}>
+              {locale === "ar" ? "لا توجد مستندات مرفوعة مطابقة للبحث أو لهذه المادة حتى الآن." : "No curriculum documents found matching your filter or for this subject yet."}
             </p>
           )}
         </div>
