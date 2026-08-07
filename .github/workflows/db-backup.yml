@@ -59,7 +59,7 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
-          curl -sS -X POST "$SUPABASE_URL/storage/v1/object/$BACKUP_BUCKET/$(date -u +%Y/%m)/$DUMP_FILE" \
+          curl -sS -X POST "$SUPABASE_URL/storage/v1/object/$BACKUP_BUCKET/backups/$DUMP_FILE" \
             -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
             -H "Content-Type: application/octet-stream" \
             --data-binary "@$DUMP_FILE" \
@@ -74,7 +74,7 @@ jobs:
           LIST=$(curl -sS -X POST "$SUPABASE_URL/storage/v1/object/list/$BACKUP_BUCKET" \
             -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
             -H "Content-Type: application/json" \
-            -d '{"prefix":"","limit":1000,"offset":0,"sortBy":{"column":"created_at","order":"desc"}}')
+            -d '{"prefix":"backups/","limit":1000,"offset":0,"sortBy":{"column":"created_at","order":"desc"}}')
           TOTAL=$(echo "$LIST" | jq 'length')
           echo "total backups: $TOTAL"
           if [ "$TOTAL" -gt "$RETENTION" ]; then
