@@ -3,6 +3,8 @@ name: Database Backup
 on:
   schedule:
     - cron: "20 1 * * *"
+  push:
+    branches: [master]
   workflow_dispatch:
 
 concurrency:
