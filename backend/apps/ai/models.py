@@ -266,3 +266,18 @@ class SubjectPromptProfile(models.Model):
 
     def __str__(self):
         return f"{self.grade_profile} - {self.subject}"
+
+
+class CountryPromptProfile(models.Model):
+    country = models.CharField(_('Country'), max_length=100, unique=True, help_text='e.g. الأردن، السعودية')
+    educational_framework = models.TextField(_('Educational Framework & Guidelines'), blank=True, help_text=_('Ministry guidelines and pedagogical rules for this country'))
+    is_active = models.BooleanField(_('Active'), default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = _('Country Prompt Profile')
+        verbose_name_plural = _('Country Prompt Profiles')
+
+    def __str__(self):
+        return self.country

@@ -116,6 +116,18 @@ class PromptBuilderService:
     def build_prompt(cls, feature_key='lesson_plan', language='ar', variables=None, learner_stage=None, subject=None, curriculum=None, grade=None):
         variables = variables or {}
 
+        from .models import CountryPromptProfile
+        country_name = getattr(curriculum, 'country', '') if curriculum else ''
+        if not country_name and grade and hasattr(grade, 'curricula'):
+            curr_obj = grade.curricula.order_by('-year', '-id').first()
+            if curr_obj:
+                country_name = curr_obj.country
+
+        if country_name:
+            c_profile = CountryPromptProfile.objects.filter(country__iexact=country_name, is_active=True).first()
+            if c_profile:
+                variables['country_framework'] = c_profile.educational_framework
+
         if grade is not None:
             constraints = cls.build_prompt_constraints(grade, subject=subject)
             variables.update(constraints)
@@ -140,16 +152,41 @@ class PromptBuilderService:
         elif feature_key in ('lesson_plan', 'worksheet', 'homework'):
             subj = variables.get('subject', '')
             grd = variables.get('grade', '')
+            country_fw = variables.get('country_framework', '')
             extra_inst = variables.get('extra_instructions', '')
             topic_rules = variables.get('topic_rules', '')
+            depth_guide = variables.get('content_depth_guidance', '')
+
             if feature_key == 'lesson_plan':
                 ttl = variables.get('title', '')
                 desc = variables.get('prompt_text', '')
                 curr = variables.get('curriculum_context', '')
-                user_msg = f"المادة الدراسية: {subj}\nالمرحلة الدراسية: {grd}\nعنوان الدرس: {ttl}\nوصف الدرس: {desc}\n\n{curr}\n\n{topic_rules}\n{extra_inst}\n\nيرجى الالتزام التام بالمادة والمرحلة والمنهاج الرسمي."
+                user_msg = f"""إطار الدولة التعليمي: {country_fw}
+المادة الدراسية: {subj}
+المرحلة الدراسية: {grd}
+عنوان الدرس: {ttl}
+وصف الدرس: {desc}
+
+{curr}
+
+إرشادات العمق المعرفي: {depth_guide}
+قواعد المادة: {topic_rules}
+تعليمات إضافية: {extra_inst}
+
+يرجى الالتزام التام بالمادة والمرحلة والمنهاج الرسمي وإطار الدولة التعليمي."""
             else:
                 plan_json = variables.get('plan_data', '')
-                user_msg = f"المادة: {subj}\nالمرحلة: {grd}\n\nخطة الدرس:\n{plan_json}\n\n{topic_rules}\n{extra_inst}\n\nقم بإنشاء {feature_key} باحترافية عالية ودقة أكاديمية تامة."
+                user_msg = f"""إطار الدولة التعليمي: {country_fw}
+المادة: {subj}
+المرحلة: {grd}
+
+خطة الدرس:
+{plan_json}
+
+قواعد المادة: {topic_rules}
+تعليمات إضافية: {extra_inst}
+
+قم بإنشاء {feature_key} باحترافية عالية ودقة أكاديمية تامة."""
         return system, user_msg
 
     @classmethod
