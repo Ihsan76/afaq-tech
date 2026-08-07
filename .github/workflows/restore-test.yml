@@ -48,7 +48,7 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
-          curl -sS -L "$SUPABASE_URL/storage/v1/object/download/$BACKUP_BUCKET/${{ steps.latest.outputs.name }}" \
+          curl -sS -L "$SUPABASE_URL/storage/v1/object/$BACKUP_BUCKET/backups/${{ steps.latest.outputs.name }}" \
             -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
             -o latest.dump
           ls -lh latest.dump
