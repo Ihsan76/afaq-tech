@@ -55,10 +55,12 @@ jobs:
 
       - name: Verify archive integrity (pg_restore --list)
         run: |
-          pg_restore --list latest.dump > /dev/null
-          ENTRIES=$(pg_restore --list latest.dump | grep -vc '^;')
+          PGRS=/usr/lib/postgresql/17/bin/pg_restore
+          "$PGRS" --version
+          "$PGRS" --list latest.dump > /dev/null
+          ENTRIES=$("$PGRS" --list latest.dump | grep -vc '^;')
           echo "Archive valid — $ENTRIES TOC entries"
 
       - name: Verify key tables exist
         run: |
-          pg_restore --list latest.dump | grep -E "TABLE (users_user|pages_page|core_translationkey|schools_school)" | head
+          /usr/lib/postgresql/17/bin/pg_restore --list latest.dump | grep -E "TABLE (users_user|pages_page|core_translationkey|schools_school)" | head

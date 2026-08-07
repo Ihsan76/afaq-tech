@@ -48,8 +48,10 @@ jobs:
           pass="${creds#*:}"
           [ "$port" = "6543" ] && port=5432
           export PGHOST="$host" PGPORT="$port" PGUSER="$user" PGPASSWORD="$pass" PGDATABASE="${db%%\?*}" PGSSLMODE=require
+          PGDMP=/usr/lib/postgresql/17/bin/pg_dump
+          "$PGDMP" --version
           TS=$(date -u +%Y%m%d_%H%M%S)
-          pg_dump --format=custom --no-owner --no-privileges \
+          "$PGDMP" --format=custom --no-owner --no-privileges \
             --compress=9 --file="afaq_${TS}.dump"
           ls -lh afaq_*.dump
           echo "DUMP_FILE=afaq_${TS}.dump" >> "$GITHUB_ENV"
