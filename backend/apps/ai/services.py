@@ -137,13 +137,17 @@ class PromptBuilderService:
         user_msg = ""
         if template_obj.user_message_template:
             user_msg = Template(template_obj.user_message_template).render(Context(variables))
-        elif feature_key == 'lesson_plan':
+        elif feature_key in ('lesson_plan', 'worksheet', 'homework'):
             subj = variables.get('subject', '')
             grd = variables.get('grade', '')
-            ttl = variables.get('title', '')
-            desc = variables.get('prompt_text', '')
-            curr = variables.get('curriculum_context', '')
-            user_msg = f"يرجى الالتزام التام والتطابق الحرفي مع البيانات التالية وعدم تغيير المادة أو المرحلة أو الموضوع:\n- المادة الدراسية: {subj}\n- المرحلة الدراسية: {grd}\n- عنوان الدرس: {ttl}\n- وصف الدرس: {desc}\n\n{curr}\n\nقم بإنشاء خطة الدرس المطلوبة حصرياً وفق هذا السياق والمادة والمرحلة."
+            if feature_key == 'lesson_plan':
+                ttl = variables.get('title', '')
+                desc = variables.get('prompt_text', '')
+                curr = variables.get('curriculum_context', '')
+                user_msg = f"يرجى الالتزام التام والتطابق الحرفي مع البيانات التالية وعدم تغيير المادة أو المرحلة أو الموضوع:\n- المادة الدراسية: {subj}\n- المرحلة الدراسية: {grd}\n- عنوان الدرس: {ttl}\n- وصف الدرس: {desc}\n\n{curr}\n\nقم بإنشاء خطة الدرس المطلوبة حصرياً وفق هذا السياق والمادة والمرحلة."
+            else:
+                plan_json = variables.get('plan_data', '')
+                user_msg = f"يرجى الالتزام التام بالمستوى الأكاديمي والعمري للطلاب ودقة الأسئلة والتمارين:\n- المادة: {subj}\n- المرحلة: {grd}\n\nخطة الدرس:\n{plan_json}\n\nقم بإنشاء {feature_key} باحترافية عالية ودقة رياضية/علمية تامة."
         return system, user_msg
 
     @classmethod
