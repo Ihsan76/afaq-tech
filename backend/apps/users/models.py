@@ -46,6 +46,7 @@ class User(AbstractUser):
     preferred_currency = models.CharField(_('Preferred Currency'), max_length=3, blank=True, default='')
 
     is_verified = models.BooleanField(_('Verified'), default=False)
+    phone_verified = models.BooleanField(_('Phone Verified'), default=False)
     phone = models.CharField(_('Phone'), max_length=20, blank=True)
     national_id = models.CharField(_('National ID'), max_length=30, blank=True, null=True, unique=True)
     avatar = models.URLField(_('Avatar'), blank=True)
@@ -80,6 +81,23 @@ class EmailVerification(models.Model):
     class Meta:
         verbose_name = _('Email Verification')
         verbose_name_plural = _('Email Verifications')
+
+    def is_valid(self):
+        return not self.used and self.expires_at > timezone.now()
+
+
+class PhoneVerification(models.Model):
+    """Short-lived verification code sent to the user's phone via SMS or WhatsApp."""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='phone_verifications')
+    phone = models.CharField(max_length=20)
+    code_hash = models.CharField(max_length=128)
+    expires_at = models.DateTimeField()
+    used = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = _('Phone Verification')
+        verbose_name_plural = _('Phone Verifications')
 
     def is_valid(self):
         return not self.used and self.expires_at > timezone.now()

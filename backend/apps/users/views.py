@@ -24,7 +24,7 @@ from apps.lessonplans.models import LessonPlan
 from apps.schools.models import School
 from apps.users.permissions import IsSystemAdmin, IsUsersAdmin
 
-from .models import EmailVerification, LoginAttempt
+from .models import EmailVerification, PhoneVerification, LoginAttempt
 from .serializers import RegisterSerializer, UserSerializer
 
 User = get_user_model()
@@ -436,6 +436,82 @@ class VerifyEmailConfirmView(APIView):
         user.is_verified = True
         user.save(update_fields=['is_verified'])
         return Response({'message': 'Email verified successfully', 'user': UserSerializer(user).data})
+
+
+def send_phone_verification_code(user, phone, channel="sms"):
+    code = f"{secrets.randbelow(900000) + 100000}"
+    code_hash = hashlib.sha256(code.encode()).hexdigest()
+    expires_at = timezone.now() + timedelta(minutes=10)
+    PhoneVerification.objects.create(
+        user=user,
+        phone=phone,
+        code_hash=code_hash,
+        expires_at=expires_at,
+    )
+    # In production, integrate SMS / WhatsApp API (e.g. Twilio / WhatsApp Business API) here.
+    return code
+
+
+class VerifyPhoneView(APIView):
+    """Send a verification code to the user's phone via SMS or WhatsApp."""
+    permission_classes = [permissions.AllowAny]
+    throttle_classes = [ResilientScopedRateThrottle]
+    throttle_scope = 'auth_verify'
+
+    def post(self, request):
+        phone = request.data.get('phone', '').strip()
+        channel = request.data.get('channel', 'sms').strip() # 'sms' or 'whatsapp'
+        user = request.user if request.user.is_authenticated else None
+
+        if not phone:
+            return Response({'error': 'Phone number is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not user:
+            user = User.objects.filter(phone=phone).first()
+            if not user:
+                return Response({'error': 'User not found with this phone number'}, status=status.HTTP_404_NOT_FOUND)
+
+        code = send_phone_verification_code(user, phone, channel)
+        return Response({
+            'message': f'Verification code sent via {channel}',
+            'debug_code': code,
+        })
+
+
+class VerifyPhoneConfirmView(APIView):
+    """Confirm phone verification code."""
+    permission_classes = [permissions.AllowAny]
+    throttle_classes = [ResilientScopedRateThrottle]
+    throttle_scope = 'auth_verify'
+
+    def post(self, request):
+        phone = request.data.get('phone', '').strip()
+        code = request.data.get('code', '').strip()
+        user = request.user if request.user.is_authenticated else None
+
+        if not phone or not code:
+            return Response({'error': 'Phone and code are required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not user:
+            user = User.objects.filter(phone=phone).first()
+            if not user:
+                return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        verification = PhoneVerification.objects.filter(
+            user=user, phone=phone, used=False
+        ).order_by('-created_at').first()
+
+        if not verification or not verification.is_valid():
+            return Response({'error': 'Code expired or already used'}, status=status.HTTP_400_BAD_REQUEST)
+        if verification.code_hash != hashlib.sha256(code.encode()).hexdigest():
+            return Response({'error': 'Invalid code'}, status=status.HTTP_400_BAD_REQUEST)
+
+        verification.used = True
+        verification.save()
+        user.phone_verified = True
+        user.phone = phone
+        user.save(update_fields=['phone_verified', 'phone'])
+        return Response({'message': 'Phone verified successfully', 'user': UserSerializer(user).data})
 
 
 def _state_payload(locale):

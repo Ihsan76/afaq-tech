@@ -13,6 +13,8 @@ urlpatterns = [
     path('reset-password/', views.ResetPasswordView.as_view(), name='reset_password'),
     path('verify-email/', views.VerifyEmailView.as_view(), name='verify_email'),
     path('verify-email/confirm/', views.VerifyEmailConfirmView.as_view(), name='verify_email_confirm'),
+    path('verify-phone/', views.VerifyPhoneView.as_view(), name='verify_phone'),
+    path('verify-phone/confirm/', views.VerifyPhoneConfirmView.as_view(), name='verify_phone_confirm'),
     path('google/', views.GoogleLoginView.as_view(), name='google_login'),
     path('google/callback/', views.GoogleCallbackView.as_view(), name='google_callback'),
     # Admin
