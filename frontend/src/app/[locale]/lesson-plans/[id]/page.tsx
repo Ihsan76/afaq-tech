@@ -232,8 +232,51 @@ export default function LessonPlanDetailPage() {
   if (!plan) return null;
 
   const rawData = plan.plan_data || {};
-  const data = (rawData as any).lesson_plan || (rawData as any).plan || rawData;
-  const isStructured = data.objectives || data.main_activity || data.introduction || data.procedures;
+  let data = (rawData as any).lesson_plan || (rawData as any).plan || rawData;
+
+  // Normalize new schema (metadata, learning_outcomes, materials, lesson_phases) to standard frontend keys if needed
+  if (data.learning_outcomes && !data.objectives) {
+    data.objectives = data.learning_outcomes;
+  }
+  if (data.materials && !data.materials_needed) {
+    data.materials_needed = data.materials;
+  }
+  if (data.metadata) {
+    if (data.metadata.lesson_title && !data.title) data.title = data.metadata.lesson_title;
+    if (data.metadata.description && !data.introduction) data.introduction = data.metadata.description;
+  }
+  if (data.lesson_phases && !data.main_activity) {
+    const phases = data.lesson_phases;
+    const steps: any[] = [];
+    const phaseKeys = [
+      { key: "warm_up", title: "التهيئة والتمهيد (Warm-up)" },
+      { key: "exploration", title: "الاستكشاف (Exploration)" },
+      { key: "explanation_and_modeling", title: "الشرح والنمذجة (Explanation & Modeling)" },
+      { key: "guided_practice", title: "التدريب الموجه (Guided Practice)" },
+      { key: "closure_and_assessment", title: "الإغلاق والتقييم (Closure & Assessment)" },
+    ];
+    let stepNum = 1;
+    for (const pk of phaseKeys) {
+      if (phases[pk.key]) {
+        const pObj = phases[pk.key];
+        const desc = Array.isArray(pObj.activities) ? "• " + pObj.activities.join("\n• ") : (pObj.description || String(pObj));
+        steps.push({
+          step: stepNum++,
+          title: pk.title,
+          description: desc,
+          duration_minutes: pObj.duration ? parseInt(pObj.duration) : undefined,
+        });
+      }
+    }
+    if (steps.length > 0) {
+      data.main_activity = steps;
+    }
+  }
+  if (data.assessment_tools && !data.assessment) {
+    data.assessment = Array.isArray(data.assessment_tools) ? data.assessment_tools.join("\n") : data.assessment_tools;
+  }
+
+  const isStructured = data.objectives || data.main_activity || data.introduction || data.procedures || data.lesson_phases || data.metadata;
 
   const safeText = (value: unknown): string => {
     if (typeof value === "string") return value;
