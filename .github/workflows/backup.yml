@@ -26,18 +26,27 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends postgresql-client
 
-      - name: Build session-pooler URL
-        id: conn
+      - name: pg_dump (custom format, gzip) via session pooler
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
-          url="${{ secrets.DATABASE_URL }}"
-          url="${url/:6543/:5432}"
-          url="${url}?sslmode=require"
-          echo "url=$url" >> "$GITHUB_OUTPUT"
-
-      - name: pg_dump (custom format, gzip)
-        run: |
+          export $(python3 - <<'EOF'
+import os, re, urllib.parse
+url = os.environ["DATABASE_URL"]
+m = re.match(r'postgres(?:ql)?://(?:([^:]+):([^@]*)@)?([^:]+)(?::(\d+))?/(.+)', url)
+user, pw, host, port, db = m.group(1) or "postgres", m.group(2) or "", m.group(3), m.group(4), m.group(5)
+db = db.split("?")[0]
+port = "5432" if port in (None, "6543") else port  # session pooler for pg_dump
+print(f"PGHOST={host}")
+print(f"PGPORT={port}")
+print(f"PGUSER={user}")
+print(f"PGPASSWORD={pw}")
+print(f"PGDATABASE={db}")
+print("PGSSLMODE=require")
+EOF
+          )
           TS=$(date -u +%Y%m%d_%H%M%S)
-          pg_dump "$URL" --format=custom --no-owner --no-privileges \
+          pg_dump --format=custom --no-owner --no-privileges \
             --compress=9 --file="afaq_${TS}.dump"
           ls -lh afaq_*.dump
           echo "DUMP_FILE=afaq_${TS}.dump" >> "$GITHUB_ENV"
@@ -63,16 +72,10 @@ jobs:
             -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
             -H "Content-Type: application/json" \
             -d '{"prefix":"","limit":1000,"offset":0,"sortBy":{"column":"created_at","order":"desc"}}')
-          echo "$LIST" > /tmp/list.json
-          OLD=$(echo "$LIST" | jq -r --argjson keep "$RETENTION" '
-            .[].name as $n |
-            . | length | tostring' | head -1)
           TOTAL=$(echo "$LIST" | jq 'length')
           echo "total backups: $TOTAL"
           if [ "$TOTAL" -gt "$RETENTION" ]; then
-            TO_DELETE=$(echo "$LIST" | jq -c --argjson keep "$RETENTION" '[.[$keep:][] | {name: .name}]')
-            echo "$TO_DELETE" | jq -r '.[].name' | head -5
-            echo "$TO_DELETE" | jq -c '{prefixes: [.[].name]}' | \
+            echo "$LIST" | jq -c --argjson keep "$RETENTION" '{prefixes: [.[$keep:][].name]}' | \
               curl -sS -X DELETE "$SUPABASE_URL/storage/v1/object/$BACKUP_BUCKET" \
                 -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
                 -H "Content-Type: application/json" \
