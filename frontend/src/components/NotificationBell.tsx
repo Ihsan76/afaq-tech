@@ -70,6 +70,8 @@ export default function NotificationBell() {
     }
   };
 
+  if (!user) return null;
+
   return (
     <div ref={bellRef} className="relative hidden lg:block">
       <button

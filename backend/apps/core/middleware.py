@@ -27,6 +27,9 @@ class SecurityHeadersMiddleware(MiddlewareMixin):
     }
 
     def process_response(self, request, response):
+        # API-only hardening — Django admin/static need their own styles/scripts.
+        if not request.path.startswith('/api/'):
+            return response
         for key, value in self.HEADERS.items():
             if key not in response:
                 response[key] = value
