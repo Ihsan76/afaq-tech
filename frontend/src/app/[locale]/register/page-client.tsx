@@ -21,6 +21,8 @@ export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [localError, setLocalError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -66,11 +68,29 @@ export default function RegisterPage() {
             </div>
             <div>
               <label className="block text-sm font-semibold mb-2" style={{ color: "var(--color-text-secondary)" }}>{t("password")}</label>
-              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className={inputCls} style={{ borderColor: "var(--color-border)", color: "var(--color-text)", backgroundColor: "var(--color-surface)" }} placeholder="••••••••" required minLength={8} />
+              <div className="relative">
+                <input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} className="w-full px-4 py-3.5 ps-4 pe-12 border rounded-2xl focus:ring-2 transition-all" style={{ borderColor: "var(--color-border)", color: "var(--color-text)", backgroundColor: "var(--color-surface)" }} placeholder="••••••••" required minLength={8} />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 end-0 px-4 flex items-center text-sm font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+                >
+                  {showPassword ? "👁️‍🗨️" : "👁️"}
+                </button>
+              </div>
             </div>
             <div>
               <label className="block text-sm font-semibold mb-2" style={{ color: "var(--color-text-secondary)" }}>{t("confirmPassword")}</label>
-              <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className={inputCls} style={{ borderColor: "var(--color-border)", color: "var(--color-text)", backgroundColor: "var(--color-surface)" }} placeholder="••••••••" required />
+              <div className="relative">
+                <input type={showConfirmPassword ? "text" : "password"} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="w-full px-4 py-3.5 ps-4 pe-12 border rounded-2xl focus:ring-2 transition-all" style={{ borderColor: "var(--color-border)", color: "var(--color-text)", backgroundColor: "var(--color-surface)" }} placeholder="••••••••" required />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute inset-y-0 end-0 px-4 flex items-center text-sm font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+                >
+                  {showConfirmPassword ? "👁️‍🗨️" : "👁️"}
+                </button>
+              </div>
             </div>
             <button type="submit" disabled={isLoading}
               className="w-full text-white py-3.5 rounded-2xl font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed mt-2"

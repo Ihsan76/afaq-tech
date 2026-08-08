@@ -102,6 +102,23 @@ export default function AdminSchoolsPage() {
   const [showAnnouncementModal, setShowAnnouncementModal] = useState(false);
   const [announcementForm, setAnnouncementForm] = useState({ school: 0, section: "", title: "", content: "", is_emergency: false });
 
+  // Academic Year & Transfer Modals state
+  const [showYearModal, setShowYearModal] = useState(false);
+  const [newYearName, setNewYearName] = useState("");
+  const [creatingYear, setCreatingYear] = useState(false);
+
+  const [showPromoteModal, setShowPromoteModal] = useState(false);
+  const [sourceYear, setSourceYear] = useState<AcademicYear | null>(null);
+  const [targetYearId, setTargetYearId] = useState<number | string>("");
+  const [promoteLoading, setPromoteLoading] = useState(false);
+  const [promoteResult, setPromoteResult] = useState<{ promoted: any[]; skipped: any[]; source_year: string; target_year: string } | null>(null);
+
+  const [showTransferModal, setShowTransferModal] = useState(false);
+  const [transferCode, setTransferCode] = useState("");
+  const [transferTargetSectionId, setTransferTargetSectionId] = useState<number | string>("");
+  const [transferLoading, setTransferLoading] = useState(false);
+  const [transferResult, setTransferResult] = useState<{ status: string; student: string; to_section: string } | null>(null);
+
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
 
   const fetchSchools = useCallback(async () => {
@@ -154,10 +171,84 @@ export default function AdminSchoolsPage() {
 
   // Lock body scroll while a modal is open
   useEffect(() => {
-    const modalOpen = showSchoolModal || showAnnouncementModal;
+    const modalOpen = showSchoolModal || showAnnouncementModal || showYearModal || showPromoteModal || showTransferModal;
     document.body.style.overflow = modalOpen ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
-  }, [showSchoolModal, showAnnouncementModal]);
+  }, [showSchoolModal, showAnnouncementModal, showYearModal, showPromoteModal, showTransferModal]);
+
+  const handleCreateYear = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newYearName.trim()) return;
+    setCreatingYear(true);
+    try {
+      await api.post("/schools/academic-years/", { name: newYearName.trim() });
+      setNewYearName("");
+      setShowYearModal(false);
+      fetchOtherTab();
+    } catch (err) {
+      alert("تعذر إنشاء العام الدراسي");
+    } finally {
+      setCreatingYear(false);
+    }
+  };
+
+  const handleOpenPromoteModal = (year: AcademicYear) => {
+    setSourceYear(year);
+    setTargetYearId("");
+    setPromoteResult(null);
+    setShowPromoteModal(true);
+  };
+
+  const handleRunPromotion = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!sourceYear || !targetYearId) return;
+    setPromoteLoading(true);
+    try {
+      const res = await api.post(`/schools/academic-years/${sourceYear.id}/promote/`, {
+        target_year_id: Number(targetYearId),
+      });
+      setPromoteResult(res.data);
+      fetchOtherTab();
+    } catch (err: any) {
+      alert(err.response?.data?.error || "حدث خطأ أثناء الترفيع السنوي");
+    } finally {
+      setPromoteLoading(false);
+    }
+  };
+
+  const handleOpenTransferModal = async () => {
+    setTransferCode("");
+    setTransferTargetSectionId("");
+    setTransferResult(null);
+    setShowTransferModal(true);
+    if (sections.length === 0) {
+      try {
+        const res = await api.get("/schools/sections/");
+        setSections(res.data.results || res.data);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+  };
+
+  const handleTransferByCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!transferCode.trim() || !transferTargetSectionId) return;
+    setTransferLoading(true);
+    try {
+      const res = await api.post("/schools/enrollments/transfer_by_code/", {
+        transfer_code: transferCode.trim(),
+        national_id: transferCode.trim(),
+        target_section_id: Number(transferTargetSectionId),
+      });
+      setTransferResult(res.data);
+      fetchOtherTab();
+    } catch (err: any) {
+      alert(err.response?.data?.error || "تعذر نقل الطالب بهذا الرمز/الرقم الوطني");
+    } finally {
+      setTransferLoading(false);
+    }
+  };
 
   const handleOpenCreateModal = () => {
     setEditingSchoolId(null);
@@ -273,7 +364,7 @@ export default function AdminSchoolsPage() {
           <h1 className="text-2xl sm:text-3xl font-bold text-[var(--color-text)]">{t("title")}</h1>
           <p className="text-[var(--color-text-muted)] mt-1">{t("subtitle")}</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
           {activeTab === "schools" && (
             <button
               onClick={handleOpenCreateModal}
@@ -281,6 +372,22 @@ export default function AdminSchoolsPage() {
             >
               + {commonT("add")} {t("schoolsList")}
             </button>
+          )}
+          {activeTab === "years" && (
+            <>
+              <button
+                onClick={() => setShowYearModal(true)}
+                className="px-5 py-2.5 bg-[var(--color-primary)] text-white rounded-2xl hover:opacity-90 font-medium transition-all shadow-sm"
+              >
+                + {t("createYear")}
+              </button>
+              <button
+                onClick={handleOpenTransferModal}
+                className="px-5 py-2.5 bg-[var(--color-surface-alt)] border border-[var(--color-border)] text-[var(--color-text)] rounded-2xl hover:opacity-90 font-medium transition-all shadow-sm"
+              >
+                🔀 {t("transferByCode")}
+              </button>
+            </>
           )}
           {activeTab === "announcements" && (
             <button
@@ -475,13 +582,32 @@ export default function AdminSchoolsPage() {
             {activeTab === "years" && (
               <div className="space-y-4">
                 {academicYears.map((y) => (
-                  <div key={y.id} className="flex justify-between items-center p-4 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-alt)]">
-                    <span className="font-bold text-[var(--color-text)]">{y.name}</span>
-                    {y.is_current && (
-                      <span className="bg-[var(--color-success-light)] text-[var(--color-success)] text-xs px-3 py-1 rounded-full font-medium">{t("currentYear")}</span>
-                    )}
+                  <div key={y.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-alt)]">
+                    <div className="flex items-center gap-3">
+                      <span className="font-bold text-lg text-[var(--color-text)]">{y.name}</span>
+                      {y.is_current ? (
+                        <span className="bg-[var(--color-success-light)] text-[var(--color-success)] text-xs px-3 py-1 rounded-full font-bold">
+                          {t("currentYear")}
+                        </span>
+                      ) : (
+                        <span className="bg-[var(--color-muted)] text-[var(--color-text-muted)] text-xs px-3 py-1 rounded-full font-medium">
+                          📦 {t("archive")}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleOpenPromoteModal(y)}
+                        className="px-4 py-2 bg-[var(--color-primary)] text-white text-xs sm:text-sm rounded-xl font-bold hover:opacity-90 transition-all shadow-sm"
+                      >
+                        🚀 {t("promoteTitle")}
+                      </button>
+                    </div>
                   </div>
                 ))}
+                {academicYears.length === 0 && (
+                  <div className="text-[var(--color-text-muted)] text-center py-8">{commonT("noResults")}</div>
+                )}
               </div>
             )}
 
@@ -733,6 +859,190 @@ export default function AdminSchoolsPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Create Year Modal */}
+      {showYearModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto" onClick={(e) => e.target === e.currentTarget && setShowYearModal(false)}>
+          <div className="bg-[var(--color-surface)] rounded-3xl max-w-md w-full p-6 space-y-6 shadow-xl my-auto">
+            <h2 className="text-xl font-bold text-[var(--color-text)]">{t("createYear")}</h2>
+            <form onSubmit={handleCreateYear} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">{t("academicYears")}</label>
+                <input
+                  type="text"
+                  required
+                  placeholder={t("yearNamePlaceholder")}
+                  className="w-full px-4 py-3 border border-[var(--color-border)] rounded-2xl outline-none"
+                  value={newYearName}
+                  onChange={(e) => setNewYearName(e.target.value)}
+                />
+              </div>
+              <div className="flex justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowYearModal(false)}
+                  className="px-5 py-2.5 bg-[var(--color-muted)] text-[var(--color-text-secondary)] rounded-2xl font-medium"
+                >
+                  {commonT("cancel")}
+                </button>
+                <button
+                  type="submit"
+                  disabled={creatingYear}
+                  className="px-5 py-2.5 bg-[var(--color-primary)] text-white rounded-2xl font-medium disabled:opacity-50"
+                >
+                  {creatingYear ? commonT("loading") : commonT("save")}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Promote Academic Year Modal */}
+      {showPromoteModal && sourceYear && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto" onClick={(e) => e.target === e.currentTarget && setShowPromoteModal(false)}>
+          <div className="bg-[var(--color-surface)] rounded-3xl max-w-lg w-full p-6 space-y-6 shadow-xl my-auto">
+            <div>
+              <h2 className="text-xl font-bold text-[var(--color-text)]">{t("promoteTitle")} ({sourceYear.name})</h2>
+              <p className="text-sm text-[var(--color-text-muted)] mt-1">{t("promoteDesc")}</p>
+            </div>
+
+            {promoteResult ? (
+              <div className="space-y-4">
+                <div className="p-4 rounded-2xl bg-[var(--color-success-light)] text-[var(--color-success)] font-medium text-sm">
+                  ✅ {t("promoteSuccess")}: {promoteResult.source_year} → {promoteResult.target_year}
+                </div>
+                <div className="text-sm space-y-1 text-[var(--color-text-secondary)]">
+                  <div>🎯 {t("promotedStudents")}: <strong className="text-[var(--color-text)]">{promoteResult.promoted.length}</strong></div>
+                  <div>⚠️ {t("skippedStudents")}: <strong className="text-[var(--color-text)]">{promoteResult.skipped.length}</strong></div>
+                </div>
+                <div className="flex justify-end pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowPromoteModal(false)}
+                    className="px-5 py-2.5 bg-[var(--color-primary)] text-white rounded-2xl font-medium"
+                  >
+                    {commonT("close")}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <form onSubmit={handleRunPromotion} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">{t("selectTargetYear")}</label>
+                  <select
+                    required
+                    className="w-full px-4 py-3 border border-[var(--color-border)] rounded-2xl bg-[var(--color-surface)] outline-none"
+                    value={targetYearId}
+                    onChange={(e) => setTargetYearId(e.target.value)}
+                  >
+                    <option value="">{t("selectTargetYear")}</option>
+                    {academicYears
+                      .filter((y) => y.id !== sourceYear.id)
+                      .map((y) => (
+                        <option key={y.id} value={y.id}>{y.name} {y.is_current ? `(${t("currentYear")})` : ""}</option>
+                      ))}
+                  </select>
+                </div>
+                <div className="flex justify-end gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowPromoteModal(false)}
+                    className="px-5 py-2.5 bg-[var(--color-muted)] text-[var(--color-text-secondary)] rounded-2xl font-medium"
+                  >
+                    {commonT("cancel")}
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={promoteLoading || !targetYearId}
+                    className="px-5 py-2.5 bg-[var(--color-primary)] text-white rounded-2xl font-medium disabled:opacity-50"
+                  >
+                    {promoteLoading ? commonT("loading") : t("promoteRun")}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Transfer Student By Code Modal */}
+      {showTransferModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto" onClick={(e) => e.target === e.currentTarget && setShowTransferModal(false)}>
+          <div className="bg-[var(--color-surface)] rounded-3xl max-w-lg w-full p-6 space-y-6 shadow-xl my-auto">
+            <div>
+              <h2 className="text-xl font-bold text-[var(--color-text)]">🔀 {t("transferByCode")}</h2>
+            </div>
+
+            {transferResult ? (
+              <div className="space-y-4">
+                <div className="p-4 rounded-2xl bg-[var(--color-success-light)] text-[var(--color-success)] font-medium text-sm">
+                  ✅ {t("transferSuccess")}
+                </div>
+                <div className="text-sm space-y-1 text-[var(--color-text-secondary)]">
+                  <div>👤 الطالب: <strong className="text-[var(--color-text)]">{transferResult.student}</strong></div>
+                  <div>🏫 الشعبة الجديدة: <strong className="text-[var(--color-text)]">{transferResult.to_section}</strong></div>
+                </div>
+                <div className="flex justify-end pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowTransferModal(false)}
+                    className="px-5 py-2.5 bg-[var(--color-primary)] text-white rounded-2xl font-medium"
+                  >
+                    {commonT("close")}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <form onSubmit={handleTransferByCode} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">{t("transferCodeLabel")}</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder={t("transferCodePlaceholder")}
+                    className="w-full px-4 py-3 border border-[var(--color-border)] rounded-2xl outline-none"
+                    value={transferCode}
+                    onChange={(e) => setTransferCode(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">{t("transferTo")}</label>
+                  <select
+                    required
+                    className="w-full px-4 py-3 border border-[var(--color-border)] rounded-2xl bg-[var(--color-surface)] outline-none"
+                    value={transferTargetSectionId}
+                    onChange={(e) => setTransferTargetSectionId(e.target.value)}
+                  >
+                    <option value="">{t("selectSection")}</option>
+                    {sections.map((sec) => (
+                      <option key={sec.id} value={sec.id}>
+                        {sec.school_name} - {sec.grade_name} ({sec.name}) [{sec.academic_year_name}]
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex justify-end gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowTransferModal(false)}
+                    className="px-5 py-2.5 bg-[var(--color-muted)] text-[var(--color-text-secondary)] rounded-2xl font-medium"
+                  >
+                    {commonT("cancel")}
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={transferLoading || !transferCode.trim() || !transferTargetSectionId}
+                    className="px-5 py-2.5 bg-[var(--color-primary)] text-white rounded-2xl font-medium disabled:opacity-50"
+                  >
+                    {transferLoading ? commonT("loading") : t("transferSubmit")}
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}

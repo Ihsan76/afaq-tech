@@ -17,6 +17,7 @@ export default function LoginPage() {
   const { login, isLoading, error } = useAuthStore();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [localError, setLocalError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -65,10 +66,19 @@ export default function LoginPage() {
 
             <div>
               <label className="block text-sm font-semibold mb-2" style={{ color: "var(--color-text-secondary)" }}>{t("password")}</label>
-              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3.5 border rounded-2xl focus:ring-2 transition-all"
-                style={{ borderColor: "var(--color-border)", color: "var(--color-text)", backgroundColor: "var(--color-surface)" }}
-                placeholder="••••••••" required />
+              <div className="relative">
+                <input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-4 py-3.5 ps-4 pe-12 border rounded-2xl focus:ring-2 transition-all"
+                  style={{ borderColor: "var(--color-border)", color: "var(--color-text)", backgroundColor: "var(--color-surface)" }}
+                  placeholder="••••••••" required />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 end-0 px-4 flex items-center text-sm font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+                >
+                  {showPassword ? "👁️‍🗨️" : "👁️"}
+                </button>
+              </div>
               <div className="text-right mt-2.5">
                 <Link href={`/${locale}/forgot-password`} className="text-sm font-medium transition-colors" style={{ color: "var(--color-primary)" }}>
                   {t("forgotPassword")}

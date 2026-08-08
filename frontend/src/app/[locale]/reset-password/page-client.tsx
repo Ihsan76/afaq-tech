@@ -15,6 +15,8 @@ export default function ResetPasswordPage() {
   const uid = searchParams.get("uid");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
@@ -60,11 +62,29 @@ export default function ResetPasswordPage() {
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div>
                   <label className="block text-sm font-semibold mb-2" style={{ color: "var(--color-text-secondary)" }}>{t("password")}</label>
-                  <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full px-4 py-3.5 border rounded-2xl focus:ring-2 transition-all" style={{ borderColor: "var(--color-border)", color: "var(--color-text)", backgroundColor: "var(--color-surface)" }} placeholder="••••••••" required minLength={8} />
+                  <div className="relative">
+                    <input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} className="w-full px-4 py-3.5 ps-4 pe-12 border rounded-2xl focus:ring-2 transition-all" style={{ borderColor: "var(--color-border)", color: "var(--color-text)", backgroundColor: "var(--color-surface)" }} placeholder="••••••••" required minLength={8} />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute inset-y-0 end-0 px-4 flex items-center text-sm font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+                    >
+                      {showPassword ? "👁️‍🗨️" : "👁️"}
+                    </button>
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm font-semibold mb-2" style={{ color: "var(--color-text-secondary)" }}>{t("confirmPassword")}</label>
-                  <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="w-full px-4 py-3.5 border rounded-2xl focus:ring-2 transition-all" style={{ borderColor: "var(--color-border)", color: "var(--color-text)", backgroundColor: "var(--color-surface)" }} placeholder="••••••••" required />
+                  <div className="relative">
+                    <input type={showConfirmPassword ? "text" : "password"} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="w-full px-4 py-3.5 ps-4 pe-12 border rounded-2xl focus:ring-2 transition-all" style={{ borderColor: "var(--color-border)", color: "var(--color-text)", backgroundColor: "var(--color-surface)" }} placeholder="••••••••" required />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute inset-y-0 end-0 px-4 flex items-center text-sm font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+                    >
+                      {showConfirmPassword ? "👁️‍🗨️" : "👁️"}
+                    </button>
+                  </div>
                 </div>
                 <button type="submit" disabled={isLoading} className="w-full text-white py-3.5 rounded-2xl font-semibold transition-all disabled:opacity-50" style={{ background: "linear-gradient(135deg, var(--color-primary), var(--color-secondary))", boxShadow: "var(--btn-shadow)" }}>
                   {isLoading ? "..." : t("resetPassword")}
