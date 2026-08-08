@@ -1,20 +1,53 @@
-"use client";
+import type { Metadata } from "next";
+import JsonLd from "@/components/JsonLd";
+import { SITE_URL, buildMetadata, getCmsPageSeo, localizedValue } from "@/lib/metadata";
+import HomePageClient from "./page-client";
 
-import DynamicPage from "@/components/DynamicPage";
-import { BlockData } from "@/components/landing/BlockRenderer";
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const seo = await getCmsPageSeo(locale, "homepage");
 
-const FALLBACK_BLOCKS: BlockData[] = [
-  { id: 0, block_type: "platform_hero", content: {}, styles: {}, layout: {}, animation: {}, is_active: true, order: 0 },
-  { id: 1, block_type: "platform_stats", content: {}, styles: {}, layout: {}, animation: {}, is_active: true, order: 1 },
-  { id: 2, block_type: "services_showcase", content: {}, styles: {}, layout: {}, animation: {}, is_active: true, order: 2 },
-  { id: 3, block_type: "portfolio", content: {}, styles: {}, layout: {}, animation: {}, is_active: true, order: 3 },
-  { id: 4, block_type: "platform_how_it_works", content: {}, styles: {}, layout: {}, animation: {}, is_active: true, order: 4 },
-  { id: 5, block_type: "testimonials", content: {}, styles: {}, layout: {}, animation: {}, is_active: true, order: 5 },
-  { id: 6, block_type: "pricing", content: {}, styles: {}, layout: {}, animation: {}, is_active: true, order: 6 },
-  { id: 7, block_type: "faq", content: {}, styles: {}, layout: {}, animation: {}, is_active: true, order: 7 },
-  { id: 8, block_type: "cta", content: {}, styles: {}, layout: {}, animation: {}, is_active: true, order: 8 },
-];
+  return buildMetadata({
+    locale,
+    path: "/",
+    title: seo?.title || `${localizedValue({ ar: "آفاق تكنولوجي", en: "Afaq Tech" }, locale)} — ${localizedValue({ ar: "منصة رقمية", en: "Digital Platform" }, locale)}`,
+    description: seo?.description,
+    type: "website",
+  });
+}
 
-export default function HomePage() {
-  return <DynamicPage slug="homepage" fallbackBlocks={FALLBACK_BLOCKS} />;
+export default async function HomePage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  const seo = await getCmsPageSeo(locale, "homepage");
+  const title = seo?.title || localizedValue({ ar: "آفاق تكنولوجي", en: "Afaq Tech" }, locale);
+  const description = seo?.description || localizedValue({ ar: "منصة تعليمية رقمية شاملة", en: "A comprehensive digital education platform" }, locale);
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "آفاق تكنولوجي | Afaq Tech",
+    url: SITE_URL,
+    description,
+    inLanguage: [locale],
+    publisher: {
+      "@type": "Organization",
+      name: "آفاق تكنولوجي",
+      url: SITE_URL,
+    },
+  };
+
+  return (
+    <>
+      <JsonLd data={jsonLd} />
+      <HomePageClient />
+    </>
+  );
 }
