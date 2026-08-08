@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { locales, localeNames } from "@/i18n/config";
 import NavbarWrapper from "@/components/NavbarWrapper";
+import ContextualSidebar from "@/components/ContextualSidebar";
 import Footer from "@/components/Footer";
 import HtmlAttrs from "@/components/HtmlAttrs";
 import ChatWidget from "@/components/ChatWidget";
@@ -62,7 +63,12 @@ export default async function LocaleLayout({
       <NextIntlClientProvider messages={messages}>
         <TranslationProvider locale={locale} messages={messages}>
           <NavbarWrapper />
-          {children}
+          <div className="flex min-h-[calc(100vh-4rem)]">
+            <ContextualSidebar />
+            <div className="flex-1 min-w-0">
+              {children}
+            </div>
+          </div>
           {/* Footer */}
           <Footer />
           <ChatWidget />
