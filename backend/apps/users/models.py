@@ -9,7 +9,9 @@ from .managers import UserManager
 class User(AbstractUser):
     class Role(models.TextChoices):
         STUDENT = 'student', _('Student')
+        USER = 'user', _('General User')
         TEACHER = 'teacher', _('Teacher')
+        INSTRUCTOR = 'instructor', _('Instructor')
         PARENT = 'parent', _('Parent')
         CONTENT_CREATOR = 'creator', _('Content Creator')
         ADMIN = 'admin', _('System Admin')
