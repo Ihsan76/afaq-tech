@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { useTranslations, useLocale } from "next-intl";
 import { useAuthStore } from "@/store/auth";
@@ -117,7 +117,6 @@ export default function SchoolFollowUpPage() {
   const commonT = useTranslations("common");
   const navT = useTranslations("nav");
   const locale = useLocale();
-  const router = useRouter();
   const pathname = usePathname();
   const currentLocale = pathname.split("/")[1] || "en";
   const { user, isLoading, loadUser } = useAuthStore();
@@ -173,12 +172,6 @@ export default function SchoolFollowUpPage() {
   }, [loadUser]);
 
   useEffect(() => {
-    if (loadedRef.current && !isLoading && !user) {
-      router.push(`/${currentLocale}/login`);
-    }
-  }, [user, isLoading, router, currentLocale]);
-
-  useEffect(() => {
     if (!user) return;
     setLoading(true);
     api.get("/schools/my-context/")
@@ -203,7 +196,7 @@ export default function SchoolFollowUpPage() {
     );
   }
 
-  if (!user) return null;
+  if (!user) return <SchoolMarketingPage />;
 
   const roleKey = `role${(user.role || "student").charAt(0).toUpperCase() + (user.role || "student").slice(1)}` as const;
   const openTickets = context?.tickets.filter((tk) => tk.status === "open" || tk.status === "in_progress").length || 0;
@@ -1190,6 +1183,125 @@ export default function SchoolFollowUpPage() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function SchoolMarketingPage() {
+  const t = useTranslations("schools");
+  const locale = useLocale();
+
+  const features = [
+    { icon: "📢", title: t("marketingFeature1Title"), desc: t("marketingFeature1Desc"), color: "var(--color-primary-light)" },
+    { icon: "🎫", title: t("marketingFeature2Title"), desc: t("marketingFeature2Desc"), color: "var(--color-success-light)" },
+    { icon: "✅", title: t("marketingFeature3Title"), desc: t("marketingFeature3Desc"), color: "var(--color-warning-light)" },
+    { icon: "📎", title: t("marketingFeature4Title"), desc: t("marketingFeature4Desc"), color: "var(--color-accent-light)" },
+    { icon: "🎙️", title: t("marketingFeature5Title"), desc: t("marketingFeature5Desc"), color: "var(--color-error)" },
+    { icon: "📊", title: t("marketingFeature6Title"), desc: t("marketingFeature6Desc"), color: "var(--color-secondary)" },
+  ];
+
+  const stats = [
+    { icon: "🏫", label: t("marketingStatsSections") },
+    { icon: "🎓", label: t("marketingStatsStudents") },
+    { icon: "💬", label: t("marketingStatsAlerts") },
+  ];
+
+  const steps = [
+    { icon: "1️⃣", title: t("marketingStep1Title"), desc: t("marketingStep1Desc") },
+    { icon: "2️⃣", title: t("marketingStep2Title"), desc: t("marketingStep2Desc") },
+    { icon: "3️⃣", title: t("marketingStep3Title"), desc: t("marketingStep3Desc") },
+  ];
+
+  return (
+    <div className="min-h-screen" style={{ background: "var(--color-background)" }} dir={locale === "ar" || locale === "ur" || locale === "fa" ? "rtl" : "ltr"}>
+      {/* Hero */}
+      <section className="relative overflow-hidden">
+        <div className="absolute inset-0" style={{ background: "linear-gradient(135deg, var(--color-primary), var(--color-secondary))" }} />
+        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 py-20 sm:py-28 text-center">
+          <span className="inline-flex items-center gap-1 px-4 py-1.5 rounded-full text-sm font-bold text-white mb-6" style={{ background: "rgba(255,255,255,0.18)", border: "1px solid rgba(255,255,255,0.3)" }}>
+            🏫 {t("marketingHeroBadge")}
+          </span>
+          <h1 className="text-4xl sm:text-5xl font-bold text-white mb-6" style={{ fontFamily: "var(--font-heading)" }}>
+            {t("marketingHeroTitle")}
+          </h1>
+          <p className="text-lg sm:text-xl text-white/90 max-w-2xl mx-auto mb-10 leading-relaxed">
+            {t("marketingHeroSubtitle")}
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <Link href={`/${locale}/register`} className="px-6 py-3 rounded-2xl font-bold transition-all hover:opacity-90" style={{ background: "var(--color-surface)", color: "var(--color-primary)" }}>
+              {t("marketingCtaRegister")}
+            </Link>
+            <Link href={`/${locale}/login`} className="px-6 py-3 rounded-2xl font-bold text-white transition-all hover:opacity-90" style={{ background: "rgba(255,255,255,0.2)", border: "1px solid rgba(255,255,255,0.4)" }}>
+              {t("marketingCtaLogin")}
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl mx-auto mt-14">
+            {stats.map((s, i) => (
+              <div key={i} className="p-4 rounded-2xl text-white" style={{ background: "rgba(255,255,255,0.14)", border: "1px solid rgba(255,255,255,0.25)" }}>
+                <div className="text-2xl mb-1">{s.icon}</div>
+                <div className="text-sm font-semibold">{s.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Features */}
+      <section className="py-16 sm:py-20" style={{ background: "var(--color-background)" }}>
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+          <div className="text-center mb-10 sm:mb-14">
+            <h2 className="text-3xl font-bold mb-3" style={{ fontFamily: "var(--font-heading)", color: "var(--color-text)" }}>{t("marketingFeaturesTitle")}</h2>
+            <p className="text-lg max-w-2xl mx-auto" style={{ color: "var(--color-text-muted)" }}>{t("marketingFeaturesSubtitle")}</p>
+          </div>
+          <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-5">
+            {features.map((f, i) => (
+              <div key={i} className="p-6 rounded-3xl transition-all hover:-translate-y-1" style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", boxShadow: "var(--card-shadow)" }}>
+                <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4 text-white" style={{ background: f.color }}>
+                  <span className="text-2xl">{f.icon}</span>
+                </div>
+                <h3 className="text-lg font-bold mb-2" style={{ color: "var(--color-text)" }}>{f.title}</h3>
+                <p className="text-sm leading-relaxed" style={{ color: "var(--color-text-muted)" }}>{f.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* How it works */}
+      <section className="py-16 sm:py-20" style={{ background: "var(--color-surface)" }}>
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+          <div className="text-center mb-10 sm:mb-14">
+            <h2 className="text-3xl font-bold mb-3" style={{ fontFamily: "var(--font-heading)", color: "var(--color-text)" }}>{t("marketingHowTitle")}</h2>
+            <p className="text-lg max-w-2xl mx-auto" style={{ color: "var(--color-text-muted)" }}>{t("marketingHowSubtitle")}</p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-5">
+            {steps.map((s, i) => (
+              <div key={i} className="p-6 rounded-3xl text-center" style={{ background: "var(--color-background)", border: "1px solid var(--color-border)", boxShadow: "var(--card-shadow)" }}>
+                <div className="text-3xl mb-3">{s.icon}</div>
+                <h3 className="font-bold mb-2" style={{ color: "var(--color-text)" }}>{s.title}</h3>
+                <p className="text-sm" style={{ color: "var(--color-text-muted)" }}>{s.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="py-16 sm:py-20">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+          <div className="rounded-3xl p-10 sm:p-14 text-center text-white" style={{ background: "linear-gradient(135deg, var(--color-primary), var(--color-secondary))", boxShadow: "var(--card-shadow)" }}>
+            <h2 className="text-3xl font-bold mb-3" style={{ fontFamily: "var(--font-heading)" }}>{t("marketingCtaTitle")}</h2>
+            <p className="text-lg max-w-2xl mx-auto mb-8 text-white/90">{t("marketingCtaSubtitle")}</p>
+            <Link href={`/${locale}/register`} className="inline-block px-8 py-3 rounded-2xl font-bold transition-all hover:opacity-90" style={{ background: "var(--color-surface)", color: "var(--color-primary)" }}>
+              {t("marketingCtaButton")}
+            </Link>
+            <p className="text-sm mt-6 text-white/80">
+              {t("marketingCurriculumNote")}{" "}
+              <Link href={`/${locale}/curriculum`} className="font-bold underline underline-offset-2 hover:opacity-90">{t("marketingCurriculumCta")}</Link>
+            </p>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
