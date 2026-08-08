@@ -1717,7 +1717,19 @@
     "adminMonitor": "Admin monitoring of attachments",
     "uploader": "Uploader",
     "file": "File",
-    "download": "Download"
+    "download": "Download",
+    "attendance": "Yoklama",
+    "recordAttendance": "Yoklama Al",
+    "date": "Tarih",
+    "loadStudents": "Öğrencileri Yükle",
+    "present": "Mevcut",
+    "absent": "Yok",
+    "saveAttendance": "Yoklamayı Kaydet",
+    "attendanceSaved": "Yoklama başarıyla kaydedildi",
+    "attendanceSaveError": "Yoklama kaydedilirken hata oluştu",
+    "attendanceLoadError": "Öğrenciler yüklenirken hata oluştu",
+    "noAttendance": "Henüz yoklama kaydı yok",
+    "recentAttendance": "Son yoklama kayıtları"
   },
   "errors": {
     "required": "Bu alan zorunludur.",

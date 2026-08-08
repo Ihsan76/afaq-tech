@@ -1717,7 +1717,19 @@
     "adminMonitor": "Admin monitoring of attachments",
     "uploader": "Uploader",
     "file": "File",
-    "download": "Download"
+    "download": "Download",
+    "attendance": "Anwesenheit",
+    "recordAttendance": "Anwesenheit erfassen",
+    "date": "Datum",
+    "loadStudents": "Schüler laden",
+    "present": "Anwesend",
+    "absent": "Abwesend",
+    "saveAttendance": "Anwesenheit speichern",
+    "attendanceSaved": "Anwesenheit erfolgreich gespeichert",
+    "attendanceSaveError": "Fehler beim Speichern der Anwesenheit",
+    "attendanceLoadError": "Fehler beim Laden der Schüler",
+    "noAttendance": "Noch keine Anwesenheitsdatensätze",
+    "recentAttendance": "Letzte Anwesenheitsdatensätze"
   },
   "errors": {
     "required": "Dieses Feld ist erforderlich.",

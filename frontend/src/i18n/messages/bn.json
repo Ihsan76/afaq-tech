@@ -1717,7 +1717,19 @@
     "adminMonitor": "Admin monitoring of attachments",
     "uploader": "Uploader",
     "file": "File",
-    "download": "Download"
+    "download": "Download",
+    "attendance": "উপস্থিতি",
+    "recordAttendance": "উপস্থিতি নথিভুক্ত করুন",
+    "date": "তারিখ",
+    "loadStudents": "শিক্ষার্থীদের লোড করুন",
+    "present": "উপস্থিত",
+    "absent": "অনুপস্থিত",
+    "saveAttendance": "উপস্থিতি সংরক্ষণ করুন",
+    "attendanceSaved": "উপস্থিতি সফলভাবে সংরক্ষিত হয়েছে",
+    "attendanceSaveError": "উপস্থিতি সংরক্ষণে ত্রুটি হয়েছে",
+    "attendanceLoadError": "শিক্ষার্থীদের লোড করতে ত্রুটি হয়েছে",
+    "noAttendance": "এখনো কোনো উপস্থিতির রেকর্ড নেই",
+    "recentAttendance": "সাম্প্রতিক উপস্থিতির রেকর্ড"
   },
   "errors": {
     "required": "এই ক্ষেত্রটি আবশ্যক।",

@@ -1717,7 +1717,19 @@
     "adminMonitor": "Admin monitoring of attachments",
     "uploader": "Uploader",
     "file": "File",
-    "download": "Download"
+    "download": "Download",
+    "attendance": "Kehadiran",
+    "recordAttendance": "Catat kehadiran",
+    "date": "Tanggal",
+    "loadStudents": "Muat siswa",
+    "present": "Hadir",
+    "absent": "Tidak hadir",
+    "saveAttendance": "Simpan kehadiran",
+    "attendanceSaved": "Kehadiran berhasil disimpan",
+    "attendanceSaveError": "Gagal menyimpan kehadiran",
+    "attendanceLoadError": "Gagal memuat siswa",
+    "noAttendance": "Belum ada catatan kehadiran",
+    "recentAttendance": "Catatan kehadiran terbaru"
   },
   "errors": {
     "required": "Bidang ini wajib diisi.",

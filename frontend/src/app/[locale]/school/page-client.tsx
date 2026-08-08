@@ -70,6 +70,24 @@ interface Attachment {
   created_at: string;
 }
 
+interface Attendance {
+  id: number;
+  student: number;
+  student_email: string;
+  student_name: string;
+  section: number;
+  section_name?: string;
+  school: number;
+  school_name?: string;
+  date: string;
+  status: string;
+  status_display: string;
+  recorded_by?: number | null;
+  recorded_by_email?: string;
+  notes?: string;
+  created_at: string;
+}
+
 interface MyContext {
   role: string;
   sections: Section[];
@@ -78,6 +96,7 @@ interface MyContext {
   teachers: Person[];
   students: Person[];
   attachments: Attachment[];
+  attendance: Attendance[];
   ai_settings?: {
     language_complexity: string;
     tone_preference: string;
@@ -106,7 +125,7 @@ export default function SchoolFollowUpPage() {
 
   const [context, setContext] = useState<MyContext | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"announcements" | "tickets" | "ai" | "attachments">("announcements");
+  const [activeTab, setActiveTab] = useState<"announcements" | "tickets" | "ai" | "attachments" | "attendance">("announcements");
 
   // Ticket modal state
   const [showTicketModal, setShowTicketModal] = useState(false);
@@ -137,6 +156,14 @@ export default function SchoolFollowUpPage() {
   const [uploadMsg, setUploadMsg] = useState("");
   const [reviewNotes, setReviewNotes] = useState<Record<number, string>>({});
   const [reviewing, setReviewing] = useState<number | null>(null);
+
+  // Attendance state
+  const [attendanceSection, setAttendanceSection] = useState(0);
+  const [attendanceDate, setAttendanceDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [attendanceRows, setAttendanceRows] = useState<Array<{ student: number; email: string; name: string; status: "present" | "absent" }>>([]);
+  const [attendanceLoading, setAttendanceLoading] = useState(false);
+  const [attendanceSaving, setAttendanceSaving] = useState(false);
+  const [attendanceMsg, setAttendanceMsg] = useState("");
 
   useEffect(() => {
     if (!loadedRef.current) {
@@ -337,6 +364,54 @@ export default function SchoolFollowUpPage() {
     }
   };
 
+  const loadAttendance = async () => {
+    if (!attendanceSection) return;
+    setAttendanceLoading(true);
+    setAttendanceMsg("");
+    try {
+      const [enrR, attR] = await Promise.all([
+        api.get("/schools/enrollments/", { params: { section: attendanceSection } }),
+        api.get("/schools/attendances/", { params: { section: attendanceSection, date: attendanceDate } }),
+      ]);
+      const enrollments = enrR.data.results || [];
+      const existing = new Map<number, string>();
+      (attR.data.results || []).forEach((a: Attendance) => existing.set(a.student, a.status));
+      const nameById = new Map((context?.students || []).map((s) => [s.id, s.name]));
+      setAttendanceRows(
+        enrollments.map((enr: { student: number; student_email: string }) => ({
+          student: enr.student,
+          email: enr.student_email,
+          name: nameById.get(enr.student) || enr.student_email,
+          status: (existing.get(enr.student) as "present" | "absent") || "present",
+        })),
+      );
+    } catch {
+      alert(t("attendanceLoadError"));
+    } finally {
+      setAttendanceLoading(false);
+    }
+  };
+
+  const submitAttendance = async () => {
+    if (!attendanceSection || attendanceRows.length === 0) return;
+    setAttendanceSaving(true);
+    setAttendanceMsg("");
+    try {
+      const records = attendanceRows.map((r) => ({ student: r.student, status: r.status }));
+      await api.post("/schools/attendances/bulk_record/", {
+        section: attendanceSection,
+        date: attendanceDate,
+        records,
+      });
+      setAttendanceMsg(t("attendanceSaved"));
+      await refreshContext();
+    } catch {
+      alert(t("attendanceSaveError"));
+    } finally {
+      setAttendanceSaving(false);
+    }
+  };
+
   const overviewCards = [
     { icon: "🏫", value: String(context?.sections.length ?? 0), label: t("mySections"), color: "linear-gradient(135deg, var(--color-primary), var(--color-secondary))" },
     { icon: "📢", value: String(context?.announcements.length ?? 0), label: t("announcements"), color: "linear-gradient(135deg, var(--color-success), var(--color-accent))" },
@@ -455,6 +530,16 @@ export default function SchoolFollowUpPage() {
                 }}
               >
                 📎 {t("attachments")}
+              </button>
+              <button
+                onClick={() => setActiveTab("attendance")}
+                className={`px-5 py-2.5 rounded-t-2xl font-medium transition-all ${activeTab === "attendance" ? "text-white shadow-sm" : ""}`}
+                style={{
+                  background: activeTab === "attendance" ? "var(--color-primary)" : "transparent",
+                  color: activeTab === "attendance" ? "#FFFFFF" : "var(--color-text-secondary)",
+                }}
+              >
+                ✅ {t("attendance")}
               </button>
             </div>
 
@@ -861,6 +946,165 @@ export default function SchoolFollowUpPage() {
                     </FadeIn>
                   );
                 })}
+              </div>
+            )}
+
+            {/* Attendance */}
+            {activeTab === "attendance" && (
+              <div className="space-y-6">
+                {(user.role === "teacher" || user.role === "school_admin" || user.role === "admin") && (
+                  <div className="p-6 rounded-3xl space-y-4" style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", boxShadow: "var(--card-shadow)" }}>
+                    <h3 className="font-bold text-lg" style={{ color: "var(--color-text)" }}>✅ {t("recordAttendance")}</h3>
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      {context && context.sections.length > 0 && (
+                        <div>
+                          <label className="block text-sm font-medium mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("section")}</label>
+                          <select
+                            className="w-full px-4 py-2.5 rounded-2xl border"
+                            style={{ background: "var(--color-background)", borderColor: "var(--color-border)", color: "var(--color-text)" }}
+                            value={attendanceSection}
+                            onChange={(e) => setAttendanceSection(Number(e.target.value))}
+                          >
+                            <option value={0}>--</option>
+                            {context.sections.map((sec) => (
+                              <option key={sec.id} value={sec.id}>{sec.school_name} - {sec.name} ({sec.grade_name})</option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+                      <div>
+                        <label className="block text-sm font-medium mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("date")}</label>
+                        <input
+                          type="date"
+                          className="w-full px-4 py-2.5 rounded-2xl border"
+                          style={{ background: "var(--color-background)", borderColor: "var(--color-border)", color: "var(--color-text)" }}
+                          value={attendanceDate}
+                          max={new Date().toISOString().slice(0, 10)}
+                          onChange={(e) => setAttendanceDate(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                    <button
+                      onClick={loadAttendance}
+                      disabled={!attendanceSection || attendanceLoading}
+                      className="px-5 py-2.5 rounded-2xl font-semibold text-white transition-all hover:opacity-90 disabled:opacity-50"
+                      style={{ background: "var(--color-primary)" }}
+                    >
+                      {attendanceLoading ? commonT("loading") + "..." : t("loadStudents")}
+                    </button>
+
+                    {attendanceRows.length > 0 && (
+                      <>
+                        <div className="pt-2 border-t space-y-2" style={{ borderColor: "var(--color-border)" }}>
+                          {attendanceRows.map((row) => (
+                            <div key={row.student} className="flex items-center justify-between gap-3 p-3 rounded-2xl" style={{ background: "var(--color-surface-alt)" }}>
+                              <div className="flex items-center gap-3 min-w-0">
+                                <span className="text-xl shrink-0">{row.status === "present" ? "✅" : "❌"}</span>
+                                <div className="min-w-0">
+                                  <p className="text-sm font-semibold truncate" style={{ color: "var(--color-text)" }}>{row.name}</p>
+                                  <p className="text-xs truncate" style={{ color: "var(--color-text-muted)" }}>{row.email}</p>
+                                </div>
+                              </div>
+                              <div className="flex gap-2 shrink-0">
+                                <button
+                                  onClick={() => setAttendanceRows((rows) => rows.map((r) => r.student === row.student ? { ...r, status: "present" } : r))}
+                                  className="px-3 py-1.5 rounded-xl text-xs font-bold transition-all hover:opacity-85"
+                                  style={{
+                                    background: row.status === "present" ? "var(--color-success)" : "var(--color-surface)",
+                                    color: row.status === "present" ? "#FFFFFF" : "var(--color-text-secondary)",
+                                    border: row.status === "present" ? "none" : "1px solid var(--color-border)",
+                                  }}
+                                >
+                                  {t("present")}
+                                </button>
+                                <button
+                                  onClick={() => setAttendanceRows((rows) => rows.map((r) => r.student === row.student ? { ...r, status: "absent" } : r))}
+                                  className="px-3 py-1.5 rounded-xl text-xs font-bold transition-all hover:opacity-85"
+                                  style={{
+                                    background: row.status === "absent" ? "var(--color-error)" : "var(--color-surface)",
+                                    color: row.status === "absent" ? "#FFFFFF" : "var(--color-text-secondary)",
+                                    border: row.status === "absent" ? "none" : "1px solid var(--color-border)",
+                                  }}
+                                >
+                                  {t("absent")}
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={submitAttendance}
+                            disabled={attendanceSaving}
+                            className="px-5 py-2.5 rounded-2xl font-semibold text-white transition-all hover:opacity-90 disabled:opacity-50"
+                            style={{ background: "var(--color-success)" }}
+                          >
+                            {attendanceSaving ? "..." : t("saveAttendance")}
+                          </button>
+                          {attendanceMsg && <span className="text-sm font-semibold" style={{ color: "var(--color-success)" }}>{attendanceMsg}</span>}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
+
+                {user.role === "student" || user.role === "parent" ? (
+                  <div>
+                    {context && context.attendance.length === 0 && (
+                      <div className="text-center py-10 rounded-3xl" style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", color: "var(--color-text-muted)" }}>
+                        {t("noAttendance")}
+                      </div>
+                    )}
+                    {context?.attendance.map((att) => (
+                      <FadeIn key={att.id} direction="up">
+                        <div className="p-6 rounded-3xl flex items-center justify-between gap-3 mb-3" style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", boxShadow: "var(--card-shadow)" }}>
+                          <div className="flex items-center gap-3 min-w-0">
+                            <span className="text-2xl">{att.status === "present" ? "✅" : "❌"}</span>
+                            <div className="min-w-0">
+                              <p className="font-bold" style={{ color: "var(--color-text)" }}>{att.student_name}</p>
+                              <p className="text-xs" style={{ color: "var(--color-text-muted)" }}>
+                                {att.section_name || "-"} · {att.date} · {att.recorded_by_email || "-"}
+                              </p>
+                            </div>
+                          </div>
+                          <span className="text-xs px-3 py-1.5 rounded-full font-bold shrink-0" style={{
+                            background: att.status === "present" ? "var(--color-success-light)" : "rgba(239,68,68,0.12)",
+                            color: att.status === "present" ? "var(--color-success)" : "var(--color-error)",
+                          }}>
+                            {att.status_display}
+                          </span>
+                        </div>
+                      </FadeIn>
+                    ))}
+                  </div>
+                ) : (
+                  context && context.attendance.length > 0 && (
+                    <div>
+                      <h3 className="font-bold text-lg mb-3" style={{ color: "var(--color-text)" }}>📋 {t("recentAttendance")}</h3>
+                      {context.attendance.map((att) => (
+                        <FadeIn key={att.id} direction="up">
+                          <div className="p-6 rounded-3xl flex items-center justify-between gap-3 mb-3" style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", boxShadow: "var(--card-shadow)" }}>
+                            <div className="flex items-center gap-3 min-w-0">
+                              <span className="text-2xl">{att.status === "present" ? "✅" : "❌"}</span>
+                              <div className="min-w-0">
+                                <p className="font-bold" style={{ color: "var(--color-text)" }}>{att.student_name}</p>
+                                <p className="text-xs" style={{ color: "var(--color-text-muted)" }}>
+                                  {att.section_name || "-"} · {att.date}
+                                </p>
+                              </div>
+                            </div>
+                            <span className="text-xs px-3 py-1.5 rounded-full font-bold shrink-0" style={{
+                              background: att.status === "present" ? "var(--color-success-light)" : "rgba(239,68,68,0.12)",
+                              color: att.status === "present" ? "var(--color-success)" : "var(--color-error)",
+                            }}>
+                              {att.status_display}
+                            </span>
+                          </div>
+                        </FadeIn>
+                      ))}
+                    </div>
+                  )
+                )}
               </div>
             )}
           </>

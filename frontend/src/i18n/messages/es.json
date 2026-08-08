@@ -1717,7 +1717,19 @@
     "adminMonitor": "Admin monitoring of attachments",
     "uploader": "Uploader",
     "file": "File",
-    "download": "Download"
+    "download": "Download",
+    "attendance": "Asistencia",
+    "recordAttendance": "Registrar asistencia",
+    "date": "Fecha",
+    "loadStudents": "Cargar estudiantes",
+    "present": "Presente",
+    "absent": "Ausente",
+    "saveAttendance": "Guardar asistencia",
+    "attendanceSaved": "Asistencia guardada correctamente",
+    "attendanceSaveError": "Error al guardar la asistencia",
+    "attendanceLoadError": "Error al cargar los estudiantes",
+    "noAttendance": "No hay registros de asistencia aún",
+    "recentAttendance": "Registros de asistencia recientes"
   },
   "errors": {
     "required": "Este campo es obligatorio.",

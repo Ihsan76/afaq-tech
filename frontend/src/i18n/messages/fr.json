@@ -1717,7 +1717,19 @@
     "adminMonitor": "Admin monitoring of attachments",
     "uploader": "Uploader",
     "file": "File",
-    "download": "Download"
+    "download": "Download",
+    "attendance": "Présences et absences",
+    "recordAttendance": "Enregistrer les présences",
+    "date": "Date",
+    "loadStudents": "Charger les élèves",
+    "present": "Présent",
+    "absent": "Absent",
+    "saveAttendance": "Enregistrer les présences",
+    "attendanceSaved": "Présences enregistrées avec succès",
+    "attendanceSaveError": "Erreur lors de l'enregistrement des présences",
+    "attendanceLoadError": "Erreur lors du chargement des élèves",
+    "noAttendance": "Aucun enregistrement de présence pour le moment",
+    "recentAttendance": "Enregistrements de présence récents"
   },
   "errors": {
     "required": "Ce champ est obligatoire.",

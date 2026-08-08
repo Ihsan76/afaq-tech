@@ -3,6 +3,7 @@ from django.contrib import admin
 from .models import (
     AcademicYear,
     Attachment,
+    Attendance,
     ParentTeacherTicket,
     School,
     SchoolAnnouncement,
@@ -60,6 +61,13 @@ class WhatsAppNotificationLogAdmin(admin.ModelAdmin):
     list_display = ['recipient_phone', 'status', 'sent_at']
     list_filter = ['status', 'sent_at']
     search_fields = ['recipient_phone', 'message']
+
+
+@admin.register(Attendance)
+class AttendanceAdmin(admin.ModelAdmin):
+    list_display = ['student', 'section', 'school', 'date', 'status', 'recorded_by']
+    list_filter = ['date', 'status', 'section__school']
+    search_fields = ['student__email', 'notes']
 
 
 @admin.register(Attachment)

@@ -17,7 +17,7 @@ from django.core.management.base import BaseCommand
 from django.db import transaction
 
 from apps.academics.models import Grade
-from apps.schools.models import AcademicYear, FamilyLink, Section, School, StudentEnrollment
+from apps.schools.models import AcademicYear, FamilyLink, School, Section, StudentEnrollment
 from apps.users.models import User
 
 ACADEMIC_YEAR_NAME = '2025/2026'

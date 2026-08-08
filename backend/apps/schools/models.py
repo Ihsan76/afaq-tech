@@ -238,6 +238,35 @@ class SupportRequest(models.Model):
         return f"Support: {self.subject} ({self.status})"
 
 
+class Attendance(models.Model):
+    """سجل حضور/غياب يومي للطالب داخل شعبة، يُسجَّل من قبل المعلم أو الإدارة."""
+
+    class Status(models.TextChoices):
+        PRESENT = 'present', 'حاضر'
+        ABSENT = 'absent', 'غائب'
+
+    student = models.ForeignKey(User, on_delete=models.CASCADE, related_name='attendances', verbose_name='الطالب')
+    section = models.ForeignKey(Section, on_delete=models.CASCADE, related_name='attendance_records', verbose_name='الشعبة')
+    school = models.ForeignKey(School, on_delete=models.CASCADE, related_name='attendance_records', verbose_name='المدرسة')
+    date = models.DateField('التاريخ', db_index=True)
+    status = models.CharField('الحالة', max_length=20, choices=Status.choices, default=Status.PRESENT)
+    recorded_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='recorded_attendances', verbose_name='سجّله'
+    )
+    notes = models.TextField('ملاحظات', blank=True)
+    created_at = models.DateTimeField('تاريخ الإنشاء', auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'حضور / غياب'
+        verbose_name_plural = 'سجلات الحضور والغياب'
+        ordering = ['-date', 'student__email']
+        unique_together = [['student', 'date']]
+
+    def __str__(self):
+        return f"{self.student.email} — {self.date} ({self.get_status_display()})"
+
+
 class Attachment(models.Model):
     """ملف أو صورة مرفق بشرح درس أو واجب منزلي، يرفعه المعلم أو الطالب وتتابعه الإدارة."""
 

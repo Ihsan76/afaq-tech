@@ -11,6 +11,7 @@ from apps.schools.models import (
     AcademicYear,
     AnnouncementReadReceipt,
     Attachment,
+    Attendance,
     FamilyLink,
     ParentTeacherTicket,
     School,
@@ -20,6 +21,7 @@ from apps.schools.models import (
     SupportRequest,
     TeacherAssignment,
     WeeklyReport,
+    WhatsAppNotificationLog,
 )
 
 User = get_user_model()
@@ -519,3 +521,182 @@ class SchoolsAdvancedFeaturesTestCase(APITestCase):
         self.assertEqual(res.status_code, 200)
         self.assertGreaterEqual(res.data['attachments_total'], 1)
         self.assertGreaterEqual(res.data['attachments_pending_review'], 1)
+
+
+class AttendanceFeatureTestCase(APITestCase):
+    def setUp(self):
+        self.admin = make_user('admin@test.com', 'admin', 'مدير الاختبار')
+        self.student = make_user('student@test.com', 'student', 'طالب الاختبار', national_id='1234567890', phone='0771000001')
+        self.parent = make_user('parent@test.com', 'parent', 'ولي أمر الاختبار', phone='0772000001')
+        self.teacher = make_user('teacher@test.com', 'teacher', 'معلم الاختبار', phone='0773000001')
+
+        self.grade = Grade.objects.create(level=5, translations={'ar': {'name': 'الصف الخامس'}})
+        self.subject = Subject.objects.create(translations={'ar': {'name': 'العلوم'}})
+        self.year = AcademicYear.objects.create(name='2025/2026', is_current=True)
+        self.school = School.objects.create(name='مدرسة الحضور', school_code='AT1')
+        self.section_a = Section.objects.create(school=self.school, grade=self.grade, academic_year=self.year, name='أ')
+        self.section_b = Section.objects.create(school=self.school, grade=self.grade, academic_year=self.year, name='ب')
+
+        StudentEnrollment.objects.create(student=self.student, section=self.section_a, academic_year=self.year)
+        TeacherAssignment.objects.create(teacher=self.teacher, section=self.section_a, subject=self.subject, academic_year=self.year)
+        FamilyLink.objects.create(parent=self.parent, student=self.student, relationship='والد')
+
+        self.target_date = '2026-08-03'  # a Monday (weekday, not skipped by the command)
+
+    def auth(self, user):
+        self.client.force_authenticate(user=user)
+
+    def results(self, res):
+        return res.data.get('results', res.data)
+
+    def test_teacher_bulk_records_attendance(self):
+        self.auth(self.teacher)
+        res = self.client.post('/api/v1/schools/attendances/bulk_record/', {
+            'section': self.section_a.id,
+            'date': self.target_date,
+            'records': [{'student': self.student.id, 'status': 'present'}],
+        }, format='json')
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.data['created'], 1)
+        attendance = Attendance.objects.get(student=self.student, date=self.target_date)
+        self.assertEqual(attendance.status, 'present')
+        self.assertEqual(attendance.recorded_by, self.teacher)
+        self.assertEqual(attendance.section, self.section_a)
+
+    def test_teacher_cannot_record_unassigned_section(self):
+        self.auth(self.teacher)
+        res = self.client.post('/api/v1/schools/attendances/bulk_record/', {
+            'section': self.section_b.id,
+            'date': self.target_date,
+            'records': [{'student': self.student.id, 'status': 'present'}],
+        }, format='json')
+        self.assertEqual(res.status_code, 403)
+
+    def test_absent_triggers_whatsapp_and_inapp_alert(self):
+        self.auth(self.teacher)
+        from apps.notifications.models import Notification
+        res = self.client.post('/api/v1/schools/attendances/bulk_record/', {
+            'section': self.section_a.id,
+            'date': self.target_date,
+            'records': [{'student': self.student.id, 'status': 'absent'}],
+        }, format='json')
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.data['absent_alerts_sent'], 1)
+        self.assertTrue(WhatsAppNotificationLog.objects.filter(recipient_phone=self.parent.phone).exists())
+        self.assertTrue(Notification.objects.filter(user=self.parent, type='absence').exists())
+
+    def test_bulk_record_is_idempotent(self):
+        self.auth(self.teacher)
+        payload = {
+            'section': self.section_a.id,
+            'date': self.target_date,
+            'records': [{'student': self.student.id, 'status': 'present'}],
+        }
+        self.client.post('/api/v1/schools/attendances/bulk_record/', payload, format='json')
+        res = self.client.post('/api/v1/schools/attendances/bulk_record/', payload, format='json')
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.data['updated'], 1)
+        self.assertEqual(Attendance.objects.filter(student=self.student, date=self.target_date).count(), 1)
+
+    def test_teacher_list_scoped_to_assigned_sections(self):
+        self.auth(self.teacher)
+        Attendance.objects.create(student=self.student, section=self.section_a, school=self.school, date=self.target_date, status='present')
+        other = make_user('other@test.com', 'student', 'طالب آخر', phone='0779000001')
+        StudentEnrollment.objects.create(student=other, section=self.section_b, academic_year=self.year)
+        Attendance.objects.create(student=other, section=self.section_b, school=self.school, date=self.target_date, status='present')
+
+        res = self.client.get('/api/v1/schools/attendances/')
+        self.assertEqual(res.status_code, 200)
+        students = {a['student'] for a in self.results(res)}
+        self.assertIn(self.student.id, students)
+        self.assertNotIn(other.id, students)
+
+    def test_enrollments_filtered_by_section(self):
+        self.auth(self.teacher)
+        other = make_user('other@test.com', 'student', 'طالب آخر', phone='0779000001')
+        StudentEnrollment.objects.create(student=other, section=self.section_b, academic_year=self.year)
+
+        res = self.client.get('/api/v1/schools/enrollments/', {'section': self.section_a.id})
+        self.assertEqual(res.status_code, 200)
+        data = self.results(res)
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]['student'], self.student.id)
+        self.assertEqual(data[0]['section'], self.section_a.id)
+
+    def test_parent_views_child_attendance(self):
+        self.auth(self.teacher)
+        self.client.post('/api/v1/schools/attendances/bulk_record/', {
+            'section': self.section_a.id,
+            'date': self.target_date,
+            'records': [{'student': self.student.id, 'status': 'absent'}],
+        }, format='json')
+        self.auth(self.parent)
+        res = self.client.get(f'/api/v1/schools/attendances/?date={self.target_date}')
+        self.assertEqual(res.status_code, 200)
+        data = self.results(res)
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]['student_email'], 'student@test.com')
+        self.assertEqual(data[0]['status'], 'absent')
+
+    def test_student_own_attendance_in_my_context(self):
+        self.auth(self.teacher)
+        self.client.post('/api/v1/schools/attendances/bulk_record/', {
+            'section': self.section_a.id,
+            'date': self.target_date,
+            'records': [{'student': self.student.id, 'status': 'present'}],
+        }, format='json')
+        self.auth(self.student)
+        res = self.client.get('/api/v1/schools/my-context/')
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(len(res.data['attendance']), 1)
+        self.assertEqual(res.data['attendance'][0]['status'], 'present')
+
+    def test_weekly_summary_uses_real_attendance(self):
+        from datetime import date, timedelta
+        monday = date.today() - timedelta(days=date.today().weekday())
+        self.auth(self.teacher)
+        self.client.post('/api/v1/schools/attendances/bulk_record/', {
+            'section': self.section_a.id,
+            'date': monday.isoformat(),
+            'records': [{'student': self.student.id, 'status': 'present'}],
+        }, format='json')
+        self.auth(self.parent)
+        res = self.client.get('/api/v1/schools/weekly-summary/')
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.data['reports'][0]['attendance_rate'], 100.0)
+
+    def test_analytics_reports_attendance_counts(self):
+        from django.utils import timezone
+        self.auth(self.teacher)
+        self.client.post('/api/v1/schools/attendances/bulk_record/', {
+            'section': self.section_a.id,
+            'date': timezone.localdate().isoformat(),
+            'records': [{'student': self.student.id, 'status': 'absent'}],
+        }, format='json')
+        self.auth(self.admin)
+        res = self.client.get('/api/v1/schools/analytics/')
+        self.assertEqual(res.status_code, 200)
+        self.assertGreaterEqual(res.data['attendance_today'], 1)
+        self.assertGreaterEqual(res.data['absent_today'], 1)
+
+    def test_send_absence_alerts_command(self):
+        from django.core.management import call_command
+        call_command('send_absence_alerts', date=self.target_date)
+        attendance = Attendance.objects.get(student=self.student, date=self.target_date)
+        self.assertEqual(attendance.status, 'absent')
+        self.assertTrue(WhatsAppNotificationLog.objects.filter(recipient_phone=self.parent.phone).exists())
+        from apps.notifications.models import Notification
+        self.assertTrue(Notification.objects.filter(user=self.parent, type='absence').exists())
+
+    def test_send_absence_alerts_is_idempotent(self):
+        from django.core.management import call_command
+        call_command('send_absence_alerts', date=self.target_date)
+        call_command('send_absence_alerts', date=self.target_date)
+        self.assertEqual(Attendance.objects.filter(student=self.student, date=self.target_date).count(), 1)
+        self.assertEqual(WhatsAppNotificationLog.objects.count(), 1)
+
+    def test_send_absence_alerts_dry_run(self):
+        from django.core.management import call_command
+        call_command('send_absence_alerts', date=self.target_date, dry_run=True)
+        self.assertFalse(Attendance.objects.filter(student=self.student, date=self.target_date).exists())
+        self.assertFalse(WhatsAppNotificationLog.objects.exists())

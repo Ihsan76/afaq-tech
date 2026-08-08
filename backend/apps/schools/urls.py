@@ -4,6 +4,7 @@ from rest_framework.routers import DefaultRouter
 from .views import (
     AcademicYearViewSet,
     AttachmentViewSet,
+    AttendanceViewSet,
     BulkExportView,
     BulkImportView,
     FamilyLinkViewSet,
@@ -34,6 +35,7 @@ router.register('tickets', ParentTeacherTicketViewSet, basename='ticket')
 router.register('family-links', FamilyLinkViewSet, basename='familylink')
 router.register('faqs', FAQViewSet, basename='faq')
 router.register('attachments', AttachmentViewSet, basename='attachment')
+router.register('attendances', AttendanceViewSet, basename='attendance')
 
 urlpatterns = [
     path('user/settings/', UserSettingsAPIView.as_view(), name='user-ai-settings'),

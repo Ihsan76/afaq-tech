@@ -15,11 +15,13 @@ from rest_framework.views import APIView
 
 from apps.users.models import User
 
+from .absence import notify_absence
 from .models import (
     FAQ,
     AcademicYear,
     AnnouncementReadReceipt,
     Attachment,
+    Attendance,
     FamilyLink,
     ParentTeacherTicket,
     School,
@@ -35,6 +37,7 @@ from .models import (
 from .serializers import (
     AcademicYearSerializer,
     AttachmentSerializer,
+    AttendanceSerializer,
     FamilyLinkSerializer,
     FAQSerializer,
     ParentTeacherTicketSerializer,
@@ -305,15 +308,24 @@ class StudentEnrollmentViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         if is_admin(self.request.user):
-            return StudentEnrollment.objects.all()
-        section_ids = user_section_ids(self.request.user)
-        if section_ids is None:
-            section_ids = set()
-        if is_teacher(self.request.user):
-            return StudentEnrollment.objects.filter(section_id__in=section_ids)
-        if self.request.user.role == 'student':
-            return StudentEnrollment.objects.filter(student=self.request.user)
-        return StudentEnrollment.objects.none()
+            qs = StudentEnrollment.objects.all()
+        elif self.request.user.role == 'school_admin':
+            school_ids = user_school_ids(self.request.user)
+            qs = StudentEnrollment.objects.filter(section__school_id__in=school_ids) if school_ids else StudentEnrollment.objects.none()
+        else:
+            section_ids = user_section_ids(self.request.user)
+            if section_ids is None:
+                section_ids = set()
+            if is_teacher(self.request.user):
+                qs = StudentEnrollment.objects.filter(section_id__in=section_ids)
+            elif self.request.user.role == 'student':
+                qs = StudentEnrollment.objects.filter(student=self.request.user)
+            else:
+                qs = StudentEnrollment.objects.none()
+        section = self.request.query_params.get('section')
+        if section:
+            qs = qs.filter(section_id=section)
+        return qs
 
     @action(detail=True, methods=['post'], permission_classes=[IsAdminRole])
     def transfer(self, request, pk=None):
@@ -441,7 +453,7 @@ class SchoolAnnouncementViewSet(viewsets.ModelViewSet):
                     'ar': f"{announcement.school.name} — {announcement.title}",
                     'en': f"{announcement.school.name} — {announcement.title}",
                 },
-                link='/school-followup',
+                link='/school',
                 icon='🏫',
             )
         if announcement.is_emergency:
@@ -461,6 +473,129 @@ class SchoolAnnouncementViewSet(viewsets.ModelViewSet):
         return Response({
             'status': 'acknowledged',
             'read_count': announcement.read_receipts.count(),
+        })
+
+
+class AttendanceViewSet(viewsets.ModelViewSet):
+    """سجل الحضور/الغياب اليومي، يسجّله المعلم أو الإدارة وتصل تنبيهات الغياب لولي الأمر."""
+
+    queryset = Attendance.objects.select_related('student', 'section', 'section__school', 'school', 'recorded_by')
+    serializer_class = AttendanceSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        if is_admin(user):
+            qs = self.queryset
+        elif user.role == 'school_admin':
+            school_ids = user_school_ids(user)
+            qs = self.queryset.filter(school_id__in=school_ids) if school_ids else self.queryset.none()
+        elif user.role == 'teacher':
+            section_ids = user_section_ids(user)
+            qs = self.queryset.filter(section_id__in=section_ids) if section_ids else self.queryset.none()
+        elif user.role == 'parent':
+            child_ids = FamilyLink.objects.filter(parent=user).values_list('student_id', flat=True)
+            qs = self.queryset.filter(student_id__in=child_ids)
+        elif user.role == 'student':
+            qs = self.queryset.filter(student=user)
+        else:
+            qs = self.queryset.none()
+
+        date_filter = self.request.query_params.get('date')
+        if date_filter:
+            qs = qs.filter(date=date_filter)
+        section = self.request.query_params.get('section')
+        if section:
+            qs = qs.filter(section_id=section)
+        student = self.request.query_params.get('student')
+        if student:
+            qs = qs.filter(student_id=student)
+        return qs.distinct()
+
+    def _can_manage_section(self, user, section):
+        """Teachers (assigned to the section) and school admins (of that school) may record."""
+        if is_admin(user):
+            return True
+        if user.role == 'school_admin':
+            return section.school.manager_id == user.id
+        if user.role == 'teacher':
+            return TeacherAssignment.objects.filter(teacher=user, section=section).exists()
+        return False
+
+    def perform_create(self, serializer):
+        section = serializer.validated_data.get('section')
+        if section and not self._can_manage_section(self.request.user, section):
+            raise serializers.ValidationError({'section': 'أنت غير مخوَّل بالتسجيل في هذه الشعبة'})
+        attendance = serializer.save(
+            recorded_by=self.request.user,
+            school=section.school if section else serializer.validated_data.get('school'),
+        )
+        notify_absence(attendance)
+
+    @action(detail=False, methods=['post'])
+    def bulk_record(self, request):
+        """تسجيل جماعي للحضور/الغياب لشعبة في يوم واحد.
+
+        Body: {section: id, date: "YYYY-MM-DD", records: [{student: id, status: "present|absent"}]}
+        """
+        section_id = request.data.get('section')
+        try:
+            section = Section.objects.get(id=section_id)
+        except (Section.DoesNotExist, TypeError, ValueError):
+            return Response({'error': 'section is required and must be valid'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not self._can_manage_section(request.user, section):
+            return Response({'error': 'أنت غير مخوَّل بالتسجيل في هذه الشعبة'}, status=status.HTTP_403_FORBIDDEN)
+
+        target_date_raw = request.data.get('date')
+        if target_date_raw:
+            try:
+                target_date = date.fromisoformat(str(target_date_raw))
+            except ValueError:
+                return Response({'error': 'date must be YYYY-MM-DD'}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            target_date = timezone.localdate()
+        records = request.data.get('records') or []
+        if not isinstance(records, list) or not records:
+            return Response({'error': 'records must be a non-empty list'}, status=status.HTTP_400_BAD_REQUEST)
+
+        created = []
+        updated = []
+        absent_alerts = 0
+        with transaction.atomic():
+            for record in records:
+                student_id = record.get('student')
+                status_value = record.get('status')
+                if status_value not in Attendance.Status.values:
+                    return Response(
+                        {'error': f"status must be one of {list(Attendance.Status.values)}"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+                attendance, was_created = Attendance.objects.update_or_create(
+                    student_id=student_id,
+                    date=target_date,
+                    defaults={
+                        'section': section,
+                        'school': section.school,
+                        'status': status_value,
+                        'recorded_by': request.user,
+                    },
+                )
+                if was_created:
+                    created.append(student_id)
+                else:
+                    updated.append(student_id)
+                if status_value == Attendance.Status.ABSENT:
+                    absent_alerts += 1
+                    notify_absence(attendance)
+
+        return Response({
+            'status': 'ok',
+            'date': target_date.isoformat(),
+            'section': section.id,
+            'created': len(created),
+            'updated': len(updated),
+            'absent_alerts_sent': absent_alerts,
         })
 
 
@@ -512,7 +647,7 @@ class ParentTeacherTicketViewSet(viewsets.ModelViewSet):
                         'ar': f"{request.user.email}: {text[:80]}",
                         'en': f"{request.user.email}: {text[:80]}",
                     },
-                    link='/school-followup',
+                    link='/school',
                     icon='💬',
                 )
         return Response(ParentTeacherTicketSerializer(ticket).data)
@@ -668,10 +803,16 @@ class WeeklySummaryAPIView(APIView):
                 created_at__date__lt=week_end,
             )
             open_tickets = ParentTeacherTicket.objects.filter(student=student, status__in=['open', 'in_progress'])
-            attendance_events = student_enrollments.filter(
-                section__academic_year__is_current=True,
-            ).count()
-            attendance_rate = 100.0 if attendance_events else 0.0
+            week_attendance = Attendance.objects.filter(
+                student=student,
+                date__gte=week_start,
+                date__lt=week_end,
+            )
+            if week_attendance.exists():
+                present = week_attendance.filter(status='present').count()
+                attendance_rate = present / week_attendance.count() * 100.0
+            else:
+                attendance_rate = 0.0
 
             topics_needing_support = []
             for ticket in ParentTeacherTicket.objects.filter(student=student).exclude(subject=None)[:5]:
@@ -1123,6 +1264,19 @@ class MySchoolContextAPIView(APIView):
         else:
             weekly_reports = WeeklyReport.objects.none()
 
+        # Attendance records visible to the user (own/children/section students).
+        if is_admin(user) or user.role == 'school_admin':
+            attendance_qs = Attendance.objects.select_related('student', 'section', 'school')
+        elif user.role == 'teacher':
+            attendance_qs = Attendance.objects.select_related('student', 'section', 'school').filter(section_id__in=user_section_ids(user))
+        elif user.role == 'parent':
+            child_ids = FamilyLink.objects.filter(parent=user).values_list('student_id', flat=True)
+            attendance_qs = Attendance.objects.select_related('student', 'section', 'school').filter(student_id__in=child_ids)
+        elif user.role == 'student':
+            attendance_qs = Attendance.objects.select_related('student', 'section', 'school').filter(student=user)
+        else:
+            attendance_qs = Attendance.objects.none()
+
         return Response({
             "role": user.role,
             "schools": SchoolSerializer(schools.distinct(), many=True).data,
@@ -1140,6 +1294,7 @@ class MySchoolContextAPIView(APIView):
                 Attachment.objects.all() if is_admin(user) else Attachment.objects.filter(uploader=user),
                 many=True, context={'request': request},
             ).data,
+            "attendance": AttendanceSerializer(attendance_qs.distinct(), many=True, context={'request': request}).data,
             "ai_settings": {
                 "language_complexity": setting.language_complexity,
                 "tone_preference": setting.tone_preference,
@@ -1163,6 +1318,8 @@ class SchoolAnalyticsAPIView(APIView):
             "active_tickets": ParentTeacherTicket.objects.filter(status='open').count(),
             "attachments_pending_review": Attachment.objects.filter(review_status=Attachment.ReviewStatus.PENDING).count(),
             "attachments_total": Attachment.objects.count(),
+            "attendance_today": Attendance.objects.filter(date=timezone.localdate()).count(),
+            "absent_today": Attendance.objects.filter(date=timezone.localdate(), status=Attendance.Status.ABSENT).count(),
             "peak_hours": "09:00 AM - 12:00 PM",
             "ai_tokens_used_estimate": 45200,
         })

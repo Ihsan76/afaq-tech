@@ -1717,7 +1717,19 @@
     "adminMonitor": "Admin monitoring of attachments",
     "uploader": "Uploader",
     "file": "File",
-    "download": "Download"
+    "download": "Download",
+    "attendance": "حضور و غیاب",
+    "recordAttendance": "ثبت حضور و غیاب",
+    "date": "تاریخ",
+    "loadStudents": "بارگذاری دانش‌آموزان",
+    "present": "حاضر",
+    "absent": "غایب",
+    "saveAttendance": "ذخیره حضور و غیاب",
+    "attendanceSaved": "حضور و غیاب با موفقیت ذخیره شد",
+    "attendanceSaveError": "خطا در ذخیره حضور و غیاب",
+    "attendanceLoadError": "خطا در بارگذاری دانش‌آموزان",
+    "noAttendance": "هنوز هیچ رکورد حضور و غیابی ثبت نشده است",
+    "recentAttendance": "آخرین رکوردهای حضور و غیاب"
   },
   "errors": {
     "required": "این فیلد الزامی است.",

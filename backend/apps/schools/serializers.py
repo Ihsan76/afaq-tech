@@ -5,6 +5,7 @@ from .models import (
     AcademicYear,
     AnnouncementReadReceipt,
     Attachment,
+    Attendance,
     FamilyLink,
     ParentTeacherTicket,
     School,
@@ -153,6 +154,23 @@ class SupportRequestSerializer(serializers.ModelSerializer):
         model = SupportRequest
         fields = '__all__'
         read_only_fields = ['user', 'created_at']
+
+
+class AttendanceSerializer(serializers.ModelSerializer):
+    student_email = serializers.CharField(source='student.email', read_only=True)
+    student_name = serializers.SerializerMethodField()
+    section_name = serializers.CharField(source='section.name', read_only=True)
+    school_name = serializers.CharField(source='school.name', read_only=True)
+    recorded_by_email = serializers.CharField(source='recorded_by.email', read_only=True)
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+
+    class Meta:
+        model = Attendance
+        fields = '__all__'
+        read_only_fields = ['recorded_by', 'created_at']
+
+    def get_student_name(self, obj):
+        return obj.student.translations.get('ar', {}).get('name', obj.student.email)
 
 
 class AttachmentSerializer(serializers.ModelSerializer):

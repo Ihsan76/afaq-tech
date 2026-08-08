@@ -1763,7 +1763,19 @@
     "managerPlaceholder": "ابحث بالبريد أو الاسم لتعيين مدير...",
     "managerSearching": "جاري البحث...",
     "removeManager": "إزالة",
-    "managerAssignHint": "تعيين المدير يمنحه دور مدير المدرسة بصلاحيات كاملة على هذه المدرسة فقط."
+    "managerAssignHint": "تعيين المدير يمنحه دور مدير المدرسة بصلاحيات كاملة على هذه المدرسة فقط.",
+    "attendance": "الحضور والغياب",
+    "recordAttendance": "تسجيل الحضور والغياب",
+    "date": "التاريخ",
+    "loadStudents": "تحميل الطلاب",
+    "present": "حاضر",
+    "absent": "غائب",
+    "saveAttendance": "حفظ الحضور",
+    "attendanceSaved": "تم حفظ الحضور بنجاح",
+    "attendanceSaveError": "حدث خطأ أثناء حفظ الحضور",
+    "attendanceLoadError": "حدث خطأ أثناء تحميل الطلاب",
+    "noAttendance": "لا توجد سجلات حضور بعد",
+    "recentAttendance": "آخر سجلات الحضور"
   },
   "editor": {
     "bold": "عريض",

@@ -1717,7 +1717,19 @@
     "adminMonitor": "Admin monitoring of attachments",
     "uploader": "Uploader",
     "file": "File",
-    "download": "Download"
+    "download": "Download",
+    "attendance": "حاضری اور غیر حاضری",
+    "recordAttendance": "حاضری ریکارڈ کریں",
+    "date": "تاریخ",
+    "loadStudents": "طلبہ لوڈ کریں",
+    "present": "حاضر",
+    "absent": "غیر حاضر",
+    "saveAttendance": "حاضری محفوظ کریں",
+    "attendanceSaved": "حاضری کامیابی سے محفوظ ہو گئی",
+    "attendanceSaveError": "حاضری محفوظ کرنے میں خرابی پیش آئی",
+    "attendanceLoadError": "طلبہ لوڈ کرنے میں خرابی پیش آئی",
+    "noAttendance": "ابھی کوئی حاضری ریکارڈ نہیں",
+    "recentAttendance": "حالیہ حاضری ریکارڈ"
   },
   "errors": {
     "required": "یہ فیلڈ درکار ہے۔",

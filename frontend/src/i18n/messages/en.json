@@ -1763,7 +1763,19 @@
     "managerPlaceholder": "Search by email or name to assign a manager...",
     "managerSearching": "Searching...",
     "removeManager": "Remove",
-    "managerAssignHint": "Assigning a manager grants them full School Admin access limited to this school only."
+    "managerAssignHint": "Assigning a manager grants them full School Admin access limited to this school only.",
+    "attendance": "Attendance",
+    "recordAttendance": "Record attendance",
+    "date": "Date",
+    "loadStudents": "Load students",
+    "present": "Present",
+    "absent": "Absent",
+    "saveAttendance": "Save attendance",
+    "attendanceSaved": "Attendance saved successfully",
+    "attendanceSaveError": "Error saving attendance",
+    "attendanceLoadError": "Error loading students",
+    "noAttendance": "No attendance records yet",
+    "recentAttendance": "Recent attendance records"
   },
   "editor": {
     "bold": "Bold",
