@@ -48,6 +48,7 @@ const STATIC_DESCRIPTION_ROUTES = [
   "/forgot-password",
   "/reset-password",
   "/verify-email",
+  "/school",
 ];
 
 const EXTRA_ROUTES = [
@@ -141,6 +142,17 @@ async function main() {
   // Root redirect sanity: bare domain should redirect to a locale.
   const root = await fetchText(BASE_URL);
   check("GET / redirects to a locale", [301, 302, 307, 308].includes(root.status), `(got ${root.status})`);
+
+  // Legacy /school-followup should permanently redirect to /school.
+  for (const locale of LOCALES) {
+    const res = await fetchText(`${BASE_URL}/${locale}/school-followup`);
+    check(
+      `GET /${locale}/school-followup → 308 /${locale}/school`,
+      res.status === 308 && res.headers.location?.endsWith(`/${locale}/school`),
+      `(got ${res.status} ${res.headers.location})`,
+    );
+  }
+
 
   console.log(`\n${checks} checks, ${failures} failures`);
   process.exit(failures > 0 ? 1 : 0);

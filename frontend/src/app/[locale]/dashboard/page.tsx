@@ -183,7 +183,7 @@ export default function DashboardPage() {
   });
 
   actions.push({
-    href: `/${locale}/school-followup`,
+    href: `/${locale}/school`,
     icon: "🏫",
     title: t("dashboard.schoolFollowUp"),
     desc: t("dashboard.schoolFollowUpDesc"),
