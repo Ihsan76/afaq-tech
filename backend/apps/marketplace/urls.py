@@ -24,4 +24,10 @@ urlpatterns = [
     path('admin/orders/<int:pk>/', views.AdminOrderDetailView.as_view(), name='admin-order-detail'),
     path('admin/reviews/', views.AdminReviewListView.as_view(), name='admin-review-list'),
     path('admin/reviews/<int:pk>/', views.AdminReviewDetailView.as_view(), name='admin-review-detail'),
+    path('wallet/', views.WalletRetrieveView.as_view(), name='wallet-detail'),
+    path('wallet/transactions/', views.WalletTransactionsView.as_view(), name='wallet-transactions'),
+    path('payouts/', views.PayoutRequestCreateView.as_view(), name='payout-create'),
+    path('payouts/mine/', views.MyPayoutListView.as_view(), name='my-payout-list'),
+    path('admin/payouts/', views.AdminPayoutListView.as_view(), name='admin-payout-list'),
+    path('admin/payouts/<int:pk>/process/', views.AdminPayoutProcessView.as_view(), name='admin-payout-process'),
 ]

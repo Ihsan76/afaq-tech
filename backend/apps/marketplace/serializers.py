@@ -2,7 +2,7 @@ from rest_framework import serializers
 
 from apps.core.translations import get_translation
 
-from .models import Order, Review, Service, ServiceAvailability, ServiceCategory
+from .models import Order, Review, Service, ServiceAvailability, ServiceCategory, Wallet, WalletTransaction, PayoutRequest
 
 
 class ServiceCategorySerializer(serializers.ModelSerializer):
@@ -134,3 +134,33 @@ class OrderCreateSerializer(serializers.ModelSerializer):
         validated_data['price_paid'] = service.price
         validated_data['currency'] = service.currency
         return super().create(validated_data)
+
+
+class WalletTransactionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = WalletTransaction
+        fields = ['id', 'amount', 'transaction_type', 'reference_id', 'description', 'created_at']
+
+
+class WalletSerializer(serializers.ModelSerializer):
+    transactions = WalletTransactionSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Wallet
+        fields = ['id', 'balance', 'currency', 'updated_at', 'transactions']
+
+
+class PayoutRequestSerializer(serializers.ModelSerializer):
+    provider_name = serializers.SerializerMethodField()
+    provider_email = serializers.SerializerMethodField()
+
+    class Meta:
+        model = PayoutRequest
+        fields = ['id', 'provider', 'provider_name', 'provider_email', 'amount', 'currency', 'status', 'bank_details', 'admin_notes', 'created_at', 'processed_at']
+        read_only_fields = ['provider', 'status', 'admin_notes', 'processed_at', 'created_at']
+
+    def get_provider_name(self, obj):
+        return get_translation(obj.provider.translations, 'ar', 'name', obj.provider.email)
+
+    def get_provider_email(self, obj):
+        return obj.provider.email

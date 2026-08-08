@@ -1,6 +1,15 @@
 from django.contrib import admin
 
-from .models import Order, Review, Service, ServiceAvailability, ServiceCategory
+from .models import (
+    Order,
+    PayoutRequest,
+    Review,
+    Service,
+    ServiceAvailability,
+    ServiceCategory,
+    Wallet,
+    WalletTransaction,
+)
 
 
 class ServiceAvailabilityInline(admin.TabularInline):
@@ -40,3 +49,24 @@ class ReviewAdmin(admin.ModelAdmin):
     list_display = ['id', 'reviewer', 'service', 'rating', 'is_approved', 'created_at']
     list_filter = ['rating', 'is_approved', 'created_at']
     list_editable = ['is_approved']
+
+
+class WalletTransactionInline(admin.TabularInline):
+    model = WalletTransaction
+    extra = 0
+    readonly_fields = ['amount', 'transaction_type', 'reference_id', 'description', 'created_at']
+    can_delete = False
+
+
+@admin.register(Wallet)
+class WalletAdmin(admin.ModelAdmin):
+    list_display = ['user', 'balance', 'currency', 'updated_at']
+    search_fields = ['user__email', 'user__name_ar', 'user__name_en']
+    inlines = [WalletTransactionInline]
+
+
+@admin.register(PayoutRequest)
+class PayoutRequestAdmin(admin.ModelAdmin):
+    list_display = ['id', 'provider', 'amount', 'currency', 'status', 'created_at', 'processed_at']
+    list_filter = ['status', 'created_at']
+    search_fields = ['provider__email', 'provider__name_ar', 'provider__name_en']

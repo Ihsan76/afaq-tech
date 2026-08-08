@@ -108,6 +108,29 @@ class PaymentProvider(ABC):
             'status',
             'updated_at',
         ])
+
+        # Credit provider wallet & record platform fee (10%)
+        from decimal import Decimal
+        from ..models import Wallet, WalletTransaction
+        provider = order.service.provider
+        if provider:
+            wallet, _ = Wallet.objects.get_or_create(user=provider, defaults={'currency': order.currency})
+            fee_percentage = Decimal('0.10')
+            total_amount = order.price_paid
+            platform_fee = total_amount * fee_percentage
+            provider_earning = total_amount - platform_fee
+
+            wallet.balance += provider_earning
+            wallet.save(update_fields=['balance', 'updated_at'])
+
+            WalletTransaction.objects.create(
+                wallet=wallet,
+                amount=provider_earning,
+                transaction_type=WalletTransaction.Type.SALE_EARNING,
+                reference_id=f"order_{order.id}",
+                description=f"Earning from order #{order.id} (after 10% platform fee)"
+            )
+
         from apps.notifications.services import notify
         notify(
             order.buyer,

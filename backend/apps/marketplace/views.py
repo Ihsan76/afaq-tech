@@ -1,6 +1,6 @@
 from django.db import models
 from django.utils import timezone
-from rest_framework import generics, permissions, status
+from rest_framework import generics, permissions, serializers, status
 from rest_framework.decorators import (
     api_view,
     authentication_classes,
@@ -12,7 +12,15 @@ from rest_framework.response import Response
 from apps.gamification.services import PointsManager
 from apps.users.permissions import IsMarketplaceAdmin
 
-from .models import Order, Review, Service, ServiceAvailability, ServiceCategory
+from .models import (
+    Order,
+    PayoutRequest,
+    Review,
+    Service,
+    ServiceAvailability,
+    ServiceCategory,
+    Wallet,
+)
 from .payments import (
     PaymentProviderError,
     PaymentWebhookError,
@@ -24,11 +32,14 @@ from .serializers import (
     AdminServiceSerializer,
     OrderCreateSerializer,
     OrderSerializer,
+    PayoutRequestSerializer,
     ReviewSerializer,
     ServiceAvailabilitySerializer,
     ServiceCategorySerializer,
     ServiceDetailSerializer,
     ServiceListSerializer,
+    WalletSerializer,
+    WalletTransactionSerializer,
 )
 
 # --- Categories ---
@@ -402,3 +413,117 @@ class AdminReviewDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     def perform_update(self, serializer):
         serializer.save()
+
+
+# --- Wallet ---
+
+class WalletRetrieveView(generics.RetrieveAPIView):
+    serializer_class = WalletSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_object(self):
+        wallet, _ = Wallet.objects.get_or_create(user=self.request.user)
+        return wallet
+
+
+class WalletTransactionsView(generics.ListAPIView):
+    serializer_class = WalletTransactionSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    pagination_class = None
+
+    def get_queryset(self):
+        wallet, _ = Wallet.objects.get_or_create(user=self.request.user)
+        return wallet.transactions.all()
+
+
+# --- Provider Payouts ---
+
+class PayoutRequestCreateView(generics.CreateAPIView):
+    serializer_class = PayoutRequestSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        wallet, _ = Wallet.objects.get_or_create(user=user)
+        amount = serializer.validated_data['amount']
+        if amount <= 0:
+            raise serializers.ValidationError({'amount': 'Amount must be greater than zero.'})
+        if amount > wallet.balance:
+            raise serializers.ValidationError({'amount': 'Insufficient wallet balance.'})
+        serializer.save(provider=user, currency=wallet.currency)
+
+
+class MyPayoutListView(generics.ListAPIView):
+    serializer_class = PayoutRequestSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    pagination_class = None
+
+    def get_queryset(self):
+        return PayoutRequest.objects.filter(provider=self.request.user).order_by('-created_at')
+
+
+# --- Admin: Payouts ---
+
+class AdminPayoutListView(generics.ListAPIView):
+    serializer_class = PayoutRequestSerializer
+    permission_classes = [IsMarketplaceAdmin]
+
+    def get_queryset(self):
+        qs = PayoutRequest.objects.select_related('provider').all()
+        payout_status = self.request.query_params.get('status')
+        if payout_status in PayoutRequest.Status.values:
+            qs = qs.filter(status=payout_status)
+        return qs.order_by('-created_at')
+
+
+class AdminPayoutProcessView(generics.RetrieveUpdateAPIView):
+    serializer_class = PayoutRequestSerializer
+    permission_classes = [IsMarketplaceAdmin]
+
+    def get_queryset(self):
+        return PayoutRequest.objects.select_related('provider').all()
+
+    def update(self, request, *args, **kwargs):
+        payout = self.get_object()
+        action = request.data.get('action')
+        if action not in ('approve', 'reject', 'mark_paid'):
+            return Response({'error': 'Invalid action'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if action == 'reject':
+            if payout.status != PayoutRequest.Status.PENDING:
+                return Response({'error': 'Only pending payouts can be rejected'}, status=status.HTTP_400_BAD_REQUEST)
+            payout.status = PayoutRequest.Status.REJECTED
+            payout.admin_notes = request.data.get('admin_notes', '')
+            payout.processed_at = timezone.now()
+            payout.save()
+            return Response(PayoutRequestSerializer(payout).data)
+
+        if action == 'approve':
+            if payout.status != PayoutRequest.Status.PENDING:
+                return Response({'error': 'Only pending payouts can be approved'}, status=status.HTTP_400_BAD_REQUEST)
+            payout.status = PayoutRequest.Status.APPROVED
+            payout.admin_notes = request.data.get('admin_notes', '')
+            payout.processed_at = timezone.now()
+            payout.save()
+            return Response(PayoutRequestSerializer(payout).data)
+
+        # mark_paid
+        if payout.status == PayoutRequest.Status.PAID:
+            return Response({'error': 'Payout already paid'}, status=status.HTTP_400_BAD_REQUEST)
+        wallet, _ = Wallet.objects.get_or_create(user=payout.provider)
+        if payout.amount > wallet.balance:
+            return Response({'error': 'Insufficient wallet balance'}, status=status.HTTP_400_BAD_REQUEST)
+        wallet.balance -= payout.amount
+        wallet.save(update_fields=['balance', 'updated_at'])
+        from .models import WalletTransaction
+        WalletTransaction.objects.create(
+            wallet=wallet,
+            amount=-payout.amount,
+            transaction_type=WalletTransaction.Type.PAYOUT,
+            reference_id=f"payout_{payout.id}",
+            description=f"Payout #{payout.id} paid out"
+        )
+        payout.status = PayoutRequest.Status.PAID
+        payout.processed_at = timezone.now()
+        payout.save()
+        return Response(PayoutRequestSerializer(payout).data)

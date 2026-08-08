@@ -134,3 +134,66 @@ class Review(models.Model):
 
     def __str__(self):
         return f"Review #{self.id} - {self.rating}/5"
+
+
+class Wallet(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='wallet')
+    balance = models.DecimalField(_('Balance'), max_digits=12, decimal_places=2, default=0)
+    currency = models.CharField(_('Currency'), max_length=3, default='JOD')
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = _('Wallet')
+        verbose_name_plural = _('Wallets')
+
+    def __str__(self):
+        return f"Wallet for {self.user} — {self.balance} {self.currency}"
+
+
+class WalletTransaction(models.Model):
+    class Type(models.TextChoices):
+        SALE_EARNING = 'sale_earning', _('Sale Earning')
+        PLATFORM_FEE = 'platform_fee', _('Platform Fee')
+        PAYOUT = 'payout', _('Payout Withdrawal')
+        DEPOSIT = 'deposit', _('Deposit')
+        REFUND = 'refund', _('Refund')
+
+    wallet = models.ForeignKey(Wallet, on_delete=models.CASCADE, related_name='transactions')
+    amount = models.DecimalField(_('Amount'), max_digits=12, decimal_places=2)
+    transaction_type = models.CharField(_('Type'), max_length=30, choices=Type.choices)
+    reference_id = models.CharField(_('Reference ID'), max_length=100, blank=True, default='')
+    description = models.TextField(_('Description'), blank=True, default='')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = _('Wallet Transaction')
+        verbose_name_plural = _('Wallet Transactions')
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.transaction_type}: {self.amount} ({self.wallet.user})"
+
+
+class PayoutRequest(models.Model):
+    class Status(models.TextChoices):
+        PENDING = 'pending', _('Pending')
+        APPROVED = 'approved', _('Approved')
+        REJECTED = 'rejected', _('Rejected')
+        PAID = 'paid', _('Paid')
+
+    provider = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='payout_requests')
+    amount = models.DecimalField(_('Amount'), max_digits=10, decimal_places=2)
+    currency = models.CharField(_('Currency'), max_length=3, default='JOD')
+    status = models.CharField(_('Status'), max_length=20, choices=Status.choices, default=Status.PENDING)
+    bank_details = models.TextField(_('Bank / Wallet Details'), help_text='IBAN, Bank Name, or CliQ / ZainCash number')
+    admin_notes = models.TextField(_('Admin Notes'), blank=True, default='')
+    created_at = models.DateTimeField(auto_now_add=True)
+    processed_at = models.DateTimeField(_('Processed At'), null=True, blank=True)
+
+    class Meta:
+        verbose_name = _('Payout Request')
+        verbose_name_plural = _('Payout Requests')
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Payout #{self.id} - {self.provider} ({self.amount} {self.currency}) [{self.status}]"
