@@ -10,6 +10,7 @@ import HtmlAttrs from "@/components/HtmlAttrs";
 import ChatWidget from "@/components/ChatWidget";
 import KeepAlive from "@/components/KeepAlive";
 import TranslationProvider from "@/components/TranslationProvider";
+import AuthInitializer from "@/components/AuthInitializer";
 import "../globals.css";
 
 export async function generateMetadata({
@@ -62,6 +63,7 @@ export default async function LocaleLayout({
       <HtmlAttrs locale={locale} />
       <NextIntlClientProvider messages={messages}>
         <TranslationProvider locale={locale} messages={messages}>
+          <AuthInitializer />
           <NavbarWrapper />
           <div className="flex min-h-[calc(100vh-4rem)]">
             <ContextualSidebar />
