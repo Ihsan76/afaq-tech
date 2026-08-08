@@ -58,8 +58,12 @@ api.interceptors.response.use(
     const redirectToLogin = () => {
       if (typeof window !== "undefined") {
         const locale = window.location.pathname.split("/")[1] || "en";
-        if (!window.location.pathname.endsWith("/login")) {
+        const path = window.location.pathname;
+        const isProtected = path.includes("/dashboard") || path.includes("/admin") || path.includes("/profile") || path.includes("/settings");
+        if (isProtected && !path.endsWith("/login")) {
           window.location.href = `/${locale}/login`;
+        } else if (!isProtected && !path.endsWith("/login")) {
+          window.location.href = `/${locale}`;
         }
       }
     };
