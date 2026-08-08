@@ -14,8 +14,11 @@ export async function generateMetadata({
   return buildMetadata({
     locale,
     path: "/",
-    title: seo?.title || `${localizedValue({ ar: "آفاق تكنولوجي", en: "Afaq Tech" }, locale)} — ${localizedValue({ ar: "منصة رقمية", en: "Digital Platform" }, locale)}`,
-    description: seo?.description,
+    title: seo?.title || localizedValue({ ar: "آفاق تكنولوجي", en: "Afaq Tech" }, locale),
+    description: seo?.description || localizedValue(
+      { ar: "منصة تعليمية رقمية شاملة: مناهج، دورات، كتب، وخدمات", en: "A comprehensive digital education platform: curricula, courses, books, and services" },
+      locale
+    ),
     type: "website",
   });
 }

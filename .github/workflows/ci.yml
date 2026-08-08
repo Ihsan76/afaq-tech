@@ -55,3 +55,39 @@ jobs:
         run: npm run build
         env:
           NEXT_PUBLIC_API_URL: http://localhost:8003/api/v1
+
+  qa:
+    name: Frontend QA (10 locales / RTL / SSR SEO)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Build
+        run: npm run build
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:8003/api/v1
+      - name: Start server
+        run: |
+          npx next start -p 3100 &
+          node -e "
+            const http = require('http');
+            const deadline = Date.now() + 120000;
+            (function ping() {
+              http.get('http://localhost:3100/en', (res) => { res.resume(); process.exit(0); })
+                .on('error', () => {
+                  if (Date.now() > deadline) { console.error('server did not start'); process.exit(1); }
+                  setTimeout(ping, 1000);
+                });
+            })();
+          "
+      - name: Run QA smoke test (10 locales, RTL/LTR, hreflang, OG, JSON-LD, mobile)
+        run: node tests/qa/smoke.mjs

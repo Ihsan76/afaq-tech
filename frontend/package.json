@@ -8,6 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "test:qa": "node tests/qa/smoke.mjs",
     "sync:locales": "node scripts/sync-locales.mjs"
   },
   "dependencies": {
