@@ -80,6 +80,10 @@ export const useAuthStore = create<AuthState>((set) => ({
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
     set({ user: null, accessToken: null, refreshToken: null });
+    if (typeof window !== "undefined") {
+      const locale = window.location.pathname.split("/")[1] || "en";
+      window.location.href = `/${locale}`;
+    }
   },
 
   sendVerification: async (email: string, locale: string) => {
