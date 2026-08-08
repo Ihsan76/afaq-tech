@@ -57,13 +57,23 @@ api.interceptors.response.use(
 
     const redirectToLogin = () => {
       if (typeof window !== "undefined") {
-        const locale = window.location.pathname.split("/")[1] || "en";
+        const parts = window.location.pathname.split("/").filter(Boolean);
+        const locale = parts[0] || "en";
+        const section = parts[1] || "";
         const path = window.location.pathname;
         const isProtected = path.includes("/dashboard") || path.includes("/admin") || path.includes("/profile") || path.includes("/settings");
+        
         if (isProtected && !path.endsWith("/login")) {
+          // If in a protected section, redirect to login
           window.location.href = `/${locale}/login`;
         } else if (!isProtected && !path.endsWith("/login")) {
-          window.location.href = `/${locale}`;
+          // If in a specific landing/service section (e.g. academy, school, curriculum, ebooks), stay or redirect to that section's root
+          const landingSections = ["academy", "school", "curriculum", "ebooks", "marketplace", "blog"];
+          if (landingSections.includes(section)) {
+            window.location.href = `/${locale}/${section}`;
+          } else {
+            window.location.href = `/${locale}`;
+          }
         }
       }
     };
