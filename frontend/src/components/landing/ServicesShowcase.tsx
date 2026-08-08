@@ -15,7 +15,7 @@ export default function ServicesShowcase({ content }: { content?: Record<string,
 
   const defaultServices = [
     { icon: "🌐", title: t("serviceWebDesign"), desc: t("serviceWebDesignDesc"), color: "var(--color-primary-light)", href: `/${locale}/services/web-design` },
-    { icon: "📱", title: t("serviceSocialMedia"), desc: t("serviceSocialMediaDesc"), color: "var(--color-success-light)", href: `/${locale}/services/social-media` },
+    { icon: "🏫", title: "آفاق مدرستي", desc: "إدارة المدرسية الذكية وحضور الطلاب والتواصل مع أولياء الأمور", color: "var(--color-success-light)", href: `/${locale}/school`, badge: "جديد" },
     { icon: "📄", title: t("serviceLandingPages"), desc: t("serviceLandingPagesDesc"), color: "var(--color-accent-light)", href: `/${locale}/services/landing-pages` },
     { icon: "📋", title: t("serviceForms"), desc: t("serviceFormsDesc"), color: "var(--color-warning-light)", href: `/${locale}/services/forms` },
     { icon: "📚", title: t("serviceEbooks"), desc: t("serviceEbooksDesc"), color: "var(--color-error-light)", href: `/${locale}/services/ebooks` },
