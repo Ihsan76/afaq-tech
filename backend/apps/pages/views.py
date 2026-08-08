@@ -55,9 +55,10 @@ class PagePublicView(APIView):
 
 
 class PageAdminListView(generics.ListAPIView):
-    """قامة الصفحات — للإدارة"""
+    """قائمة الصفحات — للإدارة"""
     serializer_class = PageListSerializer
     permission_classes = [IsContentAdmin]
+    pagination_class = None
 
     def get_queryset(self):
         return Page.objects.all()
@@ -222,6 +223,7 @@ class TemplateAdminListView(generics.ListAPIView):
     """قائمة القوالب — للإدارة"""
     serializer_class = PageTemplateSerializer
     permission_classes = [IsContentAdmin]
+    pagination_class = None
 
     def get_queryset(self):
         return PageTemplate.objects.all()

@@ -92,6 +92,7 @@ class PageBlock(models.Model):
         CODE = 'code', 'بلوك كود'
         CUSTOM_HTML = 'custom_html', 'HTML مخصص'
         BLOG_LIST = 'blog_list', 'قائمة المدونة'
+        COURSES_LIST = 'courses_list', 'قائمة الدورات المختارة'
 
     page = models.ForeignKey(Page, on_delete=models.CASCADE, related_name='blocks', verbose_name='الصفحة')
     block_type = models.CharField('نوع البلوك', max_length=30, choices=BlockType.choices)

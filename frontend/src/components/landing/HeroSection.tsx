@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { localizedContent, resolveLink } from "@/lib/i18n";
 import useSWR from "swr";
 import { api } from "@/lib/api";
+import { useAuthStore } from "@/store/auth";
 
 const fetcher = (url: string) => api.get(url).then((r) => r.data);
 
@@ -14,6 +15,7 @@ export default function HeroSection({ content }: { content?: Record<string, any>
   const t = useTranslations("landing");
   const pathname = usePathname();
   const locale = pathname.split("/")[1] || "en";
+  const { user } = useAuthStore();
   const c = content || {};
 
   const [mounted, setMounted] = useState(false);
@@ -22,8 +24,9 @@ export default function HeroSection({ content }: { content?: Record<string, any>
 
   const heading = localizedContent(c, "heading", locale, t("heroTitle"));
   const subtitle = localizedContent(c, "subtitle", locale, t("heroSubtitle"));
-  const ctaText = localizedContent(c, "cta_text", locale, t("heroCTA"));
-  let ctaLink = localizedContent(c, "cta_link", locale, "/register");
+  const isSmart = c.is_smart_cta !== false;
+  const ctaText = (isSmart && user) ? (locale === "ar" ? "الانتقال لساحة العمل" : "Go to Workspace") : localizedContent(c, "cta_text", locale, t("heroCTA"));
+  let ctaLink = (isSmart && user) ? `/${locale}/dashboard` : localizedContent(c, "cta_link", locale, "/register");
   if (ctaLink.startsWith("mailto:") && settings?.email) {
     ctaLink = `mailto:${settings.email}`;
   }

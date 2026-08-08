@@ -7,6 +7,7 @@ import { useScrollReveal } from "@/hooks/useScrollReveal";
 import { localizedContent, resolveLink } from "@/lib/i18n";
 import useSWR from "swr";
 import { api } from "@/lib/api";
+import { useAuthStore } from "@/store/auth";
 
 const fetcher = (url: string) => api.get(url).then((r) => r.data);
 
@@ -21,6 +22,7 @@ export default function FeaturesSection({ content }: { content?: Record<string, 
   const t = useTranslations("landing");
   const pathname = usePathname();
   const locale = pathname.split("/")[1] || "en";
+  const { user } = useAuthStore();
   const c = content || {};
   const { ref: sectionRef, isVisible: sectionVisible } = useScrollReveal();
   const { ref: titleRef, isVisible: titleVisible } = useScrollReveal();
@@ -29,7 +31,7 @@ export default function FeaturesSection({ content }: { content?: Record<string, 
   const defaultFeatures = [
     { icon: "🎓", title: t("feature1Title"), desc: t("feature1Desc"), color: "var(--color-primary-light)", points: [t("feature1Point1"), t("feature1Point2"), t("feature1Point3")], href: `/${locale}/academy` },
     { icon: "📝", title: t("feature2Title"), desc: t("feature2Desc"), color: "var(--color-success-light)", points: [t("feature2Point1"), t("feature2Point2"), t("feature2Point3")], href: `/${locale}/lesson-plans/new` },
-    { icon: "🤖", title: t("feature3Title"), desc: t("feature3Desc"), color: "var(--color-accent-light)", points: [t("feature3Point1"), t("feature3Point2"), t("feature3Point3")], href: `/${locale}/register` },
+    { icon: "🤖", title: t("feature3Title"), desc: t("feature3Desc"), color: "var(--color-accent-light)", points: [t("feature3Point1"), t("feature3Point2"), t("feature3Point3")], href: user ? `/${locale}/dashboard` : `/${locale}/register` },
   ];
 
   const features = c.items?.map((item: any, i: number) => {

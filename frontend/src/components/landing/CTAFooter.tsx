@@ -5,18 +5,20 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useScrollReveal } from "@/hooks/useScrollReveal";
 import { localizedContent, resolveLink } from "@/lib/i18n";
+import { useAuthStore } from "@/store/auth";
 
 export default function CTAFooter({ content }: { content?: Record<string, any> }) {
   const t = useTranslations("landing");
   const pathname = usePathname();
   const locale = pathname.split("/")[1] || "en";
+  const { user } = useAuthStore();
   const c = content || {};
   const { ref, isVisible } = useScrollReveal();
 
   const title = localizedContent(c, "title", locale, t("ctaTitle"));
   const subtitle = localizedContent(c, "subtitle", locale, t("ctaSubtitle"));
-  const ctaText = localizedContent(c, "cta_text", locale, t("ctaButton"));
-  const ctaLink = resolveLink(locale, localizedContent(c, "cta_link", locale, "/register"));
+  const ctaText = user ? (locale === "ar" ? "الانتقال لساحة العمل" : "Go to Workspace") : localizedContent(c, "cta_text", locale, t("ctaButton"));
+  const ctaLink = user ? `/${locale}/dashboard` : resolveLink(locale, localizedContent(c, "cta_link", locale, "/register"));
 
   const scrollToSection = (hash: string) => {
     const el = document.getElementById(hash.replace("#", ""));

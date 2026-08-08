@@ -43,6 +43,7 @@ const BLOCK_COMPONENTS: Record<string, React.ComponentType<any>> = {
   download: dynamic(() => import("@/components/landing/DownloadSection"), { ssr: false }),
   code: dynamic(() => import("@/components/landing/CodeSection"), { ssr: false }),
   blog_list: dynamic(() => import("@/components/landing/BlogListBlock"), { ssr: false }),
+  courses_list: dynamic(() => import("@/components/landing/CoursesListBlock"), { ssr: false }),
   contact: dynamic(() => import("@/components/landing/ContactSection"), { ssr: false }),
   chat_greeting: dynamic(() => import("@/components/landing/ChatGreeting"), { ssr: false }),
 };

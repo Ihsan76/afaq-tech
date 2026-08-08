@@ -51,9 +51,9 @@ const COMMON_PAGES = [
   { value: "", label_ar: "اختر...", label_en: "Select..." },
   { value: "/academy", label_ar: "الأكاديمية", label_en: "Academy" },
   { value: "/curriculum", label_ar: "المناهج الدراسية", label_en: "Curriculum" },
-  { value: "/register", label_ar: "إنشاء حساب", label_en: "Register" },
+  { value: "/register", label_ar: "إنشاء حساب (ذكي: يتحول تلقائياً لساحة العمل للمسجلين)", label_en: "Register (Smart: Auto-redirects to workspace if logged in)" },
   { value: "/login", label_ar: "تسجيل الدخول", label_en: "Login" },
-  { value: "/dashboard", label_ar: "لوحة التحكم", label_en: "Dashboard" },
+  { value: "/dashboard", label_ar: "لوحة التحكم (ساحة العمل)", label_en: "Dashboard (Workspace)" },
   { value: "/profile", label_ar: "الملف الشخصي", label_en: "Profile" },
   { value: "/lesson-plans", label_ar: "خطط الدروس", label_en: "Lesson Plans" },
   { value: "/admin/pages", label_ar: "إدارة الصفحات", label_en: "Admin Pages" },
@@ -78,8 +78,8 @@ function Field({ label, value, onChange, placeholder, type = "input", rows, dir 
   );
 }
 
-function LinkField({ label, value, onChange, placeholder, ar, pageBlocks }: {
-  label: string; value: string; onChange: (v: string) => void; placeholder?: string; ar: boolean; pageBlocks?: any[];
+function LinkField({ label, value, onChange, placeholder, ar, pageBlocks, showSmartToggle, isSmart, onToggleSmart }: {
+  label: string; value: string; onChange: (v: string) => void; placeholder?: string; ar: boolean; pageBlocks?: any[]; showSmartToggle?: boolean; isSmart?: boolean; onToggleSmart?: (v: boolean) => void;
 }) {
   const isSection = value?.startsWith("#");
   const isPage = value?.startsWith("/");
@@ -93,8 +93,16 @@ function LinkField({ label, value, onChange, placeholder, ar, pageBlocks }: {
     .filter(Boolean);
 
   return (
-    <div className="space-y-2">
-      <label className={labelCls} style={{ color: "var(--color-text-muted)" }}>{label}</label>
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <label className={labelCls} style={{ color: "var(--color-text-muted)" }}>{label}</label>
+        {showSmartToggle && (
+          <label className="flex items-center gap-2 cursor-pointer bg-[var(--color-primary-light)] px-2.5 py-1 rounded-xl">
+            <input type="checkbox" checked={!!isSmart} onChange={(e) => onToggleSmart?.(e.target.checked)} className="rounded text-[var(--color-primary)] focus:ring-0" />
+            <span className="text-xs font-bold" style={{ color: "var(--color-primary)" }}>{ar ? "🧠 زر ذكي (يتغير حسب تسجيل الدخول)" : "🧠 Smart Button (Auth-aware)"}</span>
+          </label>
+        )}
+      </div>
       {/* Type Tabs */}
       <div className="flex gap-1 p-1 rounded-xl" style={{ background: "var(--color-surface-alt)" }}>
         <button type="button" onClick={() => { const first = availableSections[0]; if (first) onChange(`#${first.id}`); }}
@@ -137,28 +145,6 @@ function LinkField({ label, value, onChange, placeholder, ar, pageBlocks }: {
         <input value={value} onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder || "https://..."}
           className={inputCls} style={{ background: "var(--color-surface)", color: "var(--color-text)", borderColor: "var(--color-border)" }} />
-      )}
-      {/* Hidden input for when nothing is selected */}
-      {!isSection && !isPage && !value && (
-        <div className="flex gap-2">
-          {availableSections.length > 0 && (
-            <button type="button" onClick={() => { const first = availableSections[0]; if (first) onChange(`#${first.id}`); }}
-              className="flex-1 py-2 rounded-xl border border-dashed text-xs font-bold transition-all hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
-              style={{ borderColor: "var(--color-border)", color: "var(--color-text-muted)" }}>
-              {ar ? "اختر قسم" : "Choose Section"}
-            </button>
-          )}
-          <button type="button" onClick={() => onChange("/academy")}
-            className="flex-1 py-2 rounded-xl border border-dashed text-xs font-bold transition-all hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
-            style={{ borderColor: "var(--color-border)", color: "var(--color-text-muted)" }}>
-            {ar ? "اختر صفحة" : "Choose Page"}
-          </button>
-          <button type="button" onClick={() => onChange("https://")}
-            className="flex-1 py-2 rounded-xl border border-dashed text-xs font-bold transition-all hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
-            style={{ borderColor: "var(--color-border)", color: "var(--color-text-muted)" }}>
-            {ar ? "رابط خارجي" : "External"}
-          </button>
-        </div>
       )}
     </div>
   );
@@ -278,7 +264,7 @@ export default function BlockEditorPanel({
             </Section>
             <Section title={t("الزر الرئيسي", "Primary Button")}>
               <Field label={t("نص الزر", "Button Text")} value={lf("cta_text")} onChange={(v) => updateLocaleField("cta_text", contentLocale, v)} placeholder={t("ابدأ رحلتك", "Get Started")} />
-              <LinkField label={t("رابط الزر", "Button URL")} value={lf("cta_link")} onChange={(v) => updateLocaleField("cta_link", contentLocale, v)} placeholder="/register" ar={ar} pageBlocks={pageBlocks} />
+              <LinkField label={t("رابط الزر", "Button URL")} value={lf("cta_link")} onChange={(v) => updateLocaleField("cta_link", contentLocale, v)} placeholder="/register" ar={ar} pageBlocks={pageBlocks} showSmartToggle={true} isSmart={c.is_smart_cta !== false} onToggleSmart={(v) => updateContent("is_smart_cta", v)} />
             </Section>
             <Section title={t("الزر الثانوي", "Secondary Button")}>
               <Field label={t("نص الزر", "Button Text")} value={lf("secondary_cta")} onChange={(v) => updateLocaleField("secondary_cta", contentLocale, v)} placeholder={t("استكشف الخدمات", "Explore Services")} />

@@ -5,19 +5,22 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { localizedContent, resolveLink } from "@/lib/i18n";
+import { useAuthStore } from "@/store/auth";
 
 export default function PlatformHero({ content }: { content?: Record<string, any> }) {
   const t = useTranslations("landing");
   const pathname = usePathname();
   const locale = pathname.split("/")[1] || "en";
+  const { user } = useAuthStore();
   const c = content || {};
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
 
   const heading = localizedContent(c, "heading", locale, t("platformHeroTitle"));
   const subtitle = localizedContent(c, "subtitle", locale, t("platformHeroSubtitle"));
-  const ctaText = localizedContent(c, "cta_text", locale, t("platformHeroCTA"));
-  const ctaLink = resolveLink(locale, localizedContent(c, "cta_link", locale, "/register"));
+  const isSmart = c.is_smart_cta !== false;
+  const ctaText = (isSmart && user) ? (locale === "ar" ? "الانتقال لساحة العمل" : "Go to Workspace") : localizedContent(c, "cta_text", locale, t("platformHeroCTA"));
+  const ctaLink = (isSmart && user) ? `/${locale}/dashboard` : resolveLink(locale, localizedContent(c, "cta_link", locale, "/register"));
   const secText = localizedContent(c, "secondary_cta", locale, t("platformHeroServices"));
   const secLink = resolveLink(locale, localizedContent(c, "secondary_cta_link", locale, "#services"));
   const defaultBadges = [

@@ -18,7 +18,16 @@ export default function AdminTemplatesPage() {
   const locale = useLocale();
   const { languages } = useLanguages();
   const LANGUAGES = languages.map((l) => ({ code: l.code, label: l.native_name || l.name }));
-  const [templates, setTemplates] = useState<Template[]>([]);
+  const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
+
+  const startEdit = (tpl: Template) => {
+    setEditingTemplate(tpl);
+    setSlug(tpl.slug);
+    setCategory(tpl.category || "landing");
+    setNameTranslations(tpl.translations ? Object.fromEntries(Object.entries(tpl.translations).map(([k, v]) => [k, v.name || ""])) : {});
+    setDescTranslations(tpl.translations ? Object.fromEntries(Object.entries(tpl.translations).map(([k, v]) => [k, v.description || ""])) : {});
+    setShowForm(true);
+  };
   const [isLoading, setIsLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [slug, setSlug] = useState("");
@@ -51,11 +60,17 @@ export default function AdminTemplatesPage() {
         if (descTranslations[lang.code]?.trim()) entry.description = descTranslations[lang.code].trim();
         translations[lang.code] = entry;
       }
-      await api.post("/pages/admin/templates/create/", {
-        translations, slug, category, default_blocks: [], default_layout: {},
-      });
+      if (editingTemplate) {
+        await api.put(`/pages/admin/templates/${editingTemplate.id}/`, {
+          translations, slug, category,
+        });
+      } else {
+        await api.post("/pages/admin/templates/create/", {
+          translations, slug, category, default_blocks: [], default_layout: {},
+        });
+      }
       setShowForm(false); setSlug(""); setNameTranslations({}); setDescTranslations({});
-      setSelectedLang("ar"); setNameInput(""); setDescInput(""); setError(""); fetchTemplates();
+      setSelectedLang("ar"); setNameInput(""); setDescInput(""); setError(""); setEditingTemplate(null); fetchTemplates();
     } catch (e: any) { setError(e.response?.data ? JSON.stringify(e.response.data) : "حدث خطأ"); }
   };
 
@@ -169,6 +184,7 @@ export default function AdminTemplatesPage() {
                 {tpl.translations?.ar?.description && <p className="text-xs mb-2" style={{ color: "var(--color-text-muted)" }}>{tpl.translations.ar.description}</p>}
                 <p className="text-xs mb-3" style={{ color: "var(--color-text-muted)" }}>/{tpl.slug}</p>
                 <div className="flex gap-2">
+                  <button onClick={() => startEdit(tpl)} className="px-3 py-1.5 rounded-lg text-xs font-bold text-white" style={{ background: "var(--color-primary)" }}>{t("common.edit")}</button>
                   <button onClick={() => handleDelete(tpl.id)} className="px-3 py-1.5 rounded-lg text-xs font-bold text-white" style={{ background: "var(--color-error)" }}>{t("common.delete")}</button>
                 </div>
               </div>
