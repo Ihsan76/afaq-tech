@@ -51,7 +51,7 @@ export default function ContextualSidebar() {
   const pathParts = pathname.split("/");
   const service = pathParts[2] || "";
 
-  // If service has no specific management/contextual items, hide sidebar (return null)
+  // Hide sidebar on sections that have no management/contextual sidebar
   const supportedServices = ["academy", "ebooks", "school", "curriculum", "lesson-plans", "dashboard", "profile", "gamification", "subscriptions"];
   const shouldShow = isAdminRoute || (service && supportedServices.includes(service)) || pathname.includes("/dashboard");
   if (!shouldShow) {
@@ -159,119 +159,146 @@ export default function ContextualSidebar() {
     setExpandedSections((prev) => ({ ...prev, [section]: !prev[section] }));
   };
 
+  const renderNavContent = (isMobile = false) => (
+    <nav className="space-y-1.5 flex-1">
+      {isAdminRoute ? (
+        NAV_ITEMS.map((group) => {
+          const isExpanded = !!expandedSections[group.section];
+          const hasActive = group.items.some((i) => isActive(i.href));
+          return (
+            <div key={group.key} className="space-y-1">
+              <button
+                onClick={() => toggleSection(group.section)}
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition-all ${
+                  hasActive ? "bg-[var(--color-primary-light)] text-[var(--color-primary)]" : ""
+                }`}
+                style={{ color: hasActive ? "var(--color-primary)" : "var(--color-text)" }}
+                title={!isMobile && collapsed ? group.section : undefined}
+              >
+                {(!isMobile && collapsed) ? (
+                  <span className="mx-auto text-sm">{group.items[0]?.icon || "📁"}</span>
+                ) : (
+                  <>
+                    <span className="truncate">{group.section}</span>
+                    <span className="text-[10px]">{isExpanded ? "▼" : "◀"}</span>
+                  </>
+                )}
+              </button>
+
+              {(isExpanded || (isMobile ? false : collapsed) || hasActive) && (
+                <div className={`space-y-1 ${(!isMobile && collapsed) ? "" : "ms-2 ps-2 border-s border-[var(--color-border)]"}`}>
+                  {group.items.map((item) => {
+                    const active = isActive(item.href);
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        onClick={() => isMobile && setMobileOpen(false)}
+                        title={(!isMobile && collapsed) ? item.label : undefined}
+                        className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all ${
+                          (!isMobile && collapsed) ? "justify-center px-1" : ""
+                        }`}
+                        style={{
+                          backgroundColor: active ? "var(--color-primary-light)" : "transparent",
+                          color: active ? "var(--color-primary)" : "var(--color-text-secondary)",
+                        }}
+                      >
+                        <span className="text-base shrink-0">{item.icon}</span>
+                        {(!isMobile && collapsed) ? null : <span className="truncate">{item.label}</span>}
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })
+      ) : (
+        contextualItems.map((item) => {
+          const active = isActive(item.href);
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              onClick={() => isMobile && setMobileOpen(false)}
+              title={(!isMobile && collapsed) ? item.label : undefined}
+              className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-medium transition-all ${
+                (!isMobile && collapsed) ? "justify-center px-1" : ""
+              }`}
+              style={{
+                backgroundColor: active ? "var(--color-primary-light)" : "transparent",
+                color: active ? "var(--color-primary)" : "var(--color-text-secondary)",
+              }}
+            >
+              <span className="text-base shrink-0">{item.icon}</span>
+              {(!isMobile && collapsed) ? null : <span className="truncate">{item.label}</span>}
+            </Link>
+          );
+        })
+      )}
+    </nav>
+  );
+
   return (
     <>
-      {/* Mobile Toggle Bar */}
-      <div className="md:hidden flex items-center justify-between px-4 py-2 border-b bg-[var(--color-surface)]" style={{ borderColor: "var(--color-border)" }}>
+      {/* Mobile Top Navigation Bar */}
+      <div className="md:hidden flex items-center justify-between px-4 py-2.5 border-b bg-[var(--color-surface)] sticky top-14 z-40 shadow-sm" style={{ borderColor: "var(--color-border)" }}>
         <button
-          onClick={() => setMobileOpen(!mobileOpen)}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold border"
+          onClick={() => setMobileOpen(true)}
+          className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold border shadow-sm active:scale-95 transition-all"
           style={{ borderColor: "var(--color-border)", color: "var(--color-primary)", backgroundColor: "var(--color-primary-light)" }}
         >
-          <span>📂</span>
-          <span>{mobileOpen ? "إغلاق القائمة" : "القائمة الجانبية"}</span>
+          <span className="text-base">📂</span>
+          <span>القائمة السياقية</span>
         </button>
-        <span className="text-xs font-semibold truncate" style={{ color: "var(--color-text-muted)" }}>
-          {isAdminRoute ? "الإدارة" : service || "ساحة العمل"}
+        <span className="text-xs font-bold truncate px-2 py-1 rounded-lg bg-[var(--color-surface-alt)]" style={{ color: "var(--color-text)" }}>
+          {isAdminRoute ? "لوحة الإدارة" : service ? `خدمة ${service}` : "ساحة العمل"}
         </span>
       </div>
 
       {/* Mobile Drawer Overlay */}
       {mobileOpen && (
-        <div className="fixed inset-0 z-50 bg-black/50 md:hidden" onClick={() => setMobileOpen(false)}>
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm md:hidden flex justify-start animate-fade-in" onClick={() => setMobileOpen(false)}>
           <div
-            className="w-72 h-full p-4 overflow-y-auto shadow-2xl flex flex-col"
-            style={{ background: "var(--color-surface)" }}
+            className="w-72 h-full p-5 overflow-y-auto shadow-2xl flex flex-col justify-between"
+            style={{ background: "var(--color-surface)", borderInlineEnd: "1px solid var(--color-border)" }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between mb-4 pb-2 border-b" style={{ borderColor: "var(--color-border)" }}>
-              <span className="text-sm font-bold" style={{ color: "var(--color-text)" }}>
-                {isAdminRoute ? "قائمة الإدارة الشاملة" : "القائمة السياقية"}
-              </span>
-              <button onClick={() => setMobileOpen(false)} className="text-base font-bold" style={{ color: "var(--color-text-muted)" }}>✕</button>
+            <div>
+              <div className="flex items-center justify-between mb-5 pb-3 border-b" style={{ borderColor: "var(--color-border)" }}>
+                <span className="text-sm font-bold flex items-center gap-2" style={{ color: "var(--color-text)" }}>
+                  <span>📂</span>
+                  <span>{isAdminRoute ? "قائمة الإدارة الشاملة" : "القائمة السياقية"}</span>
+                </span>
+                <button
+                  onClick={() => setMobileOpen(false)}
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border shadow-sm"
+                  style={{ borderColor: "var(--color-border)", background: "var(--color-surface-alt)", color: "var(--color-text)" }}
+                >
+                  ✕
+                </button>
+              </div>
+              {renderNavContent(true)}
             </div>
-            
-            {/* Render items inside mobile drawer */}
-            <nav className="space-y-1.5 flex-1">
-              {isAdminRoute ? (
-                NAV_ITEMS.map((group) => {
-                  const isExpanded = !!expandedSections[group.section];
-                  const hasActive = group.items.some((i) => isActive(i.href));
-                  return (
-                    <div key={group.key} className="space-y-1">
-                      <button
-                        onClick={() => toggleSection(group.section)}
-                        className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition-all ${
-                          hasActive ? "bg-[var(--color-primary-light)] text-[var(--color-primary)]" : ""
-                        }`}
-                        style={{ color: hasActive ? "var(--color-primary)" : "var(--color-text)" }}
-                      >
-                        <span className="truncate">{group.section}</span>
-                        <span className="text-[10px]">{isExpanded ? "▼" : "◀"}</span>
-                      </button>
-
-                      {(isExpanded || hasActive) && (
-                        <div className="ms-2 ps-2 border-s border-[var(--color-border)] space-y-1">
-                          {group.items.map((item) => {
-                            const active = isActive(item.href);
-                            return (
-                              <Link
-                                key={item.href}
-                                href={item.href}
-                                onClick={() => setMobileOpen(false)}
-                                className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all"
-                                style={{
-                                  backgroundColor: active ? "var(--color-primary-light)" : "transparent",
-                                  color: active ? "var(--color-primary)" : "var(--color-text-secondary)",
-                                }}
-                              >
-                                <span className="text-base shrink-0">{item.icon}</span>
-                                <span className="truncate">{item.label}</span>
-                              </Link>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })
-              ) : (
-                contextualItems.map((item) => {
-                  const active = isActive(item.href);
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      onClick={() => setMobileOpen(false)}
-                      className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-medium transition-all"
-                      style={{
-                        backgroundColor: active ? "var(--color-primary-light)" : "transparent",
-                        color: active ? "var(--color-primary)" : "var(--color-text-secondary)",
-                      }}
-                    >
-                      <span className="text-base shrink-0">{item.icon}</span>
-                      <span className="truncate">{item.label}</span>
-                    </Link>
-                  );
-                })
-              )}
-            </nav>
+            <div className="pt-4 border-t mt-4 text-center text-xs opacity-70" style={{ borderColor: "var(--color-border)" }}>
+              آفاق تكنولوجي — Afaq Tech
+            </div>
           </div>
         </div>
       )}
 
-      {/* Desktop Sidebar */}
+      {/* Desktop Collapsible Sidebar */}
       <aside
         aria-label="Contextual Navigation"
-        className={`shrink-0 hidden md:flex flex-col py-4 px-2 border-e min-h-[calc(100vh-4rem)] transition-all duration-300 relative ${
-          collapsed ? "w-14" : "w-52"
+        className={`shrink-0 hidden md:flex flex-col pt-8 pb-4 px-2 border-e min-h-[calc(100vh-4rem)] transition-all duration-300 relative ${
+          collapsed ? "w-14" : "w-48"
         }`}
         style={{ background: "var(--color-surface)", borderColor: "var(--color-border)" }}
       >
         {/* Collapse Toggle Button */}
         <button
           onClick={toggleCollapse}
-          className="absolute -top-3 end-2.5 w-5 h-5 rounded-full flex items-center justify-center border shadow-md text-[9px] transition-all hover:scale-110 z-10"
+          className="absolute top-2 end-2.5 w-5 h-5 rounded-full flex items-center justify-center border shadow-md text-[9px] transition-all hover:scale-110 z-10"
           style={{
             background: "var(--color-surface)",
             borderColor: "var(--color-border)",
@@ -285,83 +312,14 @@ export default function ContextualSidebar() {
         {!collapsed && (
           <div className="mb-3 px-2">
             <p className="text-[10px] font-bold uppercase tracking-wider truncate" style={{ color: "var(--color-text-muted)" }}>
-              {isAdminRoute ? "قائمة الإدارة الشاملة" : service ? `قائمة ${service}` : "ساحة العمل"}
+              {isAdminRoute ? "قائمة الإدارة" : service ? `قائمة ${service}` : "ساحة العمل"}
             </p>
           </div>
         )}
 
-        <nav className="space-y-1.5 flex-1 overflow-y-auto pr-0.5">
-          {isAdminRoute ? (
-            // Admin collapsible sections
-            NAV_ITEMS.map((group) => {
-              const isExpanded = !!expandedSections[group.section];
-              const hasActive = group.items.some((i) => isActive(i.href));
-              return (
-                <div key={group.key} className="space-y-1">
-                  <button
-                    onClick={() => toggleSection(group.section)}
-                    className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                      hasActive ? "bg-[var(--color-primary-light)] text-[var(--color-primary)]" : ""
-                    }`}
-                    style={{ color: hasActive ? "var(--color-primary)" : "var(--color-text)" }}
-                    title={collapsed ? group.section : undefined}
-                  >
-                    {!collapsed && <span className="truncate">{group.section}</span>}
-                    {collapsed && <span className="mx-auto text-sm">{group.items[0]?.icon || "📁"}</span>}
-                    {!collapsed && <span className="text-[9px]">{isExpanded ? "▼" : "◀"}</span>}
-                  </button>
-
-                  {(isExpanded || collapsed || hasActive) && (
-                    <div className={`space-y-1 ${collapsed ? "" : "ms-1.5 ps-1.5 border-s border-[var(--color-border)]"}`}>
-                      {group.items.map((item) => {
-                        const active = isActive(item.href);
-                        return (
-                          <Link
-                            key={item.href}
-                            href={item.href}
-                            title={collapsed ? item.label : undefined}
-                            className={`flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-xs font-medium transition-all ${
-                              collapsed ? "justify-center px-0.5" : ""
-                            }`}
-                            style={{
-                              backgroundColor: active ? "var(--color-primary-light)" : "transparent",
-                              color: active ? "var(--color-primary)" : "var(--color-text-secondary)",
-                            }}
-                          >
-                            <span className="text-base shrink-0">{item.icon}</span>
-                            {!collapsed && <span className="truncate">{item.label}</span>}
-                          </Link>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              );
-            })
-          ) : (
-            // Contextual service items
-            contextualItems.map((item) => {
-              const active = isActive(item.href);
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  title={collapsed ? item.label : undefined}
-                  className={`flex items-center gap-2 px-2.5 py-2 rounded-xl text-xs font-medium transition-all ${
-                    collapsed ? "justify-center px-0.5" : ""
-                  }`}
-                  style={{
-                    backgroundColor: active ? "var(--color-primary-light)" : "transparent",
-                    color: active ? "var(--color-primary)" : "var(--color-text-secondary)",
-                  }}
-                >
-                  <span className="text-base shrink-0">{item.icon}</span>
-                  {!collapsed && <span className="truncate">{item.label}</span>}
-                </Link>
-              );
-            })
-          )}
-        </nav>
+        <div className="flex-1 overflow-y-auto pr-0.5">
+          {renderNavContent(false)}
+        </div>
       </aside>
     </>
   );
