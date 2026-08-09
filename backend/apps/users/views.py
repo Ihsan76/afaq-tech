@@ -215,7 +215,10 @@ class UserAdminUpdateView(generics.RetrieveUpdateAPIView):
                         current.update(tr)
                         user.translations = current
                 else:
-                    setattr(user, field, request.data[field])
+                    val = request.data[field]
+                    if field == 'national_id' and (not val or str(val).strip() == ''):
+                        val = None
+                    setattr(user, field, val)
         user.save()
         return Response(UserSerializer(user, context={'request': request}).data)
 
