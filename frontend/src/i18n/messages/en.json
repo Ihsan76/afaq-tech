@@ -54,6 +54,8 @@
   "retry": "Retry",
   "status": "Status",
   "notFound": "Page not found",
+  "yes": "Yes",
+  "no": "No",
   "backToHome": "Back to homepage",
   "all": "All",
   "none": "None",
@@ -674,7 +676,12 @@
   "author": "Author",
   "templateCatDefault": "Default",
   "templateCatAbout": "About",
-  "templateCatContact": "Contact"
+  "templateCatContact": "Contact",
+  "editMenuItem": "Edit Menu Item",
+  "serviceContext": "Service Context",
+  "serviceContextHint": "Shown in sidebar only for this service/page",
+  "requiredRole": "Required Role",
+  "deactivate": "Deactivate"
  },
  "dashboard": {
   "title": "Dashboard",

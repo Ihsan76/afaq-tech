@@ -58,7 +58,9 @@
   "all": "همه",
   "none": "هیچ‌کدام",
   "noBlocksPreview": "هیچ بلوکی برای پیش‌نمایش وجود ندارد",
-  "unknownBlock": "بلوک ناشناخته"
+  "unknownBlock": "بلوک ناشناخته",
+  "yes": "Yes",
+  "no": "No"
  },
  "auth": {
   "login": "ورود",
@@ -652,7 +654,12 @@
   "orgNameRequired": "Organization name is required",
   "ownerEmailRequired": "Owner email is required",
   "orgStatusActive": "Active",
-  "orgStatusSuspended": "Suspended"
+  "orgStatusSuspended": "Suspended",
+  "editMenuItem": "Edit Menu Item",
+  "serviceContext": "Service Context",
+  "serviceContextHint": "Shown in sidebar only for this service/page",
+  "requiredRole": "Required Role",
+  "deactivate": "Deactivate"
  },
  "dashboard": {
   "title": "داشبورد",

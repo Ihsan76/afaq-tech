@@ -10,21 +10,50 @@ interface MenuItem {
   id: number; menu: string; translations: Record<string, Record<string, string>>;
   url: string; page: number | null; icon: string; order: number;
   is_active: boolean; badge: string; children: MenuItem[];
+  service_context: string; required_role: string;
 }
+
+const SERVICE_CONTEXTS = [
+  { value: "all", label: "الكل (كل الصفحات)" },
+  { value: "academy", label: "الأكاديمية" },
+  { value: "school", label: "آفاق مدرستي" },
+  { value: "curriculum", label: "المناهج" },
+  { value: "lesson-plans", label: "خطط الدروس" },
+  { value: "ebooks", label: "الكتب الإلكترونية" },
+  { value: "dashboard", label: "ساحة العمل" },
+  { value: "profile", label: "الملف الشخصي" },
+  { value: "gamification", label: "التلعيب" },
+  { value: "subscriptions", label: "الاشتراكات" },
+  { value: "admin", label: "لوحة الإدارة" },
+];
+
+const REQUIRED_ROLES = [
+  { value: "all", label: "الجميع" },
+  { value: "user", label: "مستخدم عام" },
+  { value: "instructor", label: "مدرب" },
+  { value: "admin", label: "مدير" },
+  { value: "support", label: "دعم" },
+  { value: "finance", label: "مالية" },
+  { value: "developer", label: "مطور" },
+];
 
 export default function AdminMenusPage() {
   const t = useTranslations();
   const locale = useLocale();
-  const isAr = locale === "ar";
   const [items, setItems] = useState<MenuItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [menuType, setMenuType] = useState("header");
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
   const [formTranslations, setFormTranslations] = useState<Record<string, Record<string, string>>>({});
   const [formLocale, setFormLocale] = useState(locale);
   const [url, setUrl] = useState("");
   const [icon, setIcon] = useState("");
   const [badge, setBadge] = useState("");
+  const [serviceContext, setServiceContext] = useState("all");
+  const [requiredRole, setRequiredRole] = useState("all");
+  const [isActive, setIsActive] = useState(true);
+  const [error, setError] = useState("");
 
   const MENU_POSITIONS = [
     { value: "header", label: t("admin.menuHeader") },
@@ -32,7 +61,7 @@ export default function AdminMenusPage() {
     { value: "sidebar", label: t("admin.menuSidebar") },
   ];
 
-  useEffect(() => { fetchItems(); }, [menuType]);
+  useEffect(() => { fetchItems(); }, [menuType]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchItems = async () => {
     try { const res = await api.get(`/pages/admin/menus/?menu=${menuType}`); setItems(res.data.results || res.data); } catch {} finally { setIsLoading(false); }
@@ -40,9 +69,42 @@ export default function AdminMenusPage() {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
+    const payload = {
+      menu: menuType, translations: formTranslations, url, icon, badge,
+      order: items.length, service_context: serviceContext,
+      required_role: requiredRole, is_active: isActive,
+    };
     try {
-      await api.post("/pages/admin/menus/create/", { menu: menuType, translations: formTranslations, url, icon, badge, order: items.length });
+      if (editingId) {
+        await api.patch(`/pages/admin/menus/${editingId}/`, payload);
+      } else {
+        await api.post("/pages/admin/menus/create/", payload);
+      }
       resetForm(); fetchItems();
+    } catch (err: any) {
+      const msg = err?.response?.data ? JSON.stringify(err.response.data) : (err?.message || t("common.error"));
+      setError(msg);
+    }
+  };
+
+  const handleEdit = (item: MenuItem) => {
+    setEditingId(item.id);
+    setFormTranslations(item.translations || {});
+    setUrl(item.url || "");
+    setIcon(item.icon || "");
+    setBadge(item.badge || "");
+    setServiceContext(item.service_context || "all");
+    setRequiredRole(item.required_role || "all");
+    setIsActive(item.is_active);
+    setShowForm(true);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleToggleActive = async (item: MenuItem) => {
+    try {
+      await api.patch(`/pages/admin/menus/${item.id}/`, { is_active: !item.is_active });
+      fetchItems();
     } catch {}
   };
 
@@ -63,7 +125,10 @@ export default function AdminMenusPage() {
     } catch {}
   };
 
-  const resetForm = () => { setFormTranslations({}); setUrl(""); setIcon(""); setBadge(""); setShowForm(false); };
+  const resetForm = () => {
+    setFormTranslations({}); setUrl(""); setIcon(""); setBadge(""); setShowForm(false);
+    setServiceContext("all"); setRequiredRole("all"); setIsActive(true); setEditingId(null); setError("");
+  };
   const inputCls = "w-full px-4 py-3 border rounded-2xl focus:ring-2 transition-all";
   const style = { background: "var(--color-surface)", color: "var(--color-text)", borderColor: "var(--color-border)" };
   const isRtl = formLocale === "ar" || formLocale === "ur";
@@ -94,7 +159,15 @@ export default function AdminMenusPage() {
 
       {showForm && (
         <form onSubmit={handleCreate} className="mb-6 p-6 rounded-3xl border" style={{ ...style, boxShadow: "var(--card-shadow)" }}>
-          <h2 className="text-lg font-bold mb-4" style={{ color: "var(--color-text)" }}>{t("admin.newMenuItem")}</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-bold" style={{ color: "var(--color-text)" }}>{editingId ? t("admin.editMenuItem") : t("admin.newMenuItem")}</h2>
+            <button type="button" onClick={resetForm} className="text-sm font-bold" style={{ color: "var(--color-error)" }}>✕</button>
+          </div>
+          {error && (
+            <div className="mb-4 p-3 rounded-xl text-xs font-semibold" style={{ background: "var(--color-error-light)", color: "var(--color-error)" }}>
+              {error}
+            </div>
+          )}
           <div className="grid sm:grid-cols-2 gap-4 mb-4">
             <div>
               <label className="block text-sm font-medium mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("admin.language")}</label>
@@ -124,6 +197,32 @@ export default function AdminMenusPage() {
               <label className="block text-sm font-medium mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("admin.badge")}</label>
               <input value={badge} onChange={(e) => setBadge(e.target.value)} className={inputCls} style={style} placeholder={t("admin.badgePlaceholder")} />
             </div>
+            <div>
+              <label className="block text-sm font-medium mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("admin.active")}</label>
+              <select value={isActive ? "1" : "0"} onChange={(e) => setIsActive(e.target.value === "1")} className={inputCls} style={style}>
+                <option value="1">{t("common.yes")}</option>
+                <option value="0">{t("common.no")}</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("admin.serviceContext")}</label>
+              <select value={serviceContext} onChange={(e) => setServiceContext(e.target.value)} className={inputCls} style={style}>
+                {SERVICE_CONTEXTS.map((c) => (
+                  <option key={c.value} value={c.value}>{c.label}</option>
+                ))}
+              </select>
+              {menuType === "sidebar" && (
+                <p className="text-[11px] mt-1" style={{ color: "var(--color-text-muted)" }}>{t("admin.serviceContextHint")}</p>
+              )}
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("admin.requiredRole")}</label>
+              <select value={requiredRole} onChange={(e) => setRequiredRole(e.target.value)} className={inputCls} style={style}>
+                {REQUIRED_ROLES.map((r) => (
+                  <option key={r.value} value={r.value}>{r.label}</option>
+                ))}
+              </select>
+            </div>
           </div>
           <div className="flex flex-wrap gap-1 mb-4">
             {locales.map((loc) => {
@@ -137,7 +236,7 @@ export default function AdminMenusPage() {
             })}
           </div>
           <div className="flex gap-3">
-            <button type="submit" className="px-5 py-2.5 rounded-xl font-semibold text-white" style={{ background: "var(--btn-primary-bg)" }}>{t("common.add")}</button>
+            <button type="submit" className="px-5 py-2.5 rounded-xl font-semibold text-white" style={{ background: "var(--btn-primary-bg)" }}>{editingId ? t("common.save") : t("common.add")}</button>
             <button type="button" onClick={resetForm} className="px-5 py-2.5 rounded-xl font-semibold border" style={style}>{t("common.cancel")}</button>
           </div>
         </form>
@@ -152,17 +251,35 @@ export default function AdminMenusPage() {
       ) : (
         <div className="space-y-2">
           {items.map((item, index) => (
-            <div key={item.id} className="flex items-center gap-4 p-4 rounded-2xl border" style={{ ...style, boxShadow: "var(--card-shadow)" }}>
+            <div key={item.id} className="flex items-center gap-4 p-4 rounded-2xl border flex-wrap sm:flex-nowrap" style={{ ...style, boxShadow: "var(--card-shadow)", opacity: item.is_active ? 1 : 0.55 }}>
               <span className="cursor-grab text-lg opacity-30">⠿</span>
               <span className="text-xl">{item.icon || "🔗"}</span>
-              <div className="flex-1">
+              <div className="flex-1 min-w-0">
                 <div className="font-bold text-sm" style={{ color: "var(--color-text)" }}>{getLocaleTitle(item)}</div>
                 <div className="text-xs" style={{ color: "var(--color-text-muted)" }}>{item.url || ""}</div>
+                <div className="flex flex-wrap gap-1 mt-1.5">
+                  {item.service_context && item.service_context !== "all" && (
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ background: "var(--color-secondary-light)", color: "var(--color-secondary)" }}>
+                      {SERVICE_CONTEXTS.find((c) => c.value === item.service_context)?.label || item.service_context}
+                    </span>
+                  )}
+                  {item.required_role && item.required_role !== "all" && (
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ background: "var(--color-primary-light)", color: "var(--color-primary)" }}>
+                      {REQUIRED_ROLES.find((r) => r.value === item.required_role)?.label || item.required_role}
+                    </span>
+                  )}
+                </div>
               </div>
               {item.badge && <span className="px-2 py-0.5 rounded-full text-xs font-bold" style={{ background: "var(--color-primary-light)", color: "var(--color-primary)" }}>{item.badge}</span>}
               <div className="flex gap-1">
                 <button onClick={() => moveItem(index, -1)} className="w-7 h-7 rounded-lg flex items-center justify-center border text-xs" style={style}>↑</button>
                 <button onClick={() => moveItem(index, 1)} className="w-7 h-7 rounded-lg flex items-center justify-center border text-xs" style={style}>↓</button>
+                <button onClick={() => handleEdit(item)} className="w-7 h-7 rounded-lg flex items-center justify-center border text-xs" style={style}>✎</button>
+                <button onClick={() => handleToggleActive(item)} title={item.is_active ? t("admin.deactivate") : t("admin.activate")}
+                  className="w-7 h-7 rounded-lg flex items-center justify-center border text-xs"
+                  style={{ background: item.is_active ? "var(--color-success-light)" : "var(--color-surface-alt)", color: item.is_active ? "var(--color-success)" : "var(--color-text-muted)" }}>
+                  {item.is_active ? "●" : "○"}
+                </button>
                 <button onClick={() => handleDelete(item.id)} className="w-7 h-7 rounded-lg flex items-center justify-center text-xs" style={{ background: "var(--color-error-light)", color: "var(--color-error)" }}>✕</button>
               </div>
             </div>

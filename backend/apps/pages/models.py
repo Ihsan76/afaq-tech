@@ -139,6 +139,33 @@ class MenuItem(models.Model):
 
     menu = models.CharField('القائمة', max_length=20, choices=MenuPosition.choices, default=MenuPosition.HEADER)
 
+    class ServiceContext(models.TextChoices):
+        ALL = 'all', 'الكل'
+        ACADEMY = 'academy', 'الأكاديمية'
+        SCHOOL = 'school', 'آفاق مدرستي'
+        CURRICULUM = 'curriculum', 'المناهج'
+        LESSON_PLANS = 'lesson-plans', 'خطط الدروس'
+        EBOOKS = 'ebooks', 'الكتب الإلكترونية'
+        DASHBOARD = 'dashboard', 'ساحة العمل'
+        PROFILE = 'profile', 'الملف الشخصي'
+        GAMIFICATION = 'gamification', 'التلعيب'
+        SUBSCRIPTIONS = 'subscriptions', 'الاشتراكات'
+        ADMIN = 'admin', 'لوحة الإدارة'
+
+    class RequiredRole(models.TextChoices):
+        ALL = 'all', 'الجميع'
+        USER = 'user', 'مستخدم عام'
+        INSTRUCTOR = 'instructor', 'مدرب'
+        ADMIN = 'admin', 'مدير'
+        SUPPORT = 'support', 'دعم'
+        FINANCE = 'finance', 'مالية'
+        DEVELOPER = 'developer', 'مطور'
+
+    service_context = models.CharField('سياق الخدمة', max_length=30,
+                                        choices=ServiceContext.choices, default=ServiceContext.ALL)
+    required_role = models.CharField('الدور المطلوب', max_length=20,
+                                      choices=RequiredRole.choices, default=RequiredRole.ALL)
+
     translations = models.JSONField('الترجمات', default=dict, blank=True)
 
     url = models.CharField('الرابط', max_length=500, blank=True, default='')

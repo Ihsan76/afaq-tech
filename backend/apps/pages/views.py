@@ -1,5 +1,6 @@
 from django.shortcuts import get_object_or_404
 from django.core.cache import cache
+from django.db.models import Case, IntegerField, Value, When
 from rest_framework import generics, permissions, status
 from apps.users.permissions import IsContentAdmin
 from rest_framework.response import Response
@@ -147,10 +148,22 @@ class MenuPublicView(APIView):
 
     def get(self, request, menu_type):
         locale = request.query_params.get('locale', 'en')
-        key = _public_key('menu', menu_type, locale)
+        context = request.query_params.get('context', '')
+        key = _public_key('menu', menu_type, locale, context)
         data = cache.get(key)
         if data is None:
-            items = MenuItem.objects.filter(menu=menu_type, is_active=True, parent=None).order_by('order')
+            items = MenuItem.objects.filter(menu=menu_type, is_active=True, parent=None)
+            if context:
+                items = items.filter(service_context__in=['all', context])
+                items = items.annotate(
+                    ctx_rank=Case(
+                        When(service_context=context, then=Value(0)),
+                        default=Value(1),
+                        output_field=IntegerField(),
+                    )
+                ).order_by('ctx_rank', 'order')
+            else:
+                items = items.order_by('order')
             serializer = MenuItemSerializer(items, many=True, context={'request': request})
             data = serializer.data
             cache.set(key, data, SITE_CACHE_TTL)

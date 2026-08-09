@@ -3,10 +3,10 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useAuthStore } from "@/store/auth";
+import { useApiList } from "@/lib/useApi";
 
-const ADMIN_ROLES = ["admin", "developer", "support", "content_manager", "finance"];
 const SECTION_ROLES: Record<string, string[]> = {
   content:       ["developer", "content_manager"],
   education:     ["developer", "content_manager"],
@@ -21,17 +21,71 @@ const SECTION_ROLES: Record<string, string[]> = {
   organizations: ["developer"],
 };
 
+interface SidebarItem {
+  id: number;
+  title: string;
+  url?: string;
+  resolved_url?: string;
+  icon?: string;
+  badge?: string;
+  is_active?: boolean;
+  required_role?: string;
+  service_context?: string;
+  children?: SidebarItem[];
+}
+
+function localizeHref(href: string, locale: string): string {
+  if (!href || href === "#") return href || "#";
+  if (href.startsWith("http") || href.startsWith("mailto:")) return href;
+  if (href.startsWith(`/${locale}`)) return href;
+  return `/${locale}${href.startsWith("/") ? href : `/${href}`}`;
+}
+
 export default function ContextualSidebar() {
   const pathname = usePathname();
   const locale = pathname.split("/")[1] || "en";
-  const t = useTranslations("nav");
   const adminT = useTranslations("admin");
   const { user } = useAuthStore();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
 
+  const pathParts = pathname.split("/");
+  const service = pathParts[2] || "";
   const isAdminRoute = pathname.includes("/admin");
+
+  // Hide sidebar on sections that have no management/contextual sidebar
+  const supportedServices = ["academy", "ebooks", "school", "curriculum", "lesson-plans", "dashboard", "profile", "gamification", "subscriptions"];
+  const shouldShow = isAdminRoute || (service && supportedServices.includes(service)) || pathname.includes("/dashboard");
+
+  // Dynamic sidebar items fetched from admin (no hardcoding) — hooks must run unconditionally
+  const sidebarContext = isAdminRoute ? "admin" : (service || "all");
+  const { data: sidebarItems, loading: sidebarLoading } = useApiList<SidebarItem>(
+    (isAdminRoute || !shouldShow) ? null : `/pages/menu/sidebar/`,
+    { locale, context: sidebarContext }
+  );
+
+  const roleAllowed = (item: SidebarItem) => {
+    const role = item.required_role || "all";
+    if (!role || role === "all") return true;
+    if (!user) return false;
+    if (user.is_staff || user.role === "admin") return true;
+    return user.role === role;
+  };
+
+  const contextualItems = useMemo(() => {
+    if (isAdminRoute || !shouldShow || sidebarLoading) return [];
+    return (sidebarItems || [])
+      .filter((item) => item.is_active !== false)
+      .filter(roleAllowed)
+      .map((item) => ({
+        href: localizeHref(item.resolved_url || item.url || "#", locale),
+        label: item.title || item.url || "#",
+        icon: item.icon || "🔗",
+        badge: item.badge || "",
+      }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAdminRoute, shouldShow, sidebarLoading, sidebarItems, locale, user]);
 
   useEffect(() => {
     const saved = localStorage.getItem("sidebar_collapsed");
@@ -42,21 +96,15 @@ export default function ContextualSidebar() {
     setMobileOpen(false);
   }, [pathname]);
 
+  if (!shouldShow) {
+    return null;
+  }
+
   const toggleCollapse = () => {
     const next = !collapsed;
     setCollapsed(next);
     localStorage.setItem("sidebar_collapsed", String(next));
   };
-
-  const pathParts = pathname.split("/");
-  const service = pathParts[2] || "";
-
-  // Hide sidebar on sections that have no management/contextual sidebar
-  const supportedServices = ["academy", "ebooks", "school", "curriculum", "lesson-plans", "dashboard", "profile", "gamification", "subscriptions"];
-  const shouldShow = isAdminRoute || (service && supportedServices.includes(service)) || pathname.includes("/dashboard");
-  if (!shouldShow) {
-    return null;
-  }
 
   const canSee = (section: string) =>
     !!user && (user.is_staff || user.role === "admin" || (SECTION_ROLES[section] || []).includes(user.role));
@@ -111,47 +159,6 @@ export default function ContextualSidebar() {
   ];
 
   const NAV_ITEMS = isAdminRoute ? ALL_NAV_ITEMS.filter((s) => canSee(s.key)) : [];
-
-  let contextualItems: Array<{ href: string; label: string; icon: string }> = [];
-
-  if (!isAdminRoute) {
-    if (service === "academy") {
-      contextualItems = [
-        { href: `/${locale}/academy`, label: t("academyHome") || "رئيسية الأكاديمية", icon: "🎬" },
-        { href: `/${locale}/academy/courses`, label: t("courses") || "جميع الدورات", icon: "📚" },
-        { href: `/${locale}/dashboard`, label: t("dashboard") || "لوحة التحكم", icon: "📊" },
-      ];
-    } else if (service === "ebooks") {
-      contextualItems = [
-        { href: `/${locale}/ebooks`, label: t("ebooksHome") || "مكتبة الكتب", icon: "📖" },
-        { href: `/${locale}/subscriptions`, label: t("subscriptions") || "الباقات", icon: "💳" },
-        { href: `/${locale}/dashboard`, label: t("dashboard") || "لوحة التحكم", icon: "📊" },
-      ];
-    } else if (service === "school") {
-      contextualItems = [
-        { href: `/${locale}/school`, label: t("schoolHome") || "رئيسية آفاق مدرستي", icon: "🏫" },
-        { href: `/${locale}/notifications`, label: t("notifications") || "التنبيهات", icon: "🔔" },
-        { href: `/${locale}/dashboard`, label: t("dashboard") || "لوحة التحكم", icon: "📊" },
-      ];
-    } else if (service === "curriculum" || service === "lesson-plans") {
-      contextualItems = [
-        { href: `/${locale}/curriculum`, label: t("curriculum") || "المناهج الدراسية", icon: "📚" },
-        { href: `/${locale}/lesson-plans`, label: t("lessonPlans") || "خطط الدروس", icon: "📝" },
-        { href: `/${locale}/dashboard`, label: t("dashboard") || "لوحة التحكم", icon: "📊" },
-      ];
-    } else {
-      contextualItems = [
-        { href: `/${locale}/dashboard`, label: t("dashboard") || "لوحة التحكم", icon: "📊" },
-        { href: `/${locale}/school`, label: t("school") || "آفاق مدرستي", icon: "🏫" },
-        { href: `/${locale}/academy`, label: t("academy") || "الأكاديمية", icon: "🎬" },
-        { href: `/${locale}/curriculum`, label: t("curriculum") || "المناهج الدراسية", icon: "📚" },
-        { href: `/${locale}/ebooks`, label: t("ebooks") || "الكتب الإلكترونية", icon: "📖" },
-        { href: `/${locale}/gamification`, label: t("gamification") || "التلعيب والشارات", icon: "🎮" },
-        { href: `/${locale}/subscriptions`, label: t("subscriptions") || "الاشتراكات", icon: "💳" },
-        { href: `/${locale}/profile`, label: t("profile") || "الملف الشخصي", icon: "👤" },
-      ];
-    }
-  }
 
   const isActive = (href: string) => pathname === href || (href !== `/${locale}/admin` && pathname.includes(href));
 
@@ -231,7 +238,17 @@ export default function ContextualSidebar() {
               }}
             >
               <span className="text-base shrink-0">{item.icon}</span>
-              {(!isMobile && collapsed) ? null : <span className="truncate">{item.label}</span>}
+              {(!isMobile && collapsed) ? null : (
+                <>
+                  <span className="truncate">{item.label}</span>
+                  {!!item.badge && (
+                    <span className="ms-auto text-[9px] px-1.5 py-0.5 rounded-full font-bold shrink-0"
+                      style={{ background: "var(--color-primary-light)", color: "var(--color-primary)" }}>
+                      {item.badge}
+                    </span>
+                  )}
+                </>
+              )}
             </Link>
           );
         })

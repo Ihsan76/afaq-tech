@@ -58,7 +58,9 @@
   "all": "Alle",
   "none": "Keine",
   "noBlocksPreview": "Keine Blöcke zur Vorschau",
-  "unknownBlock": "Unbekannter Block"
+  "unknownBlock": "Unbekannter Block",
+  "yes": "Yes",
+  "no": "No"
  },
  "auth": {
   "login": "Anmelden",
@@ -600,7 +602,12 @@
   "orgNameRequired": "Organization name is required",
   "ownerEmailRequired": "Owner email is required",
   "orgStatusActive": "Active",
-  "orgStatusSuspended": "Suspended"
+  "orgStatusSuspended": "Suspended",
+  "editMenuItem": "Edit Menu Item",
+  "serviceContext": "Service Context",
+  "serviceContextHint": "Shown in sidebar only for this service/page",
+  "requiredRole": "Required Role",
+  "deactivate": "Deactivate"
  },
  "dashboard": {
   "title": "Dashboard",

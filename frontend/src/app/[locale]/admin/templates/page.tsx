@@ -19,6 +19,7 @@ export default function AdminTemplatesPage() {
   const { languages } = useLanguages();
   const LANGUAGES = languages.map((l) => ({ code: l.code, label: l.native_name || l.name }));
   const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
+  const [templates, setTemplates] = useState<Template[]>([]);
 
   const startEdit = (tpl: Template) => {
     setEditingTemplate(tpl);

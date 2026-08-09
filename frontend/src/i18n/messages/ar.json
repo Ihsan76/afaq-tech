@@ -54,6 +54,8 @@
   "retry": "إعادة المحاولة",
   "status": "الحالة",
   "notFound": "الصفحة غير موجودة",
+  "yes": "نعم",
+  "no": "لا",
   "backToHome": "العودة للرئيسية",
   "all": "الكل",
   "none": "بدون",
@@ -674,7 +676,12 @@
   "author": "المؤلف",
   "templateCatDefault": "الافتراضي",
   "templateCatAbout": "من نحن",
-  "templateCatContact": "اتصل بنا"
+  "templateCatContact": "اتصل بنا",
+  "editMenuItem": "تعديل عنصر قائمة",
+  "serviceContext": "سياق الخدمة (أين يظهر)",
+  "serviceContextHint": "يظهر هذا العنصر في الشريط الجانبي عند زيارة هذه الخدمة أو الصفحة فقط",
+  "requiredRole": "الدور المطلوب",
+  "deactivate": "إيقاف"
  },
  "dashboard": {
   "title": "لوحة التحكم",

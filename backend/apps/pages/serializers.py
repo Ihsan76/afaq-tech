@@ -113,6 +113,7 @@ class MenuItemListSerializer(serializers.ModelSerializer):
         model = MenuItem
         fields = ['id', 'menu', 'title', 'url', 'page', 'icon',
                   'parent', 'order', 'is_active', 'open_in_new', 'badge',
+                  'service_context', 'required_role',
                   'resolved_url', 'children_count', 'translations']
 
     def get_title(self, obj):
