@@ -1,3 +1,4 @@
+from django.contrib.postgres.fields import ArrayField
 from django.db import models
 
 
@@ -140,7 +141,6 @@ class MenuItem(models.Model):
     menu = models.CharField('القائمة', max_length=20, choices=MenuPosition.choices, default=MenuPosition.HEADER)
 
     class ServiceContext(models.TextChoices):
-        ALL = 'all', 'الكل'
         ACADEMY = 'academy', 'الأكاديمية'
         SCHOOL = 'school', 'آفاق مدرستي'
         CURRICULUM = 'curriculum', 'المناهج'
@@ -153,7 +153,6 @@ class MenuItem(models.Model):
         ADMIN = 'admin', 'لوحة الإدارة'
 
     class RequiredRole(models.TextChoices):
-        ALL = 'all', 'الجميع'
         USER = 'user', 'مستخدم عام'
         INSTRUCTOR = 'instructor', 'مدرب'
         ADMIN = 'admin', 'مدير'
@@ -161,10 +160,20 @@ class MenuItem(models.Model):
         FINANCE = 'finance', 'مالية'
         DEVELOPER = 'developer', 'مطور'
 
-    service_context = models.CharField('سياق الخدمة', max_length=30,
-                                        choices=ServiceContext.choices, default=ServiceContext.ALL)
-    required_role = models.CharField('الدور المطلوب', max_length=20,
-                                      choices=RequiredRole.choices, default=RequiredRole.ALL)
+    service_context = ArrayField(
+        models.CharField('السياق', max_length=30, choices=ServiceContext.choices),
+        verbose_name='سياقات الخدمة',
+        default=list,
+        blank=True,
+        help_text='القائمة الفارغة = يظهر في كل الصفحات',
+    )
+    required_role = ArrayField(
+        models.CharField('الدور', max_length=20, choices=RequiredRole.choices),
+        verbose_name='الأدوار المطلوبة',
+        default=list,
+        blank=True,
+        help_text='القائمة الفارغة = للجميع',
+    )
 
     translations = models.JSONField('الترجمات', default=dict, blank=True)
 

@@ -607,6 +607,10 @@
   "serviceContext": "Service Context",
   "serviceContextHint": "Shown in sidebar only for this service/page",
   "requiredRole": "Required Role",
+  "selectAll": "Tümünü Seç",
+  "deselectAll": "Tümünün Seçimini Kaldır",
+  "allPages": "Tüm sayfalar",
+  "noSelection": "Seçim yok",
   "deactivate": "Deactivate"
  },
  "dashboard": {

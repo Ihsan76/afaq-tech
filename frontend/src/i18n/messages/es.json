@@ -607,6 +607,10 @@
   "serviceContext": "Service Context",
   "serviceContextHint": "Shown in sidebar only for this service/page",
   "requiredRole": "Required Role",
+  "selectAll": "Seleccionar todo",
+  "deselectAll": "Deseleccionar todo",
+  "allPages": "Todas las páginas",
+  "noSelection": "Sin selección",
   "deactivate": "Deactivate"
  },
  "dashboard": {

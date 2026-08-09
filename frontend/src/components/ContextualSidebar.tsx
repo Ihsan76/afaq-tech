@@ -29,8 +29,8 @@ interface SidebarItem {
   icon?: string;
   badge?: string;
   is_active?: boolean;
-  required_role?: string;
-  service_context?: string;
+  required_role?: string[] | string;
+  service_context?: string[] | string;
   children?: SidebarItem[];
 }
 
@@ -66,11 +66,13 @@ export default function ContextualSidebar() {
   );
 
   const roleAllowed = (item: SidebarItem) => {
-    const role = item.required_role || "all";
-    if (!role || role === "all") return true;
+    const roles = item.required_role;
+    if (!roles || (Array.isArray(roles) && roles.length === 0)) return true;
+    const list = Array.isArray(roles) ? roles : [roles];
+    if (list.includes("all")) return true;
     if (!user) return false;
     if (user.is_staff || user.role === "admin") return true;
-    return user.role === role;
+    return list.includes(user.role);
   };
 
   const contextualItems = useMemo(() => {

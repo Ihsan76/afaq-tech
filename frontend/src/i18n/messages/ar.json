@@ -681,6 +681,10 @@
   "serviceContext": "سياق الخدمة (أين يظهر)",
   "serviceContextHint": "يظهر هذا العنصر في الشريط الجانبي عند زيارة هذه الخدمة أو الصفحة فقط",
   "requiredRole": "الدور المطلوب",
+  "selectAll": "تحديد الكل",
+  "deselectAll": "إلغاء تحديد الكل",
+  "allPages": "كل الصفحات",
+  "noSelection": "لا يوجد تحديد",
   "deactivate": "إيقاف"
  },
  "dashboard": {

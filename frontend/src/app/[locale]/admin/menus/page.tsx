@@ -5,16 +5,16 @@ import { useTranslations, useLocale } from "next-intl";
 import { api } from "@/lib/api";
 import { localized } from "@/lib/i18n";
 import { locales, localeNames } from "@/i18n/config";
+import MultiSelectDropdown from "@/components/MultiSelectDropdown";
 
 interface MenuItem {
   id: number; menu: string; translations: Record<string, Record<string, string>>;
   url: string; page: number | null; icon: string; order: number;
   is_active: boolean; badge: string; children: MenuItem[];
-  service_context: string; required_role: string;
+  service_context: string[]; required_role: string[];
 }
 
 const SERVICE_CONTEXTS = [
-  { value: "all", label: "الكل (كل الصفحات)" },
   { value: "academy", label: "الأكاديمية" },
   { value: "school", label: "آفاق مدرستي" },
   { value: "curriculum", label: "المناهج" },
@@ -28,7 +28,6 @@ const SERVICE_CONTEXTS = [
 ];
 
 const REQUIRED_ROLES = [
-  { value: "all", label: "الجميع" },
   { value: "user", label: "مستخدم عام" },
   { value: "instructor", label: "مدرب" },
   { value: "admin", label: "مدير" },
@@ -50,8 +49,8 @@ export default function AdminMenusPage() {
   const [url, setUrl] = useState("");
   const [icon, setIcon] = useState("");
   const [badge, setBadge] = useState("");
-  const [serviceContext, setServiceContext] = useState("all");
-  const [requiredRole, setRequiredRole] = useState("all");
+  const [serviceContexts, setServiceContexts] = useState<string[]>(SERVICE_CONTEXTS.map((c) => c.value));
+  const [requiredRoles, setRequiredRoles] = useState<string[]>(REQUIRED_ROLES.map((r) => r.value));
   const [isActive, setIsActive] = useState(true);
   const [error, setError] = useState("");
 
@@ -72,8 +71,8 @@ export default function AdminMenusPage() {
     setError("");
     const payload = {
       menu: menuType, translations: formTranslations, url, icon, badge,
-      order: items.length, service_context: serviceContext,
-      required_role: requiredRole, is_active: isActive,
+      order: items.length, service_context: serviceContexts,
+      required_role: requiredRoles, is_active: isActive,
     };
     try {
       if (editingId) {
@@ -94,8 +93,8 @@ export default function AdminMenusPage() {
     setUrl(item.url || "");
     setIcon(item.icon || "");
     setBadge(item.badge || "");
-    setServiceContext(item.service_context || "all");
-    setRequiredRole(item.required_role || "all");
+    setServiceContexts(Array.isArray(item.service_context) ? item.service_context : []);
+    setRequiredRoles(Array.isArray(item.required_role) ? item.required_role : []);
     setIsActive(item.is_active);
     setShowForm(true);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -127,7 +126,8 @@ export default function AdminMenusPage() {
 
   const resetForm = () => {
     setFormTranslations({}); setUrl(""); setIcon(""); setBadge(""); setShowForm(false);
-    setServiceContext("all"); setRequiredRole("all"); setIsActive(true); setEditingId(null); setError("");
+    setServiceContexts(SERVICE_CONTEXTS.map((c) => c.value)); setRequiredRoles(REQUIRED_ROLES.map((r) => r.value));
+    setIsActive(true); setEditingId(null); setError("");
   };
   const inputCls = "w-full px-4 py-3 border rounded-2xl focus:ring-2 transition-all";
   const style = { background: "var(--color-surface)", color: "var(--color-text)", borderColor: "var(--color-border)" };
@@ -205,23 +205,29 @@ export default function AdminMenusPage() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("admin.serviceContext")}</label>
-              <select value={serviceContext} onChange={(e) => setServiceContext(e.target.value)} className={inputCls} style={style}>
-                {SERVICE_CONTEXTS.map((c) => (
-                  <option key={c.value} value={c.value}>{c.label}</option>
-                ))}
-              </select>
-              {menuType === "sidebar" && (
-                <p className="text-[11px] mt-1" style={{ color: "var(--color-text-muted)" }}>{t("admin.serviceContextHint")}</p>
-              )}
+              <MultiSelectDropdown
+                label={t("admin.serviceContext")}
+                options={SERVICE_CONTEXTS}
+                selected={serviceContexts}
+                onChange={setServiceContexts}
+                hint={menuType === "sidebar" ? t("admin.serviceContextHint") : undefined}
+                allLabel={t("admin.allPages")}
+                selectAllLabel={t("admin.selectAll")}
+                deselectAllLabel={t("admin.deselectAll")}
+                placeholder={t("admin.noSelection")}
+              />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("admin.requiredRole")}</label>
-              <select value={requiredRole} onChange={(e) => setRequiredRole(e.target.value)} className={inputCls} style={style}>
-                {REQUIRED_ROLES.map((r) => (
-                  <option key={r.value} value={r.value}>{r.label}</option>
-                ))}
-              </select>
+              <MultiSelectDropdown
+                label={t("admin.requiredRole")}
+                options={REQUIRED_ROLES}
+                selected={requiredRoles}
+                onChange={setRequiredRoles}
+                allLabel={t("admin.allRoles")}
+                selectAllLabel={t("admin.selectAll")}
+                deselectAllLabel={t("admin.deselectAll")}
+                placeholder={t("admin.noSelection")}
+              />
             </div>
           </div>
           <div className="flex flex-wrap gap-1 mb-4">
@@ -258,15 +264,31 @@ export default function AdminMenusPage() {
                 <div className="font-bold text-sm" style={{ color: "var(--color-text)" }}>{getLocaleTitle(item)}</div>
                 <div className="text-xs" style={{ color: "var(--color-text-muted)" }}>{item.url || ""}</div>
                 <div className="flex flex-wrap gap-1 mt-1.5">
-                  {item.service_context && item.service_context !== "all" && (
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ background: "var(--color-secondary-light)", color: "var(--color-secondary)" }}>
-                      {SERVICE_CONTEXTS.find((c) => c.value === item.service_context)?.label || item.service_context}
-                    </span>
+                  {item.service_context && item.service_context.length > 0 && (
+                    item.service_context.length === SERVICE_CONTEXTS.length ? (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ background: "var(--color-secondary-light)", color: "var(--color-secondary)" }}>
+                        {t("admin.allPages")}
+                      </span>
+                    ) : (
+                      item.service_context.map((ctx) => (
+                        <span key={ctx} className="px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ background: "var(--color-secondary-light)", color: "var(--color-secondary)" }}>
+                          {SERVICE_CONTEXTS.find((c) => c.value === ctx)?.label || ctx}
+                        </span>
+                      ))
+                    )
                   )}
-                  {item.required_role && item.required_role !== "all" && (
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ background: "var(--color-primary-light)", color: "var(--color-primary)" }}>
-                      {REQUIRED_ROLES.find((r) => r.value === item.required_role)?.label || item.required_role}
-                    </span>
+                  {item.required_role && item.required_role.length > 0 && (
+                    item.required_role.length === REQUIRED_ROLES.length ? (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ background: "var(--color-primary-light)", color: "var(--color-primary)" }}>
+                        {t("admin.allRoles")}
+                      </span>
+                    ) : (
+                      item.required_role.map((role) => (
+                        <span key={role} className="px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ background: "var(--color-primary-light)", color: "var(--color-primary)" }}>
+                          {REQUIRED_ROLES.find((r) => r.value === role)?.label || role}
+                        </span>
+                      ))
+                    )
                   )}
                 </div>
               </div>

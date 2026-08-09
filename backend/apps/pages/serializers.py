@@ -124,7 +124,32 @@ class MenuItemListSerializer(serializers.ModelSerializer):
         return obj.children.count()
 
 
+class ChoiceListField(serializers.ListField):
+    """قائمة من الخيارات المسموحة — القائمة الفارغة مسموحة (تعني الكل)."""
+
+    def __init__(self, choices, **kwargs):
+        self.allowed = list(choices)
+        child = serializers.ChoiceField(choices=self.allowed)
+        super().__init__(child=child, **kwargs)
+
+    def to_internal_value(self, data):
+        if data is None:
+            return []
+        if isinstance(data, str):
+            data = [data]
+        return super().to_internal_value(data)
+
+
 class MenuItemCreateUpdateSerializer(serializers.ModelSerializer):
+    service_context = ChoiceListField(
+        choices=MenuItem.ServiceContext.choices,
+        required=False,
+    )
+    required_role = ChoiceListField(
+        choices=MenuItem.RequiredRole.choices,
+        required=False,
+    )
+
     class Meta:
         model = MenuItem
         fields = '__all__'

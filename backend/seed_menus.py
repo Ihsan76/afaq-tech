@@ -8,6 +8,11 @@ django.setup()
 
 from apps.pages.models import MenuItem
 
+ALL_CONTEXTS = ['academy', 'school', 'curriculum', 'lesson-plans', 'ebooks',
+                'dashboard', 'profile', 'gamification', 'subscriptions', 'admin']
+ALL_ROLES = ['user', 'instructor', 'admin', 'support', 'finance', 'developer']
+
+
 menu_items = [
     {"menu": "header", "translations": {"en": {"title": "Home"}, "ar": {"title": "الرئيسية"}}, "url": "/", "icon": "🏠", "order": 0, "is_active": True},
     {"menu": "header", "translations": {"en": {"title": "Academy"}, "ar": {"title": "الأكاديمية"}}, "url": "/academy", "icon": "🎓", "order": 1, "is_active": True},
@@ -23,30 +28,30 @@ menu_items = [
 
 sidebar_items = [
     # عام — يظهر في كل الخدمات
-    {"menu": "sidebar", "service_context": "all", "translations": {"en": {"title": "Workspace"}, "ar": {"title": "ساحة العمل"}}, "url": "/dashboard", "icon": "📊", "order": 0, "is_active": True},
-    {"menu": "sidebar", "service_context": "all", "translations": {"en": {"title": "Afaq Madrasti"}, "ar": {"title": "آفاق مدرستي"}}, "url": "/school", "icon": "🏫", "order": 1, "is_active": True},
-    {"menu": "sidebar", "service_context": "all", "translations": {"en": {"title": "Academy"}, "ar": {"title": "الأكاديمية"}}, "url": "/academy", "icon": "🎬", "order": 2, "is_active": True},
-    {"menu": "sidebar", "service_context": "all", "translations": {"en": {"title": "Curriculum"}, "ar": {"title": "المناهج الدراسية"}}, "url": "/curriculum", "icon": "📚", "order": 3, "is_active": True},
-    {"menu": "sidebar", "service_context": "all", "translations": {"en": {"title": "E-Books"}, "ar": {"title": "الكتب الإلكترونية"}}, "url": "/ebooks", "icon": "📖", "order": 4, "is_active": True},
-    {"menu": "sidebar", "service_context": "all", "translations": {"en": {"title": "Gamification"}, "ar": {"title": "التلعيب والشارات"}}, "url": "/gamification", "icon": "🎮", "order": 5, "is_active": True},
-    {"menu": "sidebar", "service_context": "all", "translations": {"en": {"title": "Subscriptions"}, "ar": {"title": "الاشتراكات"}}, "url": "/subscriptions", "icon": "💳", "order": 6, "is_active": True},
-    {"menu": "sidebar", "service_context": "all", "translations": {"en": {"title": "Profile"}, "ar": {"title": "الملف الشخصي"}}, "url": "/profile", "icon": "👤", "order": 7, "is_active": True},
+    {"menu": "sidebar", "service_context": ALL_CONTEXTS, "translations": {"en": {"title": "Workspace"}, "ar": {"title": "ساحة العمل"}}, "url": "/dashboard", "icon": "📊", "order": 0, "is_active": True},
+    {"menu": "sidebar", "service_context": ALL_CONTEXTS, "translations": {"en": {"title": "Afaq Madrasti"}, "ar": {"title": "آفاق مدرستي"}}, "url": "/school", "icon": "🏫", "order": 1, "is_active": True},
+    {"menu": "sidebar", "service_context": ALL_CONTEXTS, "translations": {"en": {"title": "Academy"}, "ar": {"title": "الأكاديمية"}}, "url": "/academy", "icon": "🎬", "order": 2, "is_active": True},
+    {"menu": "sidebar", "service_context": ALL_CONTEXTS, "translations": {"en": {"title": "Curriculum"}, "ar": {"title": "المناهج الدراسية"}}, "url": "/curriculum", "icon": "📚", "order": 3, "is_active": True},
+    {"menu": "sidebar", "service_context": ALL_CONTEXTS, "translations": {"en": {"title": "E-Books"}, "ar": {"title": "الكتب الإلكترونية"}}, "url": "/ebooks", "icon": "📖", "order": 4, "is_active": True},
+    {"menu": "sidebar", "service_context": ALL_CONTEXTS, "translations": {"en": {"title": "Gamification"}, "ar": {"title": "التلعيب والشارات"}}, "url": "/gamification", "icon": "🎮", "order": 5, "is_active": True},
+    {"menu": "sidebar", "service_context": ALL_CONTEXTS, "translations": {"en": {"title": "Subscriptions"}, "ar": {"title": "الاشتراكات"}}, "url": "/subscriptions", "icon": "💳", "order": 6, "is_active": True},
+    {"menu": "sidebar", "service_context": ALL_CONTEXTS, "translations": {"en": {"title": "Profile"}, "ar": {"title": "الملف الشخصي"}}, "url": "/profile", "icon": "👤", "order": 7, "is_active": True},
     # الأكاديمية — يظهر في قسم الأكاديمية فقط
-    {"menu": "sidebar", "service_context": "academy", "translations": {"en": {"title": "Academy Home"}, "ar": {"title": "رئيسية الأكاديمية"}}, "url": "/academy", "icon": "🎬", "order": 0, "is_active": True},
-    {"menu": "sidebar", "service_context": "academy", "translations": {"en": {"title": "All Courses"}, "ar": {"title": "جميع الدورات"}}, "url": "/academy/courses", "icon": "📚", "order": 1, "is_active": True},
-    {"menu": "sidebar", "service_context": "academy", "translations": {"en": {"title": "Workspace"}, "ar": {"title": "لوحة التحكم"}}, "url": "/dashboard", "icon": "📊", "order": 2, "is_active": True},
+    {"menu": "sidebar", "service_context": ["academy"], "translations": {"en": {"title": "Academy Home"}, "ar": {"title": "رئيسية الأكاديمية"}}, "url": "/academy", "icon": "🎬", "order": 0, "is_active": True},
+    {"menu": "sidebar", "service_context": ["academy"], "translations": {"en": {"title": "All Courses"}, "ar": {"title": "جميع الدورات"}}, "url": "/academy/courses", "icon": "📚", "order": 1, "is_active": True},
+    {"menu": "sidebar", "service_context": ["academy"], "translations": {"en": {"title": "Workspace"}, "ar": {"title": "لوحة التحكم"}}, "url": "/dashboard", "icon": "📊", "order": 2, "is_active": True},
     # الكتب الإلكترونية
-    {"menu": "sidebar", "service_context": "ebooks", "translations": {"en": {"title": "E-Books Library"}, "ar": {"title": "مكتبة الكتب"}}, "url": "/ebooks", "icon": "📖", "order": 0, "is_active": True},
-    {"menu": "sidebar", "service_context": "ebooks", "translations": {"en": {"title": "Subscriptions"}, "ar": {"title": "الباقات"}}, "url": "/subscriptions", "icon": "💳", "order": 1, "is_active": True},
-    {"menu": "sidebar", "service_context": "ebooks", "translations": {"en": {"title": "Workspace"}, "ar": {"title": "لوحة التحكم"}}, "url": "/dashboard", "icon": "📊", "order": 2, "is_active": True},
+    {"menu": "sidebar", "service_context": ["ebooks"], "translations": {"en": {"title": "E-Books Library"}, "ar": {"title": "مكتبة الكتب"}}, "url": "/ebooks", "icon": "📖", "order": 0, "is_active": True},
+    {"menu": "sidebar", "service_context": ["ebooks"], "translations": {"en": {"title": "Subscriptions"}, "ar": {"title": "الباقات"}}, "url": "/subscriptions", "icon": "💳", "order": 1, "is_active": True},
+    {"menu": "sidebar", "service_context": ["ebooks"], "translations": {"en": {"title": "Workspace"}, "ar": {"title": "لوحة التحكم"}}, "url": "/dashboard", "icon": "📊", "order": 2, "is_active": True},
     # آفاق مدرستي
-    {"menu": "sidebar", "service_context": "school", "translations": {"en": {"title": "Afaq Madrasti Home"}, "ar": {"title": "رئيسية آفاق مدرستي"}}, "url": "/school", "icon": "🏫", "order": 0, "is_active": True},
-    {"menu": "sidebar", "service_context": "school", "translations": {"en": {"title": "Notifications"}, "ar": {"title": "التنبيهات"}}, "url": "/notifications", "icon": "🔔", "order": 1, "is_active": True},
-    {"menu": "sidebar", "service_context": "school", "translations": {"en": {"title": "Workspace"}, "ar": {"title": "لوحة التحكم"}}, "url": "/dashboard", "icon": "📊", "order": 2, "is_active": True},
+    {"menu": "sidebar", "service_context": ["school"], "translations": {"en": {"title": "Afaq Madrasti Home"}, "ar": {"title": "رئيسية آفاق مدرستي"}}, "url": "/school", "icon": "🏫", "order": 0, "is_active": True},
+    {"menu": "sidebar", "service_context": ["school"], "translations": {"en": {"title": "Notifications"}, "ar": {"title": "التنبيهات"}}, "url": "/notifications", "icon": "🔔", "order": 1, "is_active": True},
+    {"menu": "sidebar", "service_context": ["school"], "translations": {"en": {"title": "Workspace"}, "ar": {"title": "لوحة التحكم"}}, "url": "/dashboard", "icon": "📊", "order": 2, "is_active": True},
     # المناهج وخطط الدروس
-    {"menu": "sidebar", "service_context": "curriculum", "translations": {"en": {"title": "Curriculum"}, "ar": {"title": "المناهج الدراسية"}}, "url": "/curriculum", "icon": "📚", "order": 0, "is_active": True},
-    {"menu": "sidebar", "service_context": "curriculum", "translations": {"en": {"title": "Lesson Plans"}, "ar": {"title": "خطط الدروس"}}, "url": "/lesson-plans", "icon": "📝", "order": 1, "is_active": True},
-    {"menu": "sidebar", "service_context": "curriculum", "translations": {"en": {"title": "Workspace"}, "ar": {"title": "لوحة التحكم"}}, "url": "/dashboard", "icon": "📊", "order": 2, "is_active": True},
+    {"menu": "sidebar", "service_context": ["curriculum"], "translations": {"en": {"title": "Curriculum"}, "ar": {"title": "المناهج الدراسية"}}, "url": "/curriculum", "icon": "📚", "order": 0, "is_active": True},
+    {"menu": "sidebar", "service_context": ["curriculum"], "translations": {"en": {"title": "Lesson Plans"}, "ar": {"title": "خطط الدروس"}}, "url": "/lesson-plans", "icon": "📝", "order": 1, "is_active": True},
+    {"menu": "sidebar", "service_context": ["curriculum"], "translations": {"en": {"title": "Workspace"}, "ar": {"title": "لوحة التحكم"}}, "url": "/dashboard", "icon": "📊", "order": 2, "is_active": True},
 ]
 
 created = 0

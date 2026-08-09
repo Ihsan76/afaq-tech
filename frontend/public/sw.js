@@ -1,14 +1,31 @@
-const CACHE_NAME = "afaq-tech-v1";
+const CACHE_NAME = "afaq-tech-v2";
+const NAV_TTL_MS = 5 * 60 * 1000;
 const ASSETS_TO_CACHE = [
   "/",
   "/manifest.json",
 ];
 
+function cacheKey(response) {
+  const clone = response.clone();
+  const headers = new Headers(clone.headers);
+  headers.append("x-sw-cached-at", String(Date.now()));
+  return new Response(clone.body, {
+    status: clone.status,
+    statusText: clone.statusText,
+    headers,
+  });
+}
+
+function cachedAt(response) {
+  const value = response.headers.get("x-sw-cached-at");
+  return value ? parseInt(value, 10) : 0;
+}
+
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(ASSETS_TO_CACHE);
-    })
+    }).catch(() => {})
   );
   self.skipWaiting();
 });
@@ -26,34 +43,47 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
-  
+
+  // Only intercept page navigations. Everything else (images, scripts,
+  // fonts, cross-origin requests like YouTube/Supabase, /api/) is passed
+  // through untouched so the browser always loads fresh content from the
+  // network and the SW cache can never serve stale/broken course images.
+  if (event.request.mode !== "navigate") return;
+
   const url = new URL(event.request.url);
-  if (url.pathname.startsWith("/api/")) {
-    return;
-  }
+  if (url.pathname.startsWith("/api/")) return;
 
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       if (cachedResponse) {
-        fetch(event.request).then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200) {
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(event.request, networkResponse);
-            });
-          }
-        }).catch(() => {});
+        const stale = Date.now() - cachedAt(cachedResponse) > NAV_TTL_MS;
+        if (stale) {
+          fetch(event.request)
+            .then((networkResponse) => {
+              if (networkResponse && networkResponse.status === 200) {
+                caches.open(CACHE_NAME).then((cache) => {
+                  cache.put(event.request, cacheKey(networkResponse));
+                });
+              }
+            })
+            .catch(() => {});
+        }
         return cachedResponse;
       }
 
       return fetch(event.request)
         .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, cacheKey(networkResponse));
+            });
+          }
           return networkResponse;
         })
         .catch(() => {
-          if (event.request.mode === "navigate") {
-            return caches.match("/");
-          }
-          return new Response("Offline", { status: 503, statusText: "Offline" });
+          return caches.match("/").then((fallback) => {
+            return fallback || new Response("Offline", { status: 503, statusText: "Offline" });
+          });
         });
     })
   );

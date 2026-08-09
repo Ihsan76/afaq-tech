@@ -607,6 +607,10 @@
   "serviceContext": "Service Context",
   "serviceContextHint": "Shown in sidebar only for this service/page",
   "requiredRole": "Required Role",
+  "selectAll": "সব নির্বাচন করুন",
+  "deselectAll": "সব নির্বাচন বাতিল করুন",
+  "allPages": "সব পেজ",
+  "noSelection": "কোনো নির্বাচন নেই",
   "deactivate": "Deactivate"
  },
  "dashboard": {

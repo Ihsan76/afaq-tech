@@ -39,6 +39,10 @@ const nextConfig: NextConfig = {
     ].join("; ");
     return [
       {
+        source: "/sw.js",
+        headers: [{ key: "Cache-Control", value: "no-cache, no-store, must-revalidate" }],
+      },
+      {
         source: "/:path*",
         headers: [
           { key: "Content-Security-Policy", value: csp },

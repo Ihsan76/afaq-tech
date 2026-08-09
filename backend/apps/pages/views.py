@@ -1,12 +1,12 @@
-from django.shortcuts import get_object_or_404
 from django.core.cache import cache
-from django.db.models import Case, IntegerField, Value, When
+from django.db.models import Case, IntegerField, Q, Value, When
+from django.shortcuts import get_object_or_404
 from rest_framework import generics, permissions, status
-from apps.users.permissions import IsContentAdmin
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.core.cache import SITE_CACHE_TTL, _public_key
+from apps.users.permissions import IsContentAdmin
 
 from .models import (
     ContactMessage,
@@ -154,10 +154,11 @@ class MenuPublicView(APIView):
         if data is None:
             items = MenuItem.objects.filter(menu=menu_type, is_active=True, parent=None)
             if context:
-                items = items.filter(service_context__in=['all', context])
+                items = items.filter(Q(service_context__contains=[context]) | Q(service_context=[]))
                 items = items.annotate(
                     ctx_rank=Case(
-                        When(service_context=context, then=Value(0)),
+                        When(service_context__contains=[context], then=Value(0)),
+                        When(service_context=[], then=Value(0)),
                         default=Value(1),
                         output_field=IntegerField(),
                     )

@@ -607,6 +607,10 @@
   "serviceContext": "Service Context",
   "serviceContextHint": "Shown in sidebar only for this service/page",
   "requiredRole": "Required Role",
+  "selectAll": "Pilih semua",
+  "deselectAll": "Hapus semua pilihan",
+  "allPages": "Semua halaman",
+  "noSelection": "Tanpa pilihan",
   "deactivate": "Deactivate"
  },
  "dashboard": {

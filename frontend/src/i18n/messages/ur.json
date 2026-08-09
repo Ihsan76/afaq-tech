@@ -607,6 +607,10 @@
   "serviceContext": "Service Context",
   "serviceContextHint": "Shown in sidebar only for this service/page",
   "requiredRole": "Required Role",
+  "selectAll": "تمام منتخب کریں",
+  "deselectAll": "تمام کا انتخاب ہٹائیں",
+  "allPages": "تمام صفحات",
+  "noSelection": "کوئی انتخاب نہیں",
   "deactivate": "Deactivate"
  },
  "dashboard": {

@@ -16,7 +16,7 @@ export function useApi<T = any>(url: string | null, params?: Record<string, stri
   const { data, error, isLoading, mutate } = useSWR<T>(
     key,
     () => api.get(url + qs).then((r) => r.data),
-    { revalidateOnFocus: false }
+    { revalidateOnFocus: true, revalidateOnReconnect: true }
   );
   return { data, error, loading: isLoading, mutate };
 }

@@ -659,6 +659,10 @@
   "serviceContext": "Service Context",
   "serviceContextHint": "Shown in sidebar only for this service/page",
   "requiredRole": "Required Role",
+  "selectAll": "انتخاب همه",
+  "deselectAll": "لغو انتخاب همه",
+  "allPages": "همه صفحات",
+  "noSelection": "بدون انتخاب",
   "deactivate": "Deactivate"
  },
  "dashboard": {
