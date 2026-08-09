@@ -6,9 +6,10 @@ from django.http import StreamingHttpResponse
 from django.shortcuts import get_object_or_404
 from google import genai
 from rest_framework import generics, permissions, status
-from apps.users.permissions import IsAIAdmin
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
+
+from apps.users.permissions import IsAIAdmin
 
 from .models import (
     AIModel,

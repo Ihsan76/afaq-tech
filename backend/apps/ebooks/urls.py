@@ -8,6 +8,7 @@ urlpatterns = [
     path('', views.EbookListView.as_view(), name='ebook-list'),
     path('<slug:slug>/', views.EbookDetailView.as_view(), name='ebook-detail'),
     path('<slug:slug>/download/', views.EbookDownloadView.as_view(), name='ebook-download'),
+    path('<slug:slug>/purchase/', views.EbookPurchaseCreateView.as_view(), name='ebook-purchase'),
 
     # Admin
     path('admin/list/', views.EbookAdminListView.as_view(), name='ebook-admin-list'),

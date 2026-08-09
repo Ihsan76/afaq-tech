@@ -1451,7 +1451,13 @@
   "browseCourses": "مرور دوره‌ها",
   "freePreview": "پیش‌نمایش رایگان",
   "loginRequired": "برای پیگیری پیشرفت خود وارد شوید",
-  "paidComingSoon": "یکپارچه‌سازی پرداخت به‌زودی"
+  "paidComingSoon": "یکپارچه‌سازی پرداخت به‌زودی",
+  "buyNow": "خرید همین حالا",
+  "lifetimeAccess": "دسترسی مادام‌العمر",
+  "paymentUnavailable": "پرداخت در حال حاضر در دسترس نیست",
+  "paymentSuccess": "پرداخت موفق بود — دوره اکنون در دسترس است",
+  "paymentCancelled": "پرداخت لغو شد",
+  "checkoutRedirect": "در حال انتقال به صفحه پرداخت..."
  },
  "gamification": {
   "title": "بازی‌وارسازی",

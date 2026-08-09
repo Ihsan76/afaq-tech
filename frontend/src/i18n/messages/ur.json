@@ -1351,7 +1351,13 @@
   "browseCourses": "Browse Courses",
   "freePreview": "Free Preview",
   "loginRequired": "Log in to track your progress",
-  "paidComingSoon": "Payment integration coming soon"
+  "paidComingSoon": "Payment integration coming soon",
+  "buyNow": "ابھی خریدیں",
+  "lifetimeAccess": "زندگی بھر رسائی",
+  "paymentUnavailable": "ادائیگی فی الحال دستیاب نہیں",
+  "paymentSuccess": "ادائیگی کامیاب — کورس اب دستیاب ہے",
+  "paymentCancelled": "ادائیگی منسوخ",
+  "checkoutRedirect": "ادائیگی پر منتقل ہو رہے ہیں..."
  },
  "contact": {
   "email": "ای میل",

@@ -41,6 +41,16 @@ def checkout_return_path(checkout, locale='en'):
         return 'subscriptions'
     if kind == 'seat_purchase':
         return 'organization'
+    if kind == 'course_purchase':
+        course = getattr(checkout, 'course', None)
+        if course is not None:
+            return f'academy/courses/{course.slug}'
+        return 'academy/courses'
+    if kind == 'ebook_purchase':
+        ebook = getattr(checkout, 'ebook', None)
+        if ebook is not None:
+            return f'ebooks/{ebook.slug}'
+        return 'ebooks'
     return 'marketplace/orders'
 
 
@@ -48,7 +58,7 @@ def parse_checkout_id(raw):
     """Parse a `kind:id` reference (or a legacy raw id) into (kind, id)."""
     if isinstance(raw, str) and ':' in raw:
         prefix, _, rest = raw.partition(':')
-        if prefix in ('order', 'subscription', 'seat_purchase') and rest:
+        if prefix in ('order', 'subscription', 'seat_purchase', 'course_purchase', 'ebook_purchase') and rest:
             return prefix, rest
     return 'order', raw
 
@@ -110,25 +120,14 @@ class PaymentProvider(ABC):
         ])
 
         # Credit provider wallet & record platform fee (10%)
-        from decimal import Decimal
-        from ..models import Wallet, WalletTransaction
+        from .wallet import credit_earnings
         provider = order.service.provider
         if provider:
-            wallet, _ = Wallet.objects.get_or_create(user=provider, defaults={'currency': order.currency})
-            fee_percentage = Decimal('0.10')
-            total_amount = order.price_paid
-            platform_fee = total_amount * fee_percentage
-            provider_earning = total_amount - platform_fee
-
-            wallet.balance += provider_earning
-            wallet.save(update_fields=['balance', 'updated_at'])
-
-            WalletTransaction.objects.create(
-                wallet=wallet,
-                amount=provider_earning,
-                transaction_type=WalletTransaction.Type.SALE_EARNING,
-                reference_id=f"order_{order.id}",
-                description=f"Earning from order #{order.id} (after 10% platform fee)"
+            credit_earnings(
+                provider,
+                order.price_paid,
+                order.currency,
+                reference=f"order_{order.id}",
             )
 
         from apps.notifications.services import notify
@@ -153,4 +152,10 @@ class PaymentProvider(ABC):
         if kind == 'seat_purchase':
             from apps.subscriptions.services import confirm_seat_purchase
             return confirm_seat_purchase(checkout_id, transaction_id, provider_name=self.name)
+        if kind == 'course_purchase':
+            from apps.courses.services import activate_course_purchase
+            return activate_course_purchase(checkout_id, transaction_id, provider_name=self.name)
+        if kind == 'ebook_purchase':
+            from apps.ebooks.services import activate_ebook_purchase
+            return activate_ebook_purchase(checkout_id, transaction_id, provider_name=self.name)
         return self.mark_order_paid(checkout_id, transaction_id)

@@ -1351,7 +1351,13 @@
   "browseCourses": "Browse Courses",
   "freePreview": "Free Preview",
   "loginRequired": "Log in to track your progress",
-  "paidComingSoon": "Payment integration coming soon"
+  "paidComingSoon": "Payment integration coming soon",
+  "buyNow": "Beli Sekarang",
+  "lifetimeAccess": "Akses seumur hidup",
+  "paymentUnavailable": "Pembayaran tidak tersedia saat ini",
+  "paymentSuccess": "Pembayaran berhasil — kursus kini tersedia",
+  "paymentCancelled": "Pembayaran dibatalkan",
+  "checkoutRedirect": "Mengalihkan ke pembayaran..."
  },
  "contact": {
   "email": "Email",

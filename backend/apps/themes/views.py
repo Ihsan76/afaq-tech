@@ -1,11 +1,12 @@
 from django.core.cache import cache
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, permissions
-from apps.users.permissions import IsSettingsAdmin
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.core.cache import SITE_CACHE_TTL, _public_key
+from apps.users.permissions import IsSettingsAdmin
+
 from .models import Theme
 from .serializers import ThemeListSerializer, ThemeSerializer
 

@@ -205,7 +205,7 @@ def test_wallet_retrieve_and_transactions_endpoints(buyer_client, buyer_user, pu
     assert tx_resp.status_code == 200
     assert tx_resp.json() == []
 
-    provider_resp = buyer_client.get(f"/api/v1/marketplace/wallet/?locale=ar")
+    provider_resp = buyer_client.get("/api/v1/marketplace/wallet/?locale=ar")
     assert provider_resp.status_code == 200
 
 

@@ -1485,7 +1485,13 @@
   "freePreview": "Free Preview",
   "loginRequired": "Log in to track your progress",
   "paidComingSoon": "Payment integration coming soon",
-  "courses": "courses"
+  "courses": "courses",
+  "buyNow": "Buy Now",
+  "lifetimeAccess": "Lifetime access",
+  "paymentUnavailable": "Payment unavailable right now",
+  "paymentSuccess": "Payment successful — the course is now available",
+  "paymentCancelled": "Payment was cancelled",
+  "checkoutRedirect": "Redirecting to payment..."
  },
  "gamification": {
   "title": "Gamification",

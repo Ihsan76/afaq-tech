@@ -24,7 +24,7 @@ from apps.lessonplans.models import LessonPlan
 from apps.schools.models import School
 from apps.users.permissions import IsSystemAdmin, IsUsersAdmin
 
-from .models import EmailVerification, PhoneVerification, LoginAttempt
+from .models import EmailVerification, LoginAttempt, PhoneVerification
 from .serializers import RegisterSerializer, UserSerializer
 
 User = get_user_model()

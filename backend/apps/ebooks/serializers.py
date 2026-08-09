@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Ebook, EbookCategory
+from .models import Ebook, EbookCategory, EbookPurchase
 
 PLAN_LEVELS = {'free': 0, 'basic': 1, 'pro': 2, 'enterprise': 3}
 
@@ -25,18 +25,32 @@ class EbookListSerializer(serializers.ModelSerializer):
 class EbookDetailSerializer(serializers.ModelSerializer):
     access_level_display = serializers.CharField(source='get_access_level_display', read_only=True)
     can_download = serializers.SerializerMethodField()
+    is_purchased = serializers.SerializerMethodField()
 
     class Meta:
         model = Ebook
         fields = '__all__'
 
+    def _is_purchased(self, obj):
+        request = self.context.get('request')
+        if not request or not request.user or not request.user.is_authenticated:
+            return False
+        return EbookPurchase.objects.filter(
+            user=request.user, ebook=obj, status=EbookPurchase.Status.PAID
+        ).exists()
+
     def get_can_download(self, obj):
+        if self._is_purchased(obj):
+            return True
         request = self.context.get('request')
         if not request or not request.user or not request.user.is_authenticated:
             return obj.access_level == 'free'
         user_level = PLAN_LEVELS.get(request.user.subscription_plan, 0)
         required_level = PLAN_LEVELS.get(obj.access_level, 0)
         return user_level >= required_level
+
+    def get_is_purchased(self, obj):
+        return self._is_purchased(obj)
 
 
 class EbookCreateUpdateSerializer(serializers.ModelSerializer):

@@ -1,6 +1,8 @@
 from rest_framework import serializers
 
-from .models import Chapter, Course, CourseCategory, Enrollment, Lesson
+from .models import Chapter, Course, CourseCategory, CoursePurchase, Enrollment, Lesson
+
+PLAN_LEVELS = {'free': 0, 'basic': 1, 'pro': 2, 'school': 2, 'enterprise': 3}
 
 
 def _extract_field(translations_dict, field):
@@ -99,8 +101,8 @@ class CourseListSerializer(serializers.ModelSerializer):
         fields = ['id', 'slug', 'title', 'description', 'thumbnail',
                   'category', 'category_name', 'category_slug',
                   'instructor_name', 'instructor_avatar', 'instructor_url',
-                  'level', 'language', 'duration_hours',
-                  'is_free', 'price', 'is_featured',
+                  'instructor_id', 'level', 'language', 'duration_hours',
+                  'access_level', 'is_free', 'price', 'is_featured',
                   'lessons_count', 'students_count']
 
     def get_title(self, obj):
@@ -110,6 +112,10 @@ class CourseListSerializer(serializers.ModelSerializer):
         return _extract_field(obj.translations, 'description')
 
     def get_instructor_name(self, obj):
+        if obj.instructor:
+            name = obj.instructor.translations.get('ar', {}).get('name') or obj.instructor.translations.get('en', {}).get('name')
+            if name:
+                return {'ar': name, 'en': name}
         return _extract_field(obj.instructor_translations, 'name')
 
     def get_category_name(self, obj):
@@ -125,9 +131,14 @@ class CourseDetailSerializer(CourseListSerializer):
     chapters = ChapterSerializer(many=True, read_only=True)
     is_enrolled = serializers.SerializerMethodField()
     enrollment_progress = serializers.SerializerMethodField()
+    is_purchased = serializers.SerializerMethodField()
+    can_access = serializers.SerializerMethodField()
 
     class Meta(CourseListSerializer.Meta):
-        fields = CourseListSerializer.Meta.fields + ['chapters', 'is_enrolled', 'enrollment_progress']
+        fields = CourseListSerializer.Meta.fields + [
+            'chapters', 'is_enrolled', 'enrollment_progress',
+            'is_purchased', 'can_access',
+        ]
 
     def get_is_enrolled(self, obj):
         request = self.context.get('request')
@@ -142,6 +153,27 @@ class CourseDetailSerializer(CourseListSerializer):
             if enrollment:
                 return enrollment.progress
         return None
+
+    def get_is_purchased(self, obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return CoursePurchase.objects.filter(
+                user=request.user, course=obj, status=CoursePurchase.Status.PAID
+            ).exists()
+        return False
+
+    def get_can_access(self, obj):
+        request = self.context.get('request')
+        if obj.is_free or obj.access_level == Course.AccessLevel.FREE:
+            return True
+        if not request or not request.user or not request.user.is_authenticated:
+            return False
+        if CoursePurchase.objects.filter(
+            user=request.user, course=obj, status=CoursePurchase.Status.PAID
+        ).exists():
+            return True
+        user_level = PLAN_LEVELS.get(request.user.subscription_plan, 0)
+        return user_level >= PLAN_LEVELS.get(obj.access_level, 0)
 
 
 class EnrollmentSerializer(serializers.ModelSerializer):

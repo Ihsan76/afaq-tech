@@ -1,10 +1,12 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, permissions, status
-from apps.users.permissions import IsContentAdmin
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import Ebook, EbookCategory
+from apps.marketplace.payments import PaymentProviderError, get_provider
+from apps.users.permissions import IsContentAdmin
+
+from .models import Ebook, EbookCategory, EbookPurchase
 from .serializers import (
     EbookCategorySerializer,
     EbookCreateUpdateSerializer,
@@ -71,6 +73,11 @@ class EbookDownloadView(APIView):
         user_level = 0
         if request.user and request.user.is_authenticated:
             user_level = PLAN_LEVELS.get(request.user.subscription_plan, 0)
+            purchased = EbookPurchase.objects.filter(
+                user=request.user, ebook=ebook, status=EbookPurchase.Status.PAID
+            ).exists()
+            if purchased:
+                user_level = 999
 
         required_level = PLAN_LEVELS.get(ebook.access_level, 0)
         if user_level < required_level:
@@ -82,6 +89,64 @@ class EbookDownloadView(APIView):
         ebook.download_count += 1
         ebook.save(update_fields=['download_count'])
         return Response({'success': True, 'file_url': ebook.file_url})
+
+
+class EbookPurchaseCreateView(APIView):
+    """إنشاء شراء كتاب (مدى الحياة) — يعيد رابط الدفع"""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, slug):
+        ebook = get_object_or_404(Ebook, slug=slug, is_published=True)
+        if ebook.is_free:
+            return Response(
+                {'error': 'This ebook is free — no purchase needed.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        existing = EbookPurchase.objects.filter(user=request.user, ebook=ebook).first()
+        if existing and existing.status == EbookPurchase.Status.PAID:
+            return Response(
+                {'error': 'already_owned', 'is_purchased': True},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if existing and existing.status == EbookPurchase.Status.PENDING:
+            purchase = existing
+        else:
+            purchase = EbookPurchase.objects.create(
+                user=request.user,
+                ebook=ebook,
+                price_paid=ebook.price,
+                currency='JOD',
+                display_price=ebook.price,
+                display_currency='JOD',
+            )
+
+        locale = request.query_params.get('locale', 'en')
+        try:
+            provider = get_provider()
+            result = provider.create_checkout(purchase, locale)
+        except PaymentProviderError:
+            return Response(
+                {
+                    'payment_available': False,
+                    'checkout_url': None,
+                    'purchase_id': purchase.id,
+                },
+                status=status.HTTP_201_CREATED,
+            )
+
+        purchase.payment_provider = result.provider
+        purchase.payment_session_id = result.session_id
+        purchase.save(update_fields=['payment_provider', 'payment_session_id', 'updated_at'])
+        return Response(
+            {
+                'payment_available': True,
+                'checkout_url': result.checkout_url,
+                'session_id': result.session_id,
+                'purchase_id': purchase.id,
+            },
+            status=status.HTTP_201_CREATED,
+        )
 
 
 class EbookAdminListView(generics.ListAPIView):

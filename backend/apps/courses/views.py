@@ -1,11 +1,13 @@
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, permissions, status
-from apps.users.permissions import IsContentAdmin
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import Course, CourseCategory, Enrollment, Lesson
+from apps.marketplace.payments import PaymentProviderError, get_provider
+from apps.users.permissions import IsContentAdmin
+
+from .models import Course, CourseCategory, CoursePurchase, Enrollment, Lesson
 from .serializers import (
     CourseCategorySerializer,
     CourseCreateUpdateSerializer,
@@ -13,6 +15,8 @@ from .serializers import (
     CourseListSerializer,
     EnrollmentSerializer,
 )
+
+PLAN_LEVELS = {'free': 0, 'basic': 1, 'pro': 2, 'school': 2, 'enterprise': 3}
 
 # ── Public ──
 
@@ -69,20 +73,93 @@ class CoursePublicDetailView(generics.RetrieveAPIView):
 
 
 class CourseEnrollView(APIView):
-    """التسجيل في دورة — مجانية فوري، مدفوعة تتطلب دفع (لاحقاً)"""
+    """التسجيل في دورة — مجانية فوري، ومدفوعة عبر باقة كافية أو شراء مدى الحياة"""
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, slug):
         course = get_object_or_404(Course, slug=slug, is_published=True)
-        if not course.is_free:
-            return Response(
-                {'error': 'This course requires payment. Payment integration coming soon.'},
-                status=status.HTTP_402_PAYMENT_REQUIRED,
-            )
+
+        if not course.is_free and course.access_level != Course.AccessLevel.FREE:
+            purchased = CoursePurchase.objects.filter(
+                user=request.user, course=course, status=CoursePurchase.Status.PAID
+            ).exists()
+            if not purchased:
+                user_level = PLAN_LEVELS.get(request.user.subscription_plan, 0)
+                required_level = PLAN_LEVELS.get(course.access_level, 0)
+                if user_level < required_level:
+                    return Response(
+                        {
+                            'error': 'Payment required — buy the course or upgrade your plan.',
+                            'payment_required': True,
+                            'price': course.price,
+                            'currency': 'JOD',
+                            'required_access_level': course.access_level,
+                        },
+                        status=status.HTTP_402_PAYMENT_REQUIRED,
+                    )
+
         enrollment, created = Enrollment.objects.get_or_create(user=request.user, course=course)
         return Response(
             {'enrolled': True, 'created': created, 'progress': enrollment.progress},
             status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
+        )
+
+
+class CoursePurchaseCreateView(APIView):
+    """إنشاء شراء دورة (مدى الحياة) — يعيد رابط الدفع"""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, slug):
+        course = get_object_or_404(Course, slug=slug, is_published=True)
+        if course.is_free:
+            return Response(
+                {'error': 'This course is free — use the enroll endpoint.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        existing = CoursePurchase.objects.filter(user=request.user, course=course).first()
+        if existing and existing.status == CoursePurchase.Status.PAID:
+            return Response(
+                {'error': 'already_owned', 'is_enrolled': True},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if existing and existing.status == CoursePurchase.Status.PENDING:
+            purchase = existing
+        else:
+            purchase = CoursePurchase.objects.create(
+                user=request.user,
+                course=course,
+                price_paid=course.price,
+                currency='JOD',
+                display_price=course.price,
+                display_currency='JOD',
+            )
+
+        locale = request.query_params.get('locale', 'en')
+        try:
+            provider = get_provider()
+            result = provider.create_checkout(purchase, locale)
+        except PaymentProviderError:
+            return Response(
+                {
+                    'payment_available': False,
+                    'checkout_url': None,
+                    'purchase_id': purchase.id,
+                },
+                status=status.HTTP_201_CREATED,
+            )
+
+        purchase.payment_provider = result.provider
+        purchase.payment_session_id = result.session_id
+        purchase.save(update_fields=['payment_provider', 'payment_session_id', 'updated_at'])
+        return Response(
+            {
+                'payment_available': True,
+                'checkout_url': result.checkout_url,
+                'session_id': result.session_id,
+                'purchase_id': purchase.id,
+            },
+            status=status.HTTP_201_CREATED,
         )
 
 

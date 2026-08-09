@@ -2,7 +2,16 @@ from rest_framework import serializers
 
 from apps.core.translations import get_translation
 
-from .models import Order, Review, Service, ServiceAvailability, ServiceCategory, Wallet, WalletTransaction, PayoutRequest
+from .models import (
+    Order,
+    PayoutRequest,
+    Review,
+    Service,
+    ServiceAvailability,
+    ServiceCategory,
+    Wallet,
+    WalletTransaction,
+)
 
 
 class ServiceCategorySerializer(serializers.ModelSerializer):

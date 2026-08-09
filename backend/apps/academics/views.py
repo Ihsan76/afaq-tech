@@ -143,7 +143,7 @@ class CurriculumDocumentDownloadView(APIView):
             url = doc.external_url
             if request.query_params.get('download') == '1' and 'download=' not in url:
                 url += ('&' if '?' in url else '?') + 'download=1'
-            
+
             # Check if external URL is reachable, fallback to extracted text view if 500/error occurs
             try:
                 import requests

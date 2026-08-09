@@ -220,8 +220,9 @@ def search_autocomplete_view(request):
         return Response({'courses': [], 'blog': [], 'ebooks': []})
 
     from django.db.models import Q
-    from apps.courses.models import Course
+
     from apps.blog.models import BlogPost
+    from apps.courses.models import Course
     from apps.ebooks.models import Ebook
 
     courses = Course.objects.filter(is_published=True).filter(

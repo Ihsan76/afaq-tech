@@ -1485,7 +1485,13 @@
   "freePreview": "معاينة مجانية",
   "loginRequired": "سجّل الدخول لتتبع تقدمك",
   "paidComingSoon": "الدفع الإلكتروني قريباً",
-  "courses": "دورات"
+  "courses": "دورات",
+  "buyNow": "اشترِ الآن",
+  "lifetimeAccess": "وصول مدى الحياة",
+  "paymentUnavailable": "الدفع غير متاح حالياً",
+  "paymentSuccess": "تم الدفع بنجاح — الدورة متاحة الآن",
+  "paymentCancelled": "تم إلغاء الدفع",
+  "checkoutRedirect": "جاري التحويل للدفع..."
  },
  "gamification": {
   "title": "التلعيب",

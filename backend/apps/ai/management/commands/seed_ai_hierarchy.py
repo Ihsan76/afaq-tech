@@ -1,6 +1,12 @@
 from django.core.management.base import BaseCommand
-from apps.ai.models import CountryPromptProfile, GradePromptProfile, SubjectPromptProfile, PromptTemplate
+
 from apps.academics.models import Grade, Subject
+from apps.ai.models import (
+    CountryPromptProfile,
+    GradePromptProfile,
+    PromptTemplate,
+    SubjectPromptProfile,
+)
 
 LOCALIZED_TEMPLATES = {
     'ar': {

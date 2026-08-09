@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Chapter, Course, CourseCategory, Enrollment, Lesson
+from .models import Chapter, Course, CourseCategory, CoursePurchase, Enrollment, Lesson
 
 
 class ChapterInline(admin.TabularInline):
@@ -21,8 +21,11 @@ class CourseCategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Course)
 class CourseAdmin(admin.ModelAdmin):
-    list_display = ['__str__', 'category', 'level', 'language', 'is_free', 'is_published', 'is_featured']
-    list_filter = ['category', 'level', 'language', 'is_free', 'is_published']
+    list_display = ['__str__', 'instructor', 'category', 'level', 'access_level', 'price', 'platform_fee_percent', 'is_published', 'is_featured']
+    list_filter = ['category', 'level', 'language', 'access_level', 'is_free', 'is_published']
+    list_editable = ['is_published', 'is_featured']
+    autocomplete_fields = ['instructor']
+    search_fields = ['slug', 'instructor__email']
     inlines = [ChapterInline]
 
 
@@ -42,3 +45,11 @@ class LessonAdmin(admin.ModelAdmin):
 class EnrollmentAdmin(admin.ModelAdmin):
     list_display = ['user', 'course', 'progress', 'enrolled_at']
     list_filter = ['course']
+
+
+@admin.register(CoursePurchase)
+class CoursePurchaseAdmin(admin.ModelAdmin):
+    list_display = ['id', 'user', 'course', 'status', 'price_paid', 'payment_provider', 'purchased_at', 'created_at']
+    list_filter = ['status', 'payment_provider', 'created_at']
+    search_fields = ['user__email', 'course__slug']
+    readonly_fields = ['created_at', 'updated_at']

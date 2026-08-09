@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Ebook, EbookCategory
+from .models import Ebook, EbookCategory, EbookPurchase
 
 
 @admin.register(EbookCategory)
@@ -12,6 +12,16 @@ class EbookCategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Ebook)
 class EbookAdmin(admin.ModelAdmin):
-    list_display = ['slug', 'category', 'is_published', 'is_featured', 'download_count', 'created_at']
-    list_filter = ['is_published', 'is_featured', 'category']
-    search_fields = ['slug']
+    list_display = ['slug', 'author', 'category', 'access_level', 'price', 'platform_fee_percent', 'is_published', 'is_featured', 'download_count']
+    list_filter = ['is_published', 'is_featured', 'category', 'access_level']
+    list_editable = ['is_published', 'is_featured']
+    autocomplete_fields = ['author']
+    search_fields = ['slug', 'author__email']
+
+
+@admin.register(EbookPurchase)
+class EbookPurchaseAdmin(admin.ModelAdmin):
+    list_display = ['id', 'user', 'ebook', 'status', 'price_paid', 'payment_provider', 'purchased_at', 'created_at']
+    list_filter = ['status', 'payment_provider', 'created_at']
+    search_fields = ['user__email', 'ebook__slug']
+    readonly_fields = ['created_at', 'updated_at']

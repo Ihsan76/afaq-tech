@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
@@ -46,6 +46,9 @@ interface CourseDetail {
   chapters: Chapter[];
   is_enrolled: boolean;
   enrollment_progress: number | null;
+  can_access: boolean;
+  is_purchased: boolean;
+  access_level: string;
 }
 
 export default function CourseDetailPage() {
@@ -57,12 +60,27 @@ export default function CourseDetailPage() {
   const tCommon = useTranslations("common");
   const { user } = useAuthStore();
   const [enrolling, setEnrolling] = useState(false);
+  const [buying, setBuying] = useState(false);
+  const [paymentUnavailable, setPaymentUnavailable] = useState(false);
+  const [banner, setBanner] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [openChapters, setOpenChapters] = useState<number[]>([0]);
 
   const { data: course, error, isLoading, mutate } = useSWR<CourseDetail>(`/courses/${slug}/`, fetcher);
 
   const loc = (obj: Record<string, string> | null | undefined) =>
     obj?.[locale] || obj?.en || obj?.ar || "";
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("session_id") || params.get("paymentId")) {
+      setBanner({ type: "success", text: t("paymentSuccess") });
+      window.history.replaceState({}, "", window.location.pathname);
+      mutate();
+    } else if (params.get("cancelled")) {
+      setBanner({ type: "error", text: t("paymentCancelled") });
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }, [mutate, t]);
 
   const handleEnroll = async () => {
     if (!user) {
@@ -74,6 +92,24 @@ export default function CourseDetailPage() {
       await api.post(`/courses/${slug}/enroll/`);
       mutate();
     } catch {} finally { setEnrolling(false); }
+  };
+
+  const handleBuy = async () => {
+    if (!user) {
+      router.push(`/${locale}/login`);
+      return;
+    }
+    setBuying(true);
+    try {
+      const res = await api.post(`/courses/${slug}/purchase/?locale=${locale}`);
+      if (res.data?.checkout_url) {
+        window.location.href = res.data.checkout_url;
+        return;
+      }
+      setPaymentUnavailable(true);
+    } catch {
+      setPaymentUnavailable(true);
+    } finally { setBuying(false); }
   };
 
   if (isLoading) {
@@ -120,7 +156,9 @@ export default function CourseDetailPage() {
             {/* Info */}
             <div className="lg:col-span-2">
               <div className="flex flex-wrap items-center gap-2 mb-4">
-                <span className="px-3 py-1 rounded-full text-xs font-bold" style={{ background: "var(--color-success)", color: "white" }}>{t("free")}</span>
+                <span className="px-3 py-1 rounded-full text-xs font-bold" style={{ background: course.is_free ? "var(--color-success)" : "var(--color-primary)", color: "white" }}>
+                  {course.is_free ? t("free") : `${course.price} JOD`}
+                </span>
                 <span className="px-3 py-1 rounded-full text-xs font-bold" style={{ background: "var(--color-primary-light)", color: "var(--color-primary)" }}>{t(course.level)}</span>
                 <span className="px-3 py-1 rounded-full text-xs font-bold" style={{ background: "var(--color-surface-alt)", color: "var(--color-text-muted)" }}>
                   {course.language === "ar" ? "العربية" : "English"}
@@ -183,6 +221,12 @@ export default function CourseDetailPage() {
                   <img src={course.thumbnail} alt="" className="w-full h-44 object-cover" />
                 )}
                 <div className="p-5">
+                  {banner && (
+                    <div className="mb-3 px-3 py-2 rounded-xl text-xs font-semibold text-white"
+                      style={{ background: banner.type === "success" ? "var(--color-success)" : "var(--color-error)" }}>
+                      {banner.type === "success" ? "✅" : "⚠️"} {banner.text}
+                    </div>
+                  )}
                   {course.is_enrolled ? (
                     <Link
                       href={`/${locale}/academy/courses/${slug}/learn`}
@@ -191,6 +235,34 @@ export default function CourseDetailPage() {
                     >
                       {course.enrollment_progress && course.enrollment_progress > 0 ? t("continueLearning") : t("startLearning")} ←
                     </Link>
+                  ) : !course.can_access ? (
+                    <div>
+                      <div className="flex items-baseline gap-2 mb-3">
+                        <span className="text-2xl font-bold" style={{ color: "var(--color-primary)" }}>{course.price} JOD</span>
+                        <span className="text-xs" style={{ color: "var(--color-text-muted)" }}>{t("lifetimeAccess")}</span>
+                      </div>
+                      {user ? (
+                        <button
+                          onClick={handleBuy}
+                          disabled={buying}
+                          className="w-full py-3.5 rounded-xl font-bold text-white transition-all hover:scale-[1.02] disabled:opacity-50"
+                          style={{ background: "linear-gradient(135deg, var(--color-primary), var(--color-secondary))" }}
+                        >
+                          {buying ? t("checkoutRedirect") : t("buyNow")}
+                        </button>
+                      ) : (
+                        <Link
+                          href={`/${locale}/login`}
+                          className="block w-full text-center py-3.5 rounded-xl font-bold text-white transition-all hover:scale-[1.02]"
+                          style={{ background: "linear-gradient(135deg, var(--color-primary), var(--color-secondary))" }}
+                        >
+                          {t("loginToEnroll")}
+                        </Link>
+                      )}
+                      {paymentUnavailable && (
+                        <p className="mt-3 text-xs font-semibold text-center" style={{ color: "var(--color-error)" }}>{t("paymentUnavailable")}</p>
+                      )}
+                    </div>
                   ) : user ? (
                     <button
                       onClick={handleEnroll}
@@ -210,7 +282,7 @@ export default function CourseDetailPage() {
                     </Link>
                   )}
                   <p className="text-center text-xs mt-3" style={{ color: "var(--color-text-muted)" }}>
-                    ✓ {t("free")} • 🎬 {totalLessons} {t("lessons")}
+                    {course.is_free ? `✓ ${t("free")}` : `✓ ${t("lifetimeAccess")}`} • 🎬 {totalLessons} {t("lessons")}
                   </p>
                 </div>
               </div>

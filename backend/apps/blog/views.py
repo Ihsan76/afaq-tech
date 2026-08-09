@@ -1,8 +1,9 @@
 from django.db.models import Count, Q
 from rest_framework import generics, permissions
-from apps.users.permissions import IsContentAdmin
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
+
+from apps.users.permissions import IsContentAdmin
 
 from .models import BlogCategory, BlogPost
 from .serializers import (

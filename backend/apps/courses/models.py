@@ -28,10 +28,18 @@ class Course(models.Model):
         INTERMEDIATE = 'intermediate', 'متوسط'
         ADVANCED = 'advanced', 'متقدم'
 
+    class AccessLevel(models.TextChoices):
+        FREE = 'free', 'مجاني'
+        BASIC = 'basic', 'أساسي'
+        PRO = 'pro', 'برو'
+        ENTERPRISE = 'enterprise', 'مؤسسي'
+
     slug = models.SlugField(unique=True, max_length=200)
     translations = models.JSONField('Translations', default=dict, blank=True)
     category = models.ForeignKey(CourseCategory, on_delete=models.SET_NULL, null=True, blank=True, related_name='courses')
 
+    instructor = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL,
+                                   related_name='courses', verbose_name='المدرب')
     instructor_translations = models.JSONField('Instructor Translations', default=dict, blank=True)
     instructor_avatar = models.URLField('Instructor Avatar', blank=True, default='')
     instructor_url = models.URLField('Instructor Channel/URL', blank=True, default='')
@@ -41,8 +49,13 @@ class Course(models.Model):
     language = models.CharField('Language', max_length=5, default='ar')
     duration_hours = models.FloatField('Duration (hours)', default=0)
 
+    access_level = models.CharField('Access Level', max_length=20, choices=AccessLevel.choices, default=AccessLevel.FREE)
     is_free = models.BooleanField('Free', default=True)
     price = models.DecimalField('Price', max_digits=8, decimal_places=2, default=0)
+    platform_fee_percent = models.DecimalField(
+        'Platform Fee %', max_digits=4, decimal_places=1, default=10,
+        help_text='نسبة رسوم المنصة من سعر الشراء، والباقي للمدرب',
+    )
     is_published = models.BooleanField('Published', default=False)
     is_featured = models.BooleanField('Featured', default=False)
 
@@ -132,3 +145,48 @@ class Enrollment(models.Model):
         if total == 0:
             return 0
         return round((self.completed_lessons.count() / total) * 100)
+
+
+class CoursePurchase(models.Model):
+    """شراء دورة لمرة واحدة — وصول مدى الحياة"""
+
+    kind = 'course_purchase'
+
+    class Status(models.TextChoices):
+        PENDING = 'pending', 'قيد الانتظار'
+        PAID = 'paid', 'مدفوع'
+        REFUNDED = 'refunded', 'مسترد'
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='course_purchases')
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='purchases')
+
+    status = models.CharField('الحالة', max_length=20, choices=Status.choices, default=Status.PENDING)
+    payment_provider = models.CharField('مزوّد الدفع', max_length=32, blank=True, default='')
+    payment_session_id = models.CharField('معرّف الجلسة', max_length=255, blank=True, default='')
+    payment_transaction_id = models.CharField('معرّف العملية', max_length=255, blank=True, default='')
+
+    price_paid = models.DecimalField('المبلغ المدفوع', max_digits=10, decimal_places=2)
+    currency = models.CharField('العملة', max_length=3, default='JOD')
+    display_price = models.DecimalField('السعر المعروض', max_digits=10, decimal_places=2, default=0)
+    display_currency = models.CharField('عملة العرض', max_length=3, default='JOD')
+
+    purchased_at = models.DateTimeField('تاريخ الشراء', null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'شراء دورة'
+        verbose_name_plural = 'مشتريات الدورات'
+        unique_together = ['user', 'course']
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'{self.user.email} → {self.course.slug} [{self.status}]'
+
+    @property
+    def buyer(self):
+        return self.user
+
+    @property
+    def title(self):
+        return self.course.translations
