@@ -30,6 +30,10 @@ export default function Navbar() {
   const [showThemes, setShowThemes] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [openGeneral, setOpenGeneral] = useState(true);
+  const [openContextual, setOpenContextual] = useState(true);
+  const [openApps, setOpenApps] = useState(true);
+  const [openAdmin, setOpenAdmin] = useState(false);
   const themeRef = useRef<HTMLDivElement>(null);
   const userRef = useRef<HTMLDivElement>(null);
 
@@ -585,36 +589,18 @@ export default function Navbar() {
 
               {/* Main Site Links */}
               <div>
-                <p className="px-2 mb-1.5 text-[11px] font-bold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>
-                  التصفح العام
-                </p>
-                <div className="space-y-1">
-                  {navLinks.map((link) => (
-                    <Link
-                      key={link.href}
-                      href={link.href}
-                      onClick={() => setMobileOpen(false)}
-                      className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-colors"
-                      style={{
-                        backgroundColor: isActive(link.href) ? "var(--color-primary-light)" : "transparent",
-                        color: isActive(link.href) ? "var(--color-primary)" : "var(--color-text-secondary)",
-                      }}
-                    >
-                      <span className="text-base">{link.icon}</span>
-                      <span>{link.label}</span>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-
-              {/* Contextual Nav Items in Mobile */}
-              {shouldShowContextual && localizedContextualItems.length > 0 && (
-                <div>
-                  <p className="px-2 mb-1.5 text-[11px] font-bold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>
-                    {service ? `قائمة ${service}` : "القائمة السياقية"}
-                  </p>
+                <button
+                  type="button"
+                  onClick={() => setOpenGeneral(!openGeneral)}
+                  className="w-full flex items-center justify-between px-2 mb-1.5 text-[11px] font-bold uppercase tracking-wider rounded-lg py-1 hover:opacity-80 transition-opacity"
+                  style={{ color: "var(--color-text-muted)" }}
+                >
+                  <span>التصفح العام</span>
+                  <span className="text-[10px]">{openGeneral ? "▲" : "▼"}</span>
+                </button>
+                {openGeneral && (
                   <div className="space-y-1">
-                    {localizedContextualItems.map((link) => (
+                    {navLinks.map((link) => (
                       <Link
                         key={link.href}
                         href={link.href}
@@ -627,68 +613,118 @@ export default function Navbar() {
                       >
                         <span className="text-base">{link.icon}</span>
                         <span>{link.label}</span>
-                        {!!link.badge && (
-                          <span className="ms-auto text-[9px] px-1.5 py-0.5 rounded-full font-bold shrink-0"
-                            style={{ background: "var(--color-primary-light)", color: "var(--color-primary)" }}>
-                            {link.badge}
-                          </span>
-                        )}
                       </Link>
                     ))}
                   </div>
+                )}
+              </div>
+
+              {/* Contextual Nav Items in Mobile */}
+              {shouldShowContextual && localizedContextualItems.length > 0 && (
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => setOpenContextual(!openContextual)}
+                    className="w-full flex items-center justify-between px-2 mb-1.5 text-[11px] font-bold uppercase tracking-wider rounded-lg py-1 hover:opacity-80 transition-opacity"
+                    style={{ color: "var(--color-text-muted)" }}
+                  >
+                    <span>{service ? `قائمة ${service}` : "القائمة السياقية"}</span>
+                    <span className="text-[10px]">{openContextual ? "▲" : "▼"}</span>
+                  </button>
+                  {openContextual && (
+                    <div className="space-y-1">
+                      {localizedContextualItems.map((link) => (
+                        <Link
+                          key={link.href}
+                          href={link.href}
+                          onClick={() => setMobileOpen(false)}
+                          className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-colors"
+                          style={{
+                            backgroundColor: isActive(link.href) ? "var(--color-primary-light)" : "transparent",
+                            color: isActive(link.href) ? "var(--color-primary)" : "var(--color-text-secondary)",
+                          }}
+                        >
+                          <span className="text-base">{link.icon}</span>
+                          <span>{link.label}</span>
+                          {!!link.badge && (
+                            <span className="ms-auto text-[9px] px-1.5 py-0.5 rounded-full font-bold shrink-0"
+                              style={{ background: "var(--color-primary-light)", color: "var(--color-primary)" }}>
+                              {link.badge}
+                            </span>
+                          )}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
 
               {/* Logged In Apps */}
               {user && (
                 <div>
-                  <p className="px-2 mb-1.5 text-[11px] font-bold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>
-                    تطبيقاتي
-                  </p>
-                  <div className="space-y-1">
-                    {userApps.map((item) => (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        onClick={() => setMobileOpen(false)}
-                        className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-colors"
-                        style={{
-                          backgroundColor: isActive(item.href) ? "var(--color-primary-light)" : "transparent",
-                          color: isActive(item.href) ? "var(--color-primary)" : "var(--color-text-secondary)",
-                        }}
-                      >
-                        <span className="text-base">{item.icon}</span>
-                        <span>{item.label}</span>
-                      </Link>
-                    ))}
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setOpenApps(!openApps)}
+                    className="w-full flex items-center justify-between px-2 mb-1.5 text-[11px] font-bold uppercase tracking-wider rounded-lg py-1 hover:opacity-80 transition-opacity"
+                    style={{ color: "var(--color-text-muted)" }}
+                  >
+                    <span>تطبيقاتي</span>
+                    <span className="text-[10px]">{openApps ? "▲" : "▼"}</span>
+                  </button>
+                  {openApps && (
+                    <div className="space-y-1">
+                      {userApps.map((item) => (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          onClick={() => setMobileOpen(false)}
+                          className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-colors"
+                          style={{
+                            backgroundColor: isActive(item.href) ? "var(--color-primary-light)" : "transparent",
+                            color: isActive(item.href) ? "var(--color-primary)" : "var(--color-text-secondary)",
+                          }}
+                        >
+                          <span className="text-base">{item.icon}</span>
+                          <span>{item.label}</span>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
 
               {/* Admin Links in Mobile */}
               {user && isAdmin && (
                 <div>
-                  <p className="px-2 mb-1.5 text-[11px] font-bold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>
-                    {t("nav.admin")}
-                  </p>
-                  <div className="grid grid-cols-2 gap-1.5">
-                    {adminLinks.map((link) => (
-                      <Link
-                        key={link.href}
-                        href={link.href}
-                        onClick={() => setMobileOpen(false)}
-                        className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium transition-colors"
-                        style={{
-                          backgroundColor: isActive(link.href) ? "var(--color-primary-light)" : "var(--color-background-secondary)",
-                          color: isActive(link.href) ? "var(--color-primary)" : "var(--color-text-secondary)",
-                          border: "1px solid var(--color-border)",
-                        }}
-                      >
-                        <span className="text-sm">{link.icon}</span>
-                        <span className="truncate">{link.label}</span>
-                      </Link>
-                    ))}
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setOpenAdmin(!openAdmin)}
+                    className="w-full flex items-center justify-between px-2 mb-1.5 text-[11px] font-bold uppercase tracking-wider rounded-lg py-1 hover:opacity-80 transition-opacity"
+                    style={{ color: "var(--color-text-muted)" }}
+                  >
+                    <span>{t("nav.admin")}</span>
+                    <span className="text-[10px]">{openAdmin ? "▲" : "▼"}</span>
+                  </button>
+                  {openAdmin && (
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {adminLinks.map((link) => (
+                        <Link
+                          key={link.href}
+                          href={link.href}
+                          onClick={() => setMobileOpen(false)}
+                          className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium transition-colors"
+                          style={{
+                            backgroundColor: isActive(link.href) ? "var(--color-primary-light)" : "var(--color-background-secondary)",
+                            color: isActive(link.href) ? "var(--color-primary)" : "var(--color-text-secondary)",
+                            border: "1px solid var(--color-border)",
+                          }}
+                        >
+                          <span className="text-sm">{link.icon}</span>
+                          <span className="truncate">{link.label}</span>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
 
