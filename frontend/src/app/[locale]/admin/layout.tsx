@@ -11,17 +11,11 @@ const ADMIN_ROLES = ["admin", "developer", "support", "content_manager", "financ
 
 // Section key -> roles that may see it (admin sees all)
 const SECTION_ROLES: Record<string, string[]> = {
-  content:       ["developer", "content_manager"],
-  education:     ["developer", "content_manager"],
-  blog:          ["developer", "content_manager"],
-  ebooks:        ["developer", "content_manager"],
-  courses:       ["developer", "content_manager"],
-  marketplace:   ["developer"],
-  ai:            ["developer"],
-  messages:      ["developer", "support"],
-  users:         ["developer", "support"],
-  subscriptions: ["finance"],
-  organizations: ["developer"],
+  content:     ["developer", "content_manager"],
+  education:   ["developer", "content_manager"],
+  marketplace: ["developer"],
+  blog:        ["developer", "support", "content_manager"],
+  users:       ["developer", "support", "finance"],
 };
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -45,7 +39,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     !!user && (user.is_staff || user.role === "admin" || (SECTION_ROLES[section] || []).includes(user.role));
 
   const ALL_NAV_ITEMS = [
-    { key: "content", section: t("admin.contentSection"), items: [
+    { key: "content", section: t("admin.contentSection") || "المحتوى والإعدادات", items: [
       { href: "/admin/pages", label: t("admin.pages"), icon: "📄" },
       { href: "/admin/menus", label: t("admin.menus"), icon: "📋" },
       { href: "/admin/templates", label: t("admin.templates"), icon: "📝" },
@@ -55,40 +49,28 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       { href: "/admin/translations", label: t("admin.translations"), icon: "🗂️" },
       { href: "/admin/feature-flags", label: t("admin.featureFlags"), icon: "🚩" },
     ]},
-    { key: "education", section: t("admin.educationSection"), items: [
+    { key: "education", section: t("admin.educationSection") || "التعليم والأكاديمية", items: [
       { href: "/admin/grades", label: t("admin.grades"), icon: "🎓" },
       { href: "/admin/subjects", label: t("admin.subjects"), icon: "📚" },
       { href: "/admin/curricula", label: t("admin.curricula"), icon: "📋" },
       { href: "/admin/schools", label: t("admin.schools") || "المدارس والمتابعة", icon: "🏫" },
-    ]},
-    { key: "blog", section: t("admin.blogSection"), items: [
-      { href: "/admin/posts", label: t("admin.blog"), icon: "📝" },
-    ]},
-    { key: "ebooks", section: t("admin.ebooksSection") || "E-Books", items: [
+      { href: "/admin/courses", label: t("admin.courses"), icon: "🎬" },
       { href: "/admin/ebooks", label: t("admin.ebooks") || "E-Books", icon: "📚" },
     ]},
-    { key: "courses", section: t("admin.coursesSection"), items: [
-      { href: "/admin/courses", label: t("admin.courses"), icon: "🎬" },
-    ]},
-    { key: "marketplace", section: t("admin.marketplaceSection"), items: [
+    { key: "marketplace", section: t("admin.marketplaceSection") || "السوق والذكاء الاصطناعي", items: [
       { href: "/admin/marketplace", label: t("admin.marketplace"), icon: "🏪" },
       { href: "/admin/ai-runs", label: t("admin.aiRuns"), icon: "🤖" },
-    ]},
-    { key: "ai", section: "AI", items: [
       { href: "/admin/ai-models", label: "نماذج AI", icon: "🤖" },
       { href: "/admin/prompts", label: "البرومبتات", icon: "📝" },
     ]},
-    { key: "messages", section: t("admin.messagesSection"), items: [
+    { key: "blog", section: t("admin.blogSection") || "التواصل والمدونة", items: [
+      { href: "/admin/posts", label: t("admin.blog"), icon: "📝" },
       { href: "/admin/messages", label: t("admin.messages"), icon: "✉️" },
       { href: "/admin/newsletter", label: t("admin.newsletterSubs"), icon: "📬" },
     ]},
-    { key: "users", section: t("admin.usersSection"), items: [
+    { key: "users", section: t("admin.usersSection") || "المستخدمون والمالية", items: [
       { href: "/admin/users", label: t("admin.users"), icon: "👥" },
-    ]},
-    { key: "subscriptions", section: t("admin.subscriptionsSection"), items: [
       { href: "/admin/subscriptions", label: t("admin.subscriptions"), icon: "💳" },
-    ]},
-    { key: "organizations", section: t("admin.organizationsSection"), items: [
       { href: "/admin/organizations", label: t("admin.organizations"), icon: "🏫" },
     ]},
   ];

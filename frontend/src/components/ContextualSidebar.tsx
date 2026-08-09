@@ -56,7 +56,7 @@ export default function ContextualSidebar() {
 
   // Hide sidebar on sections that have no management/contextual sidebar
   const supportedServices = ["academy", "ebooks", "school", "curriculum", "lesson-plans", "dashboard", "profile", "gamification", "subscriptions"];
-  const shouldShow = isAdminRoute || (service && supportedServices.includes(service)) || pathname.includes("/dashboard");
+  const shouldShow = !isAdminRoute && ((service && supportedServices.includes(service)) || pathname.includes("/dashboard"));
 
   // Dynamic sidebar items fetched from admin (no hardcoding) — hooks must run unconditionally
   const sidebarContext = isAdminRoute ? "admin" : (service || "all");

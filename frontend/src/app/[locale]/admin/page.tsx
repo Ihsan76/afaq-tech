@@ -42,7 +42,7 @@ export default function AdminPage() {
   ] : [];
 
   const adminLinks = [
-    { section: t("admin.contentSection"), items: [
+    { section: t("admin.contentSection") || "المحتوى والإعدادات", items: [
       { href: `/${locale}/admin/pages`, title: t("admin.pages"), description: t("admin.pagesDesc"), icon: "📄", gradient: "linear-gradient(135deg, var(--color-primary), var(--color-secondary))" },
       { href: `/${locale}/admin/menus`, title: t("admin.menus"), description: t("admin.menusDesc"), icon: "📋", gradient: "linear-gradient(135deg, var(--color-accent), var(--color-primary))" },
       { href: `/${locale}/admin/templates`, title: t("admin.templates"), description: t("admin.templatesDesc"), icon: "📝", gradient: "linear-gradient(135deg, var(--color-success), var(--color-accent))" },
@@ -52,35 +52,29 @@ export default function AdminPage() {
       { href: `/${locale}/admin/translations`, title: t("admin.translations"), description: t("admin.translationsDesc"), icon: "🗂️", gradient: "linear-gradient(135deg, var(--color-secondary), var(--color-primary))" },
       { href: `/${locale}/admin/feature-flags`, title: t("admin.featureFlags"), description: t("admin.featureFlagsDesc"), icon: "🚩", gradient: "linear-gradient(135deg, var(--color-warning), var(--color-error))" },
     ]},
-    { section: t("admin.educationSection"), items: [
+    { section: t("admin.educationSection") || "التعليم والأكاديمية", items: [
       { href: `/${locale}/admin/grades`, title: t("admin.grades"), description: t("admin.gradesDesc"), icon: "🎓", gradient: "linear-gradient(135deg, var(--color-primary-light), var(--color-muted))" },
       { href: `/${locale}/admin/subjects`, title: t("admin.subjects"), description: t("admin.subjectsDesc"), icon: "📚", gradient: "linear-gradient(135deg, var(--color-success-light), var(--color-muted))" },
       { href: `/${locale}/admin/curricula`, title: t("admin.curricula"), description: t("admin.curriculaDesc"), icon: "📋", gradient: "linear-gradient(135deg, var(--color-warning-light), var(--color-muted))" },
-      { href: `/${locale}/admin/schools`, title: t("admin.schools") || "Schools & Follow-up", description: t("admin.schoolsDesc") || "Manage schools, sections, and WhatsApp alerts", icon: "🏫", gradient: "linear-gradient(135deg, var(--color-primary), var(--color-success))" },
-      { href: `/${locale}/admin/organizations`, title: t("admin.organizations") || "Organizations", description: t("admin.organizationsDesc") || "Manage educational organizations", icon: "🏢", gradient: "linear-gradient(135deg, var(--color-accent), var(--color-secondary))" },
-    ]},
-    { section: t("admin.blogSection"), items: [
-      { href: `/${locale}/admin/posts`, title: t("admin.blog"), description: t("admin.blogDesc"), icon: "📝", gradient: "linear-gradient(135deg, var(--color-accent), var(--color-success))" },
-    ]},
-    { section: t("admin.ebooksSection") || "E-Books", items: [
+      { href: `/${locale}/admin/schools`, title: t("admin.schools") || "المدارس والمتابعة", description: t("admin.schoolsDesc") || "Manage schools, sections, and WhatsApp alerts", icon: "🏫", gradient: "linear-gradient(135deg, var(--color-primary), var(--color-success))" },
+      { href: `/${locale}/admin/courses`, title: t("admin.courses"), description: t("admin.coursesDesc"), icon: "🎬", gradient: "linear-gradient(135deg, var(--color-error), var(--color-primary))" },
       { href: `/${locale}/admin/ebooks`, title: t("admin.ebooks") || "E-Books", description: t("admin.ebooksDesc") || "Manage e-books and categories", icon: "📚", gradient: "linear-gradient(135deg, var(--color-primary), var(--color-accent))" },
     ]},
-    { section: t("admin.coursesSection"), items: [
-      { href: `/${locale}/admin/courses`, title: t("admin.courses"), description: t("admin.coursesDesc"), icon: "🎬", gradient: "linear-gradient(135deg, var(--color-error), var(--color-primary))" },
-    ]},
-    { section: t("admin.marketplaceSection"), items: [
+    { section: t("admin.marketplaceSection") || "السوق والذكاء الاصطناعي", items: [
       { href: `/${locale}/admin/marketplace`, title: t("admin.marketplace"), description: t("admin.marketplaceDesc"), icon: "🏪", gradient: "linear-gradient(135deg, var(--color-warning), var(--color-success))" },
       { href: `/${locale}/admin/ai-runs`, title: t("admin.aiRuns"), description: t("admin.aiRunsDesc"), icon: "🤖", gradient: "linear-gradient(135deg, var(--color-secondary), var(--color-primary))" },
+      { href: `/${locale}/admin/ai-models`, title: "نماذج AI", description: "Manage AI models", icon: "🤖", gradient: "linear-gradient(135deg, var(--color-secondary), var(--color-info, #0284c7))" },
+      { href: `/${locale}/admin/prompts`, title: "البرومبتات", description: "Manage prompts", icon: "📝", gradient: "linear-gradient(135deg, var(--color-accent), var(--color-primary))" },
     ]},
-    { section: t("admin.messagesSection"), items: [
+    { section: t("admin.blogSection") || "التواصل والمدونة", items: [
+      { href: `/${locale}/admin/posts`, title: t("admin.blog"), description: t("admin.blogDesc"), icon: "📝", gradient: "linear-gradient(135deg, var(--color-accent), var(--color-success))" },
       { href: `/${locale}/admin/messages`, title: t("admin.messages"), description: t("admin.messagesDesc"), icon: "✉️", gradient: "linear-gradient(135deg, var(--color-secondary), var(--color-accent))" },
       { href: `/${locale}/admin/newsletter`, title: t("admin.newsletterSubs"), description: t("admin.newsletterDesc"), icon: "📬", gradient: "linear-gradient(135deg, var(--color-success), var(--color-primary))" },
     ]},
-    { section: t("admin.usersSection"), items: [
+    { section: t("admin.usersSection") || "المستخدمون والمالية", items: [
       { href: `/${locale}/admin/users`, title: t("admin.users"), description: t("admin.usersDesc"), icon: "👥", gradient: "linear-gradient(135deg, var(--color-warning), var(--color-error))" },
-    ]},
-    { section: t("admin.subscriptionsSection"), items: [
       { href: `/${locale}/admin/subscriptions`, title: t("admin.subscriptions"), description: t("admin.subscriptionsDesc"), icon: "💳", gradient: "linear-gradient(135deg, var(--color-secondary), var(--color-success))" },
+      { href: `/${locale}/admin/organizations`, title: t("admin.organizations") || "Organizations", description: t("admin.organizationsDesc") || "Manage educational organizations", icon: "🏫", gradient: "linear-gradient(135deg, var(--color-accent), var(--color-secondary))" },
     ]},
   ];
 
