@@ -7,6 +7,8 @@ import { useState, useEffect, useMemo } from "react";
 import { useAuthStore } from "@/store/auth";
 import { useApiList } from "@/lib/useApi";
 
+import SchoolSelector from "@/components/school/SchoolSelector";
+
 const SECTION_ROLES: Record<string, string[]> = {
   content:       ["developer", "content_manager"],
   education:     ["developer", "content_manager"],
@@ -281,10 +283,11 @@ export default function ContextualSidebar() {
       </button>
 
       {!collapsed && (
-        <div className="mb-3 px-2">
+        <div className="mb-3 px-2 space-y-2">
           <p className="text-[10px] font-bold uppercase tracking-wider truncate" style={{ color: "var(--color-text-muted)" }}>
             {isAdminRoute ? "قائمة الإدارة" : service ? `قائمة ${service}` : "ساحة العمل"}
           </p>
+          {service === "school" && <SchoolSelector />}
         </div>
       )}
 
