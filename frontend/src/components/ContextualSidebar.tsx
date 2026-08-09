@@ -261,46 +261,45 @@ export default function ContextualSidebar() {
   return (
     <>
       {/* Mobile Top Navigation Bar */}
-      <div className="md:hidden flex items-center justify-between px-4 py-2.5 border-b bg-[var(--color-surface)] sticky top-14 z-40 shadow-sm" style={{ borderColor: "var(--color-border)" }}>
+      <div className="md:hidden flex items-center justify-between px-4 py-2 border-b bg-[var(--color-surface)] sticky top-14 z-40 shadow-sm" style={{ borderColor: "var(--color-border)" }}>
         <button
-          onClick={() => setMobileOpen(true)}
-          className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold border shadow-sm active:scale-95 transition-all"
-          style={{ borderColor: "var(--color-border)", color: "var(--color-primary)", backgroundColor: "var(--color-primary-light)" }}
+          onClick={() => setMobileOpen(!mobileOpen)}
+          className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold transition-all active:scale-95 shadow-sm"
+          style={{ borderColor: "var(--color-border)", color: "var(--color-primary)", backgroundColor: "var(--color-primary-light)", border: "1px solid var(--color-border)" }}
+          aria-label="Toggle mobile menu"
         >
-          <span className="text-base">📂</span>
-          <span>القائمة السياقية</span>
+          <span className="text-lg">☰</span>
+          <span>{isAdminRoute ? "قائمة الإدارة" : "القائمة السياقية"}</span>
+          <span className="text-[10px]">{mobileOpen ? "▲" : "▼"}</span>
         </button>
-        <span className="text-xs font-bold truncate px-2 py-1 rounded-lg bg-[var(--color-surface-alt)]" style={{ color: "var(--color-text)" }}>
+        <span className="text-xs font-bold truncate px-2.5 py-1 rounded-lg bg-[var(--color-surface-alt)]" style={{ color: "var(--color-text)" }}>
           {isAdminRoute ? "لوحة الإدارة" : service ? `خدمة ${service}` : "ساحة العمل"}
         </span>
       </div>
 
-      {/* Mobile Drawer Overlay */}
+      {/* Mobile Dropdown / Popup Menu */}
       {mobileOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm md:hidden flex justify-start animate-fade-in" onClick={() => setMobileOpen(false)}>
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs md:hidden flex items-start justify-center pt-20 px-4 animate-fade-in" onClick={() => setMobileOpen(false)}>
           <div
-            className="w-72 h-full p-5 overflow-y-auto shadow-2xl flex flex-col justify-between"
-            style={{ background: "var(--color-surface)", borderInlineEnd: "1px solid var(--color-border)" }}
+            className="w-full max-w-sm max-h-[75vh] p-4 rounded-3xl shadow-2xl overflow-y-auto flex flex-col border"
+            style={{ background: "var(--color-surface)", borderColor: "var(--color-border)", color: "var(--color-text)" }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div>
-              <div className="flex items-center justify-between mb-5 pb-3 border-b" style={{ borderColor: "var(--color-border)" }}>
-                <span className="text-sm font-bold flex items-center gap-2" style={{ color: "var(--color-text)" }}>
-                  <span>📂</span>
-                  <span>{isAdminRoute ? "قائمة الإدارة الشاملة" : "القائمة السياقية"}</span>
-                </span>
-                <button
-                  onClick={() => setMobileOpen(false)}
-                  className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border shadow-sm"
-                  style={{ borderColor: "var(--color-border)", background: "var(--color-surface-alt)", color: "var(--color-text)" }}
-                >
-                  ✕
-                </button>
-              </div>
-              {renderNavContent(true)}
+            <div className="flex items-center justify-between mb-3 pb-2 border-b" style={{ borderColor: "var(--color-border)" }}>
+              <span className="text-xs font-bold flex items-center gap-2" style={{ color: "var(--color-text)" }}>
+                <span>📂</span>
+                <span>{isAdminRoute ? "قائمة الإدارة الشاملة" : "القائمة السياقية"}</span>
+              </span>
+              <button
+                onClick={() => setMobileOpen(false)}
+                className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border shadow-xs"
+                style={{ borderColor: "var(--color-border)", background: "var(--color-surface-alt)", color: "var(--color-text)" }}
+              >
+                ✕
+              </button>
             </div>
-            <div className="pt-4 border-t mt-4 text-center text-xs opacity-70" style={{ borderColor: "var(--color-border)" }}>
-              آفاق تكنولوجي — Afaq Tech
+            <div className="flex-1 overflow-y-auto">
+              {renderNavContent(true)}
             </div>
           </div>
         </div>
