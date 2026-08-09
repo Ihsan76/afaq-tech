@@ -34,6 +34,44 @@ export default function Navbar() {
   const userRef = useRef<HTMLDivElement>(null);
 
   const { data: dynamicMenus } = useApiList<DynamicMenuItem>("/pages/menu/header/", { locale });
+
+  const pathParts = pathname.split("/");
+  const service = pathParts[2] || "";
+  const isAdminRoute = pathname.includes("/admin");
+  const supportedServices = ["academy", "ebooks", "school", "curriculum", "lesson-plans", "dashboard", "profile", "gamification", "subscriptions"];
+  const shouldShowContextual = !isAdminRoute && ((service && supportedServices.includes(service)) || pathname.includes("/dashboard"));
+  const sidebarContext = service || "all";
+
+  interface SidebarItem {
+    id: number;
+    title: string;
+    url?: string;
+    resolved_url?: string;
+    icon?: string;
+    badge?: string;
+    is_active?: boolean;
+  }
+
+  const { data: contextualItems } = useApiList<SidebarItem>(
+    shouldShowContextual ? `/pages/menu/sidebar/` : null,
+    { locale, context: sidebarContext }
+  );
+
+  const localizeHref = (href: string, loc: string): string => {
+    if (!href || href === "#") return href || "#";
+    if (href.startsWith("http") || href.startsWith("mailto:")) return href;
+    if (href.startsWith(`/${loc}`)) return href;
+    return `/${loc}${href.startsWith("/") ? href : `/${href}`}`;
+  };
+
+  const localizedContextualItems = (contextualItems || [])
+    .filter((item) => item.is_active !== false)
+    .map((item) => ({
+      href: localizeHref(item.resolved_url || item.url || "#", locale),
+      label: item.title || item.url || "#",
+      icon: item.icon || "🔗",
+      badge: item.badge || "",
+    }));
   const prefetch = usePrefetch(
     dynamicMenus
       .map((item) => {
@@ -568,6 +606,38 @@ export default function Navbar() {
                   ))}
                 </div>
               </div>
+
+              {/* Contextual Nav Items in Mobile */}
+              {shouldShowContextual && localizedContextualItems.length > 0 && (
+                <div>
+                  <p className="px-2 mb-1.5 text-[11px] font-bold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>
+                    {service ? `قائمة ${service}` : "القائمة السياقية"}
+                  </p>
+                  <div className="space-y-1">
+                    {localizedContextualItems.map((link) => (
+                      <Link
+                        key={link.href}
+                        href={link.href}
+                        onClick={() => setMobileOpen(false)}
+                        className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-colors"
+                        style={{
+                          backgroundColor: isActive(link.href) ? "var(--color-primary-light)" : "transparent",
+                          color: isActive(link.href) ? "var(--color-primary)" : "var(--color-text-secondary)",
+                        }}
+                      >
+                        <span className="text-base">{link.icon}</span>
+                        <span>{link.label}</span>
+                        {!!link.badge && (
+                          <span className="ms-auto text-[9px] px-1.5 py-0.5 rounded-full font-bold shrink-0"
+                            style={{ background: "var(--color-primary-light)", color: "var(--color-primary)" }}>
+                            {link.badge}
+                          </span>
+                        )}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Logged In Apps */}
               {user && (

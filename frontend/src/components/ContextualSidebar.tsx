@@ -259,86 +259,38 @@ export default function ContextualSidebar() {
   );
 
   return (
-    <>
-      {/* Mobile Top Navigation Bar */}
-      <div className="md:hidden flex items-center justify-between px-4 py-2 border-b bg-[var(--color-surface)] sticky top-14 z-40 shadow-sm" style={{ borderColor: "var(--color-border)" }}>
-        <button
-          onClick={() => setMobileOpen(!mobileOpen)}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold transition-all active:scale-95 shadow-sm"
-          style={{ borderColor: "var(--color-border)", color: "var(--color-primary)", backgroundColor: "var(--color-primary-light)", border: "1px solid var(--color-border)" }}
-          aria-label="Toggle mobile menu"
-        >
-          <span className="text-lg">☰</span>
-          <span>{isAdminRoute ? "قائمة الإدارة" : "القائمة السياقية"}</span>
-          <span className="text-[10px]">{mobileOpen ? "▲" : "▼"}</span>
-        </button>
-        <span className="text-xs font-bold truncate px-2.5 py-1 rounded-lg bg-[var(--color-surface-alt)]" style={{ color: "var(--color-text)" }}>
-          {isAdminRoute ? "لوحة الإدارة" : service ? `خدمة ${service}` : "ساحة العمل"}
-        </span>
-      </div>
+    <aside
+      aria-label="Contextual Navigation"
+      className={`shrink-0 hidden md:flex flex-col pt-8 pb-4 px-2 border-e min-h-[calc(100vh-4rem)] transition-all duration-300 relative ${
+        collapsed ? "w-14" : "w-48"
+      }`}
+      style={{ background: "var(--color-surface)", borderColor: "var(--color-border)" }}
+    >
+      {/* Collapse Toggle Button */}
+      <button
+        onClick={toggleCollapse}
+        className="absolute top-2 end-2.5 w-5 h-5 rounded-full flex items-center justify-center border shadow-md text-[9px] transition-all hover:scale-110 z-10"
+        style={{
+          background: "var(--color-surface)",
+          borderColor: "var(--color-border)",
+          color: "var(--color-text)",
+        }}
+        title={collapsed ? "توسيع القائمة" : "تصغير القائمة"}
+      >
+        {collapsed ? "◀" : "▶"}
+      </button>
 
-      {/* Mobile Dropdown / Popup Menu */}
-      {mobileOpen && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs md:hidden flex items-start justify-center pt-20 px-4 animate-fade-in" onClick={() => setMobileOpen(false)}>
-          <div
-            className="w-full max-w-sm max-h-[75vh] p-4 rounded-3xl shadow-2xl overflow-y-auto flex flex-col border"
-            style={{ background: "var(--color-surface)", borderColor: "var(--color-border)", color: "var(--color-text)" }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between mb-3 pb-2 border-b" style={{ borderColor: "var(--color-border)" }}>
-              <span className="text-xs font-bold flex items-center gap-2" style={{ color: "var(--color-text)" }}>
-                <span>📂</span>
-                <span>{isAdminRoute ? "قائمة الإدارة الشاملة" : "القائمة السياقية"}</span>
-              </span>
-              <button
-                onClick={() => setMobileOpen(false)}
-                className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border shadow-xs"
-                style={{ borderColor: "var(--color-border)", background: "var(--color-surface-alt)", color: "var(--color-text)" }}
-              >
-                ✕
-              </button>
-            </div>
-            <div className="flex-1 overflow-y-auto">
-              {renderNavContent(true)}
-            </div>
-          </div>
+      {!collapsed && (
+        <div className="mb-3 px-2">
+          <p className="text-[10px] font-bold uppercase tracking-wider truncate" style={{ color: "var(--color-text-muted)" }}>
+            {isAdminRoute ? "قائمة الإدارة" : service ? `قائمة ${service}` : "ساحة العمل"}
+          </p>
         </div>
       )}
 
-      {/* Desktop Collapsible Sidebar */}
-      <aside
-        aria-label="Contextual Navigation"
-        className={`shrink-0 hidden md:flex flex-col pt-8 pb-4 px-2 border-e min-h-[calc(100vh-4rem)] transition-all duration-300 relative ${
-          collapsed ? "w-14" : "w-48"
-        }`}
-        style={{ background: "var(--color-surface)", borderColor: "var(--color-border)" }}
-      >
-        {/* Collapse Toggle Button */}
-        <button
-          onClick={toggleCollapse}
-          className="absolute top-2 end-2.5 w-5 h-5 rounded-full flex items-center justify-center border shadow-md text-[9px] transition-all hover:scale-110 z-10"
-          style={{
-            background: "var(--color-surface)",
-            borderColor: "var(--color-border)",
-            color: "var(--color-text)",
-          }}
-          title={collapsed ? "توسيع القائمة" : "تصغير القائمة"}
-        >
-          {collapsed ? "◀" : "▶"}
-        </button>
-
-        {!collapsed && (
-          <div className="mb-3 px-2">
-            <p className="text-[10px] font-bold uppercase tracking-wider truncate" style={{ color: "var(--color-text-muted)" }}>
-              {isAdminRoute ? "قائمة الإدارة" : service ? `قائمة ${service}` : "ساحة العمل"}
-            </p>
-          </div>
-        )}
-
-        <div className="flex-1 overflow-y-auto pr-0.5">
-          {renderNavContent(false)}
-        </div>
-      </aside>
-    </>
+      <div className="flex-1 overflow-y-auto pr-0.5">
+        {renderNavContent(false)}
+      </div>
+    </aside>
   );
 }
