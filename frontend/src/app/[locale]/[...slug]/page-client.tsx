@@ -7,7 +7,7 @@ const RESERVED_PREFIXES = [
   "login", "register", "auth", "verify-email", "admin", "lesson-plans", "profile", "chat",
   "curriculum", "academy", "ebooks", "blog", "dashboard",
   "forgot-password", "reset-password", "search", "marketplace", "gamification",
-  "privacy", "terms", "school", "school-followup"
+  "privacy", "terms", "school", "school-followup", "teacher", "parent", "student"
 ];
 
 export default function CatchAllPageClient({ slug: propSlug }: { slug?: string }) {
