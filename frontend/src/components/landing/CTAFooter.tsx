@@ -24,7 +24,7 @@ export default function CTAFooter({ content }: { content?: Record<string, any> }
     const el = document.getElementById(hash.replace("#", ""));
     if (el) {
       el.scrollIntoView({ behavior: "smooth" });
-      window.history.replaceState(null, "", `/${locale}${hash}`);
+      window.history.replaceState(null, "", `${pathname}${hash}`);
     }
   };
 

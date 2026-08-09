@@ -24,12 +24,15 @@ from .models import (
     Attendance,
     FamilyLink,
     ParentTeacherTicket,
+    Period,
+    Room,
     School,
     SchoolAnnouncement,
     Section,
     StudentEnrollment,
     SupportRequest,
     TeacherAssignment,
+    TimetableSlot,
     UserAISetting,
     WeeklyReport,
     WhatsAppNotificationLog,
@@ -41,12 +44,15 @@ from .serializers import (
     FamilyLinkSerializer,
     FAQSerializer,
     ParentTeacherTicketSerializer,
+    PeriodSerializer,
+    RoomSerializer,
     SchoolAnnouncementSerializer,
     SchoolSerializer,
     SectionSerializer,
     StudentEnrollmentSerializer,
     SupportRequestSerializer,
     TeacherAssignmentSerializer,
+    TimetableSlotSerializer,
     WeeklyReportSerializer,
 )
 from .whatsapp import send_whatsapp_alert
@@ -1322,4 +1328,135 @@ class SchoolAnalyticsAPIView(APIView):
             "absent_today": Attendance.objects.filter(date=timezone.localdate(), status=Attendance.Status.ABSENT).count(),
             "peak_hours": "09:00 AM - 12:00 PM",
             "ai_tokens_used_estimate": 45200,
+        })
+
+
+class PeriodViewSet(viewsets.ModelViewSet):
+    queryset = Period.objects.all()
+    serializer_class = PeriodSerializer
+    permission_classes = [IsAdminOrReadOnly]
+
+    def get_queryset(self):
+        qs = Period.objects.all()
+        school_id = self.request.query_params.get('school')
+        if school_id:
+            qs = qs.filter(school_id=school_id)
+        if not is_admin(self.request.user):
+            school_ids = user_school_ids(self.request.user)
+            if school_ids:
+                qs = qs.filter(school_id__in=school_ids)
+            else:
+                qs = Period.objects.none()
+        return qs
+
+
+class RoomViewSet(viewsets.ModelViewSet):
+    queryset = Room.objects.all()
+    serializer_class = RoomSerializer
+    permission_classes = [IsAdminOrReadOnly]
+
+    def get_queryset(self):
+        qs = Room.objects.all()
+        school_id = self.request.query_params.get('school')
+        if school_id:
+            qs = qs.filter(school_id=school_id)
+        if not is_admin(self.request.user):
+            school_ids = user_school_ids(self.request.user)
+            if school_ids:
+                qs = qs.filter(school_id__in=school_ids)
+            else:
+                qs = Room.objects.none()
+        return qs
+
+
+class TimetableSlotViewSet(viewsets.ModelViewSet):
+    queryset = TimetableSlot.objects.all()
+    serializer_class = TimetableSlotSerializer
+    permission_classes = [IsAdminOrReadOnly]
+
+    def get_queryset(self):
+        qs = TimetableSlot.objects.all()
+        section_id = self.request.query_params.get('section')
+        if section_id:
+            qs = qs.filter(section_id=section_id)
+        teacher_id = self.request.query_params.get('teacher')
+        if teacher_id:
+            qs = qs.filter(teacher_id=teacher_id)
+        room_id = self.request.query_params.get('room')
+        if room_id:
+            qs = qs.filter(room_id=room_id)
+        academic_year_id = self.request.query_params.get('academic_year')
+        if academic_year_id:
+            qs = qs.filter(academic_year_id=academic_year_id)
+
+        if not is_admin(self.request.user):
+            section_ids = user_section_ids(self.request.user)
+            school_ids = user_school_ids(self.request.user)
+            if section_ids is not None or school_ids is not None:
+                qs = qs.filter(Q(section_id__in=section_ids or []) | Q(school_id__in=school_ids or []))
+            else:
+                qs = TimetableSlot.objects.none()
+        return qs
+
+    @action(detail=False, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    def auto_schedule(self, request):
+        """Smart Auto-Scheduler: Automatically generates timetable slots for sections
+        based on TeacherAssignments and Periods."""
+        school_id = request.data.get('school_id')
+        academic_year_id = request.data.get('academic_year_id')
+        if not school_id or not academic_year_id:
+            return Response({'error': 'school_id and academic_year_id are required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not is_admin(self.request.user):
+            school_ids = user_school_ids(self.request.user)
+            if int(school_id) not in school_ids:
+                return Response({'error': 'Permission denied for this school'}, status=status.HTTP_403_FORBIDDEN)
+
+        sections = Section.objects.filter(school_id=school_id, academic_year_id=academic_year_id)
+        periods = Period.objects.filter(school_id=school_id, is_break=False).order_by('period_number')
+        rooms = Room.objects.filter(school_id=school_id)
+        default_room = rooms.first()
+
+        created_slots = []
+        errors = []
+
+        with transaction.atomic():
+            for section in sections:
+                assignments = TeacherAssignment.objects.filter(section=section, academic_year_id=academic_year_id)
+                if not assignments.exists() or not periods.exists():
+                    continue
+                
+                period_idx = 0
+                for day in range(5):
+                    for period in periods:
+                        if period_idx >= len(assignments):
+                            break
+                        assignment = assignments[period_idx % len(assignments)]
+                        
+                        existing = TimetableSlot.objects.filter(
+                            section=section,
+                            day_of_week=day,
+                            period=period
+                        ).exists()
+                        if not existing:
+                            try:
+                                slot = TimetableSlot.objects.create(
+                                    school_id=school_id,
+                                    academic_year_id=academic_year_id,
+                                    section=section,
+                                    day_of_week=day,
+                                    period=period,
+                                    subject=assignment.subject,
+                                    teacher=assignment.teacher,
+                                    room=default_room
+                                )
+                                created_slots.append(slot.id)
+                            except Exception as e:
+                                errors.append(str(e))
+                        period_idx += 1
+
+        return Response({
+            'success': True,
+            'created_count': len(created_slots),
+            'errors': errors
         })

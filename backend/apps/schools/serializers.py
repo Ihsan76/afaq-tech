@@ -8,12 +8,15 @@ from .models import (
     Attendance,
     FamilyLink,
     ParentTeacherTicket,
+    Period,
+    Room,
     School,
     SchoolAnnouncement,
     Section,
     StudentEnrollment,
     SupportRequest,
     TeacherAssignment,
+    TimetableSlot,
     WeeklyReport,
 )
 
@@ -193,3 +196,41 @@ class AttachmentSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         url = obj.file.url if obj.file else ''
         return request.build_absolute_uri(url) if request and url else url
+
+
+class PeriodSerializer(serializers.ModelSerializer):
+    school_name = serializers.CharField(source='school.name', read_only=True)
+
+    class Meta:
+        model = Period
+        fields = '__all__'
+
+
+class RoomSerializer(serializers.ModelSerializer):
+    school_name = serializers.CharField(source='school.name', read_only=True)
+    room_type_display = serializers.CharField(source='get_room_type_display', read_only=True)
+
+    class Meta:
+        model = Room
+        fields = '__all__'
+
+
+class TimetableSlotSerializer(serializers.ModelSerializer):
+    school_name = serializers.CharField(source='school.name', read_only=True)
+    section_name = serializers.CharField(source='section.name', read_only=True)
+    period_name = serializers.CharField(source='period.name', read_only=True)
+    subject_name = serializers.SerializerMethodField()
+    teacher_email = serializers.CharField(source='teacher.email', read_only=True)
+    teacher_name = serializers.SerializerMethodField()
+    room_name = serializers.CharField(source='room.name', read_only=True, default='')
+    day_display = serializers.CharField(source='get_day_of_week_display', read_only=True)
+
+    class Meta:
+        model = TimetableSlot
+        fields = '__all__'
+
+    def get_subject_name(self, obj):
+        return obj.subject.translations.get('ar', {}).get('name', '')
+
+    def get_teacher_name(self, obj):
+        return obj.teacher.translations.get('ar', {}).get('name', obj.teacher.email)

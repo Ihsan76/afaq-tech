@@ -196,11 +196,11 @@ export default function ContextualSidebar() {
 
               {(isExpanded || (isMobile ? false : collapsed) || hasActive) && (
                 <div className={`space-y-1 ${(!isMobile && collapsed) ? "" : "ms-2 ps-2 border-s border-[var(--color-border)]"}`}>
-                  {group.items.map((item) => {
+                  {group.items.map((item, index) => {
                     const active = isActive(item.href);
                     return (
                       <Link
-                        key={item.href}
+                        key={`${item.href}-${index}`}
                         href={item.href}
                         onClick={() => isMobile && setMobileOpen(false)}
                         title={(!isMobile && collapsed) ? item.label : undefined}
@@ -223,11 +223,11 @@ export default function ContextualSidebar() {
           );
         })
       ) : (
-        contextualItems.map((item) => {
+        contextualItems.map((item, index) => {
           const active = isActive(item.href);
           return (
             <Link
-              key={item.href}
+              key={`${item.href}-${index}`}
               href={item.href}
               onClick={() => isMobile && setMobileOpen(false)}
               title={(!isMobile && collapsed) ? item.label : undefined}

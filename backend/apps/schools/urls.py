@@ -11,6 +11,8 @@ from .views import (
     FAQViewSet,
     MySchoolContextAPIView,
     ParentTeacherTicketViewSet,
+    PeriodViewSet,
+    RoomViewSet,
     SchoolAnalyticsAPIView,
     SchoolAnnouncementViewSet,
     SchoolViewSet,
@@ -18,6 +20,7 @@ from .views import (
     StudentEnrollmentViewSet,
     SupportRequestCreateView,
     TeacherAssignmentViewSet,
+    TimetableSlotViewSet,
     UserSettingsAPIView,
     VoiceSynthesizeAPIView,
     VoiceTranscribeAPIView,
@@ -36,6 +39,9 @@ router.register('family-links', FamilyLinkViewSet, basename='familylink')
 router.register('faqs', FAQViewSet, basename='faq')
 router.register('attachments', AttachmentViewSet, basename='attachment')
 router.register('attendances', AttendanceViewSet, basename='attendance')
+router.register('periods', PeriodViewSet, basename='period')
+router.register('rooms', RoomViewSet, basename='room')
+router.register('timetable-slots', TimetableSlotViewSet, basename='timetableslot')
 
 urlpatterns = [
     path('user/settings/', UserSettingsAPIView.as_view(), name='user-ai-settings'),

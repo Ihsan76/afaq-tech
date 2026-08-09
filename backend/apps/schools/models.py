@@ -303,3 +303,104 @@ class Attachment(models.Model):
 
     def __str__(self):
         return f"{self.get_kind_display()} - {self.title or self.file_name}"
+
+
+class Period(models.Model):
+    school = models.ForeignKey(School, on_delete=models.CASCADE, related_name='periods', verbose_name='المدرسة')
+    name = models.CharField('اسم الحصة (مثل الحصة الأولى)', max_length=100)
+    period_number = models.IntegerField('رقم الحصة', default=1)
+    start_time = models.TimeField('وقت البداية')
+    end_time = models.TimeField('وقت النهاية')
+    is_break = models.BooleanField('استراحة / فسحة', default=False)
+
+    class Meta:
+        verbose_name = 'حصة زمنية'
+        verbose_name_plural = 'الحصص الزمنية'
+        ordering = ['school', 'period_number']
+        unique_together = [['school', 'period_number']]
+
+    def __str__(self):
+        return f"{self.name} ({self.start_time} - {self.end_time})"
+
+
+class Room(models.Model):
+    school = models.ForeignKey(School, on_delete=models.CASCADE, related_name='rooms', verbose_name='المدرسة')
+    name = models.CharField('اسم القاعة / المختبر', max_length=150)
+    code = models.CharField('رمز القاعة', max_length=50, blank=True)
+    capacity = models.IntegerField('السعة', default=30)
+    room_type = models.CharField('نوع القاعة', max_length=50, default='classroom', choices=[('classroom', 'صف دراسي'), ('lab', 'مختبر علمي'), ('computer_lab', 'مختبر حاسوب'), ('hall', 'قاعة محاضرات / نشاط')])
+
+    class Meta:
+        verbose_name = 'قاعة / مختبر'
+        verbose_name_plural = 'القاعات والمختبرات'
+        ordering = ['school', 'name']
+
+    def __str__(self):
+        return f"{self.name} ({self.get_room_type_display()})"
+
+
+class TimetableSlot(models.Model):
+    class DayOfWeek(models.IntegerChoices):
+        SUNDAY = 0, 'الأحد'
+        MONDAY = 1, 'الإثنين'
+        TUESDAY = 2, 'الثلاثاء'
+        WEDNESDAY = 3, 'الأربعاء'
+        THURSDAY = 4, 'الخميس'
+
+    school = models.ForeignKey(School, on_delete=models.CASCADE, related_name='timetable_slots', verbose_name='المدرسة')
+    academic_year = models.ForeignKey(AcademicYear, on_delete=models.CASCADE, related_name='timetable_slots', verbose_name='العام الدراسي')
+    section = models.ForeignKey(Section, on_delete=models.CASCADE, related_name='timetable_slots', verbose_name='الشعبة الصفية')
+    day_of_week = models.IntegerField('اليوم', choices=DayOfWeek.choices)
+    period = models.ForeignKey(Period, on_delete=models.CASCADE, related_name='slots', verbose_name='الحصة الزمنية')
+    subject = models.ForeignKey(Subject, on_delete=models.CASCADE, related_name='timetable_slots', verbose_name='المادة الدراسية')
+    teacher = models.ForeignKey(User, on_delete=models.CASCADE, related_name='timetable_slots', verbose_name='المعلم')
+    room = models.ForeignKey(Room, on_delete=models.SET_NULL, null=True, blank=True, related_name='timetable_slots', verbose_name='القاعة / المختبر')
+
+    class Meta:
+        verbose_name = 'خانة جدول دراسي'
+        verbose_name_plural = 'خانات الجداول الدراسية'
+        ordering = ['section', 'day_of_week', 'period__period_number']
+        unique_together = [['section', 'day_of_week', 'period']]
+
+    def __str__(self):
+        day_display = self.get_day_of_week_display()
+        return f"{self.section} - {day_display} ({self.period.name}): {self.subject} with {self.teacher.email}"
+
+    def clean(self):
+        super().clean()
+        from django.core.exceptions import ValidationError
+        
+        # 1. Section conflict check
+        section_conflict = TimetableSlot.objects.filter(
+            section=self.section,
+            academic_year=self.academic_year,
+            day_of_week=self.day_of_week,
+            period=self.period
+        ).exclude(pk=self.pk).exists()
+        if section_conflict:
+            raise ValidationError('الشعبة الصفية لديه حصة مسجلة بالفعل في هذا الوقت.')
+
+        # 2. Teacher conflict check
+        teacher_conflict = TimetableSlot.objects.filter(
+            teacher=self.teacher,
+            academic_year=self.academic_year,
+            day_of_week=self.day_of_week,
+            period=self.period
+        ).exclude(pk=self.pk).exists()
+        if teacher_conflict:
+            raise ValidationError('المعلم مرتبط بحصة أخرى في نفس هذا الوقت لشعبة أخرى.')
+
+        # 3. Room conflict check
+        if self.room:
+            room_conflict = TimetableSlot.objects.filter(
+                room=self.room,
+                academic_year=self.academic_year,
+                day_of_week=self.day_of_week,
+                period=self.period
+            ).exclude(pk=self.pk).exists()
+            if room_conflict:
+                raise ValidationError('القاعة / المختبر محجوزة بالفعل في نفس هذا الوقت.')
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
