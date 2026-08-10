@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { api } from "@/lib/api";
 import { useAuthStore } from "@/store/auth";
@@ -36,13 +37,19 @@ const ACTIONS: Record<string, { href: string; icon: string; labelKey: string }[]
 export default function RoleDashboard() {
   const locale = useLocale();
   const t = useTranslations("school");
+  const pathname = usePathname();
   const { user } = useAuthStore();
   const [ctx, setCtx] = useState<any>(null);
   const [slots, setSlots] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   const isStaff = !!(user && (user.is_staff || user.role === "admin" || user.role === "developer"));
-  const viewRole = isStaff ? "school_admin" : (user?.role || "school_admin");
+  // Staff can preview every role workspace; pick the role from the current route
+  // (e.g. /teacher => teacher view) so each workspace shows its own dashboard.
+  const routeRole = pathname.split("/")[2];
+  const viewRole = routeRole === "teacher" || routeRole === "parent" || routeRole === "student"
+    ? routeRole
+    : (isStaff ? "school_admin" : (user?.role || "school_admin"));
 
   const fetchData = useCallback(async () => {
     setLoading(true);
