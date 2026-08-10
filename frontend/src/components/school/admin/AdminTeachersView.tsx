@@ -22,20 +22,19 @@ export default function AdminTeachersView({ teachers, assignments, sections, yea
   const [teacherEmail, setTeacherEmail] = useState("");
   const [teacherName, setTeacherName] = useState("");
   const [teacherPassword, setTeacherPassword] = useState("");
+  const [busy, setBusy] = useState(false);
+  const currentYear = years.find((y) => y.is_current)?.id || years[0]?.id;
+
   const [assignmentTeacher, setAssignmentTeacher] = useState("");
   const [assignmentSection, setAssignmentSection] = useState("");
   const [assignmentSubject, setAssignmentSubject] = useState("");
-  const [assignmentYear, setAssignmentYear] = useState("");
-  const [busy, setBusy] = useState(false);
+  const [assignmentYear, setAssignmentYear] = useState(currentYear ? String(currentYear) : "");
 
   useEffect(() => {
-    api
-      .get("/academics/subjects/")
-      .then((r) => setSubjects(Array.isArray(r.data) ? r.data : r.data.results || []))
-      .catch(() => {});
-  }, []);
-
-  const currentYear = years.find((y) => y.is_current)?.id || years[0]?.id;
+    if (!assignmentYear && currentYear) {
+      setAssignmentYear(String(currentYear));
+    }
+  }, [currentYear, assignmentYear]);
 
   const addTeacher = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,14 +82,15 @@ export default function AdminTeachersView({ teachers, assignments, sections, yea
 
   const addAssignment = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!assignmentTeacher || !assignmentSection || !assignmentSubject || !assignmentYear) return;
+    const yearToUse = assignmentYear || currentYear;
+    if (!assignmentTeacher || !assignmentSection || !assignmentSubject || !yearToUse) return;
     setBusy(true);
     try {
       await api.post("/schools/teacher-assignments/", {
         teacher: Number(assignmentTeacher),
         section: Number(assignmentSection),
         subject: Number(assignmentSubject),
-        academic_year: Number(assignmentYear),
+        academic_year: Number(yearToUse),
       });
       setAssignmentTeacher("");
       setAssignmentSubject("");
