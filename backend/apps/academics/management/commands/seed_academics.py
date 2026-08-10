@@ -87,10 +87,18 @@ class Command(BaseCommand):
             if not grade:
                 self.stdout.write(f"  Skipping curriculum for grade level {c['grade_level']} (not found)")
                 continue
-            obj, was_created = Curriculum.objects.update_or_create(
-                country=c["country"], year=c["year"], grade=grade,
-                defaults={"translations": _tr(c)}
-            )
+            obj, was_created = Curriculum.objects.filter(
+                country=c["country"], year=c["year"], grade=grade
+            ).first(), False
+            if not obj:
+                obj = Curriculum.objects.create(
+                    country=c["country"], year=c["year"], grade=grade,
+                    translations=_tr(c)
+                )
+                was_created = True
+            else:
+                obj.translations = _tr(c)
+                obj.save()
             if was_created:
                 created_c += 1
             else:

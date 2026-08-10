@@ -16,6 +16,7 @@ from .views import (
     SchoolAnalyticsAPIView,
     SchoolAnnouncementViewSet,
     SchoolGradeViewSet,
+    SchoolSubjectPeriodViewSet,
     SchoolTeacherViewSet,
     SchoolViewSet,
     SectionViewSet,
@@ -34,6 +35,7 @@ router.register('schools', SchoolViewSet, basename='school')
 router.register('academic-years', AcademicYearViewSet, basename='academicyear')
 router.register('sections', SectionViewSet, basename='section')
 router.register('school-grades', SchoolGradeViewSet, basename='schoolgrade')
+router.register('school-subject-periods', SchoolSubjectPeriodViewSet, basename='schoolsubjectperiod')
 router.register('school-teachers', SchoolTeacherViewSet, basename='schoolteacher')
 router.register('enrollments', StudentEnrollmentViewSet, basename='enrollment')
 router.register('teacher-assignments', TeacherAssignmentViewSet, basename='teacherassignment')

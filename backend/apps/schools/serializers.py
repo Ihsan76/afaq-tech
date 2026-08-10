@@ -15,6 +15,7 @@ from .models import (
     School,
     SchoolAnnouncement,
     SchoolGrade,
+    SchoolSubjectPeriod,
     SchoolTeacher,
     Section,
     StudentEnrollment,
@@ -33,6 +34,16 @@ def _locale(request):
     if hasattr(request, 'GET'):
         return request.GET.get('locale', 'en')
     return 'en'
+
+
+def _subject_period_lookup(school_id):
+    """Map (grade_id, subject_id) -> weekly_periods for a school."""
+    rows = SchoolSubjectPeriod.objects.filter(school_id=school_id).values_list('grade_id', 'subject_id', 'weekly_periods')
+    return {(grade_id, subject_id): periods for grade_id, subject_id, periods in rows}
+
+
+def _weekly_periods_for(lookup, grade_id, subject_id):
+    return lookup.get((grade_id, subject_id), 1)
 
 
 class SchoolSerializer(serializers.ModelSerializer):
@@ -98,12 +109,32 @@ class SchoolGradeSerializer(serializers.ModelSerializer):
         return get_translation(obj.grade.translations, loc, 'name', str(obj.grade.level))
 
 
+class SchoolSubjectPeriodSerializer(serializers.ModelSerializer):
+    school_name = serializers.CharField(source='school.name', read_only=True)
+    grade_name = serializers.SerializerMethodField()
+    subject_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = SchoolSubjectPeriod
+        fields = '__all__'
+        read_only_fields = []
+
+    def get_grade_name(self, obj):
+        loc = _locale(self.context.get('request'))
+        return get_translation(obj.grade.translations, loc, 'name', str(obj.grade.level))
+
+    def get_subject_name(self, obj):
+        return obj.subject.translations.get('ar', {}).get('name', '')
+
+
 class SchoolTeacherSerializer(serializers.ModelSerializer):
     school_name = serializers.CharField(source='school.name', read_only=True)
     teacher_email = serializers.CharField(source='teacher.email', read_only=True)
     teacher_name = serializers.SerializerMethodField()
     teacher_phone = serializers.CharField(source='teacher.phone', read_only=True, default='')
     assignment_count = serializers.SerializerMethodField()
+    occupied_periods = serializers.SerializerMethodField()
+    remaining_periods = serializers.SerializerMethodField()
 
     class Meta:
         model = SchoolTeacher
@@ -115,6 +146,16 @@ class SchoolTeacherSerializer(serializers.ModelSerializer):
 
     def get_assignment_count(self, obj):
         return obj.teacher.assignments.filter(section__school=obj.school).count()
+
+    def get_occupied_periods(self, obj):
+        lookup = _subject_period_lookup(obj.school_id)
+        total = 0
+        for a in obj.teacher.assignments.filter(section__school=obj.school).select_related('section', 'subject'):
+            total += _weekly_periods_for(lookup, a.section.grade_id, a.subject_id)
+        return total
+
+    def get_remaining_periods(self, obj):
+        return obj.max_weekly_periods - self.get_occupied_periods(obj)
 
 
 class SchoolTeacherCreateSerializer(serializers.ModelSerializer):
@@ -132,6 +173,7 @@ class TeacherAssignmentSerializer(serializers.ModelSerializer):
     teacher_email = serializers.CharField(source='teacher.email', read_only=True)
     subject_name = serializers.SerializerMethodField()
     section_name = serializers.CharField(source='section.name', read_only=True)
+    weekly_periods = serializers.SerializerMethodField()
 
     class Meta:
         model = TeacherAssignment
@@ -139,6 +181,10 @@ class TeacherAssignmentSerializer(serializers.ModelSerializer):
 
     def get_subject_name(self, obj):
         return obj.subject.translations.get('ar', {}).get('name', '')
+
+    def get_weekly_periods(self, obj):
+        lookup = _subject_period_lookup(obj.section.school_id)
+        return _weekly_periods_for(lookup, obj.section.grade_id, obj.subject_id)
 
 
 class SchoolAnnouncementSerializer(serializers.ModelSerializer):

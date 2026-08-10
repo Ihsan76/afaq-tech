@@ -29,6 +29,7 @@ from .models import (
     School,
     SchoolAnnouncement,
     SchoolGrade,
+    SchoolSubjectPeriod,
     SchoolTeacher,
     Section,
     StudentEnrollment,
@@ -51,6 +52,7 @@ from .serializers import (
     SchoolAnnouncementSerializer,
     SchoolGradeSerializer,
     SchoolSerializer,
+    SchoolSubjectPeriodSerializer,
     SchoolTeacherCreateSerializer,
     SchoolTeacherSerializer,
     SectionSerializer,
@@ -292,16 +294,23 @@ class SectionViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAdminOrReadOnly]
 
     def get_queryset(self):
+        from django.db.models import F
         if is_admin(self.request.user):
             qs = Section.objects.all()
         else:
-            section_ids = user_section_ids(self.request.user)
-            if not section_ids:
+            school_ids = user_school_ids(self.request.user)
+            if not school_ids:
                 return Section.objects.none()
-            qs = Section.objects.filter(id__in=section_ids)
+            qs = Section.objects.filter(school_id__in=school_ids)
         school_id = self.request.query_params.get('school')
         if school_id:
-            qs = qs.filter(school_id=school_id)
+            qs = qs.filter(
+                school_id=school_id,
+                grade__school_offers__school_id=school_id,
+            )
+        else:
+            # If no school param specified for non-admin, ensure grade__school_offers matches school_id
+            qs = qs.filter(grade__school_offers__school_id=F('school_id'))
         return qs.select_related('school', 'grade', 'academic_year').order_by('school_id', 'grade_id', 'name').annotate(
             students_count_annotated=Count('students', distinct=True)
         )
@@ -408,6 +417,49 @@ class SchoolGradeViewSet(viewsets.ModelViewSet):
                 name=SECTION_LETTERS[i],
             )
             created += 1
+
+
+class SchoolSubjectPeriodViewSet(viewsets.ModelViewSet):
+    """Weekly periods per subject within an offered grade of a school."""
+    queryset = SchoolSubjectPeriod.objects.all()
+    serializer_class = SchoolSubjectPeriodSerializer
+    permission_classes = [IsAdminOrReadOnly]
+
+    def get_queryset(self):
+        if is_admin(self.request.user):
+            qs = SchoolSubjectPeriod.objects.all()
+        else:
+            school_ids = user_school_ids(self.request.user)
+            qs = SchoolSubjectPeriod.objects.filter(school_id__in=school_ids) if school_ids else SchoolSubjectPeriod.objects.none()
+        school_id = self.request.query_params.get('school')
+        if school_id:
+            qs = qs.filter(
+                school_id=school_id,
+                # Only grades the school actually offers.
+                grade__school_offers__school_id=school_id,
+            )
+        return qs.select_related('school', 'grade', 'subject')
+
+    def _check_school_access(self):
+        if is_admin(self.request.user):
+            return
+        school_id = self.request.data.get('school')
+        if school_id and str(school_id) not in {str(s) for s in user_school_ids(self.request.user)}:
+            raise serializers.ValidationError({'school': 'يمكنك إدارة صفوف مدرستك فقط'})
+
+    def perform_create(self, serializer):
+        self._check_school_access()
+        serializer.save()
+
+    def perform_update(self, serializer):
+        if not is_admin(self.request.user) and self.get_object().school.manager_id != self.request.user.id:
+            raise serializers.ValidationError({'school': 'يمكنك إدارة صفوف مدرستك فقط'})
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        if not is_admin(self.request.user) and instance.school.manager_id != self.request.user.id:
+            raise serializers.ValidationError({'school': 'يمكنك حذف صفوف مدرستك فقط'})
+        instance.delete()
 
 
 class SchoolTeacherViewSet(viewsets.ModelViewSet):

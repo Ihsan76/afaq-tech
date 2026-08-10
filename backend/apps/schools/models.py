@@ -78,10 +78,28 @@ class SchoolGrade(models.Model):
         return f"{self.school.name} - {self.grade} (شعب: {self.section_count})"
 
 
+class SchoolSubjectPeriod(models.Model):
+    """Weekly periods count for each subject within an offered grade of a school."""
+    school = models.ForeignKey(School, on_delete=models.CASCADE, related_name='subject_periods', verbose_name='المدرسة')
+    grade = models.ForeignKey(Grade, on_delete=models.CASCADE, related_name='school_subject_periods', verbose_name='الصف الدراسي')
+    subject = models.ForeignKey(Subject, on_delete=models.CASCADE, related_name='school_subject_periods', verbose_name='المادة')
+    weekly_periods = models.PositiveIntegerField('عدد الحصص الأسبوعية', default=1)
+
+    class Meta:
+        verbose_name = 'عدد حصص مادة في صف'
+        verbose_name_plural = 'عدد حصص المواد في الصفوف'
+        ordering = ['grade__level', 'id']
+        unique_together = ['school', 'grade', 'subject']
+
+    def __str__(self):
+        return f"{self.grade} - {self.subject} ({self.weekly_periods} حصص)"
+
+
 class SchoolTeacher(models.Model):
     """Direct link between a school and a teacher account (scope for school managers)."""
     school = models.ForeignKey(School, on_delete=models.CASCADE, related_name='teachers_link', verbose_name='المدرسة')
     teacher = models.ForeignKey(User, on_delete=models.CASCADE, related_name='school_links', verbose_name='المعلم')
+    max_weekly_periods = models.PositiveIntegerField('النصاب (عدد الحصص الأسبوعية)', default=24)
     created_at = models.DateTimeField('تاريخ الإضافة', auto_now_add=True)
 
     class Meta:

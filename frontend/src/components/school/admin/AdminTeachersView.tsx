@@ -71,6 +71,16 @@ export default function AdminTeachersView({ teachers, assignments, sections, yea
     }
   };
 
+  const updateTeacherQuota = async (id: number, max_weekly_periods: number) => {
+    try {
+      await api.patch(`/schools/school-teachers/${id}/`, { max_weekly_periods });
+      setBanner({ type: "success", text: t("bannerTeacherUpdated") });
+      refresh();
+    } catch {
+      setBanner({ type: "error", text: t("bannerTeacherError") });
+    }
+  };
+
   const addAssignment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!assignmentTeacher || !assignmentSection || !assignmentSubject || !assignmentYear) return;
@@ -152,23 +162,46 @@ export default function AdminTeachersView({ teachers, assignments, sections, yea
             </p>
           ) : (
             <div className="space-y-3 max-h-[26rem] overflow-y-auto pr-1">
-              {teachers.map((tc: any) => (
-                <div key={tc.id} className="p-4 rounded-2xl bg-[var(--color-background)] border flex justify-between items-center gap-3" style={{ borderColor: "var(--color-border)" }}>
-                  <div className="min-w-0">
-                    <h4 className="font-bold text-sm truncate">{tc.teacher_name || tc.teacher_email}</h4>
-                    <p className="text-xs truncate" style={{ color: "var(--color-text-secondary)" }}>
-                      {tc.teacher_email}
-                      {tc.teacher_phone ? ` • ${tc.teacher_phone}` : ""}
-                    </p>
-                    <span className="inline-block mt-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600">
-                      {t("assignmentsCount", { count: tc.assignment_count || 0 })}
-                    </span>
+              {teachers.map((tc: any) => {
+                const occupied = tc.occupied_periods ?? 0;
+                const maxQuota = tc.max_weekly_periods ?? 24;
+                const isOverQuota = occupied > maxQuota;
+                return (
+                  <div key={tc.id} className={`p-4 rounded-2xl bg-[var(--color-background)] border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 ${isOverQuota ? "border-rose-500/50 bg-rose-500/5" : ""}`} style={{ borderColor: isOverQuota ? undefined : "var(--color-border)" }}>
+                    <div className="min-w-0">
+                      <h4 className="font-bold text-sm truncate">{tc.teacher_name || tc.teacher_email}</h4>
+                      <p className="text-xs truncate" style={{ color: "var(--color-text-secondary)" }}>
+                        {tc.teacher_email}
+                        {tc.teacher_phone ? ` • ${tc.teacher_phone}` : ""}
+                      </p>
+                      <div className="flex flex-wrap items-center gap-2 mt-1.5">
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600">
+                          {t("assignmentsCount", { count: tc.assignment_count || 0 })}
+                        </span>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${isOverQuota ? "bg-rose-500/10 text-rose-600 animate-pulse" : "bg-blue-500/10 text-blue-600"}`}>
+                          {t("occupiedPeriodsLabel", { occupied, max: maxQuota })} {isOverQuota ? "⚠️" : ""}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                      <div className="flex items-center gap-1">
+                        <span className="text-[10px]" style={{ color: "var(--color-text-secondary)" }}>{t("maxQuotaLabel")}:</span>
+                        <input
+                          type="number"
+                          min={0}
+                          defaultValue={maxQuota}
+                          onBlur={(e) => updateTeacherQuota(tc.id, Number(e.target.value))}
+                          className="w-16 px-2 py-1 rounded-xl border text-xs text-center bg-[var(--color-background)]"
+                          style={{ borderColor: "var(--color-border)" }}
+                        />
+                      </div>
+                      <button onClick={() => removeTeacher(tc.id)} className="px-3 py-1.5 rounded-xl text-xs font-bold bg-rose-500/10 text-rose-600 transition-all hover:opacity-90">
+                        {t("reject")}
+                      </button>
+                    </div>
                   </div>
-                  <button onClick={() => removeTeacher(tc.id)} className="shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold bg-rose-500/10 text-rose-600 transition-all hover:opacity-90">
-                    {t("reject")}
-                  </button>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
