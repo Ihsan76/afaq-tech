@@ -2068,6 +2068,12 @@
   "periodsCount": "{count} períodos",
   "periodsEmpty": "Aún no hay períodos.",
   "bannerPeriodAdded": "Período añadido",
-  "bannerPeriodError": "La operación falló"
+  "bannerPeriodError": "La operación falló",
+  "save": "Guardar",
+  "saving": "Guardando...",
+  "revert": "Revertir",
+  "refreshing": "Actualizando datos...",
+  "bannerGradeUpdated": "Grado actualizado",
+  "unsavedChanges": "Cambios sin guardar"
  }
 }

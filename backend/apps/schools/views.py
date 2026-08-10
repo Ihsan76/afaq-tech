@@ -302,7 +302,9 @@ class SectionViewSet(viewsets.ModelViewSet):
         school_id = self.request.query_params.get('school')
         if school_id:
             qs = qs.filter(school_id=school_id)
-        return qs
+        return qs.select_related('school', 'grade', 'academic_year').order_by('school_id', 'grade_id', 'name').annotate(
+            students_count_annotated=Count('students', distinct=True)
+        )
 
     def perform_create(self, serializer):
         if not is_admin(self.request.user):

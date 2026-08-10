@@ -2068,6 +2068,12 @@
   "periodsCount": "{count} ders saati",
   "periodsEmpty": "Henüz ders saati yok.",
   "bannerPeriodAdded": "Ders saati eklendi",
-  "bannerPeriodError": "İşlem başarısız"
+  "bannerPeriodError": "İşlem başarısız",
+  "save": "Kaydet",
+  "saving": "Kaydediliyor...",
+  "revert": "Geri al",
+  "refreshing": "Veriler yenileniyor...",
+  "bannerGradeUpdated": "Sınıf güncellendi",
+  "unsavedChanges": "Kaydedilmemiş değişiklikler"
  }
 }

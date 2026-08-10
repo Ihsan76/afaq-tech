@@ -1,5 +1,7 @@
 from rest_framework import serializers
 
+from apps.core.translations import get_translation
+
 from .models import (
     FAQ,
     AcademicYear,
@@ -21,6 +23,16 @@ from .models import (
     TimetableSlot,
     WeeklyReport,
 )
+
+
+def _locale(request):
+    if request is None:
+        return 'en'
+    if hasattr(request, 'query_params'):
+        return request.query_params.get('locale', 'en')
+    if hasattr(request, 'GET'):
+        return request.GET.get('locale', 'en')
+    return 'en'
 
 
 class SchoolSerializer(serializers.ModelSerializer):
@@ -54,7 +66,8 @@ class SectionSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def get_grade_name(self, obj):
-        return obj.grade.translations.get('ar', {}).get('name', str(obj.grade.level))
+        loc = _locale(self.context.get('request'))
+        return get_translation(obj.grade.translations, loc, 'name', str(obj.grade.level))
 
     def get_students_count(self, obj):
         annotated = getattr(obj, 'students_count_annotated', None)
@@ -81,7 +94,8 @@ class SchoolGradeSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def get_grade_name(self, obj):
-        return obj.grade.translations.get('ar', {}).get('name', str(obj.grade.level))
+        loc = _locale(self.context.get('request'))
+        return get_translation(obj.grade.translations, loc, 'name', str(obj.grade.level))
 
 
 class SchoolTeacherSerializer(serializers.ModelSerializer):

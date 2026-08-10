@@ -2068,6 +2068,12 @@
   "periodsCount": "{count} পিরিয়ড",
   "periodsEmpty": "এখনো কোনো পিরিয়ড নেই।",
   "bannerPeriodAdded": "পিরিয়ড যোগ হয়েছে",
-  "bannerPeriodError": "অপারেশন ব্যর্থ"
+  "bannerPeriodError": "অপারেশন ব্যর্থ",
+  "save": "সংরক্ষণ করুন",
+  "saving": "সংরক্ষণ হচ্ছে...",
+  "revert": "ফিরিয়ে নিন",
+  "refreshing": "ডেটা রিফ্রেশ হচ্ছে...",
+  "bannerGradeUpdated": "শ্রেণি আপডেট হয়েছে",
+  "unsavedChanges": "অপরিবর্তিত পরিবর্তন"
  }
 }

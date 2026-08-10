@@ -2142,6 +2142,12 @@
   "periodsCount": "{count} حصة",
   "periodsEmpty": "لا توجد حصص زمنية بعد.",
   "bannerPeriodAdded": "تمت إضافة الحصة",
-  "bannerPeriodError": "تعذر تنفيذ العملية"
+  "bannerPeriodError": "تعذر تنفيذ العملية",
+  "save": "حفظ",
+  "saving": "جاري الحفظ...",
+  "revert": "تراجع",
+  "refreshing": "جاري تحديث البيانات...",
+  "bannerGradeUpdated": "تم تحديث الصف",
+  "unsavedChanges": "تغييرات غير محفوظة"
  }
 }

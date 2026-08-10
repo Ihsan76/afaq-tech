@@ -2068,6 +2068,12 @@
   "periodsCount": "{count} jam",
   "periodsEmpty": "Belum ada jam pelajaran.",
   "bannerPeriodAdded": "Jam pelajaran ditambahkan",
-  "bannerPeriodError": "Operasi gagal"
+  "bannerPeriodError": "Operasi gagal",
+  "save": "Simpan",
+  "saving": "Menyimpan...",
+  "revert": "Batalkan",
+  "refreshing": "Memperbarui data...",
+  "bannerGradeUpdated": "Kelas diperbarui",
+  "unsavedChanges": "Perubahan belum disimpan"
  }
 }

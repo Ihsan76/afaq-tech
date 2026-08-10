@@ -2068,6 +2068,12 @@
   "periodsCount": "{count} Stunden",
   "periodsEmpty": "Noch keine Stunden.",
   "bannerPeriodAdded": "Stunde hinzugefügt",
-  "bannerPeriodError": "Vorgang fehlgeschlagen"
+  "bannerPeriodError": "Vorgang fehlgeschlagen",
+  "save": "Speichern",
+  "saving": "Wird gespeichert...",
+  "revert": "Zurücksetzen",
+  "refreshing": "Daten werden aktualisiert...",
+  "bannerGradeUpdated": "Klasse aktualisiert",
+  "unsavedChanges": "Ungespeicherte Änderungen"
  }
 }

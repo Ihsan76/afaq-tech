@@ -2068,6 +2068,12 @@
   "periodsCount": "{count} زنگ",
   "periodsEmpty": "هنوز زنگی وجود ندارد.",
   "bannerPeriodAdded": "زنگ اضافه شد",
-  "bannerPeriodError": "عملیات ناموفق بود"
+  "bannerPeriodError": "عملیات ناموفق بود",
+  "save": "ذخیره",
+  "saving": "در حال ذخیره...",
+  "revert": "بازگردانی",
+  "refreshing": "در حال بهروزرسانی دادهها...",
+  "bannerGradeUpdated": "پایه بهروزرسانی شد",
+  "unsavedChanges": "تغییرات ذخیرهنشده"
  }
 }

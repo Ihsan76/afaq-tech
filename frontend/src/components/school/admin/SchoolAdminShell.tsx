@@ -17,7 +17,8 @@ interface SchoolAdminShellProps {
 export default function SchoolAdminShell({ endpoints, children }: SchoolAdminShellProps) {
   const t = useTranslations("school");
   const { user } = useAuthStore();
-  const { data, schoolId, loading, refresh } = useSchoolApi(endpoints);
+  const { data, schoolId, initialLoading, refreshing, refresh } = useSchoolApi(endpoints);
+  const hasData = Object.keys(data).length > 0;
 
   return (
     <div className="min-h-screen py-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto" style={{ color: "var(--color-text)" }}>
@@ -32,17 +33,37 @@ export default function SchoolAdminShell({ endpoints, children }: SchoolAdminShe
         </div>
         <button
           onClick={refresh}
-          className="px-4 py-2 rounded-2xl text-sm font-bold transition-all hover:scale-105"
+          disabled={refreshing}
+          className="px-4 py-2 rounded-2xl text-sm font-bold transition-all hover:scale-105 disabled:opacity-60 disabled:hover:scale-100 inline-flex items-center gap-2"
           style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)" }}
         >
+          {refreshing && (
+            <span
+              className="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin shrink-0"
+              style={{ borderColor: "var(--color-primary)", borderTopColor: "transparent" }}
+            />
+          )}
           {t("refresh")}
         </button>
       </div>
 
-      {loading ? (
+      {refreshing && hasData && (
+        <div
+          className="fixed bottom-4 end-4 z-50 flex items-center gap-2 px-4 py-2.5 rounded-2xl shadow-xl border text-sm font-bold animate-pulse"
+          style={{ background: "var(--color-surface)", borderColor: "var(--color-border)", color: "var(--color-text)" }}
+        >
+          <span
+            className="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin shrink-0"
+            style={{ borderColor: "var(--color-primary)", borderTopColor: "transparent" }}
+          />
+          {t("refreshing")}
+        </div>
+      )}
+
+      {initialLoading && !hasData ? (
         <div className="text-center py-20 animate-pulse text-lg font-bold">{t("loading")}</div>
       ) : (
-        children({ data, schoolId, loading, refresh })
+        children({ data, schoolId, loading: initialLoading, refresh })
       )}
     </div>
   );

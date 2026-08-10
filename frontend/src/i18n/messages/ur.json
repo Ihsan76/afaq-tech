@@ -2068,6 +2068,12 @@
   "periodsCount": "{count} ادوار",
   "periodsEmpty": "ابھی کوئی دور نہیں۔",
   "bannerPeriodAdded": "دور شامل ہو گیا",
-  "bannerPeriodError": "عمل ناکام"
+  "bannerPeriodError": "عمل ناکام",
+  "save": "محفوظ کریں",
+  "saving": "محفوظ ہو رہا ہے...",
+  "revert": "واپس",
+  "refreshing": "ڈیٹا اپ ڈیٹ ہو رہا ہے...",
+  "bannerGradeUpdated": "درجہ اپ ڈیٹ ہو گیا",
+  "unsavedChanges": "غیر محفوظ تبدیلیاں"
  }
 }

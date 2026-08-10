@@ -78,6 +78,8 @@ WSGI_APPLICATION = 'config.wsgi.application'
 DATABASES = {
     'default': env.db('DATABASE_URL', default='postgres:///afaq_tech'),
 }
+DATABASES['default']['CONN_MAX_AGE'] = 300
+DATABASES['default']['CONN_HEALTH_CHECKS'] = True
 
 AUTH_USER_MODEL = 'users.User'
 

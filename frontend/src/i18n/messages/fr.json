@@ -2068,6 +2068,12 @@
   "periodsCount": "{count} périodes",
   "periodsEmpty": "Aucune période pour le moment.",
   "bannerPeriodAdded": "Période ajoutée",
-  "bannerPeriodError": "Échec de l'opération"
+  "bannerPeriodError": "Échec de l'opération",
+  "save": "Enregistrer",
+  "saving": "Enregistrement...",
+  "revert": "Annuler",
+  "refreshing": "Actualisation...",
+  "bannerGradeUpdated": "Mise à jour effectuée",
+  "unsavedChanges": "Modifications non enregistrées"
  }
 }

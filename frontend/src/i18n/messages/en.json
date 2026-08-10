@@ -2137,6 +2137,12 @@
   "periodsCount": "{count} periods",
   "periodsEmpty": "No periods yet.",
   "bannerPeriodAdded": "Period added",
-  "bannerPeriodError": "Operation failed"
+  "bannerPeriodError": "Operation failed",
+  "save": "Save",
+  "saving": "Saving...",
+  "revert": "Revert",
+  "refreshing": "Refreshing data...",
+  "bannerGradeUpdated": "Grade updated",
+  "unsavedChanges": "Unsaved changes"
  }
 }
