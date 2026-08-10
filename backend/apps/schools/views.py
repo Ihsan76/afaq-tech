@@ -1446,7 +1446,12 @@ class MySchoolContextAPIView(APIView):
         if is_admin(user):
             if school_filter:
                 schools = School.objects.filter(id=school_filter)
-                sections = Section.objects.select_related('school', 'grade', 'academic_year').filter(school_id=school_filter)
+                sections = Section.objects.select_related('school', 'grade', 'academic_year').filter(
+                    school_id=school_filter,
+                    # Only sections whose grade the school actually offers
+                    # (excludes general/stray sections not linked to the school's structure).
+                    grade__school_offers__school_id=school_filter,
+                )
                 sections = sections.annotate(
                     students_count_annotated=Count('students', distinct=True)
                 )
@@ -1468,13 +1473,24 @@ class MySchoolContextAPIView(APIView):
         else:
             section_ids = user_section_ids(user)
             school_ids = user_school_ids(user)
-            sections = Section.objects.select_related('school', 'grade', 'academic_year').filter(id__in=section_ids) if section_ids else Section.objects.none()
+            if school_filter:
+                # Statistics scoped to the active school only.
+                section_ids = set(Section.objects.filter(id__in=section_ids, school_id=school_filter).values_list('id', flat=True))
+                school_ids = set(school_ids or []) & {int(school_filter)}
+            sections = Section.objects.select_related('school', 'grade', 'academic_year')
+            if section_ids:
+                # Only sections whose grade the school actually offers
+                # (excludes general/stray sections not linked to the school's structure).
+                sections = sections.filter(
+                    id__in=section_ids,
+                    grade__school_offers__school_id__in=school_ids or [-1],
+                )
+            else:
+                sections = Section.objects.none()
             sections = sections.annotate(
                 students_count_annotated=Count('students', distinct=True)
             )
             schools = School.objects.filter(id__in=school_ids) if school_ids else School.objects.none()
-            if school_filter:
-                schools = schools.filter(id=school_filter)
 
             if is_teacher(user):
                 announcements = SchoolAnnouncement.objects.filter(
