@@ -104,7 +104,7 @@ export default function ContextualSidebar() {
     setMobileOpen(false);
   }, [pathname]);
 
-  if (!shouldShow) {
+  if (!user || !shouldShow) {
     return null;
   }
 
