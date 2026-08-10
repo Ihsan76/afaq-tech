@@ -312,7 +312,7 @@ export default function AdminTeachersView({ teachers, assignments, sections, yea
               <tbody>
                 {assignments.map((a: any) => (
                   <tr key={a.id} className="border-b hover:bg-[var(--color-background)]" style={{ borderColor: "var(--color-border)" }}>
-                    <td className="p-3 font-bold">{a.teacher_email}</td>
+                    <td className="p-3 font-bold">{a.teacher_name || a.teacher_email}</td>
                     <td className="p-3">{assignmentSectionLabel(a)}</td>
                     <td className="p-3 text-[var(--color-primary)]">{a.subject_name || a.subject}</td>
                     <td className="p-3 text-end">

@@ -172,6 +172,7 @@ class SchoolTeacherCreateSerializer(serializers.ModelSerializer):
 
 class TeacherAssignmentSerializer(serializers.ModelSerializer):
     teacher_email = serializers.CharField(source='teacher.email', read_only=True)
+    teacher_name = serializers.SerializerMethodField()
     subject_name = serializers.SerializerMethodField()
     section_name = serializers.CharField(source='section.name', read_only=True)
     grade_name = serializers.SerializerMethodField()
@@ -180,6 +181,10 @@ class TeacherAssignmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = TeacherAssignment
         fields = '__all__'
+
+    def get_teacher_name(self, obj):
+        loc = _locale(self.context.get('request'))
+        return obj.teacher.translations.get(loc, {}).get('name') or obj.teacher.translations.get('ar', {}).get('name') or obj.teacher.email
 
     def get_subject_name(self, obj):
         loc = _locale(self.context.get('request'))
