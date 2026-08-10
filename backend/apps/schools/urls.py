@@ -15,6 +15,8 @@ from .views import (
     RoomViewSet,
     SchoolAnalyticsAPIView,
     SchoolAnnouncementViewSet,
+    SchoolGradeViewSet,
+    SchoolTeacherViewSet,
     SchoolViewSet,
     SectionViewSet,
     StudentEnrollmentViewSet,
@@ -31,6 +33,8 @@ router = DefaultRouter()
 router.register('schools', SchoolViewSet, basename='school')
 router.register('academic-years', AcademicYearViewSet, basename='academicyear')
 router.register('sections', SectionViewSet, basename='section')
+router.register('school-grades', SchoolGradeViewSet, basename='schoolgrade')
+router.register('school-teachers', SchoolTeacherViewSet, basename='schoolteacher')
 router.register('enrollments', StudentEnrollmentViewSet, basename='enrollment')
 router.register('teacher-assignments', TeacherAssignmentViewSet, basename='teacherassignment')
 router.register('announcements', SchoolAnnouncementViewSet, basename='announcement')

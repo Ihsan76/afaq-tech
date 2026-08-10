@@ -4,7 +4,7 @@ from datetime import date, timedelta
 
 from django.conf import settings
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Count, Q
 from django.http import HttpResponse
 from django.utils import timezone
 from rest_framework import permissions, serializers, status, viewsets
@@ -28,6 +28,8 @@ from .models import (
     Room,
     School,
     SchoolAnnouncement,
+    SchoolGrade,
+    SchoolTeacher,
     Section,
     StudentEnrollment,
     SupportRequest,
@@ -47,7 +49,10 @@ from .serializers import (
     PeriodSerializer,
     RoomSerializer,
     SchoolAnnouncementSerializer,
+    SchoolGradeSerializer,
     SchoolSerializer,
+    SchoolTeacherCreateSerializer,
+    SchoolTeacherSerializer,
     SectionSerializer,
     StudentEnrollmentSerializer,
     SupportRequestSerializer,
@@ -157,6 +162,8 @@ class SchoolViewSet(viewsets.ModelViewSet):
                 Q(name__icontains=search) |
                 Q(school_code__icontains=search) |
                 Q(directorate__icontains=search) |
+                Q(governorate__icontains=search) |
+                Q(region__icontains=search) |
                 Q(address__icontains=search)
             )
         directorate = self.request.query_params.get('directorate')
@@ -286,11 +293,16 @@ class SectionViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         if is_admin(self.request.user):
-            return Section.objects.all()
-        section_ids = user_section_ids(self.request.user)
-        if not section_ids:
-            return Section.objects.none()
-        return Section.objects.filter(id__in=section_ids)
+            qs = Section.objects.all()
+        else:
+            section_ids = user_section_ids(self.request.user)
+            if not section_ids:
+                return Section.objects.none()
+            qs = Section.objects.filter(id__in=section_ids)
+        school_id = self.request.query_params.get('school')
+        if school_id:
+            qs = qs.filter(school_id=school_id)
+        return qs
 
     def perform_create(self, serializer):
         if not is_admin(self.request.user):
@@ -305,6 +317,235 @@ class SectionViewSet(viewsets.ModelViewSet):
             if school.manager_id != self.request.user.id:
                 raise serializers.ValidationError('يمكنك تعديل شعب مدرستك فقط')
         serializer.save()
+
+
+SECTION_LETTERS = ['أ', 'ب', 'ج', 'د', 'هـ', 'و', 'ز', 'ح', 'ط', 'ي', 'ك', 'ل', 'م', 'ن', 'س', 'ع', 'ف', 'ص', 'ق', 'ر', 'ش', 'ت', 'ث', 'خ', 'ذ', 'ض', 'ظ', 'غ']
+
+
+class SchoolGradeViewSet(viewsets.ModelViewSet):
+    """Which grades a school offers, with auto-generated sections per grade."""
+    queryset = SchoolGrade.objects.all()
+    serializer_class = SchoolGradeSerializer
+    permission_classes = [IsAdminOrReadOnly]
+
+    def get_queryset(self):
+        if is_admin(self.request.user):
+            qs = SchoolGrade.objects.all()
+        else:
+            school_ids = user_school_ids(self.request.user)
+            qs = SchoolGrade.objects.filter(school_id__in=school_ids) if school_ids else SchoolGrade.objects.none()
+        school_id = self.request.query_params.get('school')
+        if school_id:
+            qs = qs.filter(school_id=school_id)
+        return qs.select_related('school', 'grade')
+
+    def _check_school_access(self, serializer):
+        if is_admin(self.request.user):
+            return serializer.validated_data.get('school')
+        school = serializer.validated_data.get('school')
+        if not school or school.manager_id != self.request.user.id:
+            raise serializers.ValidationError({'school': 'يمكنك إدارة صفوف مدرستك فقط'})
+        return school
+
+    @transaction.atomic
+    def perform_create(self, serializer):
+        self._check_school_access(serializer)
+        obj = serializer.save()
+        self._sync_sections(obj)
+
+    @transaction.atomic
+    def perform_update(self, serializer):
+        if is_admin(self.request.user):
+            school = serializer.validated_data.get('school') or self.get_object().school
+        else:
+            school = self.get_object().school
+            if school.manager_id != self.request.user.id:
+                raise serializers.ValidationError({'school': 'يمكنك إدارة صفوف مدرستك فقط'})
+        obj = serializer.save()
+        self._sync_sections(obj)
+
+    @transaction.atomic
+    def perform_destroy(self, instance):
+        if not is_admin(self.request.user) and instance.school.manager_id != self.request.user.id:
+            raise serializers.ValidationError({'school': 'يمكنك حذف صفوف مدرستك فقط'})
+        instance.delete()
+
+    def _sync_sections(self, obj, academic_year=None):
+        """Reconcile Section rows so the school/grade has exactly section_count sections."""
+        from apps.schools.models import Section as SectionModel
+
+        academic_year = academic_year or AcademicYear.objects.filter(is_current=True).first()
+        if academic_year is None:
+            academic_year = AcademicYear.objects.first()
+        if academic_year is None:
+            return
+
+        existing = SectionModel.objects.filter(
+            school=obj.school, grade=obj.grade, academic_year=academic_year,
+        ).order_by('id')
+        existing_ids = list(existing.values_list('id', flat=True))
+
+        target = obj.section_count if obj.is_active else 0
+
+        # Delete surplus sections (only those without enrollments/assignments)
+        surplus = SectionModel.objects.filter(id__in=existing_ids[target:])
+        for sec in surplus:
+            if sec.students.exists() or sec.teachers.exists():
+                continue
+            sec.delete()
+
+        # Create missing sections with Arabic letters
+        created = 0
+        for i in range(target):
+            if i < len(existing_ids):
+                continue
+            if created >= len(SECTION_LETTERS):
+                break
+            SectionModel.objects.get_or_create(
+                school=obj.school, grade=obj.grade, academic_year=academic_year,
+                name=SECTION_LETTERS[i],
+            )
+            created += 1
+
+
+class SchoolTeacherViewSet(viewsets.ModelViewSet):
+    """Teacher accounts linked to a school, so a school manager can manage their teachers."""
+    queryset = SchoolTeacher.objects.all()
+    serializer_class = SchoolTeacherSerializer
+    permission_classes = [IsAdminOrReadOnly]
+
+    def get_queryset(self):
+        if is_admin(self.request.user):
+            qs = SchoolTeacher.objects.all()
+        else:
+            school_ids = user_school_ids(self.request.user)
+            qs = SchoolTeacher.objects.filter(school_id__in=school_ids) if school_ids else SchoolTeacher.objects.none()
+        school_id = self.request.query_params.get('school')
+        if school_id:
+            qs = qs.filter(school_id=school_id)
+        return qs.select_related('school', 'teacher')
+
+    def _check_school_access(self, serializer):
+        if is_admin(self.request.user):
+            return serializer.validated_data.get('school')
+        school = serializer.validated_data.get('school')
+        if not school or school.manager_id != self.request.user.id:
+            raise serializers.ValidationError({'school': 'يمكنك إدارة معلمي مدرستك فقط'})
+        return school
+
+    def create(self, request, *args, **kwargs):
+        """Create (or reuse) a teacher account and link it to the school."""
+        from django.contrib.auth import get_user_model
+
+        input_serializer = SchoolTeacherCreateSerializer(data=request.data)
+        input_serializer.is_valid(raise_exception=True)
+        data = input_serializer.validated_data
+
+        school = self._check_school_access(input_serializer)
+        email = (data.get('teacher_email') or '').strip().lower()
+        name = (data.get('teacher_name') or '').strip()
+        password = data.get('password') or get_user_model().objects.make_random_password()
+
+        teacher = User.objects.filter(email=email).first()
+        if teacher is None:
+            teacher = get_user_model()(
+                email=email,
+                username=email,
+                role=get_user_model().Role.TEACHER,
+                is_verified=True,
+            )
+            teacher.set_password(password)
+            teacher.translations = {'ar': {'name': name}} if name else {}
+            teacher.save()
+        elif teacher.role != get_user_model().Role.TEACHER:
+            teacher.role = get_user_model().Role.TEACHER
+            if name:
+                teacher.translations['ar'] = {'name': name}
+            teacher.save()
+
+        link, _ = SchoolTeacher.objects.get_or_create(school=school, teacher=teacher)
+        out = SchoolTeacherSerializer(link, context=self.get_serializer_context())
+        return Response(out.data, status=status.HTTP_201_CREATED)
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        if not is_admin(self.request.user) and instance.school.manager_id != self.request.user.id:
+            raise serializers.ValidationError({'school': 'يمكنك تعديل معلمي مدرستك فقط'})
+
+        name = (request.data.get('teacher_name') or '').strip()
+        if name:
+            translations = dict(instance.teacher.translations or {})
+            translations['ar'] = {'name': name}
+            instance.teacher.translations = translations
+            instance.teacher.save(update_fields=['translations'])
+
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(serializer.data)
+
+    def perform_update(self, serializer):
+        if not is_admin(self.request.user):
+            school = self.get_object().school
+            if school.manager_id != self.request.user.id:
+                raise serializers.ValidationError({'school': 'يمكنك تعديل معلمي مدرستك فقط'})
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        if not is_admin(self.request.user) and instance.school.manager_id != self.request.user.id:
+            raise serializers.ValidationError({'school': 'يمكنك حذف معلمي مدرستك فقط'})
+        instance.delete()
+
+
+class TeacherAssignmentViewSet(viewsets.ModelViewSet):
+    queryset = TeacherAssignment.objects.all()
+    serializer_class = TeacherAssignmentSerializer
+    permission_classes = [IsAdminOrReadOnly]
+
+    def get_queryset(self):
+        if is_admin(self.request.user):
+            qs = TeacherAssignment.objects.all()
+        else:
+            section_ids = user_section_ids(self.request.user)
+            if section_ids is None:
+                section_ids = set()
+            if is_teacher(self.request.user):
+                qs = TeacherAssignment.objects.filter(teacher=self.request.user)
+            elif self.request.user.role == 'student':
+                qs = TeacherAssignment.objects.filter(section_id__in=section_ids)
+            else:
+                qs = TeacherAssignment.objects.none()
+        school_id = self.request.query_params.get('school')
+        if school_id:
+            qs = qs.filter(section__school_id=school_id)
+        return qs
+
+    def perform_create(self, serializer):
+        if is_admin(self.request.user):
+            serializer.save()
+            return
+        section = serializer.validated_data.get('section')
+        if not section or section.school.manager_id != self.request.user.id:
+            raise serializers.ValidationError({'section': 'يمكنك إسناد معلمين في شعب مدرستك فقط'})
+        serializer.save()
+
+    def perform_update(self, serializer):
+        if is_admin(self.request.user):
+            serializer.save()
+            return
+        assignment = self.get_object()
+        if assignment.section.school.manager_id != self.request.user.id:
+            raise serializers.ValidationError({'section': 'يمكنك تعديل إسناد مدرستك فقط'})
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        if is_admin(self.request.user):
+            instance.delete()
+            return
+        if instance.section.school.manager_id != self.request.user.id:
+            raise serializers.ValidationError({'section': 'يمكنك حذف إسناد مدرستك فقط'})
+        instance.delete()
 
 
 class StudentEnrollmentViewSet(viewsets.ModelViewSet):
@@ -331,6 +572,9 @@ class StudentEnrollmentViewSet(viewsets.ModelViewSet):
         section = self.request.query_params.get('section')
         if section:
             qs = qs.filter(section_id=section)
+        school_id = self.request.query_params.get('school')
+        if school_id:
+            qs = qs.filter(section__school_id=school_id)
         return qs
 
     @action(detail=True, methods=['post'], permission_classes=[IsAdminRole])
@@ -394,24 +638,6 @@ class StudentEnrollmentViewSet(viewsets.ModelViewSet):
         })
 
 
-class TeacherAssignmentViewSet(viewsets.ModelViewSet):
-    queryset = TeacherAssignment.objects.all()
-    serializer_class = TeacherAssignmentSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get_queryset(self):
-        if is_admin(self.request.user):
-            return TeacherAssignment.objects.all()
-        section_ids = user_section_ids(self.request.user)
-        if section_ids is None:
-            section_ids = set()
-        if is_teacher(self.request.user):
-            return TeacherAssignment.objects.filter(teacher=self.request.user)
-        if self.request.user.role == 'student':
-            return TeacherAssignment.objects.filter(section_id__in=section_ids)
-        return TeacherAssignment.objects.none()
-
-
 class SchoolAnnouncementViewSet(viewsets.ModelViewSet):
     queryset = SchoolAnnouncement.objects.all()
     serializer_class = SchoolAnnouncementSerializer
@@ -419,15 +645,19 @@ class SchoolAnnouncementViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         if is_admin(self.request.user):
-            return SchoolAnnouncement.objects.all()
-        section_ids = user_section_ids(self.request.user)
-        school_ids = user_school_ids(self.request.user)
-        if not section_ids and not school_ids:
-            return SchoolAnnouncement.objects.none()
-        from django.db.models import Q
-        return SchoolAnnouncement.objects.filter(
-            Q(section_id__in=section_ids) | Q(school_id__in=school_ids, section__isnull=True)
-        )
+            qs = SchoolAnnouncement.objects.all()
+        else:
+            section_ids = user_section_ids(self.request.user)
+            school_ids = user_school_ids(self.request.user)
+            if not section_ids and not school_ids:
+                return SchoolAnnouncement.objects.none()
+            qs = SchoolAnnouncement.objects.filter(
+                Q(section_id__in=section_ids) | Q(school_id__in=school_ids, section__isnull=True)
+            )
+        school_id = self.request.query_params.get('school')
+        if school_id:
+            qs = qs.filter(school_id=school_id)
+        return qs
 
     def perform_create(self, serializer):
         if not is_admin(self.request.user) and self.request.user.role == 'school_admin':
@@ -516,6 +746,9 @@ class AttendanceViewSet(viewsets.ModelViewSet):
         student = self.request.query_params.get('student')
         if student:
             qs = qs.filter(student_id=student)
+        school_id = self.request.query_params.get('school')
+        if school_id:
+            qs = qs.filter(school_id=school_id)
         return qs.distinct()
 
     def _can_manage_section(self, user, section):
@@ -612,14 +845,22 @@ class ParentTeacherTicketViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         if is_admin(self.request.user):
-            return ParentTeacherTicket.objects.all()
-        return ParentTeacherTicket.objects.filter(
-            parent=self.request.user,
-        ) | ParentTeacherTicket.objects.filter(
-            student=self.request.user,
-        ) | ParentTeacherTicket.objects.filter(
-            teacher=self.request.user,
-        )
+            qs = ParentTeacherTicket.objects.all()
+        else:
+            qs = ParentTeacherTicket.objects.filter(
+                parent=self.request.user,
+            ) | ParentTeacherTicket.objects.filter(
+                student=self.request.user,
+            ) | ParentTeacherTicket.objects.filter(
+                teacher=self.request.user,
+            )
+        school_id = self.request.query_params.get('school')
+        if school_id:
+            student_ids = StudentEnrollment.objects.filter(
+                section__school_id=school_id
+            ).values_list('student_id', flat=True)
+            qs = qs.filter(student_id__in=student_ids)
+        return qs
 
     def perform_create(self, serializer):
         serializer.save(parent=self.request.user)
@@ -724,6 +965,9 @@ class AttachmentViewSet(viewsets.ModelViewSet):
         status_filter = self.request.query_params.get('review_status')
         if status_filter in Attachment.ReviewStatus.values:
             qs = qs.filter(review_status=status_filter)
+        school_id = self.request.query_params.get('school')
+        if school_id:
+            qs = qs.filter(Q(school_id=school_id) | Q(section__school_id=school_id))
         return qs.distinct()
 
     def perform_create(self, serializer):
@@ -1195,16 +1439,37 @@ class MySchoolContextAPIView(APIView):
     def get(self, request):
         user = request.user
 
+        school_filter = request.query_params.get('school')
+
         if is_admin(user):
-            schools = School.objects.all()
-            sections = Section.objects.all()
-            announcements = SchoolAnnouncement.objects.all()
-            enrollments = StudentEnrollment.objects.all()
-            tickets = ParentTeacherTicket.objects.all()
+            if school_filter:
+                schools = School.objects.filter(id=school_filter)
+                sections = Section.objects.select_related('school', 'grade', 'academic_year').filter(school_id=school_filter)
+                sections = sections.annotate(
+                    students_count_annotated=Count('students', distinct=True)
+                )
+                announcements = SchoolAnnouncement.objects.select_related('school', 'section').filter(school_id=school_filter)
+                enrollments = StudentEnrollment.objects.select_related('student', 'section', 'section__school', 'section__grade', 'section__academic_year').filter(section__school_id=school_filter)
+                tickets = ParentTeacherTicket.objects.select_related('parent', 'teacher', 'student', 'subject').filter(
+                    student_id__in=StudentEnrollment.objects.filter(
+                        section__school_id=school_filter
+                    ).values_list('student_id', flat=True)
+                )
+            else:
+                # No school selected: return only the schools list (for the selector);
+                # the heavy context lists are scoped per school to avoid huge payloads.
+                schools = list(School.objects.all()[:200])
+                sections = Section.objects.none()
+                announcements = SchoolAnnouncement.objects.none()
+                enrollments = StudentEnrollment.objects.none()
+                tickets = ParentTeacherTicket.objects.none()
         else:
             section_ids = user_section_ids(user)
             school_ids = user_school_ids(user)
-            sections = Section.objects.filter(id__in=section_ids) if section_ids else Section.objects.none()
+            sections = Section.objects.select_related('school', 'grade', 'academic_year').filter(id__in=section_ids) if section_ids else Section.objects.none()
+            sections = sections.annotate(
+                students_count_annotated=Count('students', distinct=True)
+            )
             schools = School.objects.filter(id__in=school_ids) if school_ids else School.objects.none()
 
             if is_teacher(user):
@@ -1244,9 +1509,17 @@ class MySchoolContextAPIView(APIView):
         setting, _ = UserAISetting.objects.get_or_create(user=user)
 
         if is_admin(user):
-            teachers = User.objects.filter(role='teacher')
-            students = User.objects.filter(role='student')
-            parents = User.objects.filter(role='parent')
+            if school_filter:
+                teachers = User.objects.filter(role='teacher', assignments__section__school_id=school_filter).distinct()
+                students = User.objects.filter(role='student', school_enrollments__section__school_id=school_filter).distinct()
+                parents = User.objects.filter(
+                    role='parent',
+                    parent_tickets__student__school_enrollments__section__school_id=school_filter
+                ).distinct()
+            else:
+                teachers = User.objects.none()
+                students = User.objects.none()
+                parents = User.objects.none()
         else:
             section_ids = user_section_ids(user)
             teachers = User.objects.filter(assignments__section_id__in=section_ids)
@@ -1258,8 +1531,16 @@ class MySchoolContextAPIView(APIView):
             family_links = FamilyLink.objects.filter(parent=user)
             children_ids = family_links.values_list('student_id', flat=True)
             children = User.objects.filter(id__in=children_ids)
+        elif is_admin(user) and school_filter:
+            family_links = FamilyLink.objects.select_related('parent', 'student').filter(
+                student__school_enrollments__section__school_id=school_filter
+            ).distinct()
+            children = User.objects.none()
+        elif is_admin(user):
+            family_links = FamilyLink.objects.none()
+            children = User.objects.none()
         else:
-            family_links = FamilyLink.objects.filter(student=user) if user.role == 'student' else FamilyLink.objects.all()
+            family_links = FamilyLink.objects.filter(student=user) if user.role == 'student' else FamilyLink.objects.none()
             children = User.objects.none()
 
         # Weekly reports visible to the user (parent) or for their own sections (teacher/admin/student).
@@ -1267,6 +1548,10 @@ class MySchoolContextAPIView(APIView):
             weekly_reports = WeeklyReport.objects.filter(parent=user)
         elif user.role == 'student':
             weekly_reports = WeeklyReport.objects.filter(student=user)
+        elif is_admin(user) and school_filter:
+            weekly_reports = WeeklyReport.objects.filter(
+                student__school_enrollments__section__school_id=school_filter
+            ).distinct()
         else:
             weekly_reports = WeeklyReport.objects.none()
 
@@ -1282,10 +1567,27 @@ class MySchoolContextAPIView(APIView):
             attendance_qs = Attendance.objects.select_related('student', 'section', 'school').filter(student=user)
         else:
             attendance_qs = Attendance.objects.none()
+        if school_filter:
+            attendance_qs = attendance_qs.filter(school_id=school_filter)
+
+        role_workspace = {
+            'teacher': '/teacher',
+            'parent': '/parent',
+            'student': '/student',
+        }
+        if is_admin(user) or user.role == 'school_admin':
+            workspace_url = '/school/admin'
+        else:
+            workspace_url = role_workspace.get(user.role, '/school/admin')
+
+        attachment_qs = Attachment.objects.all() if is_admin(user) else Attachment.objects.filter(uploader=user)
+        if school_filter:
+            attachment_qs = attachment_qs.filter(Q(school_id=school_filter) | Q(section__school_id=school_filter))
 
         return Response({
             "role": user.role,
-            "schools": SchoolSerializer(schools.distinct(), many=True).data,
+            "workspace_url": workspace_url,
+            "schools": SchoolSerializer(schools, many=True).data,
             "sections": SectionSerializer(sections.distinct(), many=True).data,
             "announcements": SchoolAnnouncementSerializer(announcements.distinct(), many=True).data,
             "enrollments": StudentEnrollmentSerializer(enrollments.distinct(), many=True).data,
@@ -1297,7 +1599,7 @@ class MySchoolContextAPIView(APIView):
             "children": [{"id": c.id, "email": c.email, "name": c.translations.get('ar', {}).get('name', c.email)} for c in children.distinct()],
             "weekly_reports": WeeklyReportSerializer(weekly_reports.distinct(), many=True).data,
             "attachments": AttachmentSerializer(
-                Attachment.objects.all() if is_admin(user) else Attachment.objects.filter(uploader=user),
+                attachment_qs.distinct(),
                 many=True, context={'request': request},
             ).data,
             "attendance": AttendanceSerializer(attendance_qs.distinct(), many=True, context={'request': request}).data,
@@ -1343,11 +1645,27 @@ class PeriodViewSet(viewsets.ModelViewSet):
             qs = qs.filter(school_id=school_id)
         if not is_admin(self.request.user):
             school_ids = user_school_ids(self.request.user)
-            if school_ids:
-                qs = qs.filter(school_id__in=school_ids)
-            else:
-                qs = Period.objects.none()
+            qs = qs.filter(school_id__in=school_ids) if school_ids else Period.objects.none()
         return qs
+
+    def _check_school(self, serializer=None, obj=None):
+        if is_admin(self.request.user):
+            return
+        school = (serializer.validated_data.get('school') if serializer else None) or (obj.school if obj else None)
+        if not school or school.manager_id != self.request.user.id:
+            raise serializers.ValidationError({'school': 'يمكنك إدارة حصص مدرستك فقط'})
+
+    def perform_create(self, serializer):
+        self._check_school(serializer=serializer)
+        serializer.save()
+
+    def perform_update(self, serializer):
+        self._check_school(serializer=serializer, obj=self.get_object())
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        self._check_school(obj=instance)
+        instance.delete()
 
 
 class RoomViewSet(viewsets.ModelViewSet):
@@ -1362,11 +1680,27 @@ class RoomViewSet(viewsets.ModelViewSet):
             qs = qs.filter(school_id=school_id)
         if not is_admin(self.request.user):
             school_ids = user_school_ids(self.request.user)
-            if school_ids:
-                qs = qs.filter(school_id__in=school_ids)
-            else:
-                qs = Room.objects.none()
+            qs = qs.filter(school_id__in=school_ids) if school_ids else Room.objects.none()
         return qs
+
+    def _check_school(self, serializer=None, obj=None):
+        if is_admin(self.request.user):
+            return
+        school = (serializer.validated_data.get('school') if serializer else None) or (obj.school if obj else None)
+        if not school or school.manager_id != self.request.user.id:
+            raise serializers.ValidationError({'school': 'يمكنك إدارة قاعات مدرستك فقط'})
+
+    def perform_create(self, serializer):
+        self._check_school(serializer=serializer)
+        serializer.save()
+
+    def perform_update(self, serializer):
+        self._check_school(serializer=serializer, obj=self.get_object())
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        self._check_school(obj=instance)
+        instance.delete()
 
 
 class TimetableSlotViewSet(viewsets.ModelViewSet):
@@ -1388,6 +1722,9 @@ class TimetableSlotViewSet(viewsets.ModelViewSet):
         academic_year_id = self.request.query_params.get('academic_year')
         if academic_year_id:
             qs = qs.filter(academic_year_id=academic_year_id)
+        school_id = self.request.query_params.get('school')
+        if school_id:
+            qs = qs.filter(school_id=school_id)
 
         if not is_admin(self.request.user):
             section_ids = user_section_ids(self.request.user)
@@ -1425,14 +1762,14 @@ class TimetableSlotViewSet(viewsets.ModelViewSet):
                 assignments = TeacherAssignment.objects.filter(section=section, academic_year_id=academic_year_id)
                 if not assignments.exists() or not periods.exists():
                     continue
-                
+
                 period_idx = 0
                 for day in range(5):
                     for period in periods:
                         if period_idx >= len(assignments):
                             break
                         assignment = assignments[period_idx % len(assignments)]
-                        
+
                         existing = TimetableSlot.objects.filter(
                             section=section,
                             day_of_week=day,

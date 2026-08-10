@@ -1,5 +1,10 @@
-import ParentWorkspace from "@/components/school/ParentWorkspace";
+import RoleGuard from "@/components/school/RoleGuard";
+import RoleDashboard from "@/components/school/RoleDashboard";
 
-export default function ParentPage() {
-  return <ParentWorkspace />;
+export default function ParentDashboardPage() {
+  return (
+    <RoleGuard allowed={["parent"]}>
+      <RoleDashboard />
+    </RoleGuard>
+  );
 }

@@ -44,10 +44,29 @@ sidebar_items = [
     {"menu": "sidebar", "service_context": ["ebooks"], "translations": {"en": {"title": "E-Books Library"}, "ar": {"title": "مكتبة الكتب"}}, "url": "/ebooks", "icon": "📖", "order": 0, "is_active": True},
     {"menu": "sidebar", "service_context": ["ebooks"], "translations": {"en": {"title": "Subscriptions"}, "ar": {"title": "الباقات"}}, "url": "/subscriptions", "icon": "💳", "order": 1, "is_active": True},
     {"menu": "sidebar", "service_context": ["ebooks"], "translations": {"en": {"title": "Workspace"}, "ar": {"title": "لوحة التحكم"}}, "url": "/dashboard", "icon": "📊", "order": 2, "is_active": True},
-    # آفاق مدرستي
-    {"menu": "sidebar", "service_context": ["school"], "translations": {"en": {"title": "Afaq Madrasti Home"}, "ar": {"title": "رئيسية آفاق مدرستي"}}, "url": "/school", "icon": "🏫", "order": 0, "is_active": True},
-    {"menu": "sidebar", "service_context": ["school"], "translations": {"en": {"title": "Notifications"}, "ar": {"title": "التنبيهات"}}, "url": "/notifications", "icon": "🔔", "order": 1, "is_active": True},
-    {"menu": "sidebar", "service_context": ["school"], "translations": {"en": {"title": "Workspace"}, "ar": {"title": "لوحة التحكم"}}, "url": "/dashboard", "icon": "📊", "order": 2, "is_active": True},
+    # آفاق مدرستي — مساحات العمل حسب الأدوار والصلاحيات
+    # مساحة عمل مدير المدرسة
+    {"menu": "sidebar", "service_context": ["school"], "required_role": ["school_admin"], "translations": {"en": {"title": "Dashboard"}, "ar": {"title": "لوحة المؤشرات"}}, "url": "/school/admin", "icon": "📊", "order": 10, "is_active": True},
+    {"menu": "sidebar", "service_context": ["school"], "required_role": ["school_admin"], "translations": {"en": {"title": "Sections & Students"}, "ar": {"title": "الشعب والطلاب"}}, "url": "/school/admin/sections", "icon": "🏫", "order": 11, "is_active": True},
+    {"menu": "sidebar", "service_context": ["school"], "required_role": ["school_admin"], "translations": {"en": {"title": "Timetables"}, "ar": {"title": "الجداول والبرامج"}}, "url": "/school/admin/timetable", "icon": "📅", "order": 12, "is_active": True},
+    {"menu": "sidebar", "service_context": ["school"], "required_role": ["school_admin"], "translations": {"en": {"title": "Attendance"}, "ar": {"title": "الحضور والغياب"}}, "url": "/school/admin/attendance", "icon": "🚨", "order": 13, "is_active": True},
+    {"menu": "sidebar", "service_context": ["school"], "required_role": ["school_admin"], "translations": {"en": {"title": "Announcements"}, "ar": {"title": "الإعلانات والطوارئ"}}, "url": "/school/admin/announcements", "icon": "📢", "order": 14, "is_active": True},
+    {"menu": "sidebar", "service_context": ["school"], "required_role": ["school_admin"], "translations": {"en": {"title": "Tickets & Files"}, "ar": {"title": "التذاكر والمرفقات"}}, "url": "/school/admin/tickets", "icon": "💬", "order": 15, "is_active": True},
+    # مساحة عمل المعلم
+    {"menu": "sidebar", "service_context": ["school"], "required_role": ["teacher"], "translations": {"en": {"title": "Teacher Dashboard"}, "ar": {"title": "لوحة المعلم"}}, "url": "/teacher", "icon": "👨‍🏫", "order": 20, "is_active": True},
+    {"menu": "sidebar", "service_context": ["school"], "required_role": ["teacher"], "translations": {"en": {"title": "My Timetable"}, "ar": {"title": "جدول الحصص"}}, "url": "/teacher/timetable", "icon": "📅", "order": 21, "is_active": True},
+    {"menu": "sidebar", "service_context": ["school"], "required_role": ["teacher"], "translations": {"en": {"title": "Attendance"}, "ar": {"title": "تسجيل الحضور"}}, "url": "/teacher/attendance", "icon": "🚨", "order": 22, "is_active": True},
+    {"menu": "sidebar", "service_context": ["school"], "required_role": ["teacher"], "translations": {"en": {"title": "Parent Tickets"}, "ar": {"title": "تذاكر أولياء الأمور"}}, "url": "/teacher/tickets", "icon": "💬", "order": 23, "is_active": True},
+    # بوابة ولي الأمر
+    {"menu": "sidebar", "service_context": ["school"], "required_role": ["parent"], "translations": {"en": {"title": "Parent Dashboard"}, "ar": {"title": "لوحة ولي الأمر"}}, "url": "/parent", "icon": "👨‍👩‍👧‍👦", "order": 30, "is_active": True},
+    {"menu": "sidebar", "service_context": ["school"], "required_role": ["parent"], "translations": {"en": {"title": "Children"}, "ar": {"title": "الأبناء"}}, "url": "/parent/children", "icon": "👨‍👩‍👧‍👦", "order": 31, "is_active": True},
+    {"menu": "sidebar", "service_context": ["school"], "required_role": ["parent"], "translations": {"en": {"title": "Attendance"}, "ar": {"title": "الحضور والغياب"}}, "url": "/parent/attendance", "icon": "📊", "order": 32, "is_active": True},
+    {"menu": "sidebar", "service_context": ["school"], "required_role": ["parent"], "translations": {"en": {"title": "Weekly Reports"}, "ar": {"title": "التقارير الأسبوعية"}}, "url": "/parent/reports", "icon": "📄", "order": 33, "is_active": True},
+    # مساحة الطالب
+    {"menu": "sidebar", "service_context": ["school"], "required_role": ["student"], "translations": {"en": {"title": "Student Dashboard"}, "ar": {"title": "لوحة الطالب"}}, "url": "/student", "icon": "🎓", "order": 40, "is_active": True},
+    {"menu": "sidebar", "service_context": ["school"], "required_role": ["student"], "translations": {"en": {"title": "My Timetable"}, "ar": {"title": "جدول الحصص"}}, "url": "/student/timetable", "icon": "📅", "order": 41, "is_active": True},
+    {"menu": "sidebar", "service_context": ["school"], "required_role": ["student"], "translations": {"en": {"title": "Attendance"}, "ar": {"title": "سجل الحضور"}}, "url": "/student/attendance", "icon": "📊", "order": 42, "is_active": True},
+    {"menu": "sidebar", "service_context": ["school"], "required_role": ["student"], "translations": {"en": {"title": "My Record"}, "ar": {"title": "السجل الشخصي"}}, "url": "/student/record", "icon": "🎓", "order": 43, "is_active": True},
     # المناهج وخطط الدروس
     {"menu": "sidebar", "service_context": ["curriculum"], "translations": {"en": {"title": "Curriculum"}, "ar": {"title": "المناهج الدراسية"}}, "url": "/curriculum", "icon": "📚", "order": 0, "is_active": True},
     {"menu": "sidebar", "service_context": ["curriculum"], "translations": {"en": {"title": "Lesson Plans"}, "ar": {"title": "خطط الدروس"}}, "url": "/lesson-plans", "icon": "📝", "order": 1, "is_active": True},

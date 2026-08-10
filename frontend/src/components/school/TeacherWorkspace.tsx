@@ -1,13 +1,25 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { usePathname } from "next/navigation";
+import Link from "next/link";
+import { useLocale, useTranslations } from "next-intl";
 import { api } from "@/lib/api";
 import { useAuthStore } from "@/store/auth";
 
-export default function TeacherWorkspace() {
-  const pathname = usePathname();
-  const locale = pathname.split("/")[1] || "ar";
+interface TeacherWorkspaceProps {
+  task: "timetable" | "attendance" | "tickets";
+}
+
+const TASKS = [
+  { id: "overview", href: "/teacher", labelKey: "navOverview" },
+  { id: "timetable", href: "/teacher/timetable", labelKey: "navTimetable" },
+  { id: "attendance", href: "/teacher/attendance", labelKey: "navAttendance" },
+  { id: "tickets", href: "/teacher/tickets", labelKey: "navTickets" },
+] as const;
+
+export default function TeacherWorkspace({ task }: TeacherWorkspaceProps) {
+  const locale = useLocale();
+  const t = useTranslations("school");
   const { user } = useAuthStore();
 
   const [assignments, setAssignments] = useState<any[]>([]);
@@ -52,10 +64,10 @@ export default function TeacherWorkspace() {
         date: new Date().toISOString().split("T")[0],
         records: [{ student_id: Number(studentId), status: attStatus }]
       });
-      setBanner({ type: "success", text: locale === "ar" ? "تم تسجيل الحضور بنجاح" : "Attendance recorded successfully" });
+      setBanner({ type: "success", text: t("bannerAttUpdated") });
       setStudentId("");
     } catch {
-      setBanner({ type: "error", text: locale === "ar" ? "فشل تسجيل الحضور" : "Failed to record attendance" });
+      setBanner({ type: "error", text: t("bannerAttError") });
     }
   };
 
@@ -67,17 +79,17 @@ export default function TeacherWorkspace() {
       <div className="flex justify-between items-center mb-8 border-b pb-6" style={{ borderColor: "var(--color-border)" }}>
         <div>
           <span className="px-3 py-1 rounded-full text-xs font-bold bg-[var(--color-secondary)] text-white inline-block mb-2">
-            {locale === "ar" ? "مساحة عمل المعلم" : "Teacher Workspace"}
+            {t("teacherBadge")}
           </span>
           <h1 className="text-3xl font-bold" style={{ fontFamily: "var(--font-heading)" }}>
             {user?.name_ar || user?.email}
           </h1>
           <p className="text-sm mt-1" style={{ color: "var(--color-text-secondary)" }}>
-            {locale === "ar" ? "إدارة الحصص، رصد الحضور السريع، والرد على استفسارات أولياء الأمور" : "Managing classes, quick attendance, and parent tickets"}
+            {t("teacherSubtitle")}
           </p>
         </div>
         <button onClick={fetchData} className="px-4 py-2 rounded-2xl text-sm font-bold bg-[var(--color-surface)] border" style={{ borderColor: "var(--color-border)" }}>
-          {locale === "ar" ? "تحديث 🔄" : "Refresh 🔄"}
+          {t("refresh")}
         </button>
       </div>
 
@@ -87,133 +99,161 @@ export default function TeacherWorkspace() {
         </div>
       )}
 
+      <div className="flex flex-wrap gap-2 mb-8 border-b pb-4" style={{ borderColor: "var(--color-border)" }}>
+        {TASKS.map((tab) => {
+          const active = tab.id === task;
+          return (
+            <Link
+              key={tab.id}
+              href={`/${locale}${tab.href}`}
+              className={`px-4 py-2.5 rounded-2xl text-sm font-bold transition-all ${active ? "text-white shadow-lg" : "hover:opacity-80"}`}
+              style={active ? { background: "linear-gradient(135deg, var(--color-primary), var(--color-secondary))" } : { background: "var(--color-surface)", border: "1px solid var(--color-border)" }}
+            >
+              {t(tab.labelKey)}
+            </Link>
+          );
+        })}
+      </div>
+
       {loading ? (
-        <div className="text-center py-20 animate-pulse text-lg font-bold">جاري التحميل...</div>
+        <div className="text-center py-20 animate-pulse text-lg font-bold">{t("loading")}</div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left / Top: Assignments & Schedule */}
-          <div className="lg:col-span-2 space-y-6">
-            <div className={surfaceCls} style={surfaceStyle}>
-              <h3 className="text-xl font-bold mb-4" style={{ fontFamily: "var(--font-heading)" }}>
-                {locale === "ar" ? "📚 الشعب والمواد المسندة إليك" : "Your Assigned Classes & Subjects"}
-              </h3>
-              {assignments.length === 0 ? (
-                <p className="text-sm py-6 text-center text-[var(--color-text-secondary)]">
-                  {locale === "ar" ? "لا توجد إسنادات تدريسية مسجلة لك حالياً." : "No teacher assignments found."}
-                </p>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {assignments.map((as: any) => (
-                    <div key={as.id} className="p-4 rounded-2xl bg-[var(--color-background)] border" style={{ borderColor: "var(--color-border)" }}>
-                      <h4 className="font-bold text-lg">{as.subject_name || as.subject}</h4>
-                      <p className="text-xs mt-1 text-[var(--color-text-secondary)]">
-                        {locale === "ar" ? "الشعبة:" : "Section:"} {as.section_name || as.section} | {locale === "ar" ? "المدرسة:" : "School:"} {as.school_name || as.school}
-                      </p>
-                      <button
-                        onClick={() => setSelectedSection(as.section)}
-                        className="mt-3 px-3 py-1.5 rounded-xl text-xs font-bold text-white bg-[var(--color-primary)]"
-                      >
-                        {locale === "ar" ? "تسجيل حضور لهذه الشعبة ✓" : "Record Attendance ✓"}
-                      </button>
+          {task === "timetable" && (
+            <>
+              <div className="lg:col-span-2 space-y-6">
+                <div className={surfaceCls} style={surfaceStyle}>
+                  <h3 className="text-xl font-bold mb-4" style={{ fontFamily: "var(--font-heading)" }}>
+                    {t("teacherClassesHeading")}
+                  </h3>
+                  {assignments.length === 0 ? (
+                    <p className="text-sm py-6 text-center text-[var(--color-text-secondary)]">{t("teacherClassesEmpty")}</p>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {assignments.map((as: any) => (
+                        <div key={as.id} className="p-4 rounded-2xl bg-[var(--color-background)] border" style={{ borderColor: "var(--color-border)" }}>
+                          <h4 className="font-bold text-lg">{as.subject_name || as.subject}</h4>
+                          <p className="text-xs mt-1 text-[var(--color-text-secondary)]">
+                            {t("sectionLabel")} {as.section_name || as.section} | {t("schoolLabel")} {as.school_name || as.school}
+                          </p>
+                          <Link
+                            href={`/${locale}/teacher/attendance`}
+                            onClick={() => setSelectedSection(as.section)}
+                            className="mt-3 inline-block px-3 py-1.5 rounded-xl text-xs font-bold text-white bg-[var(--color-primary)]"
+                          >
+                            {t("recordForSection")}
+                          </Link>
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  )}
                 </div>
-              )}
-            </div>
+              </div>
 
-            <div className={surfaceCls} style={surfaceStyle}>
-              <h3 className="text-xl font-bold mb-4" style={{ fontFamily: "var(--font-heading)" }}>
-                {locale === "ar" ? "📅 جدول الحصص الأسبوعي" : "Weekly Timetable"}
-              </h3>
-              {timetable.length === 0 ? (
-                <p className="text-sm py-6 text-center text-[var(--color-text-secondary)]">لا توجد حصص مجدولة حالياً.</p>
-              ) : (
-                <div className="space-y-2">
-                  {timetable.map((slot: any) => (
-                    <div key={slot.id} className="p-3 rounded-xl bg-[var(--color-background)] border flex justify-between items-center text-sm" style={{ borderColor: "var(--color-border)" }}>
-                      <div>
-                        <span className="font-bold text-[var(--color-primary)]">{slot.subject_name}</span> ({slot.section_name})
+              <div className={surfaceCls} style={surfaceStyle}>
+                <h3 className="text-xl font-bold mb-4" style={{ fontFamily: "var(--font-heading)" }}>
+                  {t("teacherTimetableHeading")}
+                </h3>
+                {timetable.length === 0 ? (
+                  <p className="text-sm py-6 text-center text-[var(--color-text-secondary)]">{t("timetableEmpty")}</p>
+                ) : (
+                  <div className="space-y-2">
+                    {timetable.map((slot: any) => (
+                      <div key={slot.id} className="p-3 rounded-xl bg-[var(--color-background)] border flex justify-between items-center text-sm" style={{ borderColor: "var(--color-border)" }}>
+                        <div>
+                          <span className="font-bold text-[var(--color-primary)]">{slot.subject_name}</span> ({slot.section_name})
+                        </div>
+                        <div className="text-xs text-[var(--color-text-secondary)]">
+                          {slot.day_display} — {slot.period_name} {slot.room_name ? `(${slot.room_name})` : ""}
+                        </div>
                       </div>
-                      <div className="text-xs text-[var(--color-text-secondary)]">
-                        {slot.day_display} — {slot.period_name} {slot.room_name ? `(${slot.room_name})` : ""}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Right / Bottom: Quick Attendance & Tickets */}
-          <div className="space-y-6">
-            <div className={surfaceCls} style={surfaceStyle}>
-              <h3 className="text-lg font-bold mb-4" style={{ fontFamily: "var(--font-heading)" }}>
-                {locale === "ar" ? "🚨 تسجيل حضور سريع للحصة" : "Quick Attendance"}
-              </h3>
-              <form onSubmit={recordAttendance} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-bold mb-1">اختر الشعبة</label>
-                  <select
-                    value={selectedSection || ""}
-                    onChange={(e) => setSelectedSection(Number(e.target.value))}
-                    className="w-full px-4 py-2.5 rounded-2xl border text-sm bg-[var(--color-background)]"
-                    style={{ borderColor: "var(--color-border)" }}
-                  >
-                    <option value="">-- اختر الشعبة --</option>
-                    {assignments.map((as: any) => (
-                      <option key={as.section} value={as.section}>{as.section_name || `شعبة #${as.section}`}</option>
                     ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-bold mb-1">معرف الطالب (Student ID)</label>
-                  <input
-                    type="number"
-                    value={studentId}
-                    onChange={(e) => setStudentId(e.target.value)}
-                    placeholder="ID الطالب"
-                    required
-                    className="w-full px-4 py-2.5 rounded-2xl border text-sm bg-[var(--color-background)]"
-                    style={{ borderColor: "var(--color-border)" }}
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold mb-1">الحالة</label>
-                  <select
-                    value={attStatus}
-                    onChange={(e) => setAttStatus(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-2xl border text-sm bg-[var(--color-background)]"
-                    style={{ borderColor: "var(--color-border)" }}
-                  >
-                    <option value="present">حاضر (Present)</option>
-                    <option value="absent">غائب (Absent - يرسل واتساب تلقائي)</option>
-                    <option value="late">متأخر (Late)</option>
-                  </select>
-                </div>
-                <button type="submit" className="w-full py-3 rounded-2xl font-bold text-white bg-[var(--color-secondary)] shadow-lg hover:opacity-90">
-                  {locale === "ar" ? "حفظ وإرسال التنبيه 🚀" : "Save & Notify 🚀"}
-                </button>
-              </form>
-            </div>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
 
-            <div className={surfaceCls} style={surfaceStyle}>
-              <h3 className="text-lg font-bold mb-4" style={{ fontFamily: "var(--font-heading)" }}>
-                {locale === "ar" ? "💬 تذاكر أولياء الأمور" : "Parent Tickets"}
-              </h3>
-              {tickets.length === 0 ? (
-                <p className="text-xs text-[var(--color-text-secondary)]">لا توجد تذاكر حالية.</p>
-              ) : (
-                <div className="space-y-2">
-                  {tickets.map((t: any) => (
-                    <div key={t.id} className="p-3 rounded-xl bg-[var(--color-background)] border text-xs" style={{ borderColor: "var(--color-border)" }}>
-                      <p className="font-bold">{t.subject || t.title}</p>
-                      <p className="text-[var(--color-text-secondary)] mt-1">{t.message}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
+          {task === "attendance" && (
+            <div className="lg:col-span-2 mx-auto w-full max-w-xl">
+              <div className={surfaceCls} style={surfaceStyle}>
+                <h3 className="text-xl font-bold mb-4" style={{ fontFamily: "var(--font-heading)" }}>
+                  {t("quickAttHeading")}
+                </h3>
+                <form onSubmit={recordAttendance} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold mb-1">{t("selectSection")}</label>
+                    <select
+                      value={selectedSection || ""}
+                      onChange={(e) => setSelectedSection(Number(e.target.value))}
+                      className="w-full px-4 py-2.5 rounded-2xl border text-sm bg-[var(--color-background)]"
+                      style={{ borderColor: "var(--color-border)" }}
+                    >
+                      <option value="">{t("selectSectionPlaceholder")}</option>
+                      {assignments.map((as: any) => (
+                        <option key={as.section} value={as.section}>{as.section_name || `#${as.section}`}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold mb-1">{t("studentIdLabel")}</label>
+                    <input
+                      type="number"
+                      value={studentId}
+                      onChange={(e) => setStudentId(e.target.value)}
+                      placeholder={t("studentIdPlaceholder")}
+                      required
+                      className="w-full px-4 py-2.5 rounded-2xl border text-sm bg-[var(--color-background)]"
+                      style={{ borderColor: "var(--color-border)" }}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold mb-1">{t("colStatus")}</label>
+                    <select
+                      value={attStatus}
+                      onChange={(e) => setAttStatus(e.target.value)}
+                      className="w-full px-4 py-2.5 rounded-2xl border text-sm bg-[var(--color-background)]"
+                      style={{ borderColor: "var(--color-border)" }}
+                    >
+                      <option value="present">{t("statusPresent")}</option>
+                      <option value="absent">{t("statusAbsent")}</option>
+                      <option value="late">{t("statusLate")}</option>
+                    </select>
+                  </div>
+                  <button type="submit" className="w-full py-3 rounded-2xl font-bold text-white bg-[var(--color-secondary)] shadow-lg hover:opacity-90">
+                    {t("saveNotify")}
+                  </button>
+                </form>
+              </div>
             </div>
-          </div>
+          )}
+
+          {task === "tickets" && (
+            <div className="lg:col-span-3">
+              <div className={surfaceCls} style={surfaceStyle}>
+                <h3 className="text-xl font-bold mb-4" style={{ fontFamily: "var(--font-heading)" }}>
+                  {t("ticketsHeading")}
+                </h3>
+                {tickets.length === 0 ? (
+                  <p className="text-sm py-8 text-center text-[var(--color-text-secondary)]">{t("ticketsEmptyTeacher")}</p>
+                ) : (
+                  <div className="space-y-3">
+                    {tickets.map((tick: any) => (
+                      <div key={tick.id} className="p-4 rounded-2xl bg-[var(--color-background)] border" style={{ borderColor: "var(--color-border)" }}>
+                        <div className="flex justify-between items-center">
+                          <h4 className="font-bold">{tick.subject || tick.title}</h4>
+                          <span className={`text-xs px-2.5 py-1 rounded-full font-bold ${tick.is_resolved ? "bg-emerald-500/10 text-emerald-600" : "bg-amber-500/10 text-amber-600"}`}>
+                            {tick.is_resolved ? t("ticketResolved") : t("ticketOpen")}
+                          </span>
+                        </div>
+                        <p className="text-xs mt-1" style={{ color: "var(--color-text-secondary)" }}>{tick.message}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

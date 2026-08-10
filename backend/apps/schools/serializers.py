@@ -12,6 +12,8 @@ from .models import (
     Room,
     School,
     SchoolAnnouncement,
+    SchoolGrade,
+    SchoolTeacher,
     Section,
     StudentEnrollment,
     SupportRequest,
@@ -45,6 +47,7 @@ class SectionSerializer(serializers.ModelSerializer):
     school_name = serializers.CharField(source='school.name', read_only=True)
     grade_name = serializers.SerializerMethodField()
     academic_year_name = serializers.CharField(source='academic_year.name', read_only=True)
+    students_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Section
@@ -52,6 +55,12 @@ class SectionSerializer(serializers.ModelSerializer):
 
     def get_grade_name(self, obj):
         return obj.grade.translations.get('ar', {}).get('name', str(obj.grade.level))
+
+    def get_students_count(self, obj):
+        annotated = getattr(obj, 'students_count_annotated', None)
+        if annotated is not None:
+            return annotated
+        return obj.students.count()
 
 
 class StudentEnrollmentSerializer(serializers.ModelSerializer):
@@ -61,6 +70,48 @@ class StudentEnrollmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = StudentEnrollment
         fields = '__all__'
+
+
+class SchoolGradeSerializer(serializers.ModelSerializer):
+    grade_name = serializers.SerializerMethodField()
+    school_name = serializers.CharField(source='school.name', read_only=True)
+
+    class Meta:
+        model = SchoolGrade
+        fields = '__all__'
+
+    def get_grade_name(self, obj):
+        return obj.grade.translations.get('ar', {}).get('name', str(obj.grade.level))
+
+
+class SchoolTeacherSerializer(serializers.ModelSerializer):
+    school_name = serializers.CharField(source='school.name', read_only=True)
+    teacher_email = serializers.CharField(source='teacher.email', read_only=True)
+    teacher_name = serializers.SerializerMethodField()
+    teacher_phone = serializers.CharField(source='teacher.phone', read_only=True, default='')
+    assignment_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = SchoolTeacher
+        fields = '__all__'
+        read_only_fields = ['created_at']
+
+    def get_teacher_name(self, obj):
+        return obj.teacher.translations.get('ar', {}).get('name') or obj.teacher.email
+
+    def get_assignment_count(self, obj):
+        return obj.teacher.assignments.filter(section__school=obj.school).count()
+
+
+class SchoolTeacherCreateSerializer(serializers.ModelSerializer):
+    teacher_email = serializers.EmailField()
+    teacher_name = serializers.CharField(required=False, allow_blank=True)
+    password = serializers.CharField(write_only=True, required=False, allow_blank=True)
+
+    class Meta:
+        model = SchoolTeacher
+        fields = ['school', 'teacher_email', 'teacher_name', 'password']
+        extra_kwargs = {'school': {'required': True}}
 
 
 class TeacherAssignmentSerializer(serializers.ModelSerializer):

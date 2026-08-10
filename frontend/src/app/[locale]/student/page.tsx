@@ -1,5 +1,10 @@
-import StudentWorkspace from "@/components/school/StudentWorkspace";
+import RoleGuard from "@/components/school/RoleGuard";
+import RoleDashboard from "@/components/school/RoleDashboard";
 
-export default function StudentPage() {
-  return <StudentWorkspace />;
+export default function StudentDashboardPage() {
+  return (
+    <RoleGuard allowed={["student"]}>
+      <RoleDashboard />
+    </RoleGuard>
+  );
 }

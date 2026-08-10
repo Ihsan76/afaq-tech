@@ -48,6 +48,7 @@ class Section(models.Model):
     grade = models.ForeignKey(Grade, on_delete=models.CASCADE, related_name='sections', verbose_name='الصف الدراسي')
     academic_year = models.ForeignKey(AcademicYear, on_delete=models.CASCADE, related_name='sections', verbose_name='العام الدراسي')
     name = models.CharField('اسم الشعبة (مثل أ، ب، 1)', max_length=50)
+    capacity = models.PositiveIntegerField('السعة الاستيعابية', default=30)
 
     class Meta:
         verbose_name = 'شعبة صفية'
@@ -58,6 +59,38 @@ class Section(models.Model):
     def __str__(self):
         grade_name = self.grade.translations.get('ar', {}).get('name', str(self.grade.level))
         return f"{self.school.name} - {grade_name} ({self.name}) [{self.academic_year.name}]"
+
+
+class SchoolGrade(models.Model):
+    """Which global grades a school offers, and how many sections per grade."""
+    school = models.ForeignKey(School, on_delete=models.CASCADE, related_name='offered_grades', verbose_name='المدرسة')
+    grade = models.ForeignKey(Grade, on_delete=models.CASCADE, related_name='school_offers', verbose_name='الصف الدراسي')
+    section_count = models.PositiveIntegerField('عدد الشعب لكل صف', default=1)
+    is_active = models.BooleanField('مفعّل', default=True)
+
+    class Meta:
+        verbose_name = 'صف مدرسي معروض'
+        verbose_name_plural = 'الصفوف المعروضة في المدرسة'
+        ordering = ['grade__level']
+        unique_together = ['school', 'grade']
+
+    def __str__(self):
+        return f"{self.school.name} - {self.grade} (شعب: {self.section_count})"
+
+
+class SchoolTeacher(models.Model):
+    """Direct link between a school and a teacher account (scope for school managers)."""
+    school = models.ForeignKey(School, on_delete=models.CASCADE, related_name='teachers_link', verbose_name='المدرسة')
+    teacher = models.ForeignKey(User, on_delete=models.CASCADE, related_name='school_links', verbose_name='المعلم')
+    created_at = models.DateTimeField('تاريخ الإضافة', auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'معلم في مدرسة'
+        verbose_name_plural = 'المعلمون في المدارس'
+        unique_together = ['school', 'teacher']
+
+    def __str__(self):
+        return f"{self.teacher.email} @ {self.school.name}"
 
 
 class StudentEnrollment(models.Model):
@@ -369,7 +402,7 @@ class TimetableSlot(models.Model):
     def clean(self):
         super().clean()
         from django.core.exceptions import ValidationError
-        
+
         # 1. Section conflict check
         section_conflict = TimetableSlot.objects.filter(
             section=self.section,

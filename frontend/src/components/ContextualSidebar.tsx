@@ -47,6 +47,7 @@ export default function ContextualSidebar() {
   const pathname = usePathname();
   const locale = pathname.split("/")[1] || "en";
   const adminT = useTranslations("admin");
+  const schoolT = useTranslations("school");
   const { user } = useAuthStore();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -54,14 +55,16 @@ export default function ContextualSidebar() {
 
   const pathParts = pathname.split("/");
   const service = pathParts[2] || "";
-  const isAdminRoute = pathname.includes("/admin");
+  const isAdminRoute = pathParts[2] === "admin";
 
   // Hide sidebar on sections that have no management/contextual sidebar
-  const supportedServices = ["academy", "ebooks", "school", "curriculum", "lesson-plans", "dashboard", "profile", "gamification", "subscriptions"];
+  const supportedServices = ["academy", "ebooks", "school", "curriculum", "lesson-plans", "dashboard", "profile", "gamification", "subscriptions", "teacher", "parent", "student"];
   const shouldShow = !isAdminRoute && ((service && supportedServices.includes(service)) || pathname.includes("/dashboard"));
 
+  // Role workspaces share the school sidebar context (items defined in the admin menus)
+  const roleServices = ["teacher", "parent", "student"];
   // Dynamic sidebar items fetched from admin (no hardcoding) — hooks must run unconditionally
-  const sidebarContext = isAdminRoute ? "admin" : (service || "all");
+  const sidebarContext = isAdminRoute ? "admin" : (roleServices.includes(service) ? "school" : (service || "all"));
   const { data: sidebarItems, loading: sidebarLoading } = useApiList<SidebarItem>(
     (isAdminRoute || !shouldShow) ? null : `/pages/menu/sidebar/`,
     { locale, context: sidebarContext }
@@ -87,6 +90,7 @@ export default function ContextualSidebar() {
         label: item.title || item.url || "#",
         icon: item.icon || "🔗",
         badge: item.badge || "",
+        roles: Array.isArray(item.required_role) ? item.required_role : [],
       }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAdminRoute, shouldShow, sidebarLoading, sidebarItems, locale, user]);
@@ -162,12 +166,36 @@ export default function ContextualSidebar() {
     ]},
   ];
 
+  const isSchoolContext = roleServices.includes(service) || service === "school";
+
+  const SCHOOL_GROUP_KEYS = ["school_admin", "teacher", "parent", "student"] as const;
+
+  const schoolGroups = (() => {
+    if (!isSchoolContext || sidebarLoading) return [];
+    const groups = SCHOOL_GROUP_KEYS.map((key) => ({ key, items: [] as typeof contextualItems }));
+    const general = { key: "general", items: [] as typeof contextualItems };
+    for (const item of contextualItems) {
+      const role = item.roles.find((r: string) => (SCHOOL_GROUP_KEYS as readonly string[]).includes(r));
+      const group = role ? groups.find((g) => g.key === role) : general;
+      group?.items.push(item);
+    }
+    return [...groups.filter((g) => g.items.length > 0), ...(general.items.length ? [general] : [])];
+  })();
+
   const NAV_ITEMS = isAdminRoute ? ALL_NAV_ITEMS.filter((s) => canSee(s.key)) : [];
 
   const isActive = (href: string) => pathname === href || (href !== `/${locale}/admin` && pathname.includes(href));
 
   const toggleSection = (section: string) => {
     setExpandedSections((prev) => ({ ...prev, [section]: !prev[section] }));
+  };
+
+  const groupLabel = (key: string) => {
+    if (key === "school_admin") return schoolT("roleSchoolAdmin");
+    if (key === "teacher") return schoolT("roleTeacher");
+    if (key === "parent") return schoolT("roleParent");
+    if (key === "student") return schoolT("roleStudent");
+    return schoolT("roleGeneral");
   };
 
   const renderNavContent = (isMobile = false) => (
@@ -191,6 +219,59 @@ export default function ContextualSidebar() {
                 ) : (
                   <>
                     <span className="truncate">{group.section}</span>
+                    <span className="text-[10px]">{isExpanded ? "▼" : "◀"}</span>
+                  </>
+                )}
+              </button>
+
+              {(isExpanded || (isMobile ? false : collapsed) || hasActive) && (
+                <div className={`space-y-1 ${(!isMobile && collapsed) ? "" : "ms-2 ps-2 border-s border-[var(--color-border)]"}`}>
+                  {group.items.map((item, index) => {
+                    const active = isActive(item.href);
+                    return (
+                      <Link
+                        key={`${item.href}-${index}`}
+                        href={item.href}
+                        onClick={() => isMobile && setMobileOpen(false)}
+                        title={(!isMobile && collapsed) ? item.label : undefined}
+                        className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all ${
+                          (!isMobile && collapsed) ? "justify-center px-1" : ""
+                        }`}
+                        style={{
+                          backgroundColor: active ? "var(--color-primary-light)" : "transparent",
+                          color: active ? "var(--color-primary)" : "var(--color-text-secondary)",
+                        }}
+                      >
+                        <span className="text-base shrink-0">{item.icon}</span>
+                        {(!isMobile && collapsed) ? null : <span className="truncate">{item.label}</span>}
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })
+      ) : isSchoolContext ? (
+        schoolGroups.map((group) => {
+          const sectionLabel = groupLabel(group.key);
+          const isExpanded = !!expandedSections[sectionLabel];
+          const hasActive = group.items.some((i) => isActive(i.href));
+          return (
+            <div key={group.key} className="space-y-1">
+              <button
+                onClick={() => toggleSection(sectionLabel)}
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition-all ${
+                  hasActive ? "bg-[var(--color-primary-light)] text-[var(--color-primary)]" : ""
+                }`}
+                style={{ color: hasActive ? "var(--color-primary)" : "var(--color-text)" }}
+                title={(!isMobile && collapsed) ? sectionLabel : undefined}
+              >
+                {(!isMobile && collapsed) ? (
+                  <span className="mx-auto text-sm">{group.items[0]?.icon || "📁"}</span>
+                ) : (
+                  <>
+                    <span className="truncate">{sectionLabel}</span>
                     <span className="text-[10px]">{isExpanded ? "▼" : "◀"}</span>
                   </>
                 )}
