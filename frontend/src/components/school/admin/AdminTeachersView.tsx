@@ -148,6 +148,12 @@ export default function AdminTeachersView({ teachers, assignments, sections, yea
     return `${grade} (${sec.name})`;
   };
 
+  const assignmentSectionLabel = (a: any) => {
+    const grade = a.grade_name || "";
+    const secName = a.section_name || "";
+    return grade ? `${grade} (${secName})` : secName;
+  };
+
   const inputCls = "w-full px-4 py-2.5 rounded-2xl border text-sm bg-[var(--color-background)]";
 
   return (
@@ -307,7 +313,7 @@ export default function AdminTeachersView({ teachers, assignments, sections, yea
                 {assignments.map((a: any) => (
                   <tr key={a.id} className="border-b hover:bg-[var(--color-background)]" style={{ borderColor: "var(--color-border)" }}>
                     <td className="p-3 font-bold">{a.teacher_email}</td>
-                    <td className="p-3">{a.section_name}</td>
+                    <td className="p-3">{assignmentSectionLabel(a)}</td>
                     <td className="p-3 text-[var(--color-primary)]">{a.subject_name || a.subject}</td>
                     <td className="p-3 text-end">
                       <button onClick={() => removeAssignment(a.id)} className="px-3 py-1.5 rounded-xl text-xs font-bold bg-rose-500/10 text-rose-600 transition-all hover:opacity-90">
