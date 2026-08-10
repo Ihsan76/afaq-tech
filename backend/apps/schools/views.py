@@ -1473,6 +1473,8 @@ class MySchoolContextAPIView(APIView):
                 students_count_annotated=Count('students', distinct=True)
             )
             schools = School.objects.filter(id__in=school_ids) if school_ids else School.objects.none()
+            if school_filter:
+                schools = schools.filter(id=school_filter)
 
             if is_teacher(user):
                 announcements = SchoolAnnouncement.objects.filter(

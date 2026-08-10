@@ -24,7 +24,9 @@ export default function SchoolPageClient() {
 
   useEffect(() => {
     if (!accessToken) return;
-    api.get("/schools/my-context/")
+    const activeId = typeof window !== "undefined" ? localStorage.getItem("active_school_id") : null;
+    api
+      .get("/schools/my-context/", { params: activeId ? { school: activeId } : {} })
       .then((res) => setContextData(res.data))
       .catch(() => {});
   }, [accessToken]);
