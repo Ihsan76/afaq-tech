@@ -26,7 +26,7 @@ export default function HeroSection({ content }: { content?: Record<string, any>
   const subtitle = localizedContent(c, "subtitle", locale, t("heroSubtitle"));
   const isSmart = c.is_smart_cta !== false;
   const ctaText = (isSmart && user) ? (locale === "ar" ? "الانتقال لساحة العمل" : "Go to Workspace") : localizedContent(c, "cta_text", locale, t("heroCTA"));
-  let ctaLink = (isSmart && user) ? `/${locale}/dashboard` : localizedContent(c, "cta_link", locale, "/register");
+  let ctaLink = (isSmart && user) ? `/${locale}/school/dashboard` : localizedContent(c, "cta_link", locale, "/register");
   if (ctaLink.startsWith("mailto:") && settings?.email) {
     ctaLink = `mailto:${settings.email}`;
   }

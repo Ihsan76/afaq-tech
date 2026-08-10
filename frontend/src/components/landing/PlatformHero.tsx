@@ -20,7 +20,7 @@ export default function PlatformHero({ content }: { content?: Record<string, any
   const subtitle = localizedContent(c, "subtitle", locale, t("platformHeroSubtitle"));
   const isSmart = c.is_smart_cta !== false;
   const ctaText = (isSmart && user) ? (locale === "ar" ? "الانتقال لساحة العمل" : "Go to Workspace") : localizedContent(c, "cta_text", locale, t("platformHeroCTA"));
-  const ctaLink = (isSmart && user) ? `/${locale}/dashboard` : resolveLink(locale, localizedContent(c, "cta_link", locale, "/register"));
+  const ctaLink = (isSmart && user) ? `/${locale}/school/dashboard` : resolveLink(locale, localizedContent(c, "cta_link", locale, "/register"));
   const secText = localizedContent(c, "secondary_cta", locale, t("platformHeroServices"));
   const secLink = resolveLink(locale, localizedContent(c, "secondary_cta_link", locale, "#services"));
   const defaultBadges = [
