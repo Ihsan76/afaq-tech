@@ -2,21 +2,25 @@
 
 import RoleGuard from "@/components/school/RoleGuard";
 import SchoolAdminShell from "@/components/school/admin/SchoolAdminShell";
-import AdminAnnouncementsView from "@/components/school/admin/AdminAnnouncementsView";
+import AdminTeachersView from "@/components/school/admin/AdminTeachersView";
 
-export default function SchoolAdminAnnouncementsPage() {
+export default function SchoolAdminTeachersPage() {
   return (
     <RoleGuard allowed={["school_admin"]}>
       <SchoolAdminShell
         endpoints={{
-          announcements: "/schools/announcements/",
+          teachers: "/schools/school-teachers/",
+          assignments: "/schools/teacher-assignments/",
           sections: "/schools/sections/",
+          years: "/schools/academic-years/",
         }}
       >
         {({ data, schoolId, refresh }) => (
-          <AdminAnnouncementsView
-            announcements={data.announcements || []}
+          <AdminTeachersView
+            teachers={data.teachers || []}
+            assignments={data.assignments || []}
             sections={data.sections || []}
+            years={data.years || []}
             schoolId={schoolId}
             refresh={refresh}
           />

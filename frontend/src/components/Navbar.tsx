@@ -36,12 +36,14 @@ export default function Navbar() {
   const [openAdmin, setOpenAdmin] = useState(false);
   const themeRef = useRef<HTMLDivElement>(null);
   const userRef = useRef<HTMLDivElement>(null);
+  const mobileToggleRef = useRef<HTMLButtonElement>(null);
+  const mobileDrawerRef = useRef<HTMLDivElement>(null);
 
   const { data: dynamicMenus } = useApiList<DynamicMenuItem>("/pages/menu/header/", { locale });
 
   const pathParts = pathname.split("/");
   const service = pathParts[2] || "";
-  const isAdminRoute = pathname.includes("/admin");
+  const isAdminRoute = pathParts[2] === "admin";
   const supportedServices = ["academy", "ebooks", "school", "curriculum", "lesson-plans", "dashboard", "profile", "gamification", "subscriptions"];
   const shouldShowContextual = !isAdminRoute && ((service && supportedServices.includes(service)) || pathname.includes("/dashboard"));
   const sidebarContext = service || "all";
@@ -54,6 +56,7 @@ export default function Navbar() {
     icon?: string;
     badge?: string;
     is_active?: boolean;
+    required_role?: string[] | string;
   }
 
   const { data: contextualItems } = useApiList<SidebarItem>(
@@ -68,8 +71,17 @@ export default function Navbar() {
     return `/${loc}${href.startsWith("/") ? href : `/${href}`}`;
   };
 
+  const roleAllowed = (item: DynamicMenuItem | SidebarItem): boolean => {
+    const roles = (item as SidebarItem).required_role;
+    if (!roles || (Array.isArray(roles) && roles.length === 0)) return true;
+    if (roles.includes("all")) return true;
+    if (!user) return false;
+    if (user.is_staff || user.role === "admin") return true;
+    return roles.includes(user.role);
+  };
+
   const localizedContextualItems = (contextualItems || [])
-    .filter((item) => item.is_active !== false)
+    .filter((item) => item.is_active !== false && roleAllowed(item))
     .map((item) => ({
       href: localizeHref(item.resolved_url || item.url || "#", locale),
       label: item.title || item.url || "#",
@@ -99,10 +111,13 @@ export default function Navbar() {
     const handleClickOutside = (e: MouseEvent) => {
       if (themeRef.current && !themeRef.current.contains(e.target as Node)) setShowThemes(false);
       if (userRef.current && !userRef.current.contains(e.target as Node)) setShowUserMenu(false);
+      const inToggle = mobileToggleRef.current?.contains(e.target as Node);
+      const inDrawer = mobileDrawerRef.current?.contains(e.target as Node);
+      if (mobileOpen && !inToggle && !inDrawer) setMobileOpen(false);
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  }, [mobileOpen]);
 
   useEffect(() => {
     setMobileOpen(false);
@@ -518,6 +533,7 @@ export default function Navbar() {
 
             {/* Mobile Toggle Button */}
             <button
+              ref={mobileToggleRef}
               className="lg:hidden flex flex-col items-center justify-center w-9 h-9 rounded-xl border transition-all"
               style={{
                 borderColor: "var(--color-border)",
@@ -553,7 +569,7 @@ export default function Navbar() {
 
         {/* Mobile Drawer Navigation */}
         {mobileOpen && (
-          <div className="lg:hidden pb-6 border-t mt-1" style={{ borderColor: "var(--color-border)" }}>
+          <div ref={mobileDrawerRef} className="lg:hidden pb-6 border-t mt-1" style={{ borderColor: "var(--color-border)" }}>
             <div className="pt-3 space-y-4 max-h-[80vh] overflow-y-auto px-1">
               {/* User Info Card in Mobile */}
               {user && (

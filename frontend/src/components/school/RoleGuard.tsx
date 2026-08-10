@@ -15,14 +15,22 @@ export default function RoleGuard({ allowed, children }: RoleGuardProps) {
   const pathname = usePathname();
   const router = useRouter();
   const t = useTranslations("school");
-  const { user, accessToken } = useAuthStore();
+  const { user, accessToken, hydrated } = useAuthStore();
   const locale = pathname.split("/")[1] || "en";
 
   useEffect(() => {
-    if (!accessToken) {
+    if (hydrated && !accessToken) {
       router.replace(`/${locale}/school`);
     }
-  }, [accessToken, locale, router]);
+  }, [hydrated, accessToken, locale, router]);
+
+  if (!hydrated) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center text-lg font-bold animate-pulse">
+        {t("checkingAccess")}
+      </div>
+    );
+  }
 
   if (!accessToken) {
     return (

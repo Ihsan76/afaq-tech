@@ -135,7 +135,7 @@ export default function ParentWorkspace({ task }: ParentWorkspaceProps) {
                     {announcements.slice(0, 5).map((ann: any) => (
                       <div key={ann.id} className="p-3 rounded-xl bg-[var(--color-background)] border text-xs" style={{ borderColor: "var(--color-border)" }}>
                         <p className="font-bold text-sm">{ann.title}</p>
-                        <p className="text-[var(--color-text-secondary)] mt-1">{ann.body}</p>
+                        <p className="text-[var(--color-text-secondary)] mt-1">{ann.content}</p>
                       </div>
                     ))}
                   </div>

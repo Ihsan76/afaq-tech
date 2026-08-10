@@ -9,10 +9,12 @@ import { resolveActiveSchoolId } from "@/components/school/activeSchool";
 
 const ACTIONS: Record<string, { href: string; icon: string; labelKey: string }[]> = {
   school_admin: [
+    { href: "/school/admin/grades", icon: "📚", labelKey: "quickGrades" },
+    { href: "/school/admin/teachers", icon: "👩‍🏫", labelKey: "quickTeachers" },
+    { href: "/school/admin/sections", icon: "🏫", labelKey: "quickSections" },
+    { href: "/school/admin/rooms", icon: "🚪", labelKey: "quickRooms" },
     { href: "/school/admin/timetable", icon: "⚡", labelKey: "quickSchedule" },
     { href: "/school/admin/announcements", icon: "📢", labelKey: "quickBroadcast" },
-    { href: "/school/admin/attendance", icon: "🚨", labelKey: "quickWhatsappLogs" },
-    { href: "/school/admin/tickets", icon: "📁", labelKey: "quickReviewFiles" },
   ],
   teacher: [
     { href: "/teacher/timetable", icon: "📅", labelKey: "quickMyTimetable" },
@@ -101,7 +103,6 @@ export default function RoleDashboard() {
 
   const badgeKey =
     viewRole === "teacher" ? "teacherBadge" : viewRole === "parent" ? "parentBadge" : viewRole === "student" ? "studentBadge" : "adminBadge";
-  const schoolName = ctx?.school?.name || ctx?.school_name || (ctx?.schools?.[0]?.name);
   const surfaceCls = "rounded-3xl p-6 shadow-xl border";
   const surfaceStyle = { background: "var(--color-surface)", borderColor: "var(--color-border)", boxShadow: "var(--card-shadow)" };
 
@@ -116,7 +117,7 @@ export default function RoleDashboard() {
             {t("myWorkspace")}
           </h1>
           <p className="text-sm mt-1" style={{ color: "var(--color-text-secondary)" }}>
-            {user?.name_ar || user?.email} {schoolName ? `— 🏫 ${schoolName}` : ""}
+            {user?.name_ar || user?.email}
           </p>
         </div>
         <button

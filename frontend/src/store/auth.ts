@@ -26,12 +26,14 @@ interface AuthState {
   user: User | null;
   accessToken: string | null;
   refreshToken: string | null;
+  hydrated: boolean;
   isLoading: boolean;
   error: string | null;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, name_ar: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   loadUser: () => Promise<void>;
+  hydrate: () => void;
   sendVerification: (email: string, locale: string) => Promise<void>;
   confirmVerification: (email: string, code: string) => Promise<void>;
   completeGoogleLogin: (access: string, refresh: string) => Promise<void>;
@@ -39,10 +41,19 @@ interface AuthState {
 
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
-  accessToken: typeof window !== "undefined" ? localStorage.getItem("accessToken") : null,
-  refreshToken: typeof window !== "undefined" ? localStorage.getItem("refreshToken") : null,
+  accessToken: null,
+  refreshToken: null,
+  hydrated: false,
   isLoading: false,
   error: null,
+
+  hydrate: () => {
+    set({
+      accessToken: localStorage.getItem("accessToken"),
+      refreshToken: localStorage.getItem("refreshToken"),
+      hydrated: true,
+    });
+  },
 
   login: async (email: string, password: string) => {
     set({ isLoading: true, error: null });
