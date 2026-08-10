@@ -10,11 +10,12 @@ interface Props {
   assignments: any[];
   sections: any[];
   years: any[];
+  subjectPeriods?: any[];
   schoolId: string | null;
   refresh: () => void;
 }
 
-export default function AdminTeachersView({ teachers, assignments, sections, years, schoolId, refresh }: Props) {
+export default function AdminTeachersView({ teachers, assignments, sections, years, subjectPeriods = [], schoolId, refresh }: Props) {
   const t = useTranslations("school");
   const { banner, setBanner } = useBanner();
 
@@ -30,11 +31,41 @@ export default function AdminTeachersView({ teachers, assignments, sections, yea
   const [assignmentSubject, setAssignmentSubject] = useState("");
   const [assignmentYear, setAssignmentYear] = useState(currentYear ? String(currentYear) : "");
 
+  const DEFAULT_SUBJECTS = [
+    { id: 1, name: "الرياضيات" },
+    { id: 2, name: "العلوم" },
+    { id: 3, name: "اللغة العربية" },
+    { id: 4, name: "اللغة الإنجليزية" },
+    { id: 5, name: "الفيزياء" },
+    { id: 6, name: "الكيمياء" },
+    { id: 7, name: "التاريخ" },
+    { id: 8, name: "الجغرافيا" },
+  ];
+
   useEffect(() => {
     if (!assignmentYear && currentYear) {
       setAssignmentYear(String(currentYear));
     }
   }, [currentYear, assignmentYear]);
+
+  useEffect(() => {
+    api
+      .get("/academics/subjects/")
+      .then((r) => {
+        const list = Array.isArray(r.data) ? r.data : r.data.results || [];
+        setSubjects(list.length > 0 ? list : DEFAULT_SUBJECTS);
+      })
+      .catch(() => setSubjects(DEFAULT_SUBJECTS));
+  }, []);
+
+  const selectedSec = sections.find((s) => String(s.id) === String(assignmentSection));
+  const gradeId = selectedSec?.grade;
+  const gradeSubjectIds = gradeId
+    ? new Set((subjectPeriods || []).filter((p) => p.grade === gradeId).map((p) => String(p.subject)))
+    : null;
+  const filteredSubjects = gradeSubjectIds && gradeSubjectIds.size > 0
+    ? subjects.filter((s) => gradeSubjectIds.has(String(s.id)))
+    : subjects;
 
   const addTeacher = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -236,7 +267,7 @@ export default function AdminTeachersView({ teachers, assignments, sections, yea
           </select>
           <select value={assignmentSubject} onChange={(e) => setAssignmentSubject(e.target.value)} className={inputCls} style={{ borderColor: "var(--color-border)" }}>
             <option value="">{t("assignSubjectSelect")}</option>
-            {subjects.map((s: any) => (
+            {filteredSubjects.map((s: any) => (
               <option key={s.id} value={s.id}>
                 {s.name}
               </option>

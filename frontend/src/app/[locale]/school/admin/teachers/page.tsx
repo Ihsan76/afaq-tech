@@ -13,6 +13,7 @@ export default function SchoolAdminTeachersPage() {
           assignments: "/schools/teacher-assignments/",
           sections: "/schools/sections/",
           years: "/schools/academic-years/",
+          subjectPeriods: "/schools/school-subject-periods/",
         }}
       >
         {({ data, schoolId, refresh }) => (
@@ -21,6 +22,7 @@ export default function SchoolAdminTeachersPage() {
             assignments={data.assignments || []}
             sections={data.sections || []}
             years={data.years || []}
+            subjectPeriods={data.subjectPeriods || []}
             schoolId={schoolId}
             refresh={refresh}
           />
