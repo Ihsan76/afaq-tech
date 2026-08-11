@@ -2074,6 +2074,20 @@
   "revert": "واپس",
   "refreshing": "ڈیٹا اپ ڈیٹ ہو رہا ہے...",
   "bannerGradeUpdated": "درجہ اپ ڈیٹ ہو گیا",
-  "unsavedChanges": "غیر محفوظ تبدیلیاں"
+  "unsavedChanges": "غیر محفوظ تبدیلیاں",
+  "bannerSubjectPeriodsUpdated": "مضامین کے اسباق کامیابی سے اپ ڈیٹ ہو گئے",
+  "saveChanges": "تبدیلیاں محفوظ کریں",
+  "unsaved": "محفوظ نہیں",
+  "subjectPeriodsHeading": "درجے کے لحاظ سے ہفتہ وار مضامین کے اسباق",
+  "subjectPeriodsSubtitle": "ہر مضمون اور درجے کے لیے ہفتہ وار اسباق کی تعداد مقرر کریں",
+  "totalPeriodsLabel": "کل ہفتہ وار اسباق: {total}",
+  "subjectsCount": "مضامین",
+  "noSubjectsAssigned": "اس درجے میں ابھی تک کوئی مضمون تفویض نہیں کیا گیا۔",
+  "weeklyPeriodsUnit": "اسباق",
+  "selectSubjectPlaceholder": "مضمون منتخب کریں...",
+  "addSubjectToGrade": "مضمون شامل کریں",
+  "bannerTeacherUpdated": "استاد کی معلومات اپ ڈیٹ ہو گئیں",
+  "occupiedPeriodsLabel": "مصروف: {occupied} / {max}",
+  "maxQuotaLabel": "زیادہ سے زیادہ کوٹہ"
  }
 }

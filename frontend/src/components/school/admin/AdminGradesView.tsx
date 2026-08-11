@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { api } from "@/lib/api";
 import { surfaceCls, surfaceStyle, useBanner, Banner } from "@/components/school/admin/adminUi";
+import SelectDropdown from "@/components/ui/SelectDropdown";
 
 interface Props {
   offered: any[];
@@ -217,9 +218,9 @@ export default function AdminGradesView({ offered, subjectPeriods, schoolId, ref
         <div className="space-y-4">
           <div>
             <label className="block text-xs font-bold mb-1">{t("gradesSelectLabel")}</label>
-            <select
+            <SelectDropdown
               value={addGradeId}
-              onChange={(e) => setAddGradeId(e.target.value)}
+              onChange={(v) => setAddGradeId(String(v))}
               className="w-full px-4 py-2.5 rounded-2xl border text-sm bg-[var(--color-background)]"
               style={{ borderColor: "var(--color-border)" }}
             >
@@ -229,7 +230,7 @@ export default function AdminGradesView({ offered, subjectPeriods, schoolId, ref
                   {g.name || g.level}
                 </option>
               ))}
-            </select>
+            </SelectDropdown>
           </div>
           <div>
             <label className="block text-xs font-bold mb-1">{t("sectionsPerGradeLabel")}</label>
@@ -471,9 +472,9 @@ export default function AdminGradesView({ offered, subjectPeriods, schoolId, ref
                 )}
 
                 <div className="flex flex-col sm:flex-row items-center gap-2 pt-3 border-t" style={{ borderColor: "var(--color-border)" }}>
-                  <select
+                  <SelectDropdown
                     value={selectedSubjectId}
-                    onChange={(e) => setSelectedSubjectId(e.target.value)}
+                    onChange={(v) => setSelectedSubjectId(String(v))}
                     className="w-full sm:flex-1 px-3 py-2.5 rounded-xl border text-xs bg-[var(--color-background)]"
                     style={{ borderColor: "var(--color-border)" }}
                   >
@@ -483,7 +484,7 @@ export default function AdminGradesView({ offered, subjectPeriods, schoolId, ref
                         {sub.name}
                       </option>
                     ))}
-                  </select>
+                  </SelectDropdown>
                   <div className="flex items-center gap-1 w-full sm:w-auto">
                     <input
                       type="number"

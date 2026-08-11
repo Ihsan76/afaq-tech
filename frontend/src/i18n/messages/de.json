@@ -2074,6 +2074,20 @@
   "revert": "Zurücksetzen",
   "refreshing": "Daten werden aktualisiert...",
   "bannerGradeUpdated": "Klasse aktualisiert",
-  "unsavedChanges": "Ungespeicherte Änderungen"
+  "unsavedChanges": "Ungespeicherte Änderungen",
+  "bannerSubjectPeriodsUpdated": "Fachstunden erfolgreich aktualisiert",
+  "saveChanges": "Änderungen speichern",
+  "unsaved": "Nicht gespeichert",
+  "subjectPeriodsHeading": "Wöchentliche Fachstunden pro Klasse",
+  "subjectPeriodsSubtitle": "Wochenstundenanzahl für jedes Fach und jede Klasse festlegen",
+  "totalPeriodsLabel": "Wöchentliche Gesamtstunden: {total}",
+  "subjectsCount": "Fächer",
+  "noSubjectsAssigned": "Dieser Klasse sind noch keine Fächer zugewiesen.",
+  "weeklyPeriodsUnit": "Stunden",
+  "selectSubjectPlaceholder": "Fach auswählen...",
+  "addSubjectToGrade": "Fach hinzufügen",
+  "bannerTeacherUpdated": "Lehrer aktualisiert",
+  "occupiedPeriodsLabel": "Belegt: {occupied} / {max}",
+  "maxQuotaLabel": "Max. Stundenkontingent"
  }
 }

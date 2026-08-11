@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, Fragment } from "react";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { api } from "@/lib/api";
+import SelectDropdown from "@/components/ui/SelectDropdown";
 
 interface AIRunItem {
   id: number;
@@ -94,10 +95,10 @@ export default function AdminAIRunsPage() {
             className="px-4 py-2 rounded-xl text-sm border"
             style={{ background: "var(--color-surface)", color: "var(--color-text)", borderColor: "var(--color-border)" }}
           />
-          <select value={featureFilter} onChange={(e) => setFeatureFilter(e.target.value)} className="px-4 py-2 rounded-xl text-sm border" style={{ background: "var(--color-surface)", color: "var(--color-text)", borderColor: "var(--color-border)" }}>
+          <SelectDropdown value={featureFilter} onChange={(v) => setFeatureFilter(String(v))} className="px-4 py-2 rounded-xl text-sm border" style={{ background: "var(--color-surface)", color: "var(--color-text)", borderColor: "var(--color-border)" }}>
             <option value="">{t("admin.allFeatures")}</option>
             {FEATURES.map((f) => <option key={f} value={f}>{t(`admin.feature${f.charAt(0).toUpperCase() + f.slice(1)}`)}</option>)}
-          </select>
+          </SelectDropdown>
         </div>
       </div>
 

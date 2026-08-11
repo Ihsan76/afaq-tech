@@ -2074,6 +2074,20 @@
   "revert": "بازگردانی",
   "refreshing": "در حال بهروزرسانی دادهها...",
   "bannerGradeUpdated": "پایه بهروزرسانی شد",
-  "unsavedChanges": "تغییرات ذخیرهنشده"
+  "unsavedChanges": "تغییرات ذخیرهنشده",
+  "bannerSubjectPeriodsUpdated": "جلسات دروس با موفقیت به‌روزرسانی شد",
+  "saveChanges": "ذخیره تغییرات",
+  "unsaved": "ذخیره‌نشده",
+  "subjectPeriodsHeading": "جلسات هفتگی دروس بر اساس پایه",
+  "subjectPeriodsSubtitle": "تعداد جلسات هفتگی هر درس برای هر پایه را تعیین کنید",
+  "totalPeriodsLabel": "مجموع جلسات هفتگی: {total}",
+  "subjectsCount": "دروس",
+  "noSubjectsAssigned": "هنوز درسی به این پایه اختصاص نیافته است.",
+  "weeklyPeriodsUnit": "جلسات",
+  "selectSubjectPlaceholder": "انتخاب درس...",
+  "addSubjectToGrade": "افزودن درس",
+  "bannerTeacherUpdated": "اطلاعات معلم به‌روزرسانی شد",
+  "occupiedPeriodsLabel": "مشغول: {occupied} / {max}",
+  "maxQuotaLabel": "حداکثر سقف"
  }
 }

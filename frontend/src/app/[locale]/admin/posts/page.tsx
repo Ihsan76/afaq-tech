@@ -7,6 +7,7 @@ import { api } from "@/lib/api";
 import { localized } from "@/lib/i18n";
 import { locales, localeNames } from "@/i18n/config";
 import RichTextEditor from "@/components/admin/RichTextEditor";
+import SelectDropdown from "@/components/ui/SelectDropdown";
 
 interface BlogCategory {
   id: number; translations: Record<string, Record<string, string>>; slug: string;
@@ -177,11 +178,11 @@ export default function AdminBlogPage() {
           {/* Language Selector */}
           <div className="mb-4">
             <label className="block text-sm font-medium mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("admin.language")}</label>
-            <select value={formLocale} onChange={(e) => setFormLocale(e.target.value)} className={inputCls + " max-w-xs"} style={style}>
+            <SelectDropdown value={formLocale} onChange={(v) => setFormLocale(String(v))} className={inputCls + " max-w-xs"} style={style}>
               {locales.map((loc) => (
                 <option key={loc} value={loc}>{localeNames[loc]} ({loc.toUpperCase()})</option>
               ))}
-            </select>
+            </SelectDropdown>
           </div>
 
           <div className="grid sm:grid-cols-2 gap-4 mb-4">
@@ -197,10 +198,10 @@ export default function AdminBlogPage() {
             </div>
             <div>
               <label className="block text-sm font-medium mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("admin.category") || "Category"}</label>
-              <select value={formCategory} onChange={(e) => { setFormCategory(e.target.value ? Number(e.target.value) : ""); markDirty(); }} className={inputCls} style={style}>
+              <SelectDropdown value={formCategory} onChange={(v) => { setFormCategory(v ? Number(v) : ""); markDirty(); }} className={inputCls} style={style}>
                 <option value="">{t("common.none")}</option>
                 {categories.map((c) => <option key={c.id} value={c.id}>{localized(c.translations, locale, "name")}</option>)}
-              </select>
+              </SelectDropdown>
             </div>
             <div className="sm:col-span-2">
               <label className="block text-sm font-medium mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("admin.excerptAr")}</label>

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { api } from "@/lib/api";
 import { useLanguages } from "@/lib/useLanguages";
+import SelectDropdown from "@/components/ui/SelectDropdown";
 
 // ---- Types ----
 
@@ -368,10 +369,10 @@ export default function AdminPromptsPage() {
         <div>
           <div className="flex items-center gap-3 mb-4">
             <div className="flex-1" />
-            <select className={inputCls + " w-40"} style={fieldBg} value={langFilter} onChange={(e) => setLangFilter(e.target.value)}>
+            <SelectDropdown className={inputCls + " w-40"} style={fieldBg} value={langFilter} onChange={(v) => setLangFilter(String(v))}>
               <option value="">كل اللغات</option>
               {LANGUAGES.map(l => <option key={l.code} value={l.code}>{l.label}</option>)}
-            </select>
+            </SelectDropdown>
             <button onClick={openTemplateCreate}
               className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all"
               style={{ background: "var(--color-primary)" }}>
@@ -425,19 +426,19 @@ export default function AdminPromptsPage() {
             <div className="grid grid-cols-2 gap-4">
               <Field label="الاسم"><input className={inputCls} style={fieldBg} value={tf.name} onChange={(e) => setTf({ ...tf, name: e.target.value })} placeholder="اسم القالب" /></Field>
               <Field label="الميزة">
-                <select className={inputCls} style={fieldBg} value={tf.feature_key} onChange={(e) => setTf({ ...tf, feature_key: e.target.value })}>
+                <SelectDropdown className={inputCls} style={fieldBg} value={tf.feature_key} onChange={(v) => setTf({ ...tf, feature_key: String(v) })}>
                   {FEATURE_KEYS.map(fk => <option key={fk} value={fk}>{fk}</option>)}
-                </select>
+                </SelectDropdown>
               </Field>
               <Field label="اللغة">
-                <select className={inputCls} style={fieldBg} value={tf.language} onChange={(e) => setTf({ ...tf, language: e.target.value })}>
+                <SelectDropdown className={inputCls} style={fieldBg} value={tf.language} onChange={(v) => setTf({ ...tf, language: String(v) })}>
                   {LANGUAGES.map(l => <option key={l.code} value={l.code}>{l.label}</option>)}
-                </select>
+                </SelectDropdown>
               </Field>
               <Field label="المرحلة التعليمية">
-                <select className={inputCls} style={fieldBg} value={tf.learner_stage} onChange={(e) => setTf({ ...tf, learner_stage: e.target.value })}>
+                <SelectDropdown className={inputCls} style={fieldBg} value={tf.learner_stage} onChange={(v) => setTf({ ...tf, learner_stage: String(v) })}>
                   {STAGES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-                </select>
+                </SelectDropdown>
               </Field>
               <Field label="الأولوية"><input type="number" className={inputCls} style={fieldBg} value={tf.priority} onChange={(e) => setTf({ ...tf, priority: Number(e.target.value) })} /></Field>
               <Field label="الإصدار"><input type="number" className={inputCls} style={fieldBg} value={tf.version} onChange={(e) => setTf({ ...tf, version: Number(e.target.value) })} /></Field>
@@ -514,15 +515,15 @@ export default function AdminPromptsPage() {
           {/* Grade Profile Form */}
           <Modal open={showGradeForm} onClose={() => setShowGradeForm(false)} title={editingGrade ? "تعديل بروفايل الصف" : "إضافة بروفايل الصف"}>
             <Field label="الصف">
-              <select className={inputCls} style={fieldBg} value={gf.grade} onChange={(e) => setGf({ ...gf, grade: e.target.value })}>
+              <SelectDropdown className={inputCls} style={fieldBg} value={gf.grade} onChange={(v) => setGf({ ...gf, grade: String(v) })}>
                 <option value="">اختر الصف</option>
                 {grades.map(g => <option key={g.id} value={g.id}>{g.label}</option>)}
-              </select>
+              </SelectDropdown>
             </Field>
             <Field label="المرحلة التعليمية">
-              <select className={inputCls} style={fieldBg} value={gf.learner_stage} onChange={(e) => setGf({ ...gf, learner_stage: e.target.value })}>
+              <SelectDropdown className={inputCls} style={fieldBg} value={gf.learner_stage} onChange={(v) => setGf({ ...gf, learner_stage: String(v) })}>
                 {STAGES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-              </select>
+              </SelectDropdown>
             </Field>
             <Field label="نشط">
               <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={gf.is_active} onChange={(e) => setGf({ ...gf, is_active: e.target.checked })} /> نعم</label>
@@ -594,16 +595,16 @@ export default function AdminPromptsPage() {
           <Modal open={showSubjectForm} onClose={() => setShowSubjectForm(false)} title={editingSubject ? "تعديل بروفايل المادة" : "إضافة بروفايل المادة"}>
             <div className="grid grid-cols-2 gap-4">
               <Field label="بروفايل الصف">
-                <select className={inputCls} style={fieldBg} value={sf.grade_profile} onChange={(e) => setSf({ ...sf, grade_profile: e.target.value })}>
+                <SelectDropdown className={inputCls} style={fieldBg} value={sf.grade_profile} onChange={(v) => setSf({ ...sf, grade_profile: String(v) })}>
                   <option value="">اختر بروفايل الصف</option>
                   {gradeProfiles.map(gp => <option key={gp.id} value={gp.id}>{gp.grade_name}</option>)}
-                </select>
+                </SelectDropdown>
               </Field>
               <Field label="المادة">
-                <select className={inputCls} style={fieldBg} value={sf.subject} onChange={(e) => setSf({ ...sf, subject: e.target.value })}>
+                <SelectDropdown className={inputCls} style={fieldBg} value={sf.subject} onChange={(v) => setSf({ ...sf, subject: String(v) })}>
                   <option value="">اختر المادة</option>
                   {subjects.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
-                </select>
+                </SelectDropdown>
               </Field>
               <Field label="نشط">
                 <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={sf.is_active} onChange={(e) => setSf({ ...sf, is_active: e.target.checked })} /> نعم</label>

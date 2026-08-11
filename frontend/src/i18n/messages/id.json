@@ -2074,6 +2074,20 @@
   "revert": "Batalkan",
   "refreshing": "Memperbarui data...",
   "bannerGradeUpdated": "Kelas diperbarui",
-  "unsavedChanges": "Perubahan belum disimpan"
+  "unsavedChanges": "Perubahan belum disimpan",
+  "bannerSubjectPeriodsUpdated": "Periode mata pelajaran berhasil diperbarui",
+  "saveChanges": "Simpan perubahan",
+  "unsaved": "Belum disimpan",
+  "subjectPeriodsHeading": "Periode Mingguan Mata Pelajaran per Kelas",
+  "subjectPeriodsSubtitle": "Konfigurasi jumlah periode mingguan untuk setiap mata pelajaran dan kelas",
+  "totalPeriodsLabel": "Total periode mingguan: {total}",
+  "subjectsCount": "mata pelajaran",
+  "noSubjectsAssigned": "Belum ada mata pelajaran yang ditetapkan untuk kelas ini.",
+  "weeklyPeriodsUnit": "periode",
+  "selectSubjectPlaceholder": "Pilih mata pelajaran...",
+  "addSubjectToGrade": "Tambah Mata Pelajaran",
+  "bannerTeacherUpdated": "Guru diperbarui",
+  "occupiedPeriodsLabel": "Terisi: {occupied} / {max}",
+  "maxQuotaLabel": "Kuota Maksimal"
  }
 }

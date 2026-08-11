@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { api } from "@/lib/api";
 import { useAuthStore } from "@/store/auth";
+import SelectDropdown from "@/components/ui/SelectDropdown";
 
 interface TeacherWorkspaceProps {
   task: "timetable" | "attendance" | "tickets";
@@ -183,9 +184,9 @@ export default function TeacherWorkspace({ task }: TeacherWorkspaceProps) {
                 <form onSubmit={recordAttendance} className="space-y-4">
                   <div>
                     <label className="block text-xs font-bold mb-1">{t("selectSection")}</label>
-                    <select
+                    <SelectDropdown
                       value={selectedSection || ""}
-                      onChange={(e) => setSelectedSection(Number(e.target.value))}
+                      onChange={(v) => setSelectedSection(Number(v))}
                       className="w-full px-4 py-2.5 rounded-2xl border text-sm bg-[var(--color-background)]"
                       style={{ borderColor: "var(--color-border)" }}
                     >
@@ -193,7 +194,7 @@ export default function TeacherWorkspace({ task }: TeacherWorkspaceProps) {
                       {assignments.map((as: any) => (
                         <option key={as.section} value={as.section}>{as.section_name || `#${as.section}`}</option>
                       ))}
-                    </select>
+                    </SelectDropdown>
                   </div>
                   <div>
                     <label className="block text-xs font-bold mb-1">{t("studentIdLabel")}</label>
@@ -209,16 +210,16 @@ export default function TeacherWorkspace({ task }: TeacherWorkspaceProps) {
                   </div>
                   <div>
                     <label className="block text-xs font-bold mb-1">{t("colStatus")}</label>
-                    <select
+                    <SelectDropdown
                       value={attStatus}
-                      onChange={(e) => setAttStatus(e.target.value)}
+                      onChange={(v) => setAttStatus(String(v))}
                       className="w-full px-4 py-2.5 rounded-2xl border text-sm bg-[var(--color-background)]"
                       style={{ borderColor: "var(--color-border)" }}
                     >
                       <option value="present">{t("statusPresent")}</option>
                       <option value="absent">{t("statusAbsent")}</option>
                       <option value="late">{t("statusLate")}</option>
-                    </select>
+                    </SelectDropdown>
                   </div>
                   <button type="submit" className="w-full py-3 rounded-2xl font-bold text-white bg-[var(--color-secondary)] shadow-lg hover:opacity-90">
                     {t("saveNotify")}

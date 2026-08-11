@@ -2074,6 +2074,20 @@
   "revert": "Geri al",
   "refreshing": "Veriler yenileniyor...",
   "bannerGradeUpdated": "Sınıf güncellendi",
-  "unsavedChanges": "Kaydedilmemiş değişiklikler"
+  "unsavedChanges": "Kaydedilmemiş değişiklikler",
+  "bannerSubjectPeriodsUpdated": "Ders dönemleri başarıyla güncellendi",
+  "saveChanges": "Değişiklikleri kaydet",
+  "unsaved": "Kaydedilmedi",
+  "subjectPeriodsHeading": "Sınıfa Göre Haftalık Ders Dönemleri",
+  "subjectPeriodsSubtitle": "Her ders ve sınıf için haftalık dönem sayısını yapılandırın",
+  "totalPeriodsLabel": "Toplam haftalık dönem: {total}",
+  "subjectsCount": "ders",
+  "noSubjectsAssigned": "Bu sınıfa henüz ders atanmadı.",
+  "weeklyPeriodsUnit": "dönem",
+  "selectSubjectPlaceholder": "Ders seçin...",
+  "addSubjectToGrade": "Ders Ekle",
+  "bannerTeacherUpdated": "Öğretmen güncellendi",
+  "occupiedPeriodsLabel": "Dolu: {occupied} / {max}",
+  "maxQuotaLabel": "Maksimum Kontenjan"
  }
 }

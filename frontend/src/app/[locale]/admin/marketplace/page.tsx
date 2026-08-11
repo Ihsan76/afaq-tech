@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { api } from "@/lib/api";
+import SelectDropdown from "@/components/ui/SelectDropdown";
 
 interface AdminService {
   id: number;
@@ -191,10 +192,10 @@ export default function AdminMarketplacePage() {
             />
           )}
           {tab === "services" && (
-            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className={inputCls} style={{ background: "var(--color-surface)", color: "var(--color-text)", borderColor: "var(--color-border)" }}>
+            <SelectDropdown value={statusFilter} onChange={(v) => setStatusFilter(String(v))} className={inputCls} style={{ background: "var(--color-surface)", color: "var(--color-text)", borderColor: "var(--color-border)" }}>
               <option value="">{t("admin.allStatuses")}</option>
               {SERVICE_STATUSES.map((s) => <option key={s} value={s}>{t(`servicesMarketplace.${s}`)}</option>)}
-            </select>
+            </SelectDropdown>
           )}
         </div>
       </div>
@@ -289,9 +290,9 @@ export default function AdminMarketplacePage() {
                     <td className="col-hide-md px-6 py-4 text-center text-sm" style={{ color: "var(--color-text-secondary)" }}>{s.category_name || "—"}</td>
                     <td className="col-hide-sm px-6 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text)" }}>{s.price} {s.currency}</td>
                     <td className="px-6 py-4 text-center">
-                      <select value={s.status} onChange={(e) => updateService(s, { status: e.target.value })} className={selectCls} style={{ background: sc.bg, color: sc.color, borderColor: sc.color }}>
+                      <SelectDropdown value={s.status} onChange={(v) => updateService(s, { status: String(v) })} size="sm" triggerStyle={{ background: sc.bg, color: sc.color, borderColor: sc.color }}>
                         {SERVICE_STATUSES.map((st) => <option key={st} value={st}>{t(`servicesMarketplace.${st}`)}</option>)}
-                      </select>
+                      </SelectDropdown>
                     </td>
                     <td className="col-hide-md px-6 py-4 text-center">
                       <button onClick={() => updateService(s, { is_featured: !s.is_featured })} className={`px-3 py-1 rounded-full text-xs font-bold ${s.is_featured ? "text-white" : ""}`} style={s.is_featured ? { background: "var(--color-warning)" } : { background: "var(--color-surface-alt)", color: "var(--color-text-muted)" }}>
@@ -343,9 +344,9 @@ export default function AdminMarketplacePage() {
                     <td className="px-6 py-4 text-sm" style={{ color: "var(--color-text-secondary)" }}>{o.service_title}</td>
                     <td className="col-hide-sm px-6 py-4 text-center text-sm font-bold" style={{ color: "var(--color-text)" }}>{o.price_paid} {o.currency}</td>
                     <td className="px-6 py-4 text-center">
-                      <select value={o.status} onChange={(e) => updateOrder(o, e.target.value)} className={selectCls} style={{ background: oc.bg, color: oc.color, borderColor: oc.color }}>
+                       <SelectDropdown value={o.status} onChange={(v) => updateOrder(o, String(v))} size="sm" triggerStyle={{ background: oc.bg, color: oc.color, borderColor: oc.color }}>
                         {ORDER_STATUSES.map((st) => <option key={st} value={st}>{t(`servicesMarketplace.${st}`)}</option>)}
-                      </select>
+                      </SelectDropdown>
                     </td>
                     <td className="col-hide-lg px-6 py-4 text-center text-xs" style={{ color: "var(--color-text-muted)" }}>
                       {o.created_at ? new Date(o.created_at).toLocaleDateString(locale === "ar" ? "ar-JO" : "en-US") : ""}

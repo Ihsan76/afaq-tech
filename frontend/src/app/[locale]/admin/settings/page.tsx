@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { api } from "@/lib/api";
 import { useLanguages } from "@/lib/useLanguages";
+import SelectDropdown from "@/components/ui/SelectDropdown";
 
 export default function AdminSettingsPage() {
   const t = useTranslations();
@@ -92,11 +93,11 @@ export default function AdminSettingsPage() {
           <div className="flex gap-3 items-end mb-2">
             <div className="flex-1">
               <label className="block text-sm font-semibold mb-2" style={{ color: "var(--color-text-secondary)" }}>اللغة</label>
-              <select value={lang} onChange={(e) => setLang(e.target.value)} className={inputCls} style={style}>
+              <SelectDropdown value={lang} onChange={(v) => setLang(String(v))} className={inputCls} style={style}>
                 {LANGUAGES.map(l => (
                   <option key={l.code} value={l.code}>{l.label} {settings.translations?.[l.code]?.site_name?.trim() ? "✅" : ""}</option>
                 ))}
-              </select>
+              </SelectDropdown>
             </div>
             <div className="flex-[2]">
               <label className="block text-sm font-semibold mb-2" style={{ color: "var(--color-text-secondary)" }}>{t("admin.siteName")} ({LANGUAGES.find(l => l.code === lang)?.label})</label>
@@ -161,11 +162,11 @@ export default function AdminSettingsPage() {
           <div className="flex gap-3 items-end mb-2">
             <div className="flex-1">
               <label className="block text-sm font-semibold mb-2" style={{ color: "var(--color-text-secondary)" }}>اللغة</label>
-              <select value={lang} onChange={(e) => setLang(e.target.value)} className={inputCls} style={style}>
+              <SelectDropdown value={lang} onChange={(v) => setLang(String(v))} className={inputCls} style={style}>
                 {LANGUAGES.map(l => (
                   <option key={l.code} value={l.code}>{l.label} {settings.footer_translations?.[l.code]?.footer_text?.trim() ? "✅" : ""}</option>
                 ))}
-              </select>
+              </SelectDropdown>
             </div>
             <div className="flex-[2]">
               <label className="block text-sm font-semibold mb-2" style={{ color: "var(--color-text-secondary)" }}>{t("admin.footerText")} ({LANGUAGES.find(l => l.code === lang)?.label})</label>

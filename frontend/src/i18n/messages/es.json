@@ -2074,6 +2074,20 @@
   "revert": "Revertir",
   "refreshing": "Actualizando datos...",
   "bannerGradeUpdated": "Grado actualizado",
-  "unsavedChanges": "Cambios sin guardar"
+  "unsavedChanges": "Cambios sin guardar",
+  "bannerSubjectPeriodsUpdated": "Períodos de asignaturas actualizados correctamente",
+  "saveChanges": "Guardar cambios",
+  "unsaved": "Sin guardar",
+  "subjectPeriodsHeading": "Períodos semanales por asignatura y grado",
+  "subjectPeriodsSubtitle": "Configure el número de períodos semanales para cada asignatura y grado",
+  "totalPeriodsLabel": "Períodos semanales totales: {total}",
+  "subjectsCount": "asignaturas",
+  "noSubjectsAssigned": "Aún no hay asignaturas asignadas a este grado.",
+  "weeklyPeriodsUnit": "períodos",
+  "selectSubjectPlaceholder": "Seleccionar asignatura...",
+  "addSubjectToGrade": "Agregar asignatura",
+  "bannerTeacherUpdated": "Profesor actualizado",
+  "occupiedPeriodsLabel": "Ocupados: {occupied} / {max}",
+  "maxQuotaLabel": "Cuota máxima"
  }
 }

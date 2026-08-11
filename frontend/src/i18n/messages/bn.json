@@ -2074,6 +2074,20 @@
   "revert": "ফিরিয়ে নিন",
   "refreshing": "ডেটা রিফ্রেশ হচ্ছে...",
   "bannerGradeUpdated": "শ্রেণি আপডেট হয়েছে",
-  "unsavedChanges": "অপরিবর্তিত পরিবর্তন"
+  "unsavedChanges": "অপরিবর্তিত পরিবর্তন",
+  "bannerSubjectPeriodsUpdated": "বিষয়ের পিরিয়ড সফলভাবে আপডেট হয়েছে",
+  "saveChanges": "পরিবর্তন সংরক্ষণ করুন",
+  "unsaved": "সংরক্ষিত নয়",
+  "subjectPeriodsHeading": "শ্রেণি অনুযায়ী সাপ্তাহিক বিষয় পিরিয়ড",
+  "subjectPeriodsSubtitle": "প্রতিটি বিষয় ও শ্রেণির জন্য সাপ্তাহিক পিরিয়ড সংখ্যা নির্ধারণ করুন",
+  "totalPeriodsLabel": "মোট সাপ্তাহিক পিরিয়ড: {total}",
+  "subjectsCount": "বিষয়",
+  "noSubjectsAssigned": "এই শ্রেণিতে এখনও কোনো বিষয় নির্ধারণ করা হয়নি।",
+  "weeklyPeriodsUnit": "পিরিয়ড",
+  "selectSubjectPlaceholder": "বিষয় নির্বাচন করুন...",
+  "addSubjectToGrade": "বিষয় যোগ করুন",
+  "bannerTeacherUpdated": "শিক্ষকের তথ্য আপডেট হয়েছে",
+  "occupiedPeriodsLabel": "ব্যবহৃত: {occupied} / {max}",
+  "maxQuotaLabel": "সর্বোচ্চ কোটা"
  }
 }

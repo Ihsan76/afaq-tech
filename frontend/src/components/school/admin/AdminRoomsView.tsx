@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { api } from "@/lib/api";
 import { surfaceCls, surfaceStyle, useBanner, Banner } from "@/components/school/admin/adminUi";
+import SelectDropdown from "@/components/ui/SelectDropdown";
 
 interface Props {
   rooms: any[];
@@ -125,13 +126,13 @@ export default function AdminRoomsView({ rooms, periods, schoolId, refresh }: Pr
               </div>
               <div>
                 <label className="block text-xs font-bold mb-1">{t("roomTypeLabel")}</label>
-                <select value={roomType} onChange={(e) => setRoomType(e.target.value)} className={inputCls} style={{ borderColor: "var(--color-border)" }}>
+                <SelectDropdown value={roomType} onChange={(v) => setRoomType(String(v))} className={inputCls} style={{ borderColor: "var(--color-border)" }}>
                   {ROOM_TYPES.map((rt) => (
                     <option key={rt} value={rt}>
                       {t(`roomType${rt}`)}
                     </option>
                   ))}
-                </select>
+                </SelectDropdown>
               </div>
             </div>
             <button type="submit" disabled={busy} className="w-full py-3 rounded-2xl font-bold text-white shadow-lg transition-all hover:scale-105 disabled:opacity-50" style={{ background: "linear-gradient(135deg, var(--color-primary), var(--color-secondary))" }}>

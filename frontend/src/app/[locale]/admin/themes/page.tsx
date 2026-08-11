@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { api } from "@/lib/api";
 import { useLanguages } from "@/lib/useLanguages";
+import SelectDropdown from "@/components/ui/SelectDropdown";
 
 interface ThemeData {
   id: number;
@@ -343,12 +344,12 @@ export default function AdminThemesPage() {
                     <div className="flex gap-3 items-end">
                       <div className="flex-1">
                         <label className="block text-xs font-medium mb-1" style={{ color: "var(--color-text-secondary)" }}>اللغة</label>
-                        <select value={themeSelectedLang} onChange={(e) => setThemeSelectedLang(e.target.value)}
+                         <SelectDropdown value={themeSelectedLang} onChange={(v) => setThemeSelectedLang(String(v))}
                           className="w-full px-3 py-2 rounded-xl border text-sm" style={{ borderColor: "var(--color-border)", color: "var(--color-text)", background: "var(--color-surface)" }}>
                           {LANGUAGES.map(l => (
                             <option key={l.code} value={l.code}>{l.label} {form.translations?.[l.code]?.name?.trim() ? "✅" : ""}</option>
                           ))}
-                        </select>
+                        </SelectDropdown>
                       </div>
                       <div className="flex-[2]">
                         <label className="block text-xs font-medium mb-1" style={{ color: "var(--color-text-secondary)" }}>الاسم ({LANGUAGES.find(l => l.code === themeSelectedLang)?.label})</label>

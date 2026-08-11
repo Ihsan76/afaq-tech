@@ -2154,6 +2154,9 @@
   "revert": "Revert",
   "refreshing": "Refreshing data...",
   "bannerGradeUpdated": "Grade updated",
-  "unsavedChanges": "Unsaved changes"
+  "unsavedChanges": "Unsaved changes",
+  "saveChanges": "Save changes",
+  "unsaved": "Unsaved",
+  "subjectsCount": "subjects"
  }
 }

@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { api } from "@/lib/api";
 import { localized } from "@/lib/i18n";
 import { locales, localeNames } from "@/i18n/config";
+import SelectDropdown from "@/components/ui/SelectDropdown";
 
 interface EbookCategory {
   id: number; translations: Record<string, Record<string, string>>; slug: string; icon: string;
@@ -160,9 +161,9 @@ export default function AdminEbooksPage() {
 
           <div className="mb-4">
             <label className="block text-sm font-medium mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("admin.language")}</label>
-            <select value={formLocale} onChange={(e) => setFormLocale(e.target.value)} className={inputCls + " max-w-xs"} style={style}>
+            <SelectDropdown value={formLocale} onChange={(v) => setFormLocale(String(v))} className={inputCls + " max-w-xs"} style={style}>
               {locales.map((loc) => <option key={loc} value={loc}>{localeNames[loc]} ({loc.toUpperCase()})</option>)}
-            </select>
+            </SelectDropdown>
           </div>
 
           <div className="grid sm:grid-cols-2 gap-4 mb-4">
@@ -181,16 +182,16 @@ export default function AdminEbooksPage() {
             </div>
             <div>
               <label className="block text-sm font-medium mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("admin.category")}</label>
-              <select value={formCategory} onChange={(e) => { setFormCategory(e.target.value ? Number(e.target.value) : ""); markDirty(); }} className={inputCls} style={style}>
+              <SelectDropdown value={formCategory} onChange={(v) => { setFormCategory(v ? Number(v) : ""); markDirty(); }} className={inputCls} style={style}>
                 <option value="">— {t("common.none")} —</option>
                 {categories.map((c) => <option key={c.id} value={c.id}>{c.icon} {getCategoryName(c)}</option>)}
-              </select>
+              </SelectDropdown>
             </div>
             <div>
               <label className="block text-sm font-medium mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("admin.accessLevel")}</label>
-              <select value={formAccessLevel} onChange={(e) => { setFormAccessLevel(e.target.value); markDirty(); }} className={inputCls} style={style}>
+              <SelectDropdown value={formAccessLevel} onChange={(v) => { setFormAccessLevel(String(v)); markDirty(); }} className={inputCls} style={style}>
                 {ACCESS_LEVELS.map((l) => <option key={l.value} value={l.value}>{l.icon} {t(`ebooks.${l.value}`)}</option>)}
-              </select>
+              </SelectDropdown>
             </div>
             <div>
               <label className="block text-sm font-medium mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("admin.coverImage")}</label>

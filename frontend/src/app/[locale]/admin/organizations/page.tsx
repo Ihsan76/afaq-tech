@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { api } from "@/lib/api";
+import SelectDropdown from "@/components/ui/SelectDropdown";
 
 interface AdminOrg {
   id: number;
@@ -171,12 +172,12 @@ export default function AdminOrganizationsPage() {
               </div>
               <div>
                 <label className="block text-sm font-semibold mb-2" style={{ color: "var(--color-text-secondary)" }}>{t("admin.organizationPlan")}</label>
-                <select value={planId} onChange={(e) => { setPlanId(Number(e.target.value)); setError(""); }} className={inputCls} style={{ borderColor: "var(--color-border)", color: "var(--color-text)", backgroundColor: "var(--color-background)" }} required>
+                <SelectDropdown value={planId} onChange={(v) => { setPlanId(Number(v)); setError(""); }} className={inputCls} style={{ borderColor: "var(--color-border)", color: "var(--color-text)", backgroundColor: "var(--color-background)" }} required>
                   <option value="">—</option>
                   {plans.map((p) => (
                     <option key={p.id} value={p.id}>{planName(p.code, p.name)} ({p.code})</option>
                   ))}
-                </select>
+                </SelectDropdown>
               </div>
               <div>
                 <label className="block text-sm font-semibold mb-2" style={{ color: "var(--color-text-secondary)" }}>{t("admin.organizationExtraSeats")}</label>
@@ -184,10 +185,10 @@ export default function AdminOrganizationsPage() {
               </div>
               <div>
                 <label className="block text-sm font-semibold mb-2" style={{ color: "var(--color-text-secondary)" }}>{t("admin.organizationStatus")}</label>
-                <select value={status} onChange={(e) => setStatus(e.target.value)} className={inputCls} style={{ borderColor: "var(--color-border)", color: "var(--color-text)", backgroundColor: "var(--color-background)" }}>
+                 <SelectDropdown value={status} onChange={(v) => setStatus(String(v))} className={inputCls} style={{ borderColor: "var(--color-border)", color: "var(--color-text)", backgroundColor: "var(--color-background)" }}>
                   <option value="active">{t("admin.orgStatusActive")}</option>
                   <option value="suspended">{t("admin.orgStatusSuspended")}</option>
-                </select>
+                </SelectDropdown>
               </div>
               <div className="flex items-end gap-3">
                 <button type="submit" className="text-white px-6 py-3 rounded-xl font-semibold transition-all" style={{ background: "var(--btn-primary-bg)", color: "var(--btn-primary-color)", boxShadow: "var(--btn-shadow)" }}>{t("common.save")}</button>

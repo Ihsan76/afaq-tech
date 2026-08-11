@@ -8,6 +8,7 @@ import { localized } from "@/lib/i18n";
 import { locales, localeNames } from "@/i18n/config";
 import dynamic from "next/dynamic";
 import { BLOCK_TYPES, TEMPLATE_ICONS } from "@/lib/blockTypes";
+import SelectDropdown from "@/components/ui/SelectDropdown";
 
 const PageBlockPreview = dynamic(() => import("@/components/landing/PageBlockPreview"), { ssr: false });
 
@@ -205,11 +206,11 @@ export default function AdminPagesPage() {
                 </div>
                 <div>
                   <label className="text-xs font-bold uppercase tracking-wider mb-1 block" style={{ color: "var(--color-text-secondary)" }}>{t("admin.language")}</label>
-                  <select value={formLocale} onChange={(e) => setFormLocale(e.target.value)} className={inputCls} style={formStyle}>
+                   <SelectDropdown value={formLocale} onChange={(v) => setFormLocale(String(v))} className={inputCls} style={formStyle}>
                     {locales.map((loc) => (
                       <option key={loc} value={loc}>{localeNames[loc]} ({loc.toUpperCase()})</option>
                     ))}
-                  </select>
+                  </SelectDropdown>
                 </div>
                 <div>
                   <label className="text-xs font-bold uppercase tracking-wider mb-1 block" style={{ color: "var(--color-text-secondary)" }}>{t("admin.title")} ({formLocale.toUpperCase()})</label>
@@ -233,13 +234,13 @@ export default function AdminPagesPage() {
                 </div>
                 <div>
                   <label className="text-xs font-bold uppercase tracking-wider mb-1 block" style={{ color: "var(--color-text-secondary)" }}>{t("admin.template")}</label>
-                  <select value={template} onChange={(e) => setTemplate(e.target.value)} className={inputCls} style={formStyle}>
+                   <SelectDropdown value={template} onChange={(v) => setTemplate(String(v))} className={inputCls} style={formStyle}>
                     <option value="default">{t("admin.templateCatDefault")}</option>
                     <option value="landing">{t("admin.templateCatLanding")}</option>
                     <option value="about">{t("admin.templateCatAbout")}</option>
                     <option value="contact">{t("admin.templateCatContact")}</option>
                     <option value="custom">{t("admin.templateCatCustom")}</option>
-                  </select>
+                  </SelectDropdown>
                 </div>
               </div>
               <div className="p-5 border-t flex gap-3 flex-shrink-0" style={{ borderColor: "var(--color-border)" }}>

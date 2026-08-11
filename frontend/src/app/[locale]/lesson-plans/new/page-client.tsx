@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import Link from "next/link";
 import { api } from "@/lib/api";
+import SelectDropdown from "@/components/ui/SelectDropdown";
 
 interface AcademicItem {
   id: number;
@@ -253,9 +254,9 @@ export default function NewLessonPlanPage() {
               <label className="block text-sm font-semibold mb-2" style={{ color: "var(--color-text-secondary)" }}>
                 {t("subject")}
               </label>
-              <select
+              <SelectDropdown
                 value={subjectId}
-                onChange={(e) => setSubjectId(e.target.value ? parseInt(e.target.value) : "")}
+                onChange={(v) => setSubjectId(v ? parseInt(String(v), 10) : "")}
                 className="w-full px-4 py-3.5 border rounded-2xl focus:ring-2 transition-all outline-none"
                 style={{ borderColor: "var(--color-border)", color: "var(--color-text)", backgroundColor: "var(--color-background)" }}
                 disabled={loading}
@@ -264,16 +265,16 @@ export default function NewLessonPlanPage() {
                 {subjects.map((s) => (
                   <option key={s.id} value={s.id}>{s.name}</option>
                 ))}
-              </select>
+              </SelectDropdown>
             </div>
 
             <div>
               <label className="block text-sm font-semibold mb-2" style={{ color: "var(--color-text-secondary)" }}>
                 {t("grade")}
               </label>
-              <select
+              <SelectDropdown
                 value={gradeId}
-                onChange={(e) => setGradeId(e.target.value ? parseInt(e.target.value) : "")}
+                onChange={(v) => setGradeId(v ? parseInt(String(v), 10) : "")}
                 className="w-full px-4 py-3.5 border rounded-2xl focus:ring-2 transition-all outline-none"
                 style={{ borderColor: "var(--color-border)", color: "var(--color-text)", backgroundColor: "var(--color-background)" }}
                 disabled={loading}
@@ -282,7 +283,7 @@ export default function NewLessonPlanPage() {
                 {grades.map((g) => (
                   <option key={g.id} value={g.id}>{g.name}</option>
                 ))}
-              </select>
+              </SelectDropdown>
             </div>
           </div>
 
@@ -307,9 +308,9 @@ export default function NewLessonPlanPage() {
                 </p>
               ) : (
                 <>
-                  <select
+                  <SelectDropdown
                     value={unitId}
-                    onChange={(e) => setUnitId(e.target.value ? parseInt(e.target.value) : "")}
+                    onChange={(v) => setUnitId(v ? parseInt(String(v), 10) : "")}
                     className="w-full px-4 py-3 border rounded-2xl outline-none"
                     style={{ borderColor: "var(--color-border)", color: "var(--color-text)", backgroundColor: "var(--color-background)" }}
                     disabled={loading}
@@ -318,7 +319,7 @@ export default function NewLessonPlanPage() {
                     {curriculumUnits.map((u) => (
                       <option key={u.id} value={u.id}>{u.name}</option>
                     ))}
-                  </select>
+                  </SelectDropdown>
                   <p className="text-xs mt-1.5" style={{ color: "var(--color-text-muted)" }}>
                     {t("curriculumUnitHint")}
                   </p>
@@ -360,9 +361,9 @@ export default function NewLessonPlanPage() {
               <label className="block text-sm font-semibold mb-2" style={{ color: "var(--color-text-secondary)" }}>
                 {t("aiModel")}
               </label>
-              <select
+              <SelectDropdown
                 value={selectedModel}
-                onChange={(e) => setSelectedModel(e.target.value)}
+                onChange={(v) => setSelectedModel(String(v))}
                 className="w-full px-4 py-3.5 border rounded-2xl focus:ring-2 transition-all outline-none"
                 style={{ borderColor: "var(--color-border)", color: "var(--color-text)", backgroundColor: "var(--color-background)" }}
                 disabled={loading}
@@ -372,7 +373,7 @@ export default function NewLessonPlanPage() {
                     {m.name?.[locale] || m.name_ar || m.model_id} ({m.provider})
                   </option>
                 ))}
-              </select>
+              </SelectDropdown>
             </div>
 
           {/* Optional Curriculum File Upload */}

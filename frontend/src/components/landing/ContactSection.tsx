@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
 import { localizedContent } from "@/lib/i18n";
 import { api } from "@/lib/api";
+import SelectDropdown from "@/components/ui/SelectDropdown";
 
 interface ContactSectionProps {
   content?: Record<string, any>;
@@ -144,9 +145,9 @@ export default function ContactSection({ content, styles }: ContactSectionProps)
               <label className="block text-sm font-medium mb-1" style={{ color: "var(--color-text-secondary)" }}>
                 {t("serviceInterest")}
               </label>
-              <select
+              <SelectDropdown
                 value={form.service_interest}
-                onChange={(e) => setForm({ ...form, service_interest: e.target.value })}
+                onChange={(v) => setForm({ ...form, service_interest: String(v) })}
                 className={`${inputCls} ${focusCls}`}
                 style={inputStyle}
               >
@@ -159,7 +160,7 @@ export default function ContactSection({ content, styles }: ContactSectionProps)
                 <option value="academy">{tLanding("serviceAcademy")}</option>
                 <option value="ads">{tLanding("serviceAds")}</option>
                 <option value="branding">{tLanding("serviceBranding")}</option>
-              </select>
+              </SelectDropdown>
             </div>
           </div>
 

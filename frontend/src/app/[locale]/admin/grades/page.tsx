@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { api } from "@/lib/api";
 import { useLanguages } from "@/lib/useLanguages";
+import SelectDropdown from "@/components/ui/SelectDropdown";
 
 interface Grade { id: number; translations: Record<string, { name: string }>; name?: string; level: number; }
 
@@ -94,14 +95,14 @@ export default function AdminGradesPage() {
               <div className="flex gap-3 items-end">
                 <div className="flex-1">
                   <label className="block text-sm font-semibold mb-2" style={{ color: "var(--color-text-secondary)" }}>اللغة</label>
-                  <select value={selectedLang} onChange={(e) => setSelectedLang(e.target.value)}
+                  <SelectDropdown value={selectedLang} onChange={(v) => setSelectedLang(String(v))}
                     className={inputCls} style={{ borderColor: "var(--color-border)", color: "var(--color-text)", backgroundColor: "var(--color-background)" }}>
                     {LANGUAGES.map(l => (
                       <option key={l.code} value={l.code}>
                         {l.label} {gradeTranslations[l.code]?.trim() ? "✅" : ""}
                       </option>
                     ))}
-                  </select>
+                  </SelectDropdown>
                 </div>
                 <div className="flex-[2]">
                   <label className="block text-sm font-semibold mb-2" style={{ color: "var(--color-text-secondary)" }}>الاسم ({LANGUAGES.find(l => l.code === selectedLang)?.label})</label>

@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { api } from "@/lib/api";
 import FadeIn from "@/components/FadeIn";
 import { useLanguages } from "@/lib/useLanguages";
+import SelectDropdown from "@/components/ui/SelectDropdown";
 
 interface Category { id: number; name: Record<string, string>; icon: string; }
 interface ServiceData {
@@ -93,16 +94,16 @@ export default function CreateServicePage() {
               <div className="grid sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-semibold mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("serviceType")}</label>
-                  <select value={serviceType} onChange={(e) => setServiceType(e.target.value)} className={inputCls} style={fieldStyle}>
+                  <SelectDropdown value={serviceType} onChange={(v) => setServiceType(String(v))} className={inputCls} style={fieldStyle}>
                     {SERVICE_TYPES.map(st => <option key={st} value={st}>{t(st)}</option>)}
-                  </select>
+                  </SelectDropdown>
                 </div>
                 <div>
                   <label className="block text-sm font-semibold mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("categories")}</label>
-                  <select value={category || 0} onChange={(e) => setCategory(Number(e.target.value) || null)} className={inputCls} style={fieldStyle}>
+                  <SelectDropdown value={category || 0} onChange={(v) => setCategory(Number(v) || null)} className={inputCls} style={fieldStyle}>
                     <option value={0}>{t("allCategories")}</option>
                     {categories.map(c => <option key={c.id} value={c.id}>{c.icon} {c.name?.[locale] || c.name?.ar || c.name?.en || ""}</option>)}
-                  </select>
+                  </SelectDropdown>
                 </div>
               </div>
 
@@ -111,9 +112,9 @@ export default function CreateServicePage() {
                 <label className="block text-sm font-semibold mb-2" style={{ color: "var(--color-text-secondary)" }}>{t("title")}</label>
                 <div className="flex gap-3 items-end mb-2">
                   <div className="flex-1">
-                    <select value={selectedLang} onChange={(e) => setSelectedLang(e.target.value)} className={inputCls} style={fieldStyle}>
+                    <SelectDropdown value={selectedLang} onChange={(v) => setSelectedLang(String(v))} className={inputCls} style={fieldStyle}>
                       {LANGUAGES.map(l => <option key={l.code} value={l.code}>{l.label} {titleTr[l.code]?.trim() ? "✅" : ""}</option>)}
-                    </select>
+                    </SelectDropdown>
                   </div>
                   <div className="flex-[2]">
                     <input type="text" value={titleInput} onChange={(e) => { setTitleInput(e.target.value); setTitleTr(prev => ({ ...prev, [selectedLang]: e.target.value })); }}
@@ -146,11 +147,11 @@ export default function CreateServicePage() {
                 </div>
                 <div>
                   <label className="block text-sm font-semibold mb-1" style={{ color: "var(--color-text-secondary)" }}>{"العملة"}</label>
-                  <select value={currency} onChange={(e) => setCurrency(e.target.value)} className={inputCls} style={fieldStyle}>
+                  <SelectDropdown value={currency} onChange={(v) => setCurrency(String(v))} className={inputCls} style={fieldStyle}>
                     <option value="SAR">SAR</option>
                     <option value="USD">USD</option>
                     <option value="EUR">EUR</option>
-                  </select>
+                  </SelectDropdown>
                 </div>
                 <div>
                   <label className="block text-sm font-semibold mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("duration")} ({t("minutes")})</label>

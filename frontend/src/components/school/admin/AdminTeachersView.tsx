@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { api } from "@/lib/api";
 import { surfaceCls, surfaceStyle, useBanner, Banner } from "@/components/school/admin/adminUi";
+import SelectDropdown from "@/components/ui/SelectDropdown";
 
 interface Props {
   teachers: any[];
@@ -255,39 +256,39 @@ export default function AdminTeachersView({ teachers, assignments, sections, yea
         </div>
 
         <form onSubmit={addAssignment} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-          <select value={assignmentTeacher} onChange={(e) => setAssignmentTeacher(e.target.value)} className={inputCls} style={{ borderColor: "var(--color-border)" }}>
+          <SelectDropdown value={assignmentTeacher} onChange={(v) => setAssignmentTeacher(String(v))} className={inputCls} style={{ borderColor: "var(--color-border)" }}>
             <option value="">{t("assignTeacherSelect")}</option>
             {teachers.map((tc: any) => (
               <option key={tc.id} value={tc.teacher}>
                 {tc.teacher_name || tc.teacher_email}
               </option>
             ))}
-          </select>
-          <select value={assignmentSection} onChange={(e) => setAssignmentSection(e.target.value)} className={inputCls} style={{ borderColor: "var(--color-border)" }}>
+          </SelectDropdown>
+          <SelectDropdown value={assignmentSection} onChange={(v) => setAssignmentSection(String(v))} className={inputCls} style={{ borderColor: "var(--color-border)" }}>
             <option value="">{t("assignSectionSelect")}</option>
             {sections.map((sec: any) => (
               <option key={sec.id} value={sec.id}>
                 {sectionLabel(sec)}
               </option>
             ))}
-          </select>
-          <select value={assignmentSubject} onChange={(e) => setAssignmentSubject(e.target.value)} className={inputCls} style={{ borderColor: "var(--color-border)" }}>
+          </SelectDropdown>
+          <SelectDropdown value={assignmentSubject} onChange={(v) => setAssignmentSubject(String(v))} className={inputCls} style={{ borderColor: "var(--color-border)" }}>
             <option value="">{t("assignSubjectSelect")}</option>
             {filteredSubjects.map((s: any) => (
               <option key={s.id} value={s.id}>
                 {s.name}
               </option>
             ))}
-          </select>
+          </SelectDropdown>
           <div className="flex gap-2">
-            <select value={assignmentYear || currentYear || ""} onChange={(e) => setAssignmentYear(e.target.value)} className={inputCls} style={{ borderColor: "var(--color-border)" }}>
+            <SelectDropdown value={assignmentYear || currentYear || ""} onChange={(v) => setAssignmentYear(String(v))} className={inputCls} style={{ borderColor: "var(--color-border)" }}>
               <option value="">{t("assignYearSelect")}</option>
               {years.map((y: any) => (
                 <option key={y.id} value={y.id}>
                   {y.name}
                 </option>
               ))}
-            </select>
+            </SelectDropdown>
             <button type="submit" disabled={busy} className="shrink-0 px-5 py-2.5 rounded-2xl font-bold text-white shadow-lg transition-all hover:scale-105 disabled:opacity-50" style={{ background: "linear-gradient(135deg, var(--color-primary), var(--color-secondary))" }}>
               {t("assignAddBtn")}
             </button>

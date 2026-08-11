@@ -4,6 +4,7 @@ import { useState, useEffect, Fragment } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { api } from "@/lib/api";
 import { useLanguages } from "@/lib/useLanguages";
+import SelectDropdown from "@/components/ui/SelectDropdown";
 
 interface Grade { id: number; level: number; translations: Record<string, { name: string }>; }
 interface Curriculum { id: number; translations: Record<string, { name: string }>; name?: string; country: string; year: number; grade: number; }
@@ -313,12 +314,12 @@ export default function AdminCurriculaPage() {
                   <div className="flex gap-3 items-end">
                     <div className="flex-1">
                       <label className="block text-sm font-semibold mb-2" style={{ color: "var(--color-text-secondary)" }}>{al(locale, "language")}</label>
-                      <select value={currSelectedLang} onChange={(e) => setCurrSelectedLang(e.target.value)}
+                       <SelectDropdown value={currSelectedLang} onChange={(v) => setCurrSelectedLang(String(v))}
                         className={inputCls} style={{ borderColor: "var(--color-border)", color: "var(--color-text)", backgroundColor: "var(--color-background)" }}>
                         {LANGUAGES.map(l => (
                           <option key={l.code} value={l.code}>{l.label} {currTranslations[l.code]?.trim() ? "✅" : ""}</option>
                         ))}
-                      </select>
+                      </SelectDropdown>
                     </div>
                     <div className="flex-[2]">
                       <label className="block text-sm font-semibold mb-2" style={{ color: "var(--color-text-secondary)" }}>{al(locale, "name")} ({LANGUAGES.find(l => l.code === currSelectedLang)?.label})</label>
@@ -338,10 +339,10 @@ export default function AdminCurriculaPage() {
                     <div><label className="block text-sm font-semibold mb-2" style={{ color: "var(--color-text-secondary)" }}>{al(locale, "country")}</label><input type="text" value={country} onChange={(e) => setCountry(e.target.value)} className={inputCls} style={{ borderColor: "var(--color-border)", color: "var(--color-text)", backgroundColor: "var(--color-background)" }} required /></div>
                     <div><label className="block text-sm font-semibold mb-2" style={{ color: "var(--color-text-secondary)" }}>{al(locale, "year")}</label><input type="number" value={year} onChange={(e) => setYear(Number(e.target.value))} className={inputCls} style={{ borderColor: "var(--color-border)", color: "var(--color-text)", backgroundColor: "var(--color-background)" }} required /></div>
                     <div><label className="block text-sm font-semibold mb-2" style={{ color: "var(--color-text-secondary)" }}>{al(locale, "grade")}</label>
-                      <select value={gradeId} onChange={(e) => setGradeId(Number(e.target.value))} className={inputCls} style={{ borderColor: "var(--color-border)", color: "var(--color-text)", backgroundColor: "var(--color-background)" }} required>
+                      <SelectDropdown value={gradeId} onChange={(v) => setGradeId(Number(v))} className={inputCls} style={{ borderColor: "var(--color-border)", color: "var(--color-text)", backgroundColor: "var(--color-background)" }} required>
                         <option value={0}>{t("academy.selectGrade")}</option>
                         {grades.sort((a, b) => a.level - b.level).map((g) => (<option key={g.id} value={g.id}>{getGradeDisplay(g)}</option>))}
-                      </select>
+                      </SelectDropdown>
                     </div>
                   </div>
                   <p className="text-xs" style={{ color: "var(--color-text-muted)" }}>{al(locale, "filledCount", { n: LANGUAGES.filter(l => currTranslations[l.code]?.trim()).length, t: LANGUAGES.length })}</p>
@@ -394,13 +395,13 @@ export default function AdminCurriculaPage() {
 
             <div className="grid sm:grid-cols-2 gap-4 mb-6">
               <div><label className="block text-sm font-semibold mb-2" style={{ color: "var(--color-text-secondary)" }}>{al(locale, "selectCurriculum")}</label>
-                <select value={selectedCurrId} onChange={(e) => { const id = Number(e.target.value); setSelectedCurrId(id); if (id) loadDocuments(id); }}
+                <SelectDropdown value={selectedCurrId} onChange={(v) => { const id = Number(v); setSelectedCurrId(id); if (id) loadDocuments(id); }}
                   className={inputCls} style={{ borderColor: "var(--color-border)", color: "var(--color-text)", backgroundColor: "var(--color-background)" }}>
                   <option value={0}>{al(locale, "selectCurriculumPlaceholder")}</option>
                   {curricula.map(c => (
                     <option key={c.id} value={c.id}>{c.translations?.[locale]?.name || c.translations?.ar?.name || c.name || `Curriculum ${c.id}`} - {c.country} ({c.year})</option>
                   ))}
-                </select>
+                </SelectDropdown>
               </div>
             </div>
 
@@ -412,10 +413,10 @@ export default function AdminCurriculaPage() {
                     <div><label className="block text-sm font-semibold mb-2" style={{ color: "var(--color-text-secondary)" }}>{al(locale, "title")}</label>
                       <input type="text" value={uploadTitle} onChange={(e) => setUploadTitle(e.target.value)} className={inputCls} style={{ borderColor: "var(--color-border)", color: "var(--color-text)", backgroundColor: "var(--color-background)" }} placeholder={al(locale, "docPlaceholder")} /></div>
                     <div><label className="block text-sm font-semibold mb-2" style={{ color: "var(--color-text-secondary)" }}>{al(locale, "subjectOptional")}</label>
-                      <select value={uploadSubject} onChange={(e) => setUploadSubject(Number(e.target.value))} className={inputCls} style={{ borderColor: "var(--color-border)", color: "var(--color-text)", backgroundColor: "var(--color-background)" }}>
+                      <SelectDropdown value={uploadSubject} onChange={(v) => setUploadSubject(Number(v))} className={inputCls} style={{ borderColor: "var(--color-border)", color: "var(--color-text)", backgroundColor: "var(--color-background)" }}>
                         <option value={0}>{al(locale, "selectSubjectPlaceholder")}</option>
                         {subjects.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
-                      </select>
+                      </SelectDropdown>
                     </div>
                     <div><label className="block text-sm font-semibold mb-2" style={{ color: "var(--color-text-secondary)" }}>{al(locale, "file")}</label>
                       <input type="file" accept=".pdf,.txt" onChange={(e) => setUploadFile(e.target.files?.[0] || null)} className={inputCls} style={{ borderColor: "var(--color-border)", color: "var(--color-text)", backgroundColor: "var(--color-background)" }} /></div>
@@ -510,12 +511,12 @@ export default function AdminCurriculaPage() {
                   <div className="flex gap-3 items-end">
                     <div className="flex-1">
                       <label className="block text-sm font-semibold mb-2" style={{ color: "var(--color-text-secondary)" }}>{al(locale, "language")}</label>
-                      <select value={gradeSelectedLang} onChange={(e) => setGradeSelectedLang(e.target.value)}
+                       <SelectDropdown value={gradeSelectedLang} onChange={(v) => setGradeSelectedLang(String(v))}
                         className={inputCls} style={{ borderColor: "var(--color-border)", color: "var(--color-text)", backgroundColor: "var(--color-background)" }}>
                         {LANGUAGES.map(l => (
                           <option key={l.code} value={l.code}>{l.label} {gradeTranslations[l.code]?.trim() ? "✅" : ""}</option>
                         ))}
-                      </select>
+                      </SelectDropdown>
                     </div>
                     <div className="flex-[2]">
                       <label className="block text-sm font-semibold mb-2" style={{ color: "var(--color-text-secondary)" }}>{al(locale, "name")} ({LANGUAGES.find(l => l.code === gradeSelectedLang)?.label})</label>

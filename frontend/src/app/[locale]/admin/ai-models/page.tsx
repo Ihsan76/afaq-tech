@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { api } from "@/lib/api";
 import { useLanguages } from "@/lib/useLanguages";
+import SelectDropdown from "@/components/ui/SelectDropdown";
 
 interface AIModel {
   id: number;
@@ -475,7 +476,7 @@ export default function AdminAIModelsPage() {
         {fetchMode === "stored" ? (
           <div className="mb-4">
             <label className={labelCls} style={{ color: "var(--color-text-muted)" }}>اختر مزوداً</label>
-            <select value={selectedProviderId} onChange={(e) => setSelectedProviderId(e.target.value ? parseInt(e.target.value) : "")}
+            <SelectDropdown value={selectedProviderId} onChange={(v) => setSelectedProviderId(v ? parseInt(String(v), 10) : "")}
               className={inputCls} style={style}
             >
               <option value="">-- اختر مزوداً --</option>
@@ -488,7 +489,7 @@ export default function AdminAIModelsPage() {
                   </option>
                 );
               })}
-            </select>
+            </SelectDropdown>
             {!providerOptions.some((p) => {
               const pt = providerTypes.find((t) => t.code === p.provider_type);
               return pt?.needs_api_key ? p.api_key_configured : true;
@@ -502,13 +503,13 @@ export default function AdminAIModelsPage() {
           <div className="mb-4 space-y-3">
             <div>
               <label className={labelCls} style={{ color: "var(--color-text-muted)" }}>المزود</label>
-              <select value={freshProviderType} onChange={(e) => setFreshProviderType(e.target.value)}
+              <SelectDropdown value={freshProviderType} onChange={(v) => setFreshProviderType(String(v))}
                 className={inputCls} style={style}
               >
                 {providerTypes.filter((pt) => pt.is_active).map((pt) => (
                   <option key={pt.code} value={pt.code}>{pt.name_en} / {pt.name_ar}</option>
                 ))}
-              </select>
+              </SelectDropdown>
             </div>
             {providerTypes.find((pt) => pt.code === freshProviderType)?.needs_base_url && (
               <div>
@@ -695,13 +696,13 @@ export default function AdminAIModelsPage() {
               </div>
               <div>
                 <label className={labelCls} style={{ color: "var(--color-text-muted)" }}>نوع المزود</label>
-                <select value={providerFormType} onChange={(e) => setProviderFormType(e.target.value)}
+                <SelectDropdown value={providerFormType} onChange={(v) => setProviderFormType(String(v))}
                   className={inputCls} style={style}
                 >
                   {providerTypes.filter((pt) => pt.is_active).map((pt) => (
                     <option key={pt.code} value={pt.code}>{pt.name_en} / {pt.name_ar}</option>
                   ))}
-                </select>
+                </SelectDropdown>
               </div>
               {providerTypes.find((pt) => pt.code === providerFormType)?.needs_base_url && (
                 <div>
@@ -764,13 +765,13 @@ export default function AdminAIModelsPage() {
                 </div>
                 <div>
                   <label className={labelCls} style={{ color: "var(--color-text-muted)" }}>المزود</label>
-                  <select value={formProvider} onChange={(e) => setFormProvider(e.target.value)}
+                  <SelectDropdown value={formProvider} onChange={(v) => setFormProvider(String(v))}
                     className={inputCls} style={style}
                   >
                     {providerTypes.filter((pt) => pt.is_active).map((pt) => (
                       <option key={pt.code} value={pt.code}>{pt.name_en} / {pt.name_ar}</option>
                     ))}
-                  </select>
+                  </SelectDropdown>
                 </div>
               </div>
               {/* Language tabs */}

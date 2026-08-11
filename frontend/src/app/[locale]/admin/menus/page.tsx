@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import { localized } from "@/lib/i18n";
 import { locales, localeNames } from "@/i18n/config";
 import MultiSelectDropdown from "@/components/MultiSelectDropdown";
+import SelectDropdown from "@/components/ui/SelectDropdown";
 
 interface MenuItem {
   id: number; menu: string; translations: Record<string, Record<string, string>>;
@@ -171,11 +172,11 @@ export default function AdminMenusPage() {
           <div className="grid sm:grid-cols-2 gap-4 mb-4">
             <div>
               <label className="block text-sm font-medium mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("admin.language")}</label>
-              <select value={formLocale} onChange={(e) => setFormLocale(e.target.value)} className={inputCls} style={style}>
+              <SelectDropdown value={formLocale} onChange={(v) => setFormLocale(String(v))} className={inputCls} style={style}>
                 {locales.map((loc) => (
                   <option key={loc} value={loc}>{localeNames[loc]} ({loc.toUpperCase()})</option>
                 ))}
-              </select>
+              </SelectDropdown>
             </div>
             <div>
               <label className="block text-sm font-medium mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("admin.title")} ({formLocale.toUpperCase()})</label>
@@ -199,10 +200,10 @@ export default function AdminMenusPage() {
             </div>
             <div>
               <label className="block text-sm font-medium mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("admin.active")}</label>
-              <select value={isActive ? "1" : "0"} onChange={(e) => setIsActive(e.target.value === "1")} className={inputCls} style={style}>
+              <SelectDropdown value={isActive ? "1" : "0"} onChange={(v) => setIsActive(v === "1")} className={inputCls} style={style}>
                 <option value="1">{t("common.yes")}</option>
                 <option value="0">{t("common.no")}</option>
-              </select>
+              </SelectDropdown>
             </div>
             <div>
               <MultiSelectDropdown

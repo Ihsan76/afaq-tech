@@ -5,6 +5,7 @@ import { useTranslations, useLocale } from "next-intl";
 import dynamic from "next/dynamic";
 import { localizedContent, type Locale } from "@/lib/i18n";
 import { locales, localeNames } from "@/i18n/config";
+import SelectDropdown from "@/components/ui/SelectDropdown";
 
 const RichTextEditor = dynamic(() => import("./RichTextEditor"), { ssr: false });
 const PageBlockPreview = dynamic(() => import("@/components/landing/PageBlockPreview"), { ssr: false });
@@ -88,8 +89,8 @@ function LinkField({ label, value, onChange, placeholder, ar, pageBlocks }: {
         <button type="button" onClick={() => { if (isSection || isCustom) onChange("/academy"); }} className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-bold transition-all ${isPage ? 'text-white' : ''}`} style={{ background: isPage ? "var(--color-primary)" : "transparent", color: isPage ? "white" : "var(--color-text-muted)" }}>{ar ? "صفحة" : "Page"}</button>
         <button type="button" onClick={() => onChange("https://")} className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-bold transition-all ${isCustom ? 'text-white' : ''}`} style={{ background: isCustom ? "var(--color-primary)" : "transparent", color: isCustom ? "white" : "var(--color-text-muted)" }}>{ar ? "رابط خارجي" : "External"}</button>
       </div>
-      {isSection && <select value={value} onChange={(e) => onChange(e.target.value)} className={inputCls} style={{ background: "var(--color-surface)", color: "var(--color-text)", borderColor: "var(--color-border)" }}>{availableSections.length === 0 && <option value="">{ar ? "لا توجد أقسام" : "No sections"}</option>}{availableSections.map((s) => (<option key={s.id} value={`#${s.id}`}>{ar ? s.label_ar : s.label_en}</option>))}</select>}
-      {isPage && <select value={value} onChange={(e) => onChange(e.target.value)} className={inputCls} style={{ background: "var(--color-surface)", color: "var(--color-text)", borderColor: "var(--color-border)" }}>{COMMON_PAGES.map((p) => (<option key={p.value} value={p.value}>{ar ? p.label_ar : p.label_en}</option>))}</select>}
+      {isSection && <SelectDropdown value={value} onChange={(v) => onChange(String(v))} className={inputCls} style={{ background: "var(--color-surface)", color: "var(--color-text)", borderColor: "var(--color-border)" }}>{availableSections.length === 0 && <option value="">{ar ? "لا توجد أقسام" : "No sections"}</option>}{availableSections.map((s) => (<option key={s.id} value={`#${s.id}`}>{ar ? s.label_ar : s.label_en}</option>))}</SelectDropdown>}
+      {isPage && <SelectDropdown value={value} onChange={(v) => onChange(String(v))} className={inputCls} style={{ background: "var(--color-surface)", color: "var(--color-text)", borderColor: "var(--color-border)" }}>{COMMON_PAGES.map((p) => (<option key={p.value} value={p.value}>{ar ? p.label_ar : p.label_en}</option>))}</SelectDropdown>}
       {(isCustom || (!isSection && !isPage && value)) && <input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder || "https://..."} className={inputCls} style={{ background: "var(--color-surface)", color: "var(--color-text)", borderColor: "var(--color-border)" }} />}
     </div>
   );
@@ -721,12 +722,12 @@ export default function BlockEditorModal({
             {tab === "content" && (
               <div className="mb-3">
                 <label className={labelCls} style={{ color: "var(--color-text-muted)" }}>{t("اللغة", "Language")}</label>
-                <select value={contentLocale} onChange={(e) => setContentLocale(e.target.value)}
+                <SelectDropdown value={contentLocale} onChange={(v) => setContentLocale(String(v))}
                   className={inputCls} style={{ background: "var(--color-surface)", color: "var(--color-text)", borderColor: "var(--color-border)" }}>
                   {locales.map((loc) => (
                     <option key={loc} value={loc}>{localeNames[loc]} ({loc.toUpperCase()})</option>
                   ))}
-                </select>
+                </SelectDropdown>
               </div>
             )}
 

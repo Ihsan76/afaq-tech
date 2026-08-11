@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import { useAuthStore } from "@/store/auth";
+import SelectDropdown from "@/components/ui/SelectDropdown";
 
 const ROLES = ["student", "teacher", "parent", "creator", "admin", "school_admin", "developer", "support", "content_manager", "finance"];
 const PLANS = ["free", "basic", "pro", "school", "enterprise"];
@@ -166,9 +167,9 @@ export default function AdminUserEditPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-xs font-bold mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("admin.changeRole")}</label>
-            <select
+            <SelectDropdown
               value={formData.role}
-              onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+              onChange={(v) => setFormData({ ...formData, role: String(v) })}
               disabled={!canEdit}
               className={inputCls}
               style={{ background: "var(--color-surface)", color: "var(--color-text)", borderColor: "var(--color-border)" }}
@@ -176,14 +177,14 @@ export default function AdminUserEditPage() {
               {ROLES.map((r) => (
                 <option key={r} value={r}>{roleLabel(r)}</option>
               ))}
-            </select>
+            </SelectDropdown>
           </div>
 
           <div>
             <label className="block text-xs font-bold mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("admin.changePlan")}</label>
-            <select
+            <SelectDropdown
               value={formData.subscription_plan}
-              onChange={(e) => setFormData({ ...formData, subscription_plan: e.target.value })}
+              onChange={(v) => setFormData({ ...formData, subscription_plan: String(v) })}
               disabled={!canEdit}
               className={inputCls}
               style={{ background: "var(--color-surface)", color: "var(--color-text)", borderColor: "var(--color-border)" }}
@@ -191,7 +192,7 @@ export default function AdminUserEditPage() {
               {PLANS.map((p) => (
                 <option key={p} value={p}>{planLabel(p)}</option>
               ))}
-            </select>
+            </SelectDropdown>
           </div>
         </div>
 

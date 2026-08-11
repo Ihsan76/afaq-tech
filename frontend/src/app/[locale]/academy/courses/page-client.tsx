@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useApiList } from "@/lib/useApi";
+import SelectDropdown from "@/components/ui/SelectDropdown";
 
 interface Course {
   id: number;
@@ -101,9 +102,9 @@ export default function CoursesPage() {
             ))}
           </div>
           <div className="flex flex-wrap gap-2">
-            <select
+            <SelectDropdown
               value={level}
-              onChange={(e) => setLevel(e.target.value)}
+              onChange={(v) => setLevel(String(v))}
               className="px-3 py-2 rounded-xl text-sm"
               style={{ background: "var(--color-surface)", color: "var(--color-text)", border: "1px solid var(--color-border)" }}
             >
@@ -111,17 +112,17 @@ export default function CoursesPage() {
               <option value="beginner">{t("beginner")}</option>
               <option value="intermediate">{t("intermediate")}</option>
               <option value="advanced">{t("advanced")}</option>
-            </select>
-            <select
+            </SelectDropdown>
+            <SelectDropdown
               value={language}
-              onChange={(e) => setLanguage(e.target.value)}
+              onChange={(v) => setLanguage(String(v))}
               className="px-3 py-2 rounded-xl text-sm"
               style={{ background: "var(--color-surface)", color: "var(--color-text)", border: "1px solid var(--color-border)" }}
             >
               <option value="">{t("allLanguages")}</option>
               <option value="ar">العربية</option>
               <option value="en">English</option>
-            </select>
+            </SelectDropdown>
             <input
               type="text"
               value={search}

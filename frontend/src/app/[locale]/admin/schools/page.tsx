@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { api } from "@/lib/api";
+import SelectDropdown from "@/components/ui/SelectDropdown";
 
 interface School {
   id: number;
@@ -460,16 +461,16 @@ export default function AdminSchoolsPage() {
               />
             </div>
             <div className="flex items-center gap-2">
-              <select
+              <SelectDropdown
                 value={ordering}
-                onChange={(e) => setOrdering(e.target.value)}
+                onChange={(v) => setOrdering(String(v))}
                 className={inputCls}
                 style={{ background: "var(--color-surface)", color: "var(--color-text)", borderColor: "var(--color-border)" }}
               >
                 {SORTS.map((s) => (
                   <option key={s.value} value={s.value}>{s.label}</option>
                 ))}
-              </select>
+              </SelectDropdown>
             </div>
           </div>
         )}
@@ -565,14 +566,14 @@ export default function AdminSchoolsPage() {
                     >
                       التالي
                     </button>
-                    <select
+                    <SelectDropdown
                       value={pageSize}
-                      onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }}
+                      onChange={(v) => { setPageSize(Number(v)); setPage(1); }}
                       className={inputCls}
                       style={{ background: "var(--color-surface)", color: "var(--color-text)", borderColor: "var(--color-border)" }}
                     >
                       {PAGE_SIZES.map((s) => <option key={s} value={s}>{s} لكل صفحة</option>)}
-                    </select>
+                    </SelectDropdown>
                   </div>
                 </div>
               </>
@@ -799,17 +800,17 @@ export default function AdminSchoolsPage() {
             <form onSubmit={handleCreateAnnouncement} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">{t("schoolName")}</label>
-                <select
+                <SelectDropdown
                   required
                   className="w-full px-4 py-3 border border-[var(--color-border)] rounded-2xl bg-[var(--color-surface)] outline-none"
                   value={announcementForm.school}
-                  onChange={(e) => setAnnouncementForm({ ...announcementForm, school: Number(e.target.value) })}
+                  onChange={(v) => setAnnouncementForm({ ...announcementForm, school: Number(v) })}
                 >
                   <option value="">{t("selectSchool")}</option>
                   {schools.map((s) => (
                     <option key={s.id} value={s.id}>{s.name}</option>
                   ))}
-                </select>
+                </SelectDropdown>
               </div>
               <div>
                 <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">{t("title")}</label>
@@ -933,11 +934,11 @@ export default function AdminSchoolsPage() {
               <form onSubmit={handleRunPromotion} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">{t("selectTargetYear")}</label>
-                  <select
+                  <SelectDropdown
                     required
                     className="w-full px-4 py-3 border border-[var(--color-border)] rounded-2xl bg-[var(--color-surface)] outline-none"
                     value={targetYearId}
-                    onChange={(e) => setTargetYearId(e.target.value)}
+                    onChange={(v) => setTargetYearId(v)}
                   >
                     <option value="">{t("selectTargetYear")}</option>
                     {academicYears
@@ -945,7 +946,7 @@ export default function AdminSchoolsPage() {
                       .map((y) => (
                         <option key={y.id} value={y.id}>{y.name} {y.is_current ? `(${t("currentYear")})` : ""}</option>
                       ))}
-                  </select>
+                  </SelectDropdown>
                 </div>
                 <div className="flex justify-end gap-3 pt-2">
                   <button
@@ -1011,11 +1012,11 @@ export default function AdminSchoolsPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">{t("transferTo")}</label>
-                  <select
+                  <SelectDropdown
                     required
                     className="w-full px-4 py-3 border border-[var(--color-border)] rounded-2xl bg-[var(--color-surface)] outline-none"
                     value={transferTargetSectionId}
-                    onChange={(e) => setTransferTargetSectionId(e.target.value)}
+                    onChange={(v) => setTransferTargetSectionId(v)}
                   >
                     <option value="">{t("selectSection")}</option>
                     {sections.map((sec) => (
@@ -1023,7 +1024,7 @@ export default function AdminSchoolsPage() {
                         {sec.school_name} - {sec.grade_name} ({sec.name}) [{sec.academic_year_name}]
                       </option>
                     ))}
-                  </select>
+                  </SelectDropdown>
                 </div>
                 <div className="flex justify-end gap-3 pt-2">
                   <button

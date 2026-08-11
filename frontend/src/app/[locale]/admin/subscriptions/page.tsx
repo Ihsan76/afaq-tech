@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { api } from "@/lib/api";
 import { useLanguages } from "@/lib/useLanguages";
+import SelectDropdown from "@/components/ui/SelectDropdown";
 
 interface AdminPlan {
   id: number;
@@ -411,10 +412,10 @@ export default function AdminSubscriptionsPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-semibold mb-2" style={{ color: "var(--color-text-secondary)" }}>فترة الفوترة</label>
-                  <select value={billingPeriod} onChange={(e) => setBillingPeriod(e.target.value)} className={inputCls} style={{ borderColor: "var(--color-border)", color: "var(--color-text)", backgroundColor: "var(--color-background)" }}>
+                   <SelectDropdown value={billingPeriod} onChange={(v) => setBillingPeriod(String(v))} className={inputCls} style={{ borderColor: "var(--color-border)", color: "var(--color-text)", backgroundColor: "var(--color-background)" }}>
                     <option value="monthly">{t("subscriptions.monthly")}</option>
                     <option value="yearly">{t("subscriptions.yearly")}</option>
-                  </select>
+                  </SelectDropdown>
                 </div>
                 <div>
                   <label className="block text-sm font-semibold mb-2" style={{ color: "var(--color-text-secondary)" }}>المدة (يوم)</label>
@@ -442,11 +443,11 @@ export default function AdminSubscriptionsPage() {
                 <div className="flex gap-3 items-end mb-3">
                   <div className="flex-1">
                     <label className="block text-sm font-semibold mb-2" style={{ color: "var(--color-text-secondary)" }}>اللغة</label>
-                    <select value={selectedLang} onChange={(e) => setSelectedLang(e.target.value)} className={inputCls} style={{ borderColor: "var(--color-border)", color: "var(--color-text)", backgroundColor: "var(--color-background)" }}>
+                    <SelectDropdown value={selectedLang} onChange={(v) => setSelectedLang(String(v))} className={inputCls} style={{ borderColor: "var(--color-border)", color: "var(--color-text)", backgroundColor: "var(--color-background)" }}>
                       {LANGUAGES.map((l) => (
                         <option key={l.code} value={l.code}>{l.label} {nameTranslations[l.code]?.trim() ? "✅" : ""}</option>
                       ))}
-                    </select>
+                    </SelectDropdown>
                   </div>
                 </div>
                 <div className="grid gap-4">
@@ -517,12 +518,12 @@ export default function AdminSubscriptionsPage() {
               <div className="pt-4 border-t" style={{ borderColor: "var(--color-border)" }}>
                 <label className="block text-sm font-semibold mb-2" style={{ color: "var(--color-text-secondary)" }}>الخدمات المرتبطة بالباقة وحصص الاستخدام</label>
                 <div className="flex flex-wrap gap-2 mb-3">
-                  <select value={selectedServiceCode} onChange={(e) => setSelectedServiceCode(e.target.value)} className={inputCls} style={{ borderColor: "var(--color-border)", color: "var(--color-text)", backgroundColor: "var(--color-background)", flex: 1, minWidth: 200 }}>
+                   <SelectDropdown value={selectedServiceCode} onChange={(v) => setSelectedServiceCode(String(v))} className={inputCls} style={{ borderColor: "var(--color-border)", color: "var(--color-text)", backgroundColor: "var(--color-background)", flex: 1, minWidth: 200 }}>
                     <option value="">— اختر خدمة —</option>
                     {availableServices.map((s) => (
                       <option key={s.code} value={s.code}>{s.name?.ar || s.name?.en || s.code}</option>
                     ))}
-                  </select>
+                  </SelectDropdown>
                   <button type="button" onClick={addService} disabled={!selectedServiceCode} className="px-4 py-3 rounded-xl text-sm font-semibold text-white transition-all disabled:opacity-40" style={{ background: "var(--color-primary)" }}>+ إضافة خدمة</button>
                 </div>
                 {planServices.length === 0 ? (
@@ -543,13 +544,13 @@ export default function AdminSubscriptionsPage() {
                         </div>
                         <div>
                           <label className="block text-[10px] font-semibold mb-1" style={{ color: "var(--color-text-muted)" }}>الفترة</label>
-                          <select value={row.period} onChange={(e) => updateServiceRow(idx, { period: e.target.value })}
+                           <SelectDropdown value={row.period} onChange={(v) => updateServiceRow(idx, { period: String(v) })}
                             className="px-3 py-2 border rounded-xl" style={{ borderColor: "var(--color-border)", color: "var(--color-text)", backgroundColor: "var(--color-surface)" }}>
                             <option value="daily">يومي</option>
                             <option value="monthly">شهري</option>
                             <option value="yearly">سنوي</option>
                             <option value="lifetime">مدى الحياة</option>
-                          </select>
+                          </SelectDropdown>
                         </div>
                         <button type="button" onClick={() => removeService(idx)} className="px-2 py-2 text-sm font-medium transition-colors" style={{ color: "var(--color-error)" }} title="إزالة">✕</button>
                       </div>

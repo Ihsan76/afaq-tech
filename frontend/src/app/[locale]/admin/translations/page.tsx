@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { api } from "@/lib/api";
 import { useApiList } from "@/lib/useApi";
 import { useAdminLanguages } from "@/lib/useLanguages";
+import SelectDropdown from "@/components/ui/SelectDropdown";
 
 interface TranslationItem {
   id: number;
@@ -170,12 +171,12 @@ export default function AdminTranslationsPage() {
             className="px-4 py-2 rounded-xl text-sm border flex-1 min-w-[200px]"
             style={fieldStyle}
           />
-          <select value={namespace} onChange={(e) => setNamespace(e.target.value)} className="px-4 py-2 rounded-xl text-sm border" style={fieldStyle}>
+          <SelectDropdown value={namespace} onChange={(v) => setNamespace(String(v))} className="px-4 py-2 rounded-xl text-sm border" style={fieldStyle}>
             <option value="">{t("admin.translationAllNamespaces")}</option>
             {namespaces.map((ns) => (
               <option key={ns} value={ns}>{ns}</option>
             ))}
-          </select>
+          </SelectDropdown>
         </div>
 
         {loading ? (

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { api } from "@/lib/api";
 import { useLanguages } from "@/lib/useLanguages";
+import SelectDropdown from "@/components/ui/SelectDropdown";
 
 interface Template {
   id: number; translations: Record<string, { name: string; description?: string }>;
@@ -116,21 +117,21 @@ export default function AdminTemplatesPage() {
             </div>
             <div>
               <label className="block text-sm font-medium mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("admin.description")}</label>
-              <select value={category} onChange={(e) => setCategory(e.target.value)} className={inputCls} style={style}>
+              <SelectDropdown value={category} onChange={(v) => setCategory(String(v))} className={inputCls} style={style}>
                 {Object.entries(CATEGORIES).map(([val, label]) => <option key={val} value={val}>{label}</option>)}
-              </select>
+              </SelectDropdown>
             </div>
           </div>
 
           <div className="flex gap-3 items-end mb-2">
             <div className="flex-1">
               <label className="block text-sm font-semibold mb-2" style={{ color: "var(--color-text-secondary)" }}>اللغة</label>
-              <select value={selectedLang} onChange={(e) => setSelectedLang(e.target.value)}
+              <SelectDropdown value={selectedLang} onChange={(v) => setSelectedLang(String(v))}
                 className={inputCls} style={style}>
                 {LANGUAGES.map(l => (
                   <option key={l.code} value={l.code}>{l.label} {nameTranslations[l.code]?.trim() ? "✅" : ""}</option>
                 ))}
-              </select>
+              </SelectDropdown>
             </div>
             <div className="flex-[2]">
               <label className="block text-sm font-semibold mb-2" style={{ color: "var(--color-text-secondary)" }}>{t("admin.title")} ({LANGUAGES.find(l => l.code === selectedLang)?.label})</label>

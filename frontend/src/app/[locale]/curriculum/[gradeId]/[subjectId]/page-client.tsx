@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import useSWR from "swr";
 import { api, API_URL } from "@/lib/api";
+import SelectDropdown from "@/components/ui/SelectDropdown";
 
 const fetcher = (url: string) => api.get(url).then((r) => r.data);
 
@@ -60,9 +61,9 @@ export default function CurriculumSubjectDetailPage() {
             <label className="block text-xs font-bold mb-1.5 uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>
               {locale === "ar" ? "فرز حسب الدولة" : "Filter by Country"}
             </label>
-            <select
+            <SelectDropdown
               value={selectedCountry}
-              onChange={(e) => setSelectedCountry(e.target.value)}
+              onChange={(v) => setSelectedCountry(String(v))}
               className="w-full px-4 py-2.5 rounded-xl border outline-none text-sm"
               style={{ background: "var(--color-background)", color: "var(--color-text)", borderColor: "var(--color-border)" }}
             >
@@ -70,7 +71,7 @@ export default function CurriculumSubjectDetailPage() {
               {countries.map((c: any) => (
                 <option key={c} value={c}>{c}</option>
               ))}
-            </select>
+            </SelectDropdown>
           </div>
         </div>
 

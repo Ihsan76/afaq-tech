@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import { useAuthStore } from "@/store/auth";
+import SelectDropdown from "@/components/ui/SelectDropdown";
 
 interface AdminUser {
   id: number;
@@ -144,17 +145,17 @@ export default function AdminUsersPage() {
             className={inputCls}
             style={{ background: "var(--color-surface)", color: "var(--color-text)", borderColor: "var(--color-border)" }}
           />
-          <select value={roleFilter} onChange={(e) => { setRoleFilter(e.target.value); setPage(1); }} className={inputCls} style={{ background: "var(--color-surface)", color: "var(--color-text)", borderColor: "var(--color-border)" }}>
+          <SelectDropdown value={roleFilter} onChange={(v) => { setRoleFilter(String(v)); setPage(1); }} className={inputCls} style={{ background: "var(--color-surface)", color: "var(--color-text)", borderColor: "var(--color-border)" }}>
             <option value="">{t("admin.allRoles")}</option>
             {ROLES.map((r) => <option key={r} value={r}>{roleLabel(r)}</option>)}
-          </select>
-          <select value={planFilter} onChange={(e) => { setPlanFilter(e.target.value); setPage(1); }} className={inputCls} style={{ background: "var(--color-surface)", color: "var(--color-text)", borderColor: "var(--color-border)" }}>
+          </SelectDropdown>
+          <SelectDropdown value={planFilter} onChange={(v) => { setPlanFilter(String(v)); setPage(1); }} className={inputCls} style={{ background: "var(--color-surface)", color: "var(--color-text)", borderColor: "var(--color-border)" }}>
             <option value="">{t("admin.allPlans")}</option>
             {PLANS.map((p) => <option key={p} value={p}>{t(`dashboard.plan${p.charAt(0).toUpperCase() + p.slice(1)}`)}</option>)}
-          </select>
-          <select value={sort} onChange={(e) => { setSort(e.target.value); setPage(1); }} className={inputCls} style={{ background: "var(--color-surface)", color: "var(--color-text)", borderColor: "var(--color-border)" }} title={t("admin.sortBy")}>
+          </SelectDropdown>
+          <SelectDropdown value={sort} onChange={(v) => { setSort(String(v)); setPage(1); }} className={inputCls} style={{ background: "var(--color-surface)", color: "var(--color-text)", borderColor: "var(--color-border)" }} title={t("admin.sortBy")}>
             {SORTS.map((s) => <option key={s} value={s}>{t(`admin.${SORT_LABEL_KEYS[s]}`)}</option>)}
-          </select>
+          </SelectDropdown>
         </div>
       </div>
 
@@ -202,18 +203,18 @@ export default function AdminUsersPage() {
                     </td>
                     <td className="px-6 py-4 text-center">
                       {canEdit ? (
-                        <select
+                        <SelectDropdown
                           value={user.role}
-                          onChange={(e) => updateUser(user, "role", e.target.value)}
-                          className={selectCls}
-                          style={{ background: rc.bg, color: rc.color, borderColor: rc.color }}
+                          onChange={(v) => updateUser(user, "role", String(v))}
+                          size="sm"
+                          triggerStyle={{ background: rc.bg, color: rc.color, borderColor: rc.color }}
                         >
                           {ROLES.map((r) => (
                             <option key={r} value={r}>
                               {ROLE_COLORS[r]?.icon} {roleLabel(r)}
                             </option>
                           ))}
-                        </select>
+                        </SelectDropdown>
                       ) : (
                         <span className={selectCls} style={{ background: rc.bg, color: rc.color, borderColor: rc.color, border: "1px solid" }}>
                           {rc.icon} {roleLabel(user.role)}
@@ -222,16 +223,16 @@ export default function AdminUsersPage() {
                     </td>
                     <td className="col-hide-md px-6 py-4 text-center">
                       {canEdit ? (
-                        <select
+                        <SelectDropdown
                           value={user.subscription_plan}
-                          onChange={(e) => updateUser(user, "subscription_plan", e.target.value)}
-                          className={selectCls}
-                          style={{ background: pc.bg, color: pc.color, borderColor: pc.color }}
+                          onChange={(v) => updateUser(user, "subscription_plan", String(v))}
+                          size="sm"
+                          triggerStyle={{ background: pc.bg, color: pc.color, borderColor: pc.color }}
                         >
                           {PLANS.map((p) => (
                             <option key={p} value={p}>{t(`dashboard.plan${p.charAt(0).toUpperCase() + p.slice(1)}`)}</option>
                           ))}
-                        </select>
+                        </SelectDropdown>
                       ) : (
                         <span className={selectCls} style={{ background: pc.bg, color: pc.color, borderColor: pc.color, border: "1px solid" }}>
                           {t(`dashboard.plan${user.subscription_plan.charAt(0).toUpperCase() + user.subscription_plan.slice(1)}`)}
@@ -277,15 +278,15 @@ export default function AdminUsersPage() {
             >
               {t("admin.nextPage")}
             </button>
-            <select
+            <SelectDropdown
               value={pageSize}
-              onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }}
+              onChange={(v) => { setPageSize(Number(v)); setPage(1); }}
               className={inputCls}
               style={{ background: "var(--color-surface)", color: "var(--color-text)", borderColor: "var(--color-border)" }}
               title={t("admin.perPage")}
             >
               {PAGE_SIZES.map((s) => <option key={s} value={s}>{s}</option>)}
-            </select>
+            </SelectDropdown>
           </div>
         </div>
         </>

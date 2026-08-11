@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { useAuthStore } from "@/store/auth";
 import { api } from "@/lib/api";
 import ThemeSwitcher from "@/components/ThemeSwitcher";
+import SelectDropdown from "@/components/ui/SelectDropdown";
 
 export default function ProfilePage() {
   const t = useTranslations();
@@ -122,14 +123,14 @@ export default function ProfilePage() {
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("profile.timezone")}</label>
-                <select value={form.timezone} onChange={(e) => setForm({ ...form, timezone: e.target.value })} className={inputCls} style={{ borderColor: "var(--color-border)" }}>
+                <SelectDropdown value={form.timezone} onChange={(v) => setForm({ ...form, timezone: String(v) })} className={inputCls} style={{ borderColor: "var(--color-border)" }}>
                   <option value="Asia/Amman">Asia/Amman (GMT+3)</option>
                   <option value="Asia/Riyadh">Asia/Riyadh (GMT+3)</option>
                   <option value="Asia/Dubai">Asia/Dubai (GMT+4)</option>
                   <option value="Africa/Cairo">Africa/Cairo (GMT+2)</option>
                   <option value="Europe/London">Europe/London (GMT+0)</option>
                   <option value="America/New_York">America/New_York (GMT-5)</option>
-                </select>
+                </SelectDropdown>
               </div>
             </div>
           </div>
@@ -140,7 +141,7 @@ export default function ProfilePage() {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("profile.uiLanguage")}</label>
-                <select value={form.ui_language} onChange={(e) => setForm({ ...form, ui_language: e.target.value })} className={inputCls} style={{ borderColor: "var(--color-border)" }}>
+                <SelectDropdown value={form.ui_language} onChange={(v) => setForm({ ...form, ui_language: String(v) })} className={inputCls} style={{ borderColor: "var(--color-border)" }}>
                   <option value="ar">العربية</option>
                   <option value="en">English</option>
                   <option value="fr">Français</option>
@@ -150,11 +151,11 @@ export default function ProfilePage() {
                   <option value="ja">日本語</option>
                   <option value="ko">한국어</option>
                   <option value="tr">Türkçe</option>
-                </select>
+                </SelectDropdown>
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("profile.inputLanguage")}</label>
-                <select value={form.input_language} onChange={(e) => setForm({ ...form, input_language: e.target.value })} className={inputCls} style={{ borderColor: "var(--color-border)" }}>
+                <SelectDropdown value={form.input_language} onChange={(v) => setForm({ ...form, input_language: String(v) })} className={inputCls} style={{ borderColor: "var(--color-border)" }}>
                   <option value="ar">العربية</option>
                   <option value="en">English</option>
                   <option value="fr">Français</option>
@@ -164,11 +165,11 @@ export default function ProfilePage() {
                   <option value="ja">日本語</option>
                   <option value="ko">한국어</option>
                   <option value="tr">Türkçe</option>
-                </select>
+                </SelectDropdown>
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("profile.outputLanguage")}</label>
-                <select value={form.output_language} onChange={(e) => setForm({ ...form, output_language: e.target.value })} className={inputCls} style={{ borderColor: "var(--color-border)" }}>
+                <SelectDropdown value={form.output_language} onChange={(v) => setForm({ ...form, output_language: String(v) })} className={inputCls} style={{ borderColor: "var(--color-border)" }}>
                   <option value="ar">العربية</option>
                   <option value="en">English</option>
                   <option value="fr">Français</option>
@@ -178,7 +179,7 @@ export default function ProfilePage() {
                   <option value="ja">日本語</option>
                   <option value="ko">한국어</option>
                   <option value="tr">Türkçe</option>
-                </select>
+                </SelectDropdown>
               </div>
             </div>
           </div>

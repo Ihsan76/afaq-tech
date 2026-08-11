@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useLocale } from "next-intl";
 import dynamic from "next/dynamic";
 import { locales, localeNames } from "@/i18n/config";
+import SelectDropdown from "@/components/ui/SelectDropdown";
 
 const RichTextEditor = dynamic(() => import("./RichTextEditor"), { ssr: false });
 
@@ -123,22 +124,22 @@ function LinkField({ label, value, onChange, placeholder, ar, pageBlocks, showSm
       </div>
       {/* Section Selector */}
       {isSection && (
-        <select value={value} onChange={(e) => onChange(e.target.value)}
+        <SelectDropdown value={value} onChange={(v) => onChange(String(v))}
           className={inputCls} style={{ background: "var(--color-surface)", color: "var(--color-text)", borderColor: "var(--color-border)" }}>
           {availableSections.length === 0 && <option value="">{ar ? "لا توجد أقسام في الصفحة" : "No sections on this page"}</option>}
           {availableSections.map((s) => (
             <option key={s.id} value={`#${s.id}`}>{ar ? s.label_ar : s.label_en}</option>
           ))}
-        </select>
+        </SelectDropdown>
       )}
       {/* Page Selector */}
       {isPage && (
-        <select value={value} onChange={(e) => onChange(e.target.value)}
+        <SelectDropdown value={value} onChange={(v) => onChange(String(v))}
           className={inputCls} style={{ background: "var(--color-surface)", color: "var(--color-text)", borderColor: "var(--color-border)" }}>
           {COMMON_PAGES.map((p) => (
             <option key={p.value} value={p.value}>{ar ? p.label_ar : p.label_en}</option>
           ))}
-        </select>
+        </SelectDropdown>
       )}
       {/* Custom URL Input */}
       {(isCustom || (!isSection && !isPage && value)) && (
@@ -908,12 +909,12 @@ export default function BlockEditorPanel({
           {tab === "content" && (
             <div className="mb-3">
               <label className={labelCls} style={{ color: "var(--color-text-muted)" }}>{t("اللغة", "Language")}</label>
-              <select value={contentLocale} onChange={(e) => setContentLocale(e.target.value)}
+              <SelectDropdown value={contentLocale} onChange={(v) => setContentLocale(String(v))}
                 className={inputCls} style={{ background: "var(--color-surface)", color: "var(--color-text)", borderColor: "var(--color-border)" }}>
                 {locales.map((loc) => (
                   <option key={loc} value={loc}>{localeNames[loc]} ({loc.toUpperCase()})</option>
                 ))}
-              </select>
+              </SelectDropdown>
             </div>
           )}
 

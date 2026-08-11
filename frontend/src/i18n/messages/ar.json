@@ -2159,6 +2159,9 @@
   "revert": "تراجع",
   "refreshing": "جاري تحديث البيانات...",
   "bannerGradeUpdated": "تم تحديث الصف",
-  "unsavedChanges": "تغييرات غير محفوظة"
+  "unsavedChanges": "تغييرات غير محفوظة",
+  "saveChanges": "حفظ التغييرات",
+  "unsaved": "غير محفوظة",
+  "subjectsCount": "المواد"
  }
 }
