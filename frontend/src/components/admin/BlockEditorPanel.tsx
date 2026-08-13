@@ -263,10 +263,19 @@ export default function BlockEditorPanel({
             <Section title={t("النص الفرعي", "Subtitle")}>
               <Field label={t("النص الفرعي", "Subtitle")} value={lf("subtitle")} onChange={(v) => updateLocaleField("subtitle", contentLocale, v)} />
             </Section>
-            <Section title={t("الزر الرئيسي", "Primary Button")}>
-              <Field label={t("نص الزر", "Button Text")} value={lf("cta_text")} onChange={(v) => updateLocaleField("cta_text", contentLocale, v)} placeholder={t("ابدأ رحلتك", "Get Started")} />
-              <LinkField label={t("رابط الزر", "Button URL")} value={lf("cta_link")} onChange={(v) => updateLocaleField("cta_link", contentLocale, v)} placeholder="/register" ar={ar} pageBlocks={pageBlocks} showSmartToggle={true} isSmart={c.is_smart_cta !== false} onToggleSmart={(v) => updateContent("is_smart_cta", v)} />
-            </Section>
+             <Section title={t("الزر الرئيسي", "Primary Button")}>
+               <Field label={t("نص الزر", "Button Text")} value={lf("cta_text")} onChange={(v) => updateLocaleField("cta_text", contentLocale, v)} placeholder={t("ابدأ رحلتك", "Get Started")} />
+               <LinkField label={t("رابط الزر", "Button URL")} value={lf("cta_link")} onChange={(v) => updateLocaleField("cta_link", contentLocale, v)} placeholder="/register" ar={ar} pageBlocks={pageBlocks} showSmartToggle={true} isSmart={c.is_smart_cta !== false} onToggleSmart={(v) => updateContent("is_smart_cta", v)} />
+               {c.is_smart_cta !== false && (
+                 <div className="mt-4 p-3 rounded-2xl border bg-[var(--color-surface-alt)] space-y-3" style={{ borderColor: "var(--color-border)" }}>
+                   <p className="text-xs font-bold" style={{ color: "var(--color-primary)" }}>
+                     {ar ? "🧠 إعدادات الزر عند تسجيل الدخول (Smart CTA):" : "🧠 Logged-in Button Settings (Smart CTA):"}
+                   </p>
+                   <Field label={ar ? "نص الزر عند تسجيل الدخول" : "Logged-in Button Text"} value={lf("cta_logged_in_text")} onChange={(v) => updateLocaleField("cta_logged_in_text", contentLocale, v)} placeholder="لوحة التحكم" />
+                   <LinkField label={ar ? "رابط الزر عند تسجيل الدخول" : "Logged-in Button URL"} value={lf("cta_logged_in_link")} onChange={(v) => updateLocaleField("cta_logged_in_link", contentLocale, v)} placeholder="/dashboard" ar={ar} pageBlocks={pageBlocks} />
+                 </div>
+               )}
+             </Section>
             <Section title={t("الزر الثانوي", "Secondary Button")}>
               <Field label={t("نص الزر", "Button Text")} value={lf("secondary_cta")} onChange={(v) => updateLocaleField("secondary_cta", contentLocale, v)} placeholder={t("استكشف الخدمات", "Explore Services")} />
               <LinkField label={t("رابط الزر", "Button URL")} value={lf("secondary_cta_link")} onChange={(v) => updateLocaleField("secondary_cta_link", contentLocale, v)} placeholder="#services" ar={ar} pageBlocks={pageBlocks} />
