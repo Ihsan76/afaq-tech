@@ -25,11 +25,16 @@ export default function HeroSection({ content }: { content?: Record<string, any>
   const heading = localizedContent(c, "heading", locale, t("heroTitle"));
   const subtitle = localizedContent(c, "subtitle", locale, t("heroSubtitle"));
   const isSmart = c.is_smart_cta !== false;
+  const isSchoolPage = pathname.includes("/school");
+  const defaultLink = isSchoolPage ? "/school/dashboard" : "/dashboard";
+  const defaultTextAr = isSchoolPage ? "الانتقال لساحة العمل" : "لوحة التحكم";
+  const defaultTextEn = isSchoolPage ? "Go to Workspace" : "Dashboard";
+
   const ctaText = (isSmart && user)
-    ? localizedContent(c, "cta_logged_in_text", locale, locale === "ar" ? "الانتقال لساحة العمل" : "Go to Workspace")
+    ? localizedContent(c, "cta_logged_in_text", locale, locale === "ar" ? defaultTextAr : defaultTextEn)
     : localizedContent(c, "cta_text", locale, t("heroCTA"));
   let ctaLink = (isSmart && user)
-    ? resolveLink(locale, localizedContent(c, "cta_logged_in_link", locale, "/school/dashboard"))
+    ? resolveLink(locale, localizedContent(c, "cta_logged_in_link", locale, defaultLink))
     : localizedContent(c, "cta_link", locale, "/register");
   if (ctaLink.startsWith("mailto:") && settings?.email) {
     ctaLink = `mailto:${settings.email}`;
