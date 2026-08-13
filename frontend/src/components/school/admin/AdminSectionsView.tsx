@@ -266,7 +266,7 @@ export default function AdminSectionsView({ sections, schoolId, refresh }: Props
 
       {dirtyCount > 0 && (
         <div
-          className="sticky top-4 z-30 mb-6 flex flex-wrap items-center gap-3 px-4 py-3 rounded-2xl shadow-xl border"
+          className="sticky top-20 z-40 mb-6 flex flex-wrap items-center gap-3 px-4 py-3 rounded-2xl shadow-xl border"
           style={{ background: "var(--color-surface)", borderColor: "var(--color-border)" }}
         >
           <span className="inline-flex items-center gap-2 text-xs font-bold px-3 py-1 rounded-full bg-amber-500/10 text-amber-600">
@@ -309,12 +309,18 @@ export default function AdminSectionsView({ sections, schoolId, refresh }: Props
                   className="p-3 rounded-2xl border bg-[var(--color-background)] space-y-2.5"
                   style={{ borderColor: "var(--color-border)" }}
                 >
-                  {/* Line 1: Name, Grade, Students, Action */}
+                  {/* Line 1: Grade Name (clickable), Section Name, Students, Unsaved */}
                   <div className="flex items-center justify-between gap-2 border-b pb-2" style={{ borderColor: "var(--color-border)" }}>
                     <div className="flex items-center gap-1.5 flex-wrap min-w-0">
-                      <span className="font-bold text-base truncate">{sec.name}</span>
-                      <span className="text-xs shrink-0" style={{ color: "var(--color-text-secondary)" }}>
-                        ({sec.grade_name || sec.grade})
+                      <button
+                        type="button"
+                        onClick={() => openSection(sec.id)}
+                        className="font-bold text-base text-[var(--color-primary)] hover:underline text-start bg-transparent border-0 p-0 cursor-pointer"
+                      >
+                        {sec.grade_name || sec.grade}
+                      </button>
+                      <span className="text-xs shrink-0 font-bold" style={{ color: "var(--color-text-secondary)" }}>
+                        ({sec.name})
                       </span>
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 text-xs font-bold shrink-0">
                         👥 {sec.students_count || 0}
@@ -325,14 +331,6 @@ export default function AdminSectionsView({ sections, schoolId, refresh }: Props
                         </span>
                       )}
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => openSection(sec.id)}
-                      className="px-2.5 py-1 rounded-xl text-xs font-bold text-[var(--color-primary)] border transition-all hover:scale-105 shrink-0"
-                      style={{ borderColor: "var(--color-border)" }}
-                    >
-                      {t("viewStudents")} ←
-                    </button>
                   </div>
 
                   {/* Line 2: Capacity Stepper & Class Teacher */}
@@ -393,12 +391,11 @@ export default function AdminSectionsView({ sections, schoolId, refresh }: Props
             <table className="w-full border-collapse text-sm">
               <thead>
                 <tr className="border-b" style={{ borderColor: "var(--color-border)" }}>
-                  <th className="py-2 px-3 text-start">{t("colSection")}</th>
                   <th className="py-2 px-3 text-start">{t("gradeLabel")}</th>
+                  <th className="py-2 px-3 text-start">{t("colSection")}</th>
                   <th className="py-2 px-3 text-center">{t("colStudents")}</th>
                   <th className="py-2 px-3 text-center">{t("capacityLabel")}</th>
                   <th className="py-2 px-3 text-start">{t("classTeacherLabel")}</th>
-                  <th className="py-2 px-3 text-end">{t("colActions")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -409,7 +406,13 @@ export default function AdminSectionsView({ sections, schoolId, refresh }: Props
                     <tr key={sec.id} className="border-b hover:bg-[var(--color-background)]" style={{ borderColor: "var(--color-border)" }}>
                       <td className="py-1.5 px-3">
                         <div className="flex items-center gap-2">
-                          <span className="font-bold text-sm">{sec.name}</span>
+                          <button
+                            type="button"
+                            onClick={() => openSection(sec.id)}
+                            className="font-bold text-sm text-[var(--color-primary)] hover:underline text-start bg-transparent border-0 p-0 cursor-pointer"
+                          >
+                            {sec.grade_name || sec.grade}
+                          </button>
                           {dirty && (
                             <span className="shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600">
                               {t("unsaved")}
@@ -417,8 +420,8 @@ export default function AdminSectionsView({ sections, schoolId, refresh }: Props
                           )}
                         </div>
                       </td>
-                      <td className="py-1.5 px-3 text-xs" style={{ color: "var(--color-text-secondary)" }}>
-                        {sec.grade_name || sec.grade}
+                      <td className="py-1.5 px-3 text-sm font-semibold" style={{ color: "var(--color-text-secondary)" }}>
+                        {sec.name}
                       </td>
                       <td className="py-1.5 px-3 text-center">
                         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 text-xs font-bold">
@@ -468,18 +471,6 @@ export default function AdminSectionsView({ sections, schoolId, refresh }: Props
                             </option>
                           ))}
                         </SelectDropdown>
-                      </td>
-                      <td className="py-1.5 px-3">
-                        <div className="flex justify-end">
-                          <button
-                            type="button"
-                            onClick={() => openSection(sec.id)}
-                            className="px-2.5 py-1 rounded-xl text-xs font-bold text-[var(--color-primary)] border transition-all hover:scale-105"
-                            style={{ borderColor: "var(--color-border)" }}
-                          >
-                            {t("viewStudents")} ←
-                          </button>
-                        </div>
                       </td>
                     </tr>
                   );
