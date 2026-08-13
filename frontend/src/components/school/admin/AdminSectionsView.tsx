@@ -297,76 +297,81 @@ export default function AdminSectionsView({ sections, schoolId, refresh }: Props
           {t("sectionsEmpty")}
         </p>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-sm">
-            <thead>
-              <tr className="border-b" style={{ borderColor: "var(--color-border)" }}>
-                <th className="p-3 text-start">{t("colSection")}</th>
-                <th className="p-3 text-start">{t("gradeLabel")}</th>
-                <th className="p-3 text-center">{t("colStudents")}</th>
-                <th className="p-3 text-center">{t("capacityLabel")}</th>
-                <th className="p-3 text-start">{t("classTeacherLabel")}</th>
-                <th className="p-3 text-end">{t("colActions")}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sections.map((sec: any) => {
-                const draft = drafts[sec.id];
-                const dirty = dirtyIds.has(sec.id);
-                return (
-                  <tr key={sec.id} className="border-b hover:bg-[var(--color-background)]" style={{ borderColor: "var(--color-border)" }}>
-                    <td className="p-3">
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-base">{sec.name}</span>
-                        {dirty && (
-                          <span className="shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600">
-                            {t("unsaved")}
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="p-3" style={{ color: "var(--color-text-secondary)" }}>
-                      {sec.grade_name || sec.grade}
-                    </td>
-                    <td className="p-3 text-center">
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 text-xs font-bold">
-                        <span>👥</span>
-                        {sec.students_count || 0}
+        <>
+          {/* Mobile view: 2-line layout per section card */}
+          <div className="space-y-3 md:hidden">
+            {sections.map((sec: any) => {
+              const draft = drafts[sec.id];
+              const dirty = dirtyIds.has(sec.id);
+              return (
+                <div
+                  key={sec.id}
+                  className="p-3 rounded-2xl border bg-[var(--color-background)] space-y-2.5"
+                  style={{ borderColor: "var(--color-border)" }}
+                >
+                  {/* Line 1: Name, Grade, Students, Action */}
+                  <div className="flex items-center justify-between gap-2 border-b pb-2" style={{ borderColor: "var(--color-border)" }}>
+                    <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+                      <span className="font-bold text-base truncate">{sec.name}</span>
+                      <span className="text-xs shrink-0" style={{ color: "var(--color-text-secondary)" }}>
+                        ({sec.grade_name || sec.grade})
                       </span>
-                    </td>
-                    <td className="p-3">
-                      <div className="flex items-center justify-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => setDraft(sec.id, { capacity: Math.max(1, (draft?.capacity ?? sec.capacity ?? 30) - 1) })}
-                          className={stepperCls}
-                          style={{ borderColor: "var(--color-border)" }}
-                        >
-                          −
-                        </button>
-                        <input
-                          type="number"
-                          min={1}
-                          value={draft?.capacity ?? sec.capacity ?? 30}
-                          onChange={(e) => setDraft(sec.id, { capacity: Number(e.target.value) })}
-                          className="w-16 text-center px-1 py-2 rounded-xl border text-sm font-extrabold bg-[var(--color-surface)]"
-                          style={{ borderColor: "var(--color-border)" }}
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setDraft(sec.id, { capacity: (draft?.capacity ?? sec.capacity ?? 30) + 1 })}
-                          className={stepperCls}
-                          style={{ borderColor: "var(--color-border)" }}
-                        >
-                          +
-                        </button>
-                      </div>
-                    </td>
-                    <td className="p-3">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 text-xs font-bold shrink-0">
+                        👥 {sec.students_count || 0}
+                      </span>
+                      {dirty && (
+                        <span className="shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600">
+                          {t("unsaved")}
+                        </span>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => openSection(sec.id)}
+                      className="px-2.5 py-1 rounded-xl text-xs font-bold text-[var(--color-primary)] border transition-all hover:scale-105 shrink-0"
+                      style={{ borderColor: "var(--color-border)" }}
+                    >
+                      {t("viewStudents")} ←
+                    </button>
+                  </div>
+
+                  {/* Line 2: Capacity Stepper & Class Teacher */}
+                  <div className="flex flex-wrap items-center justify-between gap-2 pt-0.5">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs font-bold shrink-0" style={{ color: "var(--color-text-secondary)" }}>
+                        {t("capacityLabel")}:
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setDraft(sec.id, { capacity: Math.max(1, (draft?.capacity ?? sec.capacity ?? 30) - 1) })}
+                        className={stepperCls}
+                        style={{ borderColor: "var(--color-border)" }}
+                      >
+                        −
+                      </button>
+                      <input
+                        type="number"
+                        min={1}
+                        value={draft?.capacity ?? sec.capacity ?? 30}
+                        onChange={(e) => setDraft(sec.id, { capacity: Number(e.target.value) })}
+                        className="w-14 text-center px-1 py-1 rounded-xl border text-sm font-extrabold bg-[var(--color-surface)]"
+                        style={{ borderColor: "var(--color-border)" }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setDraft(sec.id, { capacity: (draft?.capacity ?? sec.capacity ?? 30) + 1 })}
+                        className={stepperCls}
+                        style={{ borderColor: "var(--color-border)" }}
+                      >
+                        +
+                      </button>
+                    </div>
+
+                    <div className="flex-1 min-w-[140px]">
                       <SelectDropdown
                         value={draft?.class_teacher ?? sec.class_teacher ?? ""}
                         onChange={(v) => setDraft(sec.id, { class_teacher: v === "" ? "" : Number(v) })}
-                        className="w-full min-w-40 px-3 py-2 rounded-xl border text-sm bg-[var(--color-background)]"
+                        className="w-full px-2.5 py-1.5 rounded-xl border text-xs bg-[var(--color-surface)]"
                         style={{ borderColor: "var(--color-border)" }}
                       >
                         <option value="">{t("noClassTeacher")}</option>
@@ -376,25 +381,113 @@ export default function AdminSectionsView({ sections, schoolId, refresh }: Props
                           </option>
                         ))}
                       </SelectDropdown>
-                    </td>
-                    <td className="p-3">
-                      <div className="flex justify-end">
-                        <button
-                          type="button"
-                          onClick={() => openSection(sec.id)}
-                          className="px-3 py-1.5 rounded-xl text-xs font-bold text-[var(--color-primary)] border transition-all hover:scale-105"
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Desktop/Tablet view: Compact table with reduced row padding */}
+          <div className="hidden md:block overflow-x-auto">
+            <table className="w-full border-collapse text-sm">
+              <thead>
+                <tr className="border-b" style={{ borderColor: "var(--color-border)" }}>
+                  <th className="py-2 px-3 text-start">{t("colSection")}</th>
+                  <th className="py-2 px-3 text-start">{t("gradeLabel")}</th>
+                  <th className="py-2 px-3 text-center">{t("colStudents")}</th>
+                  <th className="py-2 px-3 text-center">{t("capacityLabel")}</th>
+                  <th className="py-2 px-3 text-start">{t("classTeacherLabel")}</th>
+                  <th className="py-2 px-3 text-end">{t("colActions")}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sections.map((sec: any) => {
+                  const draft = drafts[sec.id];
+                  const dirty = dirtyIds.has(sec.id);
+                  return (
+                    <tr key={sec.id} className="border-b hover:bg-[var(--color-background)]" style={{ borderColor: "var(--color-border)" }}>
+                      <td className="py-1.5 px-3">
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-sm">{sec.name}</span>
+                          {dirty && (
+                            <span className="shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600">
+                              {t("unsaved")}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-1.5 px-3 text-xs" style={{ color: "var(--color-text-secondary)" }}>
+                        {sec.grade_name || sec.grade}
+                      </td>
+                      <td className="py-1.5 px-3 text-center">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 text-xs font-bold">
+                          <span>👥</span>
+                          {sec.students_count || 0}
+                        </span>
+                      </td>
+                      <td className="py-1.5 px-3">
+                        <div className="flex items-center justify-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => setDraft(sec.id, { capacity: Math.max(1, (draft?.capacity ?? sec.capacity ?? 30) - 1) })}
+                            className={stepperCls}
+                            style={{ borderColor: "var(--color-border)" }}
+                          >
+                            −
+                          </button>
+                          <input
+                            type="number"
+                            min={1}
+                            value={draft?.capacity ?? sec.capacity ?? 30}
+                            onChange={(e) => setDraft(sec.id, { capacity: Number(e.target.value) })}
+                            className="w-14 text-center px-1 py-1 rounded-xl border text-sm font-extrabold bg-[var(--color-surface)]"
+                            style={{ borderColor: "var(--color-border)" }}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setDraft(sec.id, { capacity: (draft?.capacity ?? sec.capacity ?? 30) + 1 })}
+                            className={stepperCls}
+                            style={{ borderColor: "var(--color-border)" }}
+                          >
+                            +
+                          </button>
+                        </div>
+                      </td>
+                      <td className="py-1.5 px-3">
+                        <SelectDropdown
+                          value={draft?.class_teacher ?? sec.class_teacher ?? ""}
+                          onChange={(v) => setDraft(sec.id, { class_teacher: v === "" ? "" : Number(v) })}
+                          className="w-full min-w-36 px-2.5 py-1 rounded-xl border text-xs bg-[var(--color-background)]"
                           style={{ borderColor: "var(--color-border)" }}
                         >
-                          {t("viewStudents")} ←
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                          <option value="">{t("noClassTeacher")}</option>
+                          {teachers.map((tch) => (
+                            <option key={tch.id} value={tch.id}>
+                              {tch.name}
+                            </option>
+                          ))}
+                        </SelectDropdown>
+                      </td>
+                      <td className="py-1.5 px-3">
+                        <div className="flex justify-end">
+                          <button
+                            type="button"
+                            onClick={() => openSection(sec.id)}
+                            className="px-2.5 py-1 rounded-xl text-xs font-bold text-[var(--color-primary)] border transition-all hover:scale-105"
+                            style={{ borderColor: "var(--color-border)" }}
+                          >
+                            {t("viewStudents")} ←
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
 
       {showPromote && (
