@@ -366,9 +366,9 @@ class SchoolsAdvancedFeaturesTestCase(APITestCase):
         self.assertEqual(parent2.role, 'parent')
         self.assertTrue(FamilyLink.objects.filter(parent=parent2, student=new_student).exists())
 
-    def test_bulk_export_students(self):
+    def test_bulk_export_students_csv(self):
         self.auth(self.admin)
-        res = self.client.get('/api/v1/schools/bulk/export/?kind=students')
+        res = self.client.get('/api/v1/schools/bulk/export/?kind=students&file_format=csv')
         self.assertEqual(res.status_code, 200)
         self.assertIn('text/csv', res['Content-Type'])
         content = res.content.decode('utf-8')
@@ -422,10 +422,10 @@ class SchoolsAdvancedFeaturesTestCase(APITestCase):
         self.assertEqual(len(res.data['errors']), 1)
         self.assertEqual(School.objects.filter(name='مدرسة بدون رمز').count(), 0)
 
-    def test_bulk_export_schools(self):
+    def test_bulk_export_schools_csv(self):
         School.objects.create(name='مدرسة التصدير', school_code='990100', governorate='الزرقاء')
         self.auth(self.admin)
-        res = self.client.get('/api/v1/schools/bulk/export/?kind=schools')
+        res = self.client.get('/api/v1/schools/bulk/export/?kind=schools&file_format=csv')
         self.assertEqual(res.status_code, 200)
         self.assertIn('text/csv', res['Content-Type'])
         content = res.content.decode('utf-8')
@@ -1113,3 +1113,273 @@ class SchoolManagerStudentManagementTestCase(APITestCase):
         ids = {s['id'] for s in res.data['results']}
         self.assertEqual(ids, {self.sec_a.id, self.sec_b.id})
         self.assertNotIn(self.sec_grade2.id, ids)
+
+
+class ExcelAndClassTeacherTestCase(SchoolManagerStudentManagementTestCase):
+    """School-manager/class-teacher Excel import-export + national-ID conflict handling."""
+
+    def setUp(self):
+        super().setUp()
+        self.sec_a.class_teacher = self.teacher
+        self.sec_a.save(update_fields=['class_teacher'])
+
+    def _make_xlsx(self, headers, rows):
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.append(headers)
+        for row in rows:
+            ws.append(row)
+        buffer = io.BytesIO()
+        wb.save(buffer)
+        return SimpleUploadedFile(
+            'students.xlsx', buffer.getvalue(),
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        )
+
+    def _read_xlsx(self, content):
+        wb = openpyxl.load_workbook(io.BytesIO(content), read_only=True, data_only=True)
+        ws = wb[wb.sheetnames[0]]
+        return [list(r) for r in ws.iter_rows(values_only=True)]
+
+    def _import_file(self, user, file, **extra):
+        self._auth(user)
+        data = {'kind': 'students', 'file': file}
+        data.update(extra)
+        return self.client.post('/api/v1/schools/bulk/import/', data, format='multipart')
+
+    # ---- School-manager Excel import scoping ----
+
+    def test_manager_import_xlsx_scoped_to_own_school(self):
+        file = self._make_xlsx(
+            ['اسم الطالب', 'الرقم الوطني', 'البريد', 'الهاتف', 'الصف', 'الشعبة', 'السنة الدراسية', 'الرمز المدرسي'],
+            [['طالب استيراد', '9900111111', 'imp1@test.com', '0790000001', '1', 'ج', '2025/2026', 'SCH2']],
+        )
+        res = self._import_file(self.manager, file, school_id=self.school.id)
+        self.assertEqual(res.status_code, 200, res.data)
+        self.assertEqual(res.data['created'], 1)
+        self.assertEqual(res.data['errors'], [])
+        user = User.objects.get(email='imp1@test.com')
+        self.assertEqual(user.national_id, '9900111111')
+        en = StudentEnrollment.objects.get(student=user, academic_year=self.year)
+        self.assertEqual(en.section.school, self.school)
+        self.assertEqual(en.section.name, 'ج')
+        # the file's SCH2 (another school) must have been ignored
+        self.assertFalse(Section.objects.filter(school=self.other_school, name='ج', academic_year=self.year).exists())
+
+    def test_manager_import_requires_own_school_id(self):
+        file = self._make_xlsx(['اسم الطالب', 'البريد'], [['طالب', 'no-school@test.com']])
+        res = self._import_file(self.manager, file)
+        self.assertEqual(res.status_code, 403)
+        self.assertFalse(User.objects.filter(email='no-school@test.com').exists())
+
+    def test_manager_cannot_import_other_school(self):
+        file = self._make_xlsx(['اسم الطالب', 'البريد'], [['طالب', 'other@test.com']])
+        res = self._import_file(self.manager, file, school_id=self.other_school.id)
+        self.assertEqual(res.status_code, 403)
+        self.assertFalse(User.objects.filter(email='other@test.com').exists())
+
+    def test_manager_cannot_import_teachers(self):
+        file = self._make_xlsx(['اسم المعلم', 'البريد'], [['معلم', 't@test.com']])
+        res = self._import_file(self.manager, file, school_id=self.school.id, kind='teachers')
+        self.assertEqual(res.status_code, 403)
+
+    def test_import_matches_existing_student_by_national_id(self):
+        existing = make_user('migrate@test.com', 'student', 'طالب منقول', national_id='9900222222')
+        StudentEnrollment.objects.create(student=existing, section=self.other_sec, academic_year=self.year)
+        file = self._make_xlsx(
+            ['اسم الطالب', 'الرقم الوطني', 'البريد', 'الصف', 'الشعبة', 'السنة الدراسية'],
+            [['طالب منقول', '9900222222', 'different@test.com', '1', 'أ', '2025/2026']],
+        )
+        res = self._import_file(self.manager, file, school_id=self.school.id)
+        self.assertEqual(res.status_code, 200, res.data)
+        self.assertEqual(res.data['updated'], 1)
+        self.assertFalse(User.objects.filter(email='different@test.com').exists())
+        # already enrolled for the same year in another school: import is additive and keeps that enrollment
+        enrollments = StudentEnrollment.objects.filter(student=existing, academic_year=self.year)
+        self.assertEqual(enrollments.count(), 1)
+        self.assertEqual(enrollments.first().section, self.other_sec)
+
+    def test_import_enrolls_existing_student_without_enrollment(self):
+        existing = make_user('no-enroll@test.com', 'student', 'طالب غير مسجل', national_id='9900777777')
+        file = self._make_xlsx(
+            ['اسم الطالب', 'الرقم الوطني', 'الصف', 'الشعبة', 'السنة الدراسية'],
+            [['طالب غير مسجل', '9900777777', '1', 'أ', '2025/2026']],
+        )
+        res = self._import_file(self.manager, file, school_id=self.school.id)
+        self.assertEqual(res.status_code, 200, res.data)
+        self.assertEqual(res.data['updated'], 1)
+        en = StudentEnrollment.objects.get(student=existing, academic_year=self.year)
+        self.assertEqual(en.section.school, self.school)
+        self.assertEqual(en.section, self.sec_a)
+
+    def test_import_national_id_only_creates_placeholder_email(self):
+        file = self._make_xlsx(
+            ['اسم الطالب', 'الرقم الوطني', 'الصف', 'الشعبة', 'السنة الدراسية'],
+            [['طالب بلا بريد', '9900333333', '1', 'ب', '2025/2026']],
+        )
+        res = self._import_file(self.manager, file, school_id=self.school.id)
+        self.assertEqual(res.status_code, 200, res.data)
+        self.assertEqual(res.data['created'], 1)
+        user = User.objects.get(national_id='9900333333')
+        self.assertEqual(user.email, 'student-9900333333@student.local')
+        self.assertEqual(StudentEnrollment.objects.get(student=user).section, self.sec_b)
+
+    # ---- School-manager Excel export scoping ----
+
+    def test_manager_export_xlsx_scoped_to_school(self):
+        self._auth(self.manager)
+        res = self.client.get('/api/v1/schools/bulk/export/', {
+            'kind': 'students', 'school_id': self.school.id,
+        })
+        self.assertEqual(res.status_code, 200)
+        self.assertIn('spreadsheetml.sheet', res['Content-Type'])
+        rows = self._read_xlsx(res.content)
+        self.assertEqual(rows[0][0], 'البريد الإلكتروني')
+        flat = '\n'.join('\t'.join(str(c or '') for c in r) for r in rows)
+        self.assertIn('student@test.com', flat)
+        self.assertIn('طالب أول', flat)
+        self.assertNotIn('other-student@test.com', flat)
+
+    def test_manager_export_template(self):
+        self._auth(self.manager)
+        res = self.client.get('/api/v1/schools/bulk/export/', {
+            'kind': 'students', 'school_id': self.school.id, 'template': 1,
+        })
+        self.assertEqual(res.status_code, 200)
+        rows = self._read_xlsx(res.content)
+        self.assertEqual(len(rows), 2)
+        self.assertEqual(rows[1][1], 'محمد أحمد')
+        self.assertEqual(rows[1][2], '1000000000')
+
+    def test_manager_cannot_export_other_school(self):
+        self._auth(self.manager)
+        res = self.client.get('/api/v1/schools/bulk/export/', {
+            'kind': 'students', 'school_id': self.other_school.id,
+        })
+        self.assertEqual(res.status_code, 403)
+
+    def test_manager_cannot_export_schools(self):
+        self._auth(self.manager)
+        res = self.client.get('/api/v1/schools/bulk/export/', {
+            'kind': 'schools', 'school_id': self.school.id,
+        })
+        self.assertEqual(res.status_code, 403)
+
+    # ---- National-ID conflict on enroll ----
+
+    def test_enroll_cross_school_national_id_conflict(self):
+        cross = make_user('x-school@test.com', 'student', 'طالب مدرسة أخرى', national_id='9900444444')
+        StudentEnrollment.objects.create(student=cross, section=self.other_sec, academic_year=self.year)
+        self._auth(self.manager)
+        res = self.client.post(f'/api/v1/schools/sections/{self.sec_a.id}/enroll/', {
+            'name': 'طالب مدرسة أخرى', 'national_id': '9900444444',
+        })
+        self.assertEqual(res.status_code, 409, res.data)
+        self.assertEqual(res.data['conflict'], 'national_id')
+        self.assertEqual(res.data['student']['email'], 'x-school@test.com')
+        self.assertEqual(res.data['school']['id'], self.other_school.id)
+        # not moved yet
+        self.assertEqual(StudentEnrollment.objects.get(student=cross, academic_year=self.year).section, self.other_sec)
+
+    def test_enroll_cross_school_national_id_confirmed_moves(self):
+        cross = make_user('x-school@test.com', 'student', 'طالب مدرسة أخرى', national_id='9900444444')
+        StudentEnrollment.objects.create(student=cross, section=self.other_sec, academic_year=self.year)
+        self._auth(self.manager)
+        res = self.client.post(f'/api/v1/schools/sections/{self.sec_a.id}/enroll/', {
+            'name': 'طالب مدرسة أخرى', 'national_id': '9900444444', 'confirm': True,
+        })
+        self.assertEqual(res.status_code, 200, res.data)
+        self.assertEqual(res.data['school_moved_from'], self.other_school.name)
+        self.assertEqual(StudentEnrollment.objects.get(student=cross, academic_year=self.year).section, self.sec_a)
+
+    def test_enroll_same_school_national_id_no_conflict(self):
+        self.student.national_id = '9900555555'
+        self.student.save(update_fields=['national_id'])
+        self._auth(self.manager)
+        res = self.client.post(f'/api/v1/schools/sections/{self.sec_b.id}/enroll/', {
+            'name': 'طالب أول', 'national_id': '9900555555',
+        })
+        self.assertEqual(res.status_code, 200, res.data)
+        self.assertFalse(res.data['created_account'])
+        self.assertTrue(res.data['moved'])
+        self.assertIsNone(res.data.get('school_moved_from'))
+        self.assertEqual(StudentEnrollment.objects.get(student=self.student, academic_year=self.year).section, self.sec_b)
+
+    # ---- Class-teacher (مربي الصف) permissions ----
+
+    def test_class_teacher_sees_only_own_class_students(self):
+        self._auth(self.teacher)
+        res = self.client.get('/api/v1/schools/enrollments/')
+        self.assertEqual(res.status_code, 200, res.data)
+        rows = res.data['results'] if isinstance(res.data, dict) and 'results' in res.data else res.data
+        emails = {r['student_email'] for r in rows}
+        self.assertIn('student@test.com', emails)
+        self.assertNotIn('other-student@test.com', emails)
+        # a section the teacher does not mentor is not visible
+        res = self.client.get('/api/v1/schools/enrollments/', {'section': self.sec_b.id})
+        rows = res.data['results'] if isinstance(res.data, dict) and 'results' in res.data else res.data
+        self.assertEqual(rows, [])
+
+    def test_class_teacher_can_add_student_to_own_class(self):
+        self._auth(self.teacher)
+        res = self.client.post(f'/api/v1/schools/sections/{self.sec_a.id}/enroll/', {
+            'name': 'طالب مربي الصف', 'email': 'classkid@test.com',
+        })
+        self.assertEqual(res.status_code, 200, res.data)
+        self.assertTrue(User.objects.filter(email='classkid@test.com').exists())
+
+    def test_class_teacher_cannot_add_to_unmentored_section(self):
+        self._auth(self.teacher)
+        res = self.client.post(f'/api/v1/schools/sections/{self.sec_b.id}/enroll/', {
+            'name': 'طالب', 'email': 'nope@test.com',
+        })
+        self.assertEqual(res.status_code, 400)
+        self.assertFalse(User.objects.filter(email='nope@test.com').exists())
+
+    def test_class_teacher_records_attendance_own_class(self):
+        self._auth(self.teacher)
+        res = self.client.post('/api/v1/schools/attendances/bulk_record/', {
+            'section': self.sec_a.id,
+            'date': '2025-09-01',
+            'records': [{'student': self.student.id, 'status': 'present'}],
+        }, format='json')
+        self.assertEqual(res.status_code, 200, res.data)
+        self.assertEqual(Attendance.objects.get(student=self.student, date='2025-09-01').section, self.sec_a)
+
+    def test_class_teacher_cannot_record_unmentored_section(self):
+        self._auth(self.teacher)
+        res = self.client.post('/api/v1/schools/attendances/bulk_record/', {
+            'section': self.sec_b.id,
+            'date': '2025-09-01',
+            'records': [{'student': self.student.id, 'status': 'present'}],
+        }, format='json')
+        self.assertEqual(res.status_code, 403)
+
+    def test_class_teacher_import_export_scoped_to_section(self):
+        file = self._make_xlsx(
+            ['اسم الطالب', 'الرقم الوطني', 'البريد'],
+            [['طالب صف مربي', '9900666666', 'classimport@test.com']],
+        )
+        res = self._import_file(self.teacher, file, section_id=self.sec_a.id)
+        self.assertEqual(res.status_code, 200, res.data)
+        self.assertEqual(res.data['created'], 1)
+        user = User.objects.get(email='classimport@test.com')
+        self.assertEqual(StudentEnrollment.objects.get(student=user, academic_year=self.year).section, self.sec_a)
+
+        self._auth(self.teacher)
+        res = self.client.get('/api/v1/schools/bulk/export/', {
+            'kind': 'students', 'section_id': self.sec_a.id,
+        })
+        self.assertEqual(res.status_code, 200)
+        rows = self._read_xlsx(res.content)
+        flat = '\n'.join('\t'.join(str(c or '') for c in r) for r in rows)
+        self.assertIn('student@test.com', flat)
+        self.assertIn('classimport@test.com', flat)
+        self.assertNotIn('other-student@test.com', flat)
+
+    def test_sections_filter_by_class_teacher(self):
+        self._auth(self.admin)
+        res = self.client.get('/api/v1/schools/sections/', {'class_teacher': self.teacher.id})
+        self.assertEqual(res.status_code, 200, res.data)
+        ids = {s['id'] for s in res.data['results']}
+        self.assertEqual(ids, {self.sec_a.id})

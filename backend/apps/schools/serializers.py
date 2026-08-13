@@ -114,6 +114,7 @@ class SectionSerializer(serializers.ModelSerializer):
 class StudentEnrollmentSerializer(serializers.ModelSerializer):
     student_email = serializers.CharField(source='student.email', read_only=True)
     student_name = serializers.SerializerMethodField()
+    national_id = serializers.CharField(source='student.national_id', read_only=True, allow_null=True)
     section_name = serializers.CharField(source='section.name', read_only=True)
 
     class Meta:

@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
-import { surfaceCls, surfaceStyle, useBanner, Banner } from "@/components/school/admin/adminUi";
+import { surfaceCls, surfaceStyle, useBanner, Banner, downloadBlob } from "@/components/school/admin/adminUi";
 import SelectDropdown from "@/components/ui/SelectDropdown";
 
 interface Props {
@@ -33,6 +33,9 @@ export default function AdminSectionsView({ sections, schoolId, refresh }: Props
   const [teachers, setTeachers] = useState<TeacherOption[]>([]);
   const [drafts, setDrafts] = useState<Record<number, SectionDraft>>({});
   const [saving, setSaving] = useState(false);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [importing, setImporting] = useState(false);
 
   const [showPromote, setShowPromote] = useState(false);
   const [years, setYears] = useState<any[]>([]);
@@ -143,19 +146,98 @@ export default function AdminSectionsView({ sections, schoolId, refresh }: Props
     router.push(`/${locale}/school/admin/sections/${id}`);
   };
 
+  const onImportFile = async (file: File) => {
+    if (!file) return;
+    setImporting(true);
+    try {
+      const fd = new FormData();
+      fd.append("kind", "students");
+      if (schoolId) fd.append("school_id", schoolId);
+      fd.append("file", file);
+      const res = await api.post("/schools/bulk/import/", fd);
+      const errors = Array.isArray(res.data.errors) ? res.data.errors : [];
+      setBanner({
+        type: errors.length > 0 ? "error" : "success",
+        text: errors.length > 0
+          ? `${t("importResult", { created: res.data.created ?? 0, updated: res.data.updated ?? 0 })}\n${t("importErrorsCount", { count: errors.length })}`
+          : t("importResult", { created: res.data.created ?? 0, updated: res.data.updated ?? 0 }),
+      });
+      refresh();
+    } catch {
+      setBanner({ type: "error", text: t("bannerImportError") });
+    } finally {
+      setImporting(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  const exportStudents = async () => {
+    if (!schoolId) return;
+    try {
+      await downloadBlob(
+        "/schools/bulk/export/",
+        { kind: "students", school_id: schoolId, locale },
+        "afaq_students.xlsx",
+      );
+    } catch {
+      setBanner({ type: "error", text: t("bannerExportError") });
+    }
+  };
+
+  const downloadTemplate = async () => {
+    if (!schoolId) return;
+    try {
+      await downloadBlob(
+        "/schools/bulk/export/",
+        { kind: "students", school_id: schoolId, template: 1 },
+        "afaq_students_template.xlsx",
+      );
+    } catch {
+      setBanner({ type: "error", text: t("bannerExportError") });
+    }
+  };
+
   const dirtyCount = Object.keys(drafts).length;
   const dirtyIds = new Set(Object.keys(drafts).map(Number));
 
-  const inputCls = "w-full px-4 py-2.5 rounded-2xl border text-sm bg-[var(--color-background)]";
   const stepperCls = "w-8 h-8 rounded-lg bg-[var(--color-surface)] border text-sm font-bold leading-none transition-all hover:scale-105";
+  const headerBtnCls =
+    "px-4 py-2 rounded-xl text-sm font-bold transition-all hover:scale-105 disabled:opacity-50 border bg-[var(--color-background)]";
 
   return (
     <div className={surfaceCls} style={surfaceStyle}>
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-wrap justify-between items-center gap-3 mb-6">
         <h3 className="text-xl font-bold" style={{ fontFamily: "var(--font-heading)" }}>
           {t("sectionsHeading")}
         </h3>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={importing}
+            className={headerBtnCls}
+            style={{ borderColor: "var(--color-border)" }}
+          >
+            {importing ? t("loading") : t("importBtn")}
+          </button>
+          <button
+            type="button"
+            onClick={downloadTemplate}
+            disabled={!schoolId}
+            className={headerBtnCls}
+            style={{ borderColor: "var(--color-border)" }}
+          >
+            {t("downloadTemplate")}
+          </button>
+          <button
+            type="button"
+            onClick={exportStudents}
+            disabled={!schoolId}
+            className={headerBtnCls}
+            style={{ borderColor: "var(--color-border)" }}
+          >
+            {t("exportBtn")}
+          </button>
           <button
             type="button"
             onClick={openPromote}
@@ -168,6 +250,16 @@ export default function AdminSectionsView({ sections, schoolId, refresh }: Props
             {t("sectionsCount", { count: sections.length })}
           </span>
         </div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".xlsx,.xls,.csv"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) onImportFile(file);
+          }}
+        />
       </div>
 
       <Banner banner={banner} />
@@ -205,94 +297,103 @@ export default function AdminSectionsView({ sections, schoolId, refresh }: Props
           {t("sectionsEmpty")}
         </p>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {sections.map((sec: any) => {
-            const draft = drafts[sec.id];
-            const dirty = dirtyIds.has(sec.id);
-            return (
-              <div
-                key={sec.id}
-                onClick={() => openSection(sec.id)}
-                className="p-4 rounded-2xl bg-[var(--color-background)] border transition-all hover:scale-[1.02] hover:shadow-lg cursor-pointer"
-                style={{ borderColor: "var(--color-border)" }}
-              >
-                <div className="flex justify-between items-start gap-2">
-                  <h4 className="font-bold text-lg">{sec.name}</h4>
-                  {dirty && (
-                    <span className="shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600">
-                      {t("unsaved")}
-                    </span>
-                  )}
-                </div>
-                <p className="text-xs mt-1" style={{ color: "var(--color-text-secondary)" }}>
-                  {t("gradeLabel")} {sec.grade_name || sec.grade}
-                </p>
-
-                <div className="mt-3 inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 text-xs font-bold">
-                  <span>👥</span>
-                  {t("studentsCount", { count: sec.students_count || 0 })}
-                </div>
-
-                <div
-                  className="mt-4 space-y-3 pt-3 border-t"
-                  style={{ borderColor: "var(--color-border)" }}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <div>
-                    <label className="block text-xs font-bold mb-1">{t("capacityLabel")}</label>
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setDraft(sec.id, { capacity: Math.max(1, (draft?.capacity ?? sec.capacity ?? 30) - 1) })}
-                        className={stepperCls}
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse text-sm">
+            <thead>
+              <tr className="border-b" style={{ borderColor: "var(--color-border)" }}>
+                <th className="p-3 text-start">{t("colSection")}</th>
+                <th className="p-3 text-start">{t("gradeLabel")}</th>
+                <th className="p-3 text-center">{t("colStudents")}</th>
+                <th className="p-3 text-center">{t("capacityLabel")}</th>
+                <th className="p-3 text-start">{t("classTeacherLabel")}</th>
+                <th className="p-3 text-end">{t("colActions")}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sections.map((sec: any) => {
+                const draft = drafts[sec.id];
+                const dirty = dirtyIds.has(sec.id);
+                return (
+                  <tr key={sec.id} className="border-b hover:bg-[var(--color-background)]" style={{ borderColor: "var(--color-border)" }}>
+                    <td className="p-3">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-base">{sec.name}</span>
+                        {dirty && (
+                          <span className="shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600">
+                            {t("unsaved")}
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="p-3" style={{ color: "var(--color-text-secondary)" }}>
+                      {sec.grade_name || sec.grade}
+                    </td>
+                    <td className="p-3 text-center">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 text-xs font-bold">
+                        <span>👥</span>
+                        {sec.students_count || 0}
+                      </span>
+                    </td>
+                    <td className="p-3">
+                      <div className="flex items-center justify-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setDraft(sec.id, { capacity: Math.max(1, (draft?.capacity ?? sec.capacity ?? 30) - 1) })}
+                          className={stepperCls}
+                          style={{ borderColor: "var(--color-border)" }}
+                        >
+                          −
+                        </button>
+                        <input
+                          type="number"
+                          min={1}
+                          value={draft?.capacity ?? sec.capacity ?? 30}
+                          onChange={(e) => setDraft(sec.id, { capacity: Number(e.target.value) })}
+                          className="w-16 text-center px-1 py-2 rounded-xl border text-sm font-extrabold bg-[var(--color-surface)]"
+                          style={{ borderColor: "var(--color-border)" }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setDraft(sec.id, { capacity: (draft?.capacity ?? sec.capacity ?? 30) + 1 })}
+                          className={stepperCls}
+                          style={{ borderColor: "var(--color-border)" }}
+                        >
+                          +
+                        </button>
+                      </div>
+                    </td>
+                    <td className="p-3">
+                      <SelectDropdown
+                        value={draft?.class_teacher ?? sec.class_teacher ?? ""}
+                        onChange={(v) => setDraft(sec.id, { class_teacher: v === "" ? "" : Number(v) })}
+                        className="w-full min-w-40 px-3 py-2 rounded-xl border text-sm bg-[var(--color-background)]"
                         style={{ borderColor: "var(--color-border)" }}
                       >
-                        −
-                      </button>
-                      <input
-                        type="number"
-                        min={1}
-                        value={draft?.capacity ?? sec.capacity ?? 30}
-                        onChange={(e) => setDraft(sec.id, { capacity: Number(e.target.value) })}
-                        onKeyDown={(e) => e.stopPropagation()}
-                        className="w-20 text-center px-2 py-2 rounded-xl border text-sm font-extrabold bg-[var(--color-surface)]"
-                        style={{ borderColor: "var(--color-border)" }}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setDraft(sec.id, { capacity: (draft?.capacity ?? sec.capacity ?? 30) + 1 })}
-                        className={stepperCls}
-                        style={{ borderColor: "var(--color-border)" }}
-                      >
-                        +
-                      </button>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold mb-1">{t("classTeacherLabel")}</label>
-                    <SelectDropdown
-                      value={draft?.class_teacher ?? sec.class_teacher ?? ""}
-                      onChange={(v) => setDraft(sec.id, { class_teacher: v === "" ? "" : Number(v) })}
-                      className={inputCls}
-                      style={{ borderColor: "var(--color-border)" }}
-                    >
-                      <option value="">{t("noClassTeacher")}</option>
-                      {teachers.map((tch) => (
-                        <option key={tch.id} value={tch.id}>
-                          {tch.name}
-                        </option>
-                      ))}
-                    </SelectDropdown>
-                  </div>
-                </div>
-
-                <div className="mt-3 pt-3 border-t text-center text-xs font-bold" style={{ borderColor: "var(--color-border)", color: "var(--color-primary)" }}>
-                  {t("viewStudents")} ←
-                </div>
-              </div>
-            );
-          })}
+                        <option value="">{t("noClassTeacher")}</option>
+                        {teachers.map((tch) => (
+                          <option key={tch.id} value={tch.id}>
+                            {tch.name}
+                          </option>
+                        ))}
+                      </SelectDropdown>
+                    </td>
+                    <td className="p-3">
+                      <div className="flex justify-end">
+                        <button
+                          type="button"
+                          onClick={() => openSection(sec.id)}
+                          className="px-3 py-1.5 rounded-xl text-xs font-bold text-[var(--color-primary)] border transition-all hover:scale-105"
+                          style={{ borderColor: "var(--color-border)" }}
+                        >
+                          {t("viewStudents")} ←
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       )}
 

@@ -2208,6 +2208,26 @@
   "skippedStudents": "Students without a next grade",
   "promoteSuccess": "Promotion completed",
   "bannerPromoteError": "Could not run promotion",
-  "noYears": "No academic years available"
+  "noYears": "No academic years available",
+  "importBtn": "Import",
+  "exportBtn": "Export",
+  "downloadTemplate": "Download template",
+  "importResult": "Imported: {created} new, {updated} updated.",
+  "importErrorsCount": "{count} rows had errors.",
+  "bannerImportError": "Import failed.",
+  "bannerExportError": "Export failed.",
+  "colStudents": "Students",
+  "nationalIdLabel": "National ID",
+  "nationalIdPlaceholder": "Enter national ID",
+  "studentExistsTitle": "Student already exists",
+  "studentExistsBody": "This student is enrolled in {school}. Confirm to enroll them here?",
+  "confirmEnroll": "Confirm & enroll",
+  "schoolMovedNotice": "Student moved from {school}.",
+  "navMyClass": "My class",
+  "quickMyClass": "My class",
+  "myClassHeading": "My class",
+  "myClassSubtitle": "Manage your class students, attendance and imports.",
+  "myClassEmpty": "You are not assigned as a class teacher to any section yet.",
+  "myClassSectionLabel": "Section"
  }
 }

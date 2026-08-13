@@ -2213,6 +2213,26 @@
   "skippedStudents": "طلاب بدون صف تالٍ",
   "promoteSuccess": "تم الترفيع",
   "bannerPromoteError": "تعذر تنفيذ الترفيع",
-  "noYears": "لا توجد سنوات دراسية متاحة"
+  "noYears": "لا توجد سنوات دراسية متاحة",
+  "importBtn": "استيراد",
+  "exportBtn": "تصدير",
+  "downloadTemplate": "تحميل قالب",
+  "importResult": "تم الاستيراد: {created} جديد، {updated} محدَّث.",
+  "importErrorsCount": "احتوَت {count} صفوف على أخطاء.",
+  "bannerImportError": "فشل الاستيراد.",
+  "bannerExportError": "فشل التصدير.",
+  "colStudents": "الطلاب",
+  "nationalIdLabel": "الرقم الوطني",
+  "nationalIdPlaceholder": "أدخل الرقم الوطني",
+  "studentExistsTitle": "الطالب موجود مسبقاً",
+  "studentExistsBody": "هذا الطالب مسجَّل في {school}. هل تريد تأكيد تسجيله هنا؟",
+  "confirmEnroll": "تأكيد التسجيل",
+  "schoolMovedNotice": "تم نقل الطالب من {school}.",
+  "navMyClass": "صفّي",
+  "quickMyClass": "صفّي",
+  "myClassHeading": "صفّي",
+  "myClassSubtitle": "إدارة طلاب صفّك وحضورهم واستيراداتهم.",
+  "myClassEmpty": "لم تُعيَّن بعد كمربي صف لأي شعبة.",
+  "myClassSectionLabel": "الشعبة"
  }
 }

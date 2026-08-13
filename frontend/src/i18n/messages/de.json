@@ -2139,6 +2139,26 @@
   "skippedStudents": "Schüler ohne nächsten Jahrgang",
   "promoteSuccess": "Verschiebung abgeschlossen",
   "bannerPromoteError": "Verschiebung fehlgeschlagen",
-  "noYears": "Keine Schuljahre verfügbar"
+  "noYears": "Keine Schuljahre verfügbar",
+  "importBtn": "Importieren",
+  "exportBtn": "Exportieren",
+  "downloadTemplate": "Vorlage herunterladen",
+  "importResult": "Importiert: {created} neu, {updated} aktualisiert.",
+  "importErrorsCount": "{count} Zeilen enthielten Fehler.",
+  "bannerImportError": "Import fehlgeschlagen.",
+  "bannerExportError": "Export fehlgeschlagen.",
+  "colStudents": "Schüler",
+  "nationalIdLabel": "Personalausweis-Nr.",
+  "nationalIdPlaceholder": "Personalausweis-Nr. eingeben",
+  "studentExistsTitle": "Schüler existiert bereits",
+  "studentExistsBody": "Dieser Schüler ist an {school} eingeschrieben. Trotzdem hier einschreiben?",
+  "confirmEnroll": "Bestätigen und einschreiben",
+  "schoolMovedNotice": "Schüler von {school} übernommen.",
+  "navMyClass": "Meine Klasse",
+  "quickMyClass": "Meine Klasse",
+  "myClassHeading": "Meine Klasse",
+  "myClassSubtitle": "Verwalten Sie Schüler, Anwesenheit und Importe Ihrer Klasse.",
+  "myClassEmpty": "Sie sind noch keiner Sektion als Klassenlehrer zugewiesen.",
+  "myClassSectionLabel": "Sektion"
  }
 }

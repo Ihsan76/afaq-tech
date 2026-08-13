@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 import { api } from "@/lib/api";
-import { surfaceCls, surfaceStyle, useBanner, Banner } from "@/components/school/admin/adminUi";
+import { surfaceCls, surfaceStyle, useBanner, Banner, downloadBlob } from "@/components/school/admin/adminUi";
 import SelectDropdown from "@/components/ui/SelectDropdown";
 
 interface Props {
@@ -14,6 +14,7 @@ interface Props {
 interface AddForm {
   name: string;
   email: string;
+  national_id: string;
   parent_email: string;
   phone: string;
 }
@@ -26,8 +27,14 @@ export default function AdminSectionStudentsView({ sectionId }: Props) {
   const [students, setStudents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const [form, setForm] = useState<AddForm>({ name: "", email: "", parent_email: "", phone: "" });
+  const [form, setForm] = useState<AddForm>({ name: "", email: "", national_id: "", parent_email: "", phone: "" });
   const [adding, setAdding] = useState(false);
+
+  const [conflict, setConflict] = useState<any>(null);
+  const [confirming, setConfirming] = useState(false);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [importing, setImporting] = useState(false);
 
   const [transferEn, setTransferEn] = useState<any>(null);
   const [targetSections, setTargetSections] = useState<any[]>([]);
@@ -95,26 +102,57 @@ export default function AdminSectionStudentsView({ sectionId }: Props) {
 
   const submitAdd = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.name.trim() || !form.email.trim()) return;
+    if (!form.name.trim() || (!form.email.trim() && !form.national_id.trim())) return;
     setAdding(true);
     try {
       const res = await api.post(`/schools/sections/${sectionId}/enroll/`, {
         name: form.name.trim(),
         email: form.email.trim(),
+        national_id: form.national_id.trim(),
         parent_email: form.parent_email.trim(),
         phone: form.phone.trim(),
       });
-      if (res.data.moved && res.data.moved_from) {
-        setBanner({ type: "success", text: t("studentMovedNotice", { from: res.data.moved_from }) });
+      applyAddResult(res.data);
+    } catch (err: any) {
+      if (err?.response?.status === 409) {
+        setConflict(err.response.data);
       } else {
-        setBanner({ type: "success", text: t("addStudentSuccess") });
+        setBanner({ type: "error", text: t("bannerStudentAddError") });
       }
-      setForm({ name: "", email: "", parent_email: "", phone: "" });
-      fetchStudents();
+    } finally {
+      setAdding(false);
+    }
+  };
+
+  const applyAddResult = (data: any) => {
+    if (data.school_moved_from) {
+      setBanner({ type: "success", text: t("schoolMovedNotice", { school: data.school_moved_from }) });
+    } else if (data.moved && data.moved_from) {
+      setBanner({ type: "success", text: t("studentMovedNotice", { from: data.moved_from }) });
+    } else {
+      setBanner({ type: "success", text: t("addStudentSuccess") });
+    }
+    setForm({ name: "", email: "", national_id: "", parent_email: "", phone: "" });
+    fetchStudents();
+  };
+
+  const confirmConflict = async () => {
+    setConfirming(true);
+    try {
+      const res = await api.post(`/schools/sections/${sectionId}/enroll/`, {
+        name: form.name.trim(),
+        email: form.email.trim(),
+        national_id: form.national_id.trim(),
+        parent_email: form.parent_email.trim(),
+        phone: form.phone.trim(),
+        confirm: true,
+      });
+      setConflict(null);
+      applyAddResult(res.data);
     } catch {
       setBanner({ type: "error", text: t("bannerStudentAddError") });
     } finally {
-      setAdding(false);
+      setConfirming(false);
     }
   };
 
@@ -129,6 +167,55 @@ export default function AdminSectionStudentsView({ sectionId }: Props) {
       setBanner({ type: "error", text: t("bannerRemoveError") });
     } finally {
       setRemoving(null);
+    }
+  };
+
+  const onImportFile = async (file: File) => {
+    if (!file) return;
+    setImporting(true);
+    try {
+      const fd = new FormData();
+      fd.append("kind", "students");
+      fd.append("section_id", sectionId);
+      fd.append("file", file);
+      const res = await api.post("/schools/bulk/import/", fd);
+      const errors = Array.isArray(res.data.errors) ? res.data.errors : [];
+      setBanner({
+        type: errors.length > 0 ? "error" : "success",
+        text: errors.length > 0
+          ? `${t("importResult", { created: res.data.created ?? 0, updated: res.data.updated ?? 0 })}\n${t("importErrorsCount", { count: errors.length })}`
+          : t("importResult", { created: res.data.created ?? 0, updated: res.data.updated ?? 0 }),
+      });
+      fetchStudents();
+    } catch {
+      setBanner({ type: "error", text: t("bannerImportError") });
+    } finally {
+      setImporting(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  const exportStudents = async () => {
+    try {
+      await downloadBlob(
+        "/schools/bulk/export/",
+        { kind: "students", section_id: sectionId },
+        "afaq_students.xlsx",
+      );
+    } catch {
+      setBanner({ type: "error", text: t("bannerExportError") });
+    }
+  };
+
+  const downloadTemplate = async () => {
+    try {
+      await downloadBlob(
+        "/schools/bulk/export/",
+        { kind: "students", section_id: sectionId, template: 1 },
+        "afaq_students_template.xlsx",
+      );
+    } catch {
+      setBanner({ type: "error", text: t("bannerExportError") });
     }
   };
 
@@ -158,14 +245,51 @@ export default function AdminSectionStudentsView({ sectionId }: Props) {
               {section?.class_teacher_name ? ` • ${t("classTeacherLabel")} ${section.class_teacher_name}` : ""}
             </p>
           </div>
-          <span className="text-xs font-bold px-3 py-1 rounded-full bg-[var(--color-background)] border">
-            {t("studentsCount", { count: students.length })}
-          </span>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={importing}
+              className={`${actionBtnCls} px-4 py-2 rounded-xl`}
+              style={{ borderColor: "var(--color-border)" }}
+            >
+              {importing ? t("loading") : t("importBtn")}
+            </button>
+            <button
+              type="button"
+              onClick={downloadTemplate}
+              className={`${actionBtnCls} px-4 py-2 rounded-xl`}
+              style={{ borderColor: "var(--color-border)" }}
+            >
+              {t("downloadTemplate")}
+            </button>
+            <button
+              type="button"
+              onClick={exportStudents}
+              className={`${actionBtnCls} px-4 py-2 rounded-xl`}
+              style={{ borderColor: "var(--color-border)" }}
+            >
+              {t("exportBtn")}
+            </button>
+            <span className="text-xs font-bold px-3 py-1 rounded-full bg-[var(--color-background)] border">
+              {t("studentsCount", { count: students.length })}
+            </span>
+          </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".xlsx,.xls,.csv"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) onImportFile(file);
+            }}
+          />
         </div>
 
         <form onSubmit={submitAdd} className="mb-8 p-4 rounded-2xl bg-[var(--color-background)] border" style={{ borderColor: "var(--color-border)" }}>
           <h4 className="font-bold text-sm mb-3">{t("addStudentHeading")}</h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
             <div>
               <label className="block text-xs font-bold mb-1">{t("studentNameLabel")}</label>
               <input
@@ -179,6 +303,18 @@ export default function AdminSectionStudentsView({ sectionId }: Props) {
               />
             </div>
             <div>
+              <label className="block text-xs font-bold mb-1">{t("nationalIdLabel")}</label>
+              <input
+                type="text"
+                dir="ltr"
+                value={form.national_id}
+                onChange={(e) => setForm((f) => ({ ...f, national_id: e.target.value }))}
+                placeholder={t("nationalIdPlaceholder")}
+                className={inputCls}
+                style={{ borderColor: "var(--color-border)" }}
+              />
+            </div>
+            <div>
               <label className="block text-xs font-bold mb-1">{t("studentEmailLabel")}</label>
               <input
                 type="email"
@@ -187,7 +323,6 @@ export default function AdminSectionStudentsView({ sectionId }: Props) {
                 placeholder={t("studentEmailPlaceholder")}
                 className={inputCls}
                 style={{ borderColor: "var(--color-border)" }}
-                required
               />
             </div>
             <div>
@@ -240,6 +375,7 @@ export default function AdminSectionStudentsView({ sectionId }: Props) {
               <thead>
                 <tr className="border-b" style={{ borderColor: "var(--color-border)" }}>
                   <th className="p-3 text-start">{t("colStudent")}</th>
+                  <th className="p-3 text-start">{t("nationalIdLabel")}</th>
                   <th className="p-3 text-start">{t("colEmail")}</th>
                   <th className="p-3 text-end">{t("colActions")}</th>
                 </tr>
@@ -248,6 +384,9 @@ export default function AdminSectionStudentsView({ sectionId }: Props) {
                 {students.map((en: any) => (
                   <tr key={en.id} className="border-b hover:bg-[var(--color-background)]" style={{ borderColor: "var(--color-border)" }}>
                     <td className="p-3 font-bold">{en.student_name || en.student_email}</td>
+                    <td className="p-3" style={{ color: "var(--color-text-secondary)" }}>
+                      <span dir="ltr">{en.national_id || "—"}</span>
+                    </td>
                     <td className="p-3" style={{ color: "var(--color-text-secondary)" }}>{en.student_email}</td>
                     <td className="p-3">
                       <div className="flex justify-end gap-2">
@@ -277,6 +416,47 @@ export default function AdminSectionStudentsView({ sectionId }: Props) {
           </div>
         )}
       </div>
+
+      {conflict && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={(e) => e.target === e.currentTarget && setConflict(null)}>
+          <div className="bg-[var(--color-surface)] rounded-3xl max-w-md w-full p-6 space-y-4 shadow-xl">
+            <h3 className="text-lg font-bold">{t("studentExistsTitle")}</h3>
+            <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-sm space-y-2">
+              <p>
+                <strong>{t("colStudent")}:</strong> {conflict.student?.name || conflict.student?.email}
+              </p>
+              <p>
+                <strong>{t("schoolLabel")}</strong> {conflict.school?.name}
+              </p>
+            </div>
+            <p className="text-sm" style={{ color: "var(--color-text-secondary)" }}>
+              {t("studentExistsBody", {
+                name: conflict.student?.name || conflict.student?.email,
+                school: conflict.school?.name || "",
+              })}
+            </p>
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setConflict(null)}
+                className="px-4 py-2 rounded-xl text-sm font-bold border transition-all hover:opacity-80"
+                style={{ borderColor: "var(--color-border)" }}
+              >
+                {t("cancel")}
+              </button>
+              <button
+                type="button"
+                onClick={confirmConflict}
+                disabled={confirming}
+                className="px-4 py-2 rounded-xl text-sm font-bold text-white transition-all hover:scale-105 disabled:opacity-50"
+                style={{ background: "linear-gradient(135deg, var(--color-primary), var(--color-secondary))" }}
+              >
+                {confirming ? t("loading") : t("confirmEnroll")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {transferEn && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={(e) => e.target === e.currentTarget && setTransferEn(null)}>

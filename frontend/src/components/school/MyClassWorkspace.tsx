@@ -1,0 +1,468 @@
+"use client";
+
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
+import { api } from "@/lib/api";
+import { useAuthStore } from "@/store/auth";
+import { surfaceCls, surfaceStyle, useBanner, Banner, downloadBlob } from "@/components/school/admin/adminUi";
+import SelectDropdown from "@/components/ui/SelectDropdown";
+
+interface AddForm {
+  name: string;
+  email: string;
+  national_id: string;
+  phone: string;
+}
+
+export default function MyClassWorkspace() {
+  const t = useTranslations("school");
+  const locale = useLocale();
+  const { user } = useAuthStore();
+
+  const [sections, setSections] = useState<any[]>([]);
+  const [sectionId, setSectionId] = useState<string>("");
+  const [students, setStudents] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const [form, setForm] = useState<AddForm>({ name: "", email: "", national_id: "", phone: "" });
+  const [adding, setAdding] = useState(false);
+  const [conflict, setConflict] = useState<any>(null);
+  const [confirming, setConfirming] = useState(false);
+
+  const [attStudentId, setAttStudentId] = useState<string>("");
+  const [attStatus, setAttStatus] = useState<string>("present");
+  const [recording, setRecording] = useState(false);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [importing, setImporting] = useState(false);
+
+  const { banner, setBanner } = useBanner();
+
+  const fetchSections = useCallback(() => {
+    if (!user?.id) return;
+    setLoading(true);
+    api
+      .get("/schools/sections/", { params: { class_teacher: user.id, locale } })
+      .then((r) => {
+        const list = Array.isArray(r.data) ? r.data : r.data.results || [];
+        setSections(list);
+        setSectionId((prev) => prev || (list[0] ? String(list[0].id) : ""));
+      })
+      .catch(() => setSections([]))
+      .finally(() => setLoading(false));
+  }, [user, locale]);
+
+  const fetchStudents = useCallback(() => {
+    if (!sectionId) {
+      setStudents([]);
+      return;
+    }
+    api
+      .get("/schools/enrollments/", { params: { section: sectionId, locale } })
+      .then((r) => setStudents(Array.isArray(r.data) ? r.data : r.data.results || []))
+      .catch(() => setStudents([]));
+  }, [sectionId, locale]);
+
+  useEffect(() => {
+    fetchSections();
+  }, [fetchSections]);
+
+  useEffect(() => {
+    fetchStudents();
+  }, [fetchStudents]);
+
+  const applyAddResult = (data: any) => {
+    if (data.school_moved_from) {
+      setBanner({ type: "success", text: t("schoolMovedNotice", { school: data.school_moved_from }) });
+    } else {
+      setBanner({ type: "success", text: t("addStudentSuccess") });
+    }
+    setForm({ name: "", email: "", national_id: "", phone: "" });
+    fetchStudents();
+  };
+
+  const submitAdd = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.name.trim() || (!form.email.trim() && !form.national_id.trim()) || !sectionId) return;
+    setAdding(true);
+    try {
+      const res = await api.post(`/schools/sections/${sectionId}/enroll/`, {
+        name: form.name.trim(),
+        email: form.email.trim(),
+        national_id: form.national_id.trim(),
+        phone: form.phone.trim(),
+      });
+      applyAddResult(res.data);
+    } catch (err: any) {
+      if (err?.response?.status === 409) {
+        setConflict(err.response.data);
+      } else {
+        setBanner({ type: "error", text: t("bannerStudentAddError") });
+      }
+    } finally {
+      setAdding(false);
+    }
+  };
+
+  const confirmConflict = async () => {
+    if (!sectionId) return;
+    setConfirming(true);
+    try {
+      const res = await api.post(`/schools/sections/${sectionId}/enroll/`, {
+        name: form.name.trim(),
+        email: form.email.trim(),
+        national_id: form.national_id.trim(),
+        phone: form.phone.trim(),
+        confirm: true,
+      });
+      setConflict(null);
+      applyAddResult(res.data);
+    } catch {
+      setBanner({ type: "error", text: t("bannerStudentAddError") });
+    } finally {
+      setConfirming(false);
+    }
+  };
+
+  const recordAttendance = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!sectionId || !attStudentId) return;
+    setRecording(true);
+    try {
+      await api.post("/schools/attendances/bulk_record/", {
+        section: Number(sectionId),
+        date: new Date().toISOString().split("T")[0],
+        records: [{ student: Number(attStudentId), status: attStatus }],
+      });
+      setBanner({ type: "success", text: t("bannerAttUpdated") });
+      setAttStudentId("");
+    } catch {
+      setBanner({ type: "error", text: t("bannerAttError") });
+    } finally {
+      setRecording(false);
+    }
+  };
+
+  const onImportFile = async (file: File) => {
+    if (!file || !sectionId) return;
+    setImporting(true);
+    try {
+      const fd = new FormData();
+      fd.append("kind", "students");
+      fd.append("section_id", sectionId);
+      fd.append("file", file);
+      const res = await api.post("/schools/bulk/import/", fd);
+      const errors = Array.isArray(res.data.errors) ? res.data.errors : [];
+      setBanner({
+        type: errors.length > 0 ? "error" : "success",
+        text: errors.length > 0
+          ? `${t("importResult", { created: res.data.created ?? 0, updated: res.data.updated ?? 0 })}\n${t("importErrorsCount", { count: errors.length })}`
+          : t("importResult", { created: res.data.created ?? 0, updated: res.data.updated ?? 0 }),
+      });
+      fetchStudents();
+    } catch {
+      setBanner({ type: "error", text: t("bannerImportError") });
+    } finally {
+      setImporting(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  const exportStudents = async () => {
+    try {
+      await downloadBlob(
+        "/schools/bulk/export/",
+        { kind: "students", section_id: sectionId },
+        "afaq_students.xlsx",
+      );
+    } catch {
+      setBanner({ type: "error", text: t("bannerExportError") });
+    }
+  };
+
+  const downloadTemplate = async () => {
+    try {
+      await downloadBlob(
+        "/schools/bulk/export/",
+        { kind: "students", section_id: sectionId, template: 1 },
+        "afaq_students_template.xlsx",
+      );
+    } catch {
+      setBanner({ type: "error", text: t("bannerExportError") });
+    }
+  };
+
+  const inputCls = "w-full px-4 py-2.5 rounded-2xl border text-sm bg-[var(--color-background)]";
+
+  return (
+    <div className={surfaceCls} style={surfaceStyle}>
+      <Banner banner={banner} />
+
+      <div className="flex flex-wrap justify-between items-center gap-3 mb-6">
+        <div>
+          <h3 className="text-xl font-bold" style={{ fontFamily: "var(--font-heading)" }}>
+            {t("myClassHeading")}
+          </h3>
+          <p className="text-sm mt-1" style={{ color: "var(--color-text-secondary)" }}>
+            {t("myClassSubtitle")}
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={importing || !sectionId}
+            className="px-4 py-2 rounded-xl text-sm font-bold border transition-all hover:scale-105 disabled:opacity-50 bg-[var(--color-background)]"
+            style={{ borderColor: "var(--color-border)" }}
+          >
+            {importing ? t("loading") : t("importBtn")}
+          </button>
+          <button
+            type="button"
+            onClick={downloadTemplate}
+            disabled={!sectionId}
+            className="px-4 py-2 rounded-xl text-sm font-bold border transition-all hover:scale-105 disabled:opacity-50 bg-[var(--color-background)]"
+            style={{ borderColor: "var(--color-border)" }}
+          >
+            {t("downloadTemplate")}
+          </button>
+          <button
+            type="button"
+            onClick={exportStudents}
+            disabled={!sectionId}
+            className="px-4 py-2 rounded-xl text-sm font-bold border transition-all hover:scale-105 disabled:opacity-50 bg-[var(--color-background)]"
+            style={{ borderColor: "var(--color-border)" }}
+          >
+            {t("exportBtn")}
+          </button>
+        </div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".xlsx,.xls,.csv"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) onImportFile(file);
+          }}
+        />
+      </div>
+
+      {loading ? (
+        <p className="text-center py-10 text-sm font-bold animate-pulse" style={{ color: "var(--color-text-secondary)" }}>
+          {t("loading")}
+        </p>
+      ) : sections.length === 0 ? (
+        <p className="text-sm py-8 text-center" style={{ color: "var(--color-text-secondary)" }}>
+          {t("myClassEmpty")}
+        </p>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-6">
+            <div>
+              <label className="block text-xs font-bold mb-1">{t("myClassSectionLabel")}</label>
+              <SelectDropdown
+                value={sectionId}
+                onChange={(v) => setSectionId(String(v))}
+                className="w-full max-w-xs px-4 py-2.5 rounded-2xl border text-sm bg-[var(--color-background)]"
+                style={{ borderColor: "var(--color-border)" }}
+              >
+                {sections.map((s: any) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name} — {s.grade_name || s.grade}
+                  </option>
+                ))}
+              </SelectDropdown>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-[var(--color-background)] border" style={{ borderColor: "var(--color-border)" }}>
+              <h4 className="font-bold text-sm mb-3">{t("addStudentHeading")}</h4>
+              <form onSubmit={submitAdd} className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold mb-1">{t("studentNameLabel")}</label>
+                  <input
+                    type="text"
+                    value={form.name}
+                    onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                    placeholder={t("studentNamePlaceholder")}
+                    className={inputCls}
+                    style={{ borderColor: "var(--color-border)" }}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold mb-1">{t("nationalIdLabel")}</label>
+                  <input
+                    type="text"
+                    dir="ltr"
+                    value={form.national_id}
+                    onChange={(e) => setForm((f) => ({ ...f, national_id: e.target.value }))}
+                    placeholder={t("nationalIdPlaceholder")}
+                    className={inputCls}
+                    style={{ borderColor: "var(--color-border)" }}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold mb-1">{t("studentEmailLabel")}</label>
+                  <input
+                    type="email"
+                    value={form.email}
+                    onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+                    placeholder={t("studentEmailPlaceholder")}
+                    className={inputCls}
+                    style={{ borderColor: "var(--color-border)" }}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold mb-1">{t("studentPhoneLabel")}</label>
+                  <input
+                    type="tel"
+                    dir="ltr"
+                    value={form.phone}
+                    onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
+                    placeholder={t("studentPhonePlaceholder")}
+                    className={inputCls}
+                    style={{ borderColor: "var(--color-border)" }}
+                  />
+                </div>
+                <div className="md:col-span-2 flex justify-end">
+                  <button
+                    type="submit"
+                    disabled={adding}
+                    className="px-5 py-2 rounded-xl text-sm font-bold text-white transition-all hover:scale-105 disabled:opacity-50"
+                    style={{ background: "linear-gradient(135deg, var(--color-primary), var(--color-secondary))" }}
+                  >
+                    {adding ? t("loading") : t("addStudentBtn")}
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <div>
+              <h4 className="font-bold text-sm mb-3">
+                {t("studentsHeading")}{" "}
+                <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-[var(--color-background)] border">
+                  {t("studentsCount", { count: students.length })}
+                </span>
+              </h4>
+              {students.length === 0 ? (
+                <p className="text-sm py-6 text-center" style={{ color: "var(--color-text-secondary)" }}>
+                  {t("studentsEmpty")}
+                </p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse text-sm">
+                    <thead>
+                      <tr className="border-b" style={{ borderColor: "var(--color-border)" }}>
+                        <th className="p-3 text-start">{t("colStudent")}</th>
+                        <th className="p-3 text-start">{t("nationalIdLabel")}</th>
+                        <th className="p-3 text-start">{t("colEmail")}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {students.map((en: any) => (
+                        <tr key={en.id} className="border-b hover:bg-[var(--color-background)]" style={{ borderColor: "var(--color-border)" }}>
+                          <td className="p-3 font-bold">{en.student_name || en.student_email}</td>
+                          <td className="p-3" style={{ color: "var(--color-text-secondary)" }}>
+                            <span dir="ltr">{en.national_id || "—"}</span>
+                          </td>
+                          <td className="p-3" style={{ color: "var(--color-text-secondary)" }}>{en.student_email}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            <div className="p-4 rounded-2xl bg-[var(--color-background)] border" style={{ borderColor: "var(--color-border)" }}>
+              <h4 className="font-bold text-sm mb-3">{t("quickAttHeading")}</h4>
+              <form onSubmit={recordAttendance} className="space-y-3">
+                <div>
+                  <label className="block text-xs font-bold mb-1">{t("selectSection")}</label>
+                  <SelectDropdown
+                    value={attStudentId}
+                    onChange={(v) => setAttStudentId(String(v))}
+                    className="w-full px-3 py-2.5 rounded-2xl border text-sm bg-[var(--color-surface)]"
+                    style={{ borderColor: "var(--color-border)" }}
+                  >
+                    <option value="">{t("selectSectionPlaceholder")}</option>
+                    {students.map((en: any) => (
+                      <option key={en.id} value={en.student}>
+                        {en.student_name || en.student_email}
+                      </option>
+                    ))}
+                  </SelectDropdown>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold mb-1">{t("colStatus")}</label>
+                  <SelectDropdown
+                    value={attStatus}
+                    onChange={(v) => setAttStatus(String(v))}
+                    className="w-full px-3 py-2.5 rounded-2xl border text-sm bg-[var(--color-surface)]"
+                    style={{ borderColor: "var(--color-border)" }}
+                  >
+                    <option value="present">{t("statusPresent")}</option>
+                    <option value="absent">{t("statusAbsent")}</option>
+                    <option value="late">{t("statusLate")}</option>
+                  </SelectDropdown>
+                </div>
+                <button
+                  type="submit"
+                  disabled={recording || !attStudentId}
+                  className="w-full py-2.5 rounded-xl font-bold text-sm text-white transition-all hover:scale-105 disabled:opacity-50"
+                  style={{ background: "linear-gradient(135deg, var(--color-primary), var(--color-secondary))" }}
+                >
+                  {recording ? t("loading") : t("saveNotify")}
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {conflict && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={(e) => e.target === e.currentTarget && setConflict(null)}>
+          <div className="bg-[var(--color-surface)] rounded-3xl max-w-md w-full p-6 space-y-4 shadow-xl">
+            <h3 className="text-lg font-bold">{t("studentExistsTitle")}</h3>
+            <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-sm space-y-2">
+              <p>
+                <strong>{t("colStudent")}:</strong> {conflict.student?.name || conflict.student?.email}
+              </p>
+              <p>
+                <strong>{t("schoolLabel")}</strong> {conflict.school?.name}
+              </p>
+            </div>
+            <p className="text-sm" style={{ color: "var(--color-text-secondary)" }}>
+              {t("studentExistsBody", {
+                name: conflict.student?.name || conflict.student?.email,
+                school: conflict.school?.name || "",
+              })}
+            </p>
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setConflict(null)}
+                className="px-4 py-2 rounded-xl text-sm font-bold border transition-all hover:opacity-80"
+                style={{ borderColor: "var(--color-border)" }}
+              >
+                {t("cancel")}
+              </button>
+              <button
+                type="button"
+                onClick={confirmConflict}
+                disabled={confirming}
+                className="px-4 py-2 rounded-xl text-sm font-bold text-white transition-all hover:scale-105 disabled:opacity-50"
+                style={{ background: "linear-gradient(135deg, var(--color-primary), var(--color-secondary))" }}
+              >
+                {confirming ? t("loading") : t("confirmEnroll")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

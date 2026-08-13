@@ -6,15 +6,17 @@ import { useLocale, useTranslations } from "next-intl";
 import { api } from "@/lib/api";
 import { useAuthStore } from "@/store/auth";
 import SelectDropdown from "@/components/ui/SelectDropdown";
+import MyClassWorkspace from "@/components/school/MyClassWorkspace";
 
 interface TeacherWorkspaceProps {
-  task: "timetable" | "attendance" | "tickets";
+  task: "timetable" | "attendance" | "tickets" | "my-class";
 }
 
 const TASKS = [
   { id: "overview", href: "/teacher", labelKey: "navOverview" },
   { id: "timetable", href: "/teacher/timetable", labelKey: "navTimetable" },
   { id: "attendance", href: "/teacher/attendance", labelKey: "navAttendance" },
+  { id: "my-class", href: "/teacher/my-class", labelKey: "navMyClass" },
   { id: "tickets", href: "/teacher/tickets", labelKey: "navTickets" },
 ] as const;
 
@@ -226,6 +228,12 @@ export default function TeacherWorkspace({ task }: TeacherWorkspaceProps) {
                   </button>
                 </form>
               </div>
+            </div>
+          )}
+
+          {task === "my-class" && (
+            <div className="lg:col-span-3">
+              <MyClassWorkspace />
             </div>
           )}
 

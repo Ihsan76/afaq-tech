@@ -2139,6 +2139,26 @@
   "skippedStudents": "دانش‌آموزان بدون پایه بعدی",
   "promoteSuccess": "ارتقا انجام شد",
   "bannerPromoteError": "اجرای ارتقا ممکن نشد",
-  "noYears": "سال تحصیلی موجود نیست"
+  "noYears": "سال تحصیلی موجود نیست",
+  "importBtn": "ورود",
+  "exportBtn": "خروج",
+  "downloadTemplate": "دانلود قالب",
+  "importResult": "ورود انجام شد: {created} جدید، {updated} به‌روزرسانی شد.",
+  "importErrorsCount": "{count} ردیف دارای خطا بود.",
+  "bannerImportError": "ورود ناموفق بود.",
+  "bannerExportError": "خروج ناموفق بود.",
+  "colStudents": "دانش‌آموزان",
+  "nationalIdLabel": "کد ملی",
+  "nationalIdPlaceholder": "کد ملی را وارد کنید",
+  "studentExistsTitle": "دانش‌آموز از قبل وجود دارد",
+  "studentExistsBody": "این دانش‌آموز در {school} ثبت شده است. ثبت‌نام در اینجا را تأیید می‌کنید؟",
+  "confirmEnroll": "تأیید و ثبت‌نام",
+  "schoolMovedNotice": "دانش‌آموز از {school} منتقل شد.",
+  "navMyClass": "کلاس من",
+  "quickMyClass": "کلاس من",
+  "myClassHeading": "کلاس من",
+  "myClassSubtitle": "دانش‌آموزان، حضور و ورود اطلاعات کلاس خود را مدیریت کنید.",
+  "myClassEmpty": "هنوز به‌عنوان معلم کلاس به هیچ بخشی منصوب نشده‌اید.",
+  "myClassSectionLabel": "بخش"
  }
 }

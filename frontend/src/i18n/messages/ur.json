@@ -2139,6 +2139,26 @@
   "skippedStudents": "بغیر اگلے گریڈ کے طلباء",
   "promoteSuccess": "منتقلی مکمل",
   "bannerPromoteError": "منتقلی نہیں چل سکی",
-  "noYears": "کوئی تعلیمی سال دستیاب نہیں"
+  "noYears": "کوئی تعلیمی سال دستیاب نہیں",
+  "importBtn": "درآمد",
+  "exportBtn": "برآمد",
+  "downloadTemplate": "ٹیمپلیٹ ڈاؤن لوڈ",
+  "importResult": "درآمد مکمل: {created} نئے، {updated} اپڈیٹ ہوئے۔",
+  "importErrorsCount": "{count} قطاروں میں خرابیاں تھیں۔",
+  "bannerImportError": "درآمد ناکام ہوئی۔",
+  "bannerExportError": "برآمد ناکام ہوئی۔",
+  "colStudents": "طلبا",
+  "nationalIdLabel": "قومی شناختی نمبر",
+  "nationalIdPlaceholder": "قومی شناختی نمبر درج کریں",
+  "studentExistsTitle": "طالب علم پہلے سے موجود ہے",
+  "studentExistsBody": "یہ طالب علم {school} میں درج ہے۔ کیا یہاں درج کرنے کی تصدیق کریں؟",
+  "confirmEnroll": "تصدیق اور اندراج",
+  "schoolMovedNotice": "طالب علم {school} سے منتقل ہوا۔",
+  "navMyClass": "میری کلاس",
+  "quickMyClass": "میری کلاس",
+  "myClassHeading": "میری کلاس",
+  "myClassSubtitle": "اپنی کلاس کے طلبا، حاضری اور درآمدات کا انتظام کریں۔",
+  "myClassEmpty": "آپ ابھی کسی سیکشن کے کلاس ٹیچر مقرر نہیں ہوئے۔",
+  "myClassSectionLabel": "سیکشن"
  }
 }

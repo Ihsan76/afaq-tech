@@ -85,11 +85,15 @@ def is_school_admin(user):
 
 
 def user_section_ids(user):
-    """Returns a set of section ids the user is linked to, or None for admins (no filtering)."""
+    """Returns a set of section ids the user is linked to, or None for admins (no filtering).
+    Teachers are linked to the sections they teach (TeacherAssignment) plus the sections
+    they mentor as class teacher (مربي الصف)."""
     if not user or not user.is_authenticated:
         return set()
     if user.role == 'teacher':
-        return set(TeacherAssignment.objects.filter(teacher=user).values_list('section_id', flat=True))
+        section_ids = set(TeacherAssignment.objects.filter(teacher=user).values_list('section_id', flat=True))
+        section_ids |= set(Section.objects.filter(class_teacher=user).values_list('id', flat=True))
+        return section_ids
     if user.role == 'student':
         return set(StudentEnrollment.objects.filter(student=user).values_list('section_id', flat=True))
     if user.role == 'parent':
@@ -98,6 +102,13 @@ def user_section_ids(user):
     if user.role == 'school_admin':
         return set(Section.objects.filter(school__manager=user).values_list('id', flat=True))
     return set()
+
+
+def class_teacher_section_ids(user):
+    """Section ids where the user is the class mentor (مربي الصف)."""
+    if not (user and user.is_authenticated) or user.role != 'teacher':
+        return set()
+    return set(Section.objects.filter(class_teacher=user).values_list('id', flat=True))
 
 
 def user_school_ids(user):
@@ -177,6 +188,43 @@ class IsAdminRole(permissions.BasePermission):
 
     def has_permission(self, request, view):
         return is_admin(request.user)
+
+
+class IsAdminOrSchoolManager(permissions.BasePermission):
+    """Allows system admins unrestricted; school managers when `school_id` targets one
+    of their schools; class teachers when `section_id` targets a section they mentor.
+
+    Used by the bulk import/export endpoints so school staff can exchange student
+    data via Excel without crossing school boundaries.
+    """
+
+    def has_permission(self, request, view):
+        if not (request.user and request.user.is_authenticated):
+            return False
+        if is_admin(request.user):
+            return True
+        if is_school_admin(request.user):
+            raw = self._scoped_id(request, 'school_id')
+            if not raw:
+                return False
+            school_ids = user_school_ids(request.user)
+            return bool(school_ids) and int(raw) in school_ids
+        if is_teacher(request.user):
+            raw = self._scoped_id(request, 'section_id')
+            if not raw:
+                return False
+            return Section.objects.filter(id=int(raw), class_teacher=request.user).exists()
+        return False
+
+    @staticmethod
+    def _scoped_id(request, name):
+        raw = request.data.get(name) if request.method == 'POST' else request.query_params.get(name)
+        if raw in (None, ''):
+            return None
+        try:
+            return int(raw)
+        except (TypeError, ValueError):
+            return None
 
 
 class SchoolPagination(PageNumberPagination):
@@ -376,6 +424,9 @@ class SectionViewSet(viewsets.ModelViewSet):
         grade_id = self.request.query_params.get('grade')
         if grade_id:
             qs = qs.filter(grade_id=grade_id)
+        class_teacher = self.request.query_params.get('class_teacher')
+        if class_teacher:
+            qs = qs.filter(class_teacher_id=class_teacher)
         return qs.select_related('school', 'grade', 'academic_year').order_by('school_id', 'grade__level', 'name').annotate(
             students_count_annotated=Count('students', distinct=True)
         )
@@ -396,45 +447,44 @@ class SectionViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'], url_path='enroll', permission_classes=[permissions.IsAuthenticated])
     def enroll_student(self, request, pk=None):
-        """Add a student to this section (school-manager self-service).
+        """Add a student to this section (school-manager or class-teacher self-service).
         Creates the student account if missing and optionally a parent link.
-        If the student is already enrolled this year in another section, they are
-        moved here and the response reports `moved_from`."""
+        The student is resolved by email OR national ID. If the student already exists
+        and is enrolled in ANOTHER school, a 409 conflict is returned (unless
+        `confirm=true`) so the requester can review the student's name and school.
+        If the student is already enrolled this year in another section (same school),
+        they are moved here and the response reports `moved_from`."""
         section = self.get_object()
         if not is_admin(request.user):
             if section.school.manager_id != request.user.id:
-                raise serializers.ValidationError('يمكنك إضافة طلاب إلى شعب مدرستك فقط')
+                if not (is_teacher(request.user) and section.class_teacher_id == request.user.id):
+                    raise serializers.ValidationError('يمكنك إضافة طلاب إلى شعب مدرستك فقط')
 
-        email = (request.data.get('email') or '').strip().lower()
+        email = (request.data.get('email') or '').strip().lower() or None
         name = (request.data.get('name') or '').strip()
-        if not email or not name:
-            return Response({'error': 'name and email are required'}, status=status.HTTP_400_BAD_REQUEST)
         national_id = (request.data.get('national_id') or '').strip() or None
+        if not name or (not email and not national_id):
+            return Response({'error': 'name and (email or national_id) are required'}, status=status.HTTP_400_BAD_REQUEST)
         phone = (request.data.get('phone') or '').strip() or None
         parent_email = (request.data.get('parent_email') or '').strip().lower() or None
+        confirm = str(request.data.get('confirm', '')).lower() in ('1', 'true', 'yes')
 
-        user, created = User.objects.get_or_create(
-            email=email,
-            defaults={
-                'username': email,
-                'role': 'student',
-                'national_id': national_id,
-                'phone': phone or '',
-                'translations': {'ar': {'name': name}},
-                'is_verified': True,
-            },
-        )
-        if created:
-            user.set_unusable_password()
-            user.save(update_fields=['password'])
-        else:
-            translations = dict(user.translations or {})
-            ar = dict(translations.get('ar') or {})
-            if not ar.get('name'):
-                ar['name'] = name
-                translations['ar'] = ar
-                user.translations = translations
-                user.save(update_fields=['translations'])
+        user, created = self._resolve_enroll_student(email, national_id, name, phone, request)
+        if user is None:
+            return Response({'error': 'name and (email or national_id) are required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not created:
+            latest = StudentEnrollment.objects.filter(student=user).select_related('section__school').order_by('-id').first()
+            if latest and latest.section.school_id != section.school_id and not confirm:
+                return Response({
+                    'conflict': 'national_id',
+                    'student': {
+                        'id': user.id,
+                        'email': user.email,
+                        'name': user.translations.get('ar', {}).get('name') or user.email,
+                    },
+                    'school': {'id': latest.section.school_id, 'name': latest.section.school.name},
+                }, status=status.HTTP_409_CONFLICT)
 
         if parent_email:
             parent, _ = User.objects.get_or_create(
@@ -452,8 +502,11 @@ class SectionViewSet(viewsets.ModelViewSet):
             defaults={'section': section},
         )
         moved_from = None
+        school_moved_from = None
         if not was_created and enrollment.section_id != section.id:
             moved_from = enrollment.section.name
+            if enrollment.section.school_id != section.school_id:
+                school_moved_from = enrollment.section.school.name
             enrollment.section = section
             enrollment.save(update_fields=['section'])
 
@@ -462,6 +515,7 @@ class SectionViewSet(viewsets.ModelViewSet):
             'created_account': created,
             'moved': bool(moved_from),
             'moved_from': moved_from,
+            'school_moved_from': school_moved_from,
             'student': {
                 'id': user.id,
                 'email': user.email,
@@ -469,6 +523,49 @@ class SectionViewSet(viewsets.ModelViewSet):
             },
             'enrollment': StudentEnrollmentSerializer(enrollment, context={'request': request}).data,
         })
+
+    def _resolve_enroll_student(self, email, national_id, name, phone, request):
+        """Find or create a student by national ID or email. Returns (user, created)."""
+        user = None
+        if national_id:
+            user = User.objects.filter(national_id=national_id, role='student').first()
+        if user is None and email:
+            user = User.objects.filter(email=email, role='student').first()
+        if user:
+            changed = False
+            if national_id and not user.national_id:
+                user.national_id = national_id
+                changed = True
+            if phone and not user.phone:
+                user.phone = phone
+                changed = True
+            if user.role != 'student':
+                user.role = 'student'
+                changed = True
+            translations = dict(user.translations or {})
+            ar = dict(translations.get('ar') or {})
+            if name and not ar.get('name'):
+                ar['name'] = name
+                translations['ar'] = ar
+                user.translations = translations
+                changed = True
+            if changed:
+                user.save()
+            return user, False
+        if not email:
+            email = f'student-{national_id}@student.local'
+        user = User.objects.create_user(
+            email=email,
+            username=email,
+            role='student',
+            national_id=national_id,
+            phone=phone or '',
+            translations={'ar': {'name': name}},
+            is_verified=True,
+        )
+        user.set_unusable_password()
+        user.save(update_fields=['password'])
+        return user, True
 
 
 SECTION_LETTERS = ['أ', 'ب', 'ج', 'د', 'هـ', 'و', 'ز', 'ح', 'ط', 'ي', 'ك', 'ل', 'م', 'ن', 'س', 'ع', 'ف', 'ص', 'ق', 'ر', 'ش', 'ت', 'ث', 'خ', 'ذ', 'ض', 'ظ', 'غ']
@@ -957,13 +1054,15 @@ class AttendanceViewSet(viewsets.ModelViewSet):
         return qs.distinct()
 
     def _can_manage_section(self, user, section):
-        """Teachers (assigned to the section) and school admins (of that school) may record."""
+        """Teachers (assigned to the section or its class mentor) and school admins
+        (of that school) may record."""
         if is_admin(user):
             return True
         if user.role == 'school_admin':
             return section.school.manager_id == user.id
         if user.role == 'teacher':
-            return TeacherAssignment.objects.filter(teacher=user, section=section).exists()
+            return (TeacherAssignment.objects.filter(teacher=user, section=section).exists()
+                    or section.class_teacher_id == user.id)
         return False
 
     def perform_create(self, serializer):
@@ -1302,8 +1401,26 @@ class WeeklySummaryAPIView(APIView):
 
 
 class BulkImportView(APIView):
-    """Bulk import (الاستيراد الجماعي) of schools/students/teachers from CSV/Excel."""
-    permission_classes = [IsAdminRole]
+    """Bulk import (الاستيراد الجماعي) of schools/students/teachers from CSV/Excel.
+
+    School managers and class teachers may only import students, scoped to their own
+    school (or their class-teacher section); the file's school_code column is ignored
+    for them and their school/section is forced instead.
+    """
+
+    permission_classes = [IsAdminOrSchoolManager]
+
+    STUDENT_ALIASES = {
+        'email': ('email', 'البريد', 'البريد الإلكتروني', 'الايميل'),
+        'name': ('name', 'اسم الطالب', 'الاسم', 'student name', 'full name'),
+        'national_id': ('national_id', 'الرقم الوطني', 'رقم الهوية'),
+        'phone': ('phone', 'الهاتف', 'رقم الهاتف', 'جوال', 'phone number'),
+        'parent_email': ('parent_email', 'بريد ولي الأمر', 'البريد الإلكتروني لولي الأمر', 'parent email'),
+        'grade_level': ('grade_level', 'الصف', 'المستوى', 'الصف الدراسي', 'المرحلة', 'grade'),
+        'section_name': ('section_name', 'الشعبة', 'اسم الشعبة', 'section'),
+        'academic_year': ('academic_year', 'السنة الدراسية', 'العام الدراسي', 'academic year'),
+        'school_code': ('school_code', 'الرمز المدرسي', 'رمز المدرسة', 'school code'),
+    }
 
     def post(self, request):
         kind = request.data.get('kind', 'students')
@@ -1315,18 +1432,46 @@ class BulkImportView(APIView):
         if rows is None:
             return Response({'error': 'file must be CSV or XLSX'}, status=status.HTTP_400_BAD_REQUEST)
 
+        scope = self._resolve_scope(request)
+        if not is_admin(request.user) and kind != 'students':
+            return Response({'error': 'school managers and class teachers may only import students'}, status=status.HTTP_403_FORBIDDEN)
+
         results = {'created': 0, 'updated': 0, 'skipped': 0, 'errors': []}
 
         if kind == 'schools':
             self._import_schools(rows, results)
         elif kind == 'students':
-            self._import_students(rows, results)
+            self._import_students(rows, results, school_id=scope.get('school_id'), section=scope.get('section'))
         elif kind == 'teachers':
             self._import_teachers(rows, results)
         else:
             return Response({'error': 'kind must be schools, students or teachers'}, status=status.HTTP_400_BAD_REQUEST)
 
         return Response(results)
+
+    def _resolve_scope(self, request):
+        """Determine the forced school/section for the current user (non-admins)."""
+        user = request.user
+        if is_admin(user):
+            return {}
+        if is_school_admin(user):
+            school_ids = user_school_ids(user)
+            raw = request.data.get('school_id')
+            try:
+                school_id = int(raw)
+            except (TypeError, ValueError):
+                school_id = None
+            if school_id is None or not school_ids or school_id not in school_ids:
+                raise serializers.ValidationError({'school_id': 'school_id is required and must be one of your schools'})
+            return {'school_id': school_id}
+        if is_teacher(user):
+            raw = request.data.get('section_id')
+            try:
+                section = Section.objects.get(id=int(raw), class_teacher=user)
+            except (Section.DoesNotExist, TypeError, ValueError):
+                raise serializers.ValidationError({'section_id': 'section_id is required and must be a section you mentor'})
+            return {'school_id': section.school_id, 'section': section}
+        raise serializers.ValidationError('Not allowed to import')
 
     @staticmethod
     def _read_rows(file):
@@ -1402,31 +1547,33 @@ class BulkImportView(APIView):
             return str(int(value))
         return str(value).strip()
 
-    def _import_students(self, rows, results):
-        for row in rows:
-            email = self._cell(row, 'email')
-            name = self._cell(row, 'name')
-            if not email:
-                results['errors'].append({'row': row, 'error': 'email is required'})
-                continue
-            national_id = self._cell(row, 'national_id') or None
-            phone = self._cell(row, 'phone')
-            parent_email = self._cell(row, 'parent_email')
+    @classmethod
+    def _row_value(cls, row, aliases):
+        """First non-empty cell across the given column aliases (Arabic/English)."""
+        for alias in aliases:
+            value = cls._cell(row, alias)
+            if value:
+                return value
+        return ''
 
-            user, created = User.objects.get_or_create(
-                email=email,
-                defaults={
-                    'username': email,
-                    'role': 'student',
-                    'national_id': national_id,
-                    'phone': phone,
-                    'translations': {'ar': {'name': name}},
-                    'is_verified': True,
-                },
-            )
+    def _import_students(self, rows, results, school_id=None, section=None):
+        from apps.academics.models import Grade
+        for row in rows:
+            email = self._row_value(row, self.STUDENT_ALIASES['email']).lower() or None
+            name = self._row_value(row, self.STUDENT_ALIASES['name'])
+            national_id = self._row_value(row, self.STUDENT_ALIASES['national_id']) or None
+            phone = self._row_value(row, self.STUDENT_ALIASES['phone'])
+            parent_email = self._row_value(row, self.STUDENT_ALIASES['parent_email']).lower() or None
+
+            if not email and not national_id:
+                results['errors'].append({'row': row, 'error': 'email or national_id is required'})
+                continue
+            if not name:
+                results['errors'].append({'row': row, 'error': 'name is required'})
+                continue
+
+            user, created = self._get_or_create_student(email, national_id, name, phone)
             if created:
-                user.set_unusable_password()
-                user.save(update_fields=['password'])
                 results['created'] += 1
             else:
                 results['updated'] += 1
@@ -1441,7 +1588,50 @@ class BulkImportView(APIView):
                     parent.save(update_fields=['role'])
                 FamilyLink.objects.get_or_create(parent=parent, student=user)
 
-            self._enroll_by_row(user, row, results)
+            self._enroll_by_row(user, row, results, school_id=school_id, section=section)
+
+    def _get_or_create_student(self, email, national_id, name, phone):
+        """Resolve a student by national ID first, then email; create if missing."""
+        user = None
+        if national_id:
+            user = User.objects.filter(national_id=national_id, role='student').first()
+        if user is None and email:
+            user = User.objects.filter(email=email, role='student').first()
+        if user:
+            changed = False
+            if national_id and not user.national_id:
+                user.national_id = national_id
+                changed = True
+            if phone and not user.phone:
+                user.phone = phone
+                changed = True
+            if user.role != 'student':
+                user.role = 'student'
+                changed = True
+            translations = dict(user.translations or {})
+            ar = dict(translations.get('ar') or {})
+            if name and not ar.get('name'):
+                ar['name'] = name
+                translations['ar'] = ar
+                user.translations = translations
+                changed = True
+            if changed:
+                user.save()
+            return user, False
+        if not email:
+            email = f'student-{national_id}@student.local'
+        user = User.objects.create_user(
+            email=email,
+            username=email,
+            role='student',
+            national_id=national_id,
+            phone=phone or '',
+            translations={'ar': {'name': name}},
+            is_verified=True,
+        )
+        user.set_unusable_password()
+        user.save(update_fields=['password'])
+        return user, True
 
     def _import_teachers(self, rows, results):
         for row in rows:
@@ -1467,23 +1657,31 @@ class BulkImportView(APIView):
                 results['updated'] += 1
             self._assign_teacher(user, row, results)
 
-    def _enroll_by_row(self, student, row, results):
+    def _enroll_by_row(self, student, row, results, school_id=None, section=None):
         from apps.academics.models import Grade
-        grade_level = row.get('grade_level')
-        section_name = row.get('section_name')
-        year_name = row.get('academic_year')
-        school_code = row.get('school_code')
+        grade_level = self._row_value(row, self.STUDENT_ALIASES['grade_level'])
+        section_name = self._row_value(row, self.STUDENT_ALIASES['section_name'])
+        year_name = self._row_value(row, self.STUDENT_ALIASES['academic_year'])
+        school_code = self._row_value(row, self.STUDENT_ALIASES['school_code'])
+        if section is not None:
+            school_id = section.school_id
+            grade_level = grade_level or section.grade.level
+            section_name = section_name or section.name
+            year_name = year_name or section.academic_year.name
+            school_code = section.school.school_code
+        elif school_id is not None and not school_code:
+            school_code = School.objects.filter(id=school_id).values_list('school_code', flat=True).first()
         if not all([grade_level, section_name, year_name, school_code]):
             return
         try:
             grade = Grade.objects.get(level=grade_level)
             year = AcademicYear.objects.get(name=year_name)
-            school = School.objects.get(school_code=school_code)
-            section, _ = Section.objects.get_or_create(
+            school = School.objects.get(id=school_id) if school_id else School.objects.get(school_code=school_code)
+            sec, _ = Section.objects.get_or_create(
                 school=school, grade=grade, academic_year=year, name=section_name,
             )
             StudentEnrollment.objects.get_or_create(
-                student=student, academic_year=year, defaults={'section': section},
+                student=student, academic_year=year, defaults={'section': sec},
             )
         except (Grade.DoesNotExist, AcademicYear.DoesNotExist, School.DoesNotExist) as e:
             results['errors'].append({'row': row, 'error': str(e)})
@@ -1514,60 +1712,163 @@ class BulkImportView(APIView):
 
 
 class BulkExportView(APIView):
-    """Bulk export (التصدير الجماعي) of students/teachers as CSV."""
-    permission_classes = [IsAdminRole]
+    """Bulk export (التصدير الجماعي) of students/teachers as XLSX or CSV.
+
+    School managers and class teachers are scoped to their own school/section.
+    `template=1` returns the header row plus a sample row (Eduwave-style template).
+    """
+
+    permission_classes = [IsAdminOrSchoolManager]
+
+    STUDENT_HEADERS = [
+        ('email', 'البريد الإلكتروني'),
+        ('name', 'اسم الطالب'),
+        ('national_id', 'الرقم الوطني'),
+        ('phone', 'الهاتف'),
+        ('parent_email', 'بريد ولي الأمر'),
+        ('grade_level', 'الصف'),
+        ('section_name', 'الشعبة'),
+        ('academic_year', 'السنة الدراسية'),
+        ('school_code', 'الرمز المدرسي'),
+    ]
+    SAMPLE_ROW = {
+        'email': 'student@example.com',
+        'name': 'محمد أحمد',
+        'national_id': '1000000000',
+        'phone': '0790000000',
+        'parent_email': 'parent@example.com',
+        'grade_level': '8',
+        'section_name': 'أ',
+        'academic_year': '2025-2026',
+        'school_code': '1001',
+    }
 
     def get(self, request):
         kind = request.query_params.get('kind', 'students')
-        response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = f'attachment; filename="schools_{kind}.csv"'
+        if not is_admin(request.user) and kind != 'students':
+            return Response({'error': 'school managers and class teachers may only export students'}, status=status.HTTP_403_FORBIDDEN)
+        fmt = (request.query_params.get('file_format') or 'xlsx').lower()
+        if fmt not in ('xlsx', 'csv'):
+            return Response({'error': 'file_format must be xlsx or csv'}, status=status.HTTP_400_BAD_REQUEST)
+        template = str(request.query_params.get('template', '')).lower() in ('1', 'true', 'yes')
+
+        scope = self._resolve_scope(request)
 
         if kind == 'schools':
-            writer = csv.writer(response)
-            writer.writerow(['school_code', 'name', 'directorate', 'governorate', 'region', 'gender', 'education_type', 'address'])
-            for s in School.objects.all().order_by('school_code'):
-                writer.writerow([
-                    s.school_code,
-                    s.name,
-                    s.directorate,
-                    s.governorate,
-                    s.region,
-                    s.gender,
-                    s.education_type,
-                    s.address,
-                ])
+            rows = [
+                [s.school_code, s.name, s.directorate, s.governorate, s.region, s.gender, s.education_type, s.address]
+                for s in School.objects.all().order_by('school_code')
+            ]
+            headers = ['school_code', 'name', 'directorate', 'governorate', 'region', 'gender', 'education_type', 'address']
         elif kind == 'students':
-            writer = csv.writer(response)
-            writer.writerow(['email', 'name', 'national_id', 'phone', 'school_code', 'grade_level', 'section_name', 'academic_year'])
-            enrollments = StudentEnrollment.objects.select_related('student', 'section', 'section__school', 'section__grade', 'section__academic_year')
-            for en in enrollments:
-                writer.writerow([
-                    en.student.email,
-                    en.student.translations.get('ar', {}).get('name', ''),
-                    en.student.national_id or '',
-                    en.student.phone,
-                    en.section.school.school_code,
-                    en.section.grade.level,
-                    en.section.name,
-                    en.section.academic_year.name,
-                ])
+            headers = [label for _, label in self.STUDENT_HEADERS]
+            if template:
+                rows = [[self.SAMPLE_ROW[key] for key, _ in self.STUDENT_HEADERS]]
+            else:
+                enrollments = self._scoped_enrollments(scope)
+                rows = []
+                for en in enrollments:
+                    rows.append([
+                        en.student.email,
+                        en.student.translations.get('ar', {}).get('name', ''),
+                        en.student.national_id or '',
+                        en.student.phone or '',
+                        ', '.join(g.parent.email for g in en.student.linked_guardians.all()),
+                        en.section.grade.level,
+                        en.section.name,
+                        en.section.academic_year.name,
+                        en.section.school.school_code,
+                    ])
         elif kind == 'teachers':
-            writer = csv.writer(response)
-            writer.writerow(['email', 'name', 'subject', 'school_code', 'section_name', 'academic_year'])
+            headers = ['email', 'name', 'subject', 'school_code', 'section_name', 'academic_year']
             assignments = TeacherAssignment.objects.select_related('teacher', 'section', 'section__school', 'section__academic_year')
-            for a in assignments:
-                writer.writerow([
-                    a.teacher.email,
-                    a.teacher.translations.get('ar', {}).get('name', ''),
-                    a.subject.translations.get('ar', {}).get('name', ''),
-                    a.section.school.school_code,
-                    a.section.name,
-                    a.section.academic_year.name,
-                ])
+            if not is_admin(request.user):
+                assignments = assignments.filter(section__school_id=scope.get('school_id'))
+            rows = [[
+                a.teacher.email,
+                a.teacher.translations.get('ar', {}).get('name', ''),
+                a.subject.translations.get('ar', {}).get('name', ''),
+                a.section.school.school_code,
+                a.section.name,
+                a.section.academic_year.name,
+            ] for a in assignments]
         else:
             return Response({'error': 'kind must be schools, students or teachers'}, status=status.HTTP_400_BAD_REQUEST)
 
+        filename = f'afaq_students_template.xlsx' if template else f'afaq_{kind}.{fmt}'
+        if fmt == 'csv':
+            response = HttpResponse(content_type='text/csv')
+            response['Content-Disposition'] = f'attachment; filename="{filename}"'
+            writer = csv.writer(response)
+            writer.writerow(headers)
+            for row in rows:
+                writer.writerow(row)
+            return response
+        return self._xlsx_response(headers, rows, filename)
+
+    def _scoped_enrollments(self, scope):
+        qs = StudentEnrollment.objects.select_related(
+            'student', 'section', 'section__school', 'section__grade', 'section__academic_year',
+        ).prefetch_related('student__linked_guardians__parent')
+        if scope.get('school_id') is not None:
+            qs = qs.filter(section__school_id=scope['school_id'])
+        if scope.get('section') is not None:
+            qs = qs.filter(section=scope['section'])
+        return qs.order_by('section__name', 'student__translations')
+
+    def _xlsx_response(self, headers, rows, filename):
+        from openpyxl import Workbook
+        from openpyxl.styles import Alignment, Font, PatternFill
+        wb = Workbook()
+        ws = wb.active
+        ws.title = 'Sheet1'
+        header_fill = PatternFill('solid', fgColor='1F4E79')
+        header_font = Font(color='FFFFFF', bold=True)
+        for col, header in enumerate(headers, start=1):
+            cell = ws.cell(row=1, column=col, value=header)
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = Alignment(horizontal='center', vertical='center')
+        for r, row in enumerate(rows, start=2):
+            for c, value in enumerate(row, start=1):
+                cell = ws.cell(row=r, column=c, value=value)
+                cell.alignment = Alignment(horizontal='right')
+        ws.column_dimensions['A'].width = 26
+        ws.column_dimensions['B'].width = 28
+        ws.column_dimensions['C'].width = 18
+        for col in ws.columns:
+            letter = col[0].column_letter
+            if letter not in ('A', 'B', 'C'):
+                ws.column_dimensions[letter].width = 16
+        buf = io.BytesIO()
+        wb.save(buf)
+        buf.seek(0)
+        response = HttpResponse(buf, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
         return response
+
+    def _resolve_scope(self, request):
+        user = request.user
+        if is_admin(user):
+            return {}
+        if is_school_admin(user):
+            school_ids = user_school_ids(user)
+            raw = request.query_params.get('school_id')
+            try:
+                school_id = int(raw)
+            except (TypeError, ValueError):
+                school_id = None
+            if school_id is None or not school_ids or school_id not in school_ids:
+                raise serializers.ValidationError({'school_id': 'school_id is required and must be one of your schools'})
+            return {'school_id': school_id}
+        if is_teacher(user):
+            raw = request.query_params.get('section_id')
+            try:
+                section = Section.objects.get(id=int(raw), class_teacher=user)
+            except (Section.DoesNotExist, TypeError, ValueError):
+                raise serializers.ValidationError({'section_id': 'section_id is required and must be a section you mentor'})
+            return {'school_id': section.school_id, 'section': section}
+        raise serializers.ValidationError('Not allowed to export')
 
 
 class UserSettingsAPIView(APIView):

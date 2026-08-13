@@ -2139,6 +2139,26 @@
   "skippedStudents": "Estudiantes sin siguiente grado",
   "promoteSuccess": "Promoción completada",
   "bannerPromoteError": "No se pudo ejecutar la promoción",
-  "noYears": "No hay años académicos disponibles"
+  "noYears": "No hay años académicos disponibles",
+  "importBtn": "Importar",
+  "exportBtn": "Exportar",
+  "downloadTemplate": "Descargar plantilla",
+  "importResult": "Importados: {created} nuevos, {updated} actualizados.",
+  "importErrorsCount": "{count} filas tenían errores.",
+  "bannerImportError": "Error en la importación.",
+  "bannerExportError": "Error en la exportación.",
+  "colStudents": "Estudiantes",
+  "nationalIdLabel": "DNI",
+  "nationalIdPlaceholder": "Ingrese el DNI",
+  "studentExistsTitle": "El estudiante ya existe",
+  "studentExistsBody": "Este estudiante está matriculado en {school}. ¿Confirmar matrícula aquí?",
+  "confirmEnroll": "Confirmar y matricular",
+  "schoolMovedNotice": "Estudiante trasladado desde {school}.",
+  "navMyClass": "Mi clase",
+  "quickMyClass": "Mi clase",
+  "myClassHeading": "Mi clase",
+  "myClassSubtitle": "Gestiona estudiantes, asistencia e importaciones de tu clase.",
+  "myClassEmpty": "Aún no se te ha asignado una sección como tutor.",
+  "myClassSectionLabel": "Sección"
  }
 }

@@ -2139,6 +2139,26 @@
   "skippedStudents": "Sonraki sınıfı olmayan öğrenciler",
   "promoteSuccess": "Terfi tamamlandı",
   "bannerPromoteError": "Terfi çalıştırılamadı",
-  "noYears": "Öğretim yılı yok"
+  "noYears": "Öğretim yılı yok",
+  "importBtn": "İçe aktar",
+  "exportBtn": "Dışa aktar",
+  "downloadTemplate": "Şablonu indir",
+  "importResult": "Aktarıldı: {created} yeni, {updated} güncellendi.",
+  "importErrorsCount": "{count} satırda hata vardı.",
+  "bannerImportError": "İçe aktarma başarısız.",
+  "bannerExportError": "Dışa aktarma başarısız.",
+  "colStudents": "Öğrenciler",
+  "nationalIdLabel": "Kimlik No",
+  "nationalIdPlaceholder": "Kimlik no girin",
+  "studentExistsTitle": "Öğrenci zaten var",
+  "studentExistsBody": "Bu öğrenci {school} okuluna kayıtlı. Buraya kaydetmeyi onaylıyor musunuz?",
+  "confirmEnroll": "Onayla ve kaydet",
+  "schoolMovedNotice": "Öğrenci {school} okulundan taşındı.",
+  "navMyClass": "Sınıfım",
+  "quickMyClass": "Sınıfım",
+  "myClassHeading": "Sınıfım",
+  "myClassSubtitle": "Sınıfınızın öğrencilerini, devamını ve aktarımlarını yönetin.",
+  "myClassEmpty": "Henüz hiçbir şubeye sınıf öğretmeni olarak atanmadınız.",
+  "myClassSectionLabel": "Şube"
  }
 }

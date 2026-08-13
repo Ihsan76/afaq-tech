@@ -2139,6 +2139,26 @@
   "skippedStudents": "পরবর্তী শ্রেণি নেই এমন শিক্ষার্থী",
   "promoteSuccess": "স্থানান্তর সম্পন্ন",
   "bannerPromoteError": "স্থানান্তর চালানো যায়নি",
-  "noYears": "কোনো শিক্ষাবর্ষ নেই"
+  "noYears": "কোনো শিক্ষাবর্ষ নেই",
+  "importBtn": "ইমপোর্ট",
+  "exportBtn": "এক্সপোর্ট",
+  "downloadTemplate": "টেমপ্লেট ডাউনলোড",
+  "importResult": "ইমপোর্ট সম্পন্ন: {created} নতুন, {updated} হালনাগাদ।",
+  "importErrorsCount": "{count} সারিতে ত্রুটি ছিল।",
+  "bannerImportError": "ইমপোর্ট ব্যর্থ হয়েছে।",
+  "bannerExportError": "এক্সপোর্ট ব্যর্থ হয়েছে।",
+  "colStudents": "শিক্ষার্থী",
+  "nationalIdLabel": "জাতীয় আইডি",
+  "nationalIdPlaceholder": "জাতীয় আইডি দিন",
+  "studentExistsTitle": "শিক্ষার্থী ইতিমধ্যে আছে",
+  "studentExistsBody": "এই শিক্ষার্থী {school} এ নথিভুক্ত। এখানে নথিভুক্ত করতে নিশ্চিত করবেন?",
+  "confirmEnroll": "নিশ্চিত করে নথিভুক্ত করুন",
+  "schoolMovedNotice": "শিক্ষার্থী {school} থেকে স্থানান্তরিত হয়েছে।",
+  "navMyClass": "আমার ক্লাস",
+  "quickMyClass": "আমার ক্লাস",
+  "myClassHeading": "আমার ক্লাস",
+  "myClassSubtitle": "আপনার ক্লাসের শিক্ষার্থী, উপস্থিতি ও ইমপোর্ট ব্যবস্থাপনা।",
+  "myClassEmpty": "আপনি এখনো কোনো সেকশনের শ্রেণি শিক্ষক নিযুক্ত হননি।",
+  "myClassSectionLabel": "সেকশন"
  }
 }

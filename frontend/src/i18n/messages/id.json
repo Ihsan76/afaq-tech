@@ -2139,6 +2139,26 @@
   "skippedStudents": "Siswa tanpa kelas berikutnya",
   "promoteSuccess": "Perpindahan selesai",
   "bannerPromoteError": "Gagal menjalankan perpindahan",
-  "noYears": "Tidak ada tahun ajaran"
+  "noYears": "Tidak ada tahun ajaran",
+  "importBtn": "Impor",
+  "exportBtn": "Ekspor",
+  "downloadTemplate": "Unduh template",
+  "importResult": "Diimpor: {created} baru, {updated} diperbarui.",
+  "importErrorsCount": "{count} baris memiliki kesalahan.",
+  "bannerImportError": "Impor gagal.",
+  "bannerExportError": "Ekspor gagal.",
+  "colStudents": "Siswa",
+  "nationalIdLabel": "NIK",
+  "nationalIdPlaceholder": "Masukkan NIK",
+  "studentExistsTitle": "Siswa sudah ada",
+  "studentExistsBody": "Siswa ini terdaftar di {school}. Konfirmasi untuk mendaftarkannya di sini?",
+  "confirmEnroll": "Konfirmasi & daftarkan",
+  "schoolMovedNotice": "Siswa dipindahkan dari {school}.",
+  "navMyClass": "Kelas saya",
+  "quickMyClass": "Kelas saya",
+  "myClassHeading": "Kelas saya",
+  "myClassSubtitle": "Kelola siswa, kehadiran, dan impor kelas Anda.",
+  "myClassEmpty": "Anda belum ditugaskan sebagai wali kelas pada bagian mana pun.",
+  "myClassSectionLabel": "Bagian"
  }
 }

@@ -2139,6 +2139,26 @@
   "skippedStudents": "Élèves sans niveau suivant",
   "promoteSuccess": "Promotion terminée",
   "bannerPromoteError": "Impossible de lancer la promotion",
-  "noYears": "Aucune année scolaire disponible"
+  "noYears": "Aucune année scolaire disponible",
+  "importBtn": "Importer",
+  "exportBtn": "Exporter",
+  "downloadTemplate": "Télécharger le modèle",
+  "importResult": "Importés : {created} nouveaux, {updated} mis à jour.",
+  "importErrorsCount": "{count} lignes contenaient des erreurs.",
+  "bannerImportError": "Échec de l'importation.",
+  "bannerExportError": "Échec de l'exportation.",
+  "colStudents": "Élèves",
+  "nationalIdLabel": "N° national",
+  "nationalIdPlaceholder": "Saisir le n° national",
+  "studentExistsTitle": "L'élève existe déjà",
+  "studentExistsBody": "Cet élève est inscrit à {school}. Confirmer l'inscription ici ?",
+  "confirmEnroll": "Confirmer et inscrire",
+  "schoolMovedNotice": "Élève transféré depuis {school}.",
+  "navMyClass": "Ma classe",
+  "quickMyClass": "Ma classe",
+  "myClassHeading": "Ma classe",
+  "myClassSubtitle": "Gérez les élèves, présences et importations de votre classe.",
+  "myClassEmpty": "Vous n'êtes encore assigné à aucune section comme professeur principal.",
+  "myClassSectionLabel": "Section"
  }
 }
