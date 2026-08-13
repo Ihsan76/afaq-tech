@@ -129,6 +129,49 @@ class CanManageAnnouncements(permissions.BasePermission):
         return is_admin(request.user) or is_teacher(request.user) or is_school_admin(request.user)
 
 
+class CanManageEnrollments(permissions.BasePermission):
+    """Enrollment writes (create/update/delete/transfer) only for system admins or
+    school managers, and only within the school(s) they manage."""
+
+    def has_permission(self, request, view):
+        if request.method in permissions.SAFE_METHODS:
+            return bool(request.user and request.user.is_authenticated)
+        if not (request.user and request.user.is_authenticated):
+            return False
+        if is_admin(request.user):
+            return True
+        if not is_school_admin(request.user):
+            return False
+        if view.action == 'create':
+            raw = request.data.get('section')
+            if isinstance(raw, dict):
+                raw = raw.get('id')
+            if raw is None:
+                return False
+            return Section.objects.filter(id=raw, school__manager=request.user).exists()
+        # Detail actions (update/destroy/transfer) rely on has_object_permission.
+        return True
+
+    def has_object_permission(self, request, view, obj):
+        if request.method in permissions.SAFE_METHODS:
+            return bool(request.user and request.user.is_authenticated)
+        if is_admin(request.user):
+            return True
+        if is_school_admin(request.user):
+            school_ids = user_school_ids(request.user)
+            return obj.section.school_id in school_ids if school_ids else False
+        return False
+
+
+class IsAdminOrReadOnlyYears(permissions.BasePermission):
+    """Academic years are global: anyone may read; only system admins may create/update/delete."""
+
+    def has_permission(self, request, view):
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        return is_admin(request.user)
+
+
 class IsAdminRole(permissions.BasePermission):
     """Allows access only for users with the admin role (or staff), consistent with is_admin()."""
 
@@ -209,10 +252,10 @@ class SchoolViewSet(viewsets.ModelViewSet):
 class AcademicYearViewSet(viewsets.ModelViewSet):
     queryset = AcademicYear.objects.all()
     serializer_class = AcademicYearSerializer
-    permission_classes = [IsAdminOrReadOnly]
+    permission_classes = [IsAdminOrReadOnlyYears]
 
     def get_queryset(self):
-        if is_admin(self.request.user):
+        if is_admin(self.request.user) or is_school_admin(self.request.user):
             return AcademicYear.objects.all()
         section_ids = user_section_ids(self.request.user)
         if not section_ids:
@@ -220,12 +263,25 @@ class AcademicYearViewSet(viewsets.ModelViewSet):
         year_ids = Section.objects.filter(id__in=section_ids).values_list('academic_year_id', flat=True)
         return AcademicYear.objects.filter(id__in=year_ids)
 
-    @action(detail=True, methods=['post'], permission_classes=[IsAdminRole])
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def promote(self, request, pk=None):
-        """Annual promotion (الترفيع السنوي): moves all current enrollments of this year
-        into the next academic year and next grade, keeping history archived."""
+        """Annual promotion (الترفيع السنوي): moves the enrollments of this year
+        into the next academic year and next grade, keeping history archived.
+        System admins may promote all schools or a specific one via school_id;
+        school managers may only promote their own school (school_id required)."""
         source_year = self.get_object()
         from apps.academics.models import Grade
+
+        user = request.user
+        school_id = request.data.get('school_id')
+        if not is_admin(user):
+            if not is_school_admin(user):
+                return Response({'error': 'غير مصرح لك بإجراء الترفيع'}, status=status.HTTP_403_FORBIDDEN)
+            if not school_id:
+                return Response({'error': 'school_id is required for school managers'}, status=status.HTTP_400_BAD_REQUEST)
+            school_ids = user_school_ids(user)
+            if int(school_id) not in school_ids:
+                return Response({'error': 'يمكنك ترفيع مدرستك فقط'}, status=status.HTTP_403_FORBIDDEN)
 
         target_year_id = request.data.get('target_year_id')
         target_grade_id = request.data.get('target_grade_id')
@@ -244,6 +300,8 @@ class AcademicYearViewSet(viewsets.ModelViewSet):
                 return Response({'error': 'target grade not found'}, status=status.HTTP_404_NOT_FOUND)
 
         enrollments = StudentEnrollment.objects.filter(academic_year=source_year).select_related('student', 'section', 'section__school', 'section__grade')
+        if school_id:
+            enrollments = enrollments.filter(section__school_id=school_id)
 
         created = []
         skipped = []
@@ -258,6 +316,7 @@ class AcademicYearViewSet(viewsets.ModelViewSet):
                     grade=new_grade,
                     academic_year=target_year,
                     name=en.section.name,
+                    defaults={'class_teacher': en.section.class_teacher, 'capacity': en.section.capacity},
                 )
                 _, was_created = StudentEnrollment.objects.get_or_create(
                     student=en.student,
@@ -311,7 +370,13 @@ class SectionViewSet(viewsets.ModelViewSet):
         else:
             # If no school param specified for non-admin, ensure grade__school_offers matches school_id
             qs = qs.filter(grade__school_offers__school_id=F('school_id'))
-        return qs.select_related('school', 'grade', 'academic_year').order_by('school_id', 'grade_id', 'name').annotate(
+        academic_year_id = self.request.query_params.get('academic_year')
+        if academic_year_id:
+            qs = qs.filter(academic_year_id=academic_year_id)
+        grade_id = self.request.query_params.get('grade')
+        if grade_id:
+            qs = qs.filter(grade_id=grade_id)
+        return qs.select_related('school', 'grade', 'academic_year').order_by('school_id', 'grade__level', 'name').annotate(
             students_count_annotated=Count('students', distinct=True)
         )
 
@@ -328,6 +393,82 @@ class SectionViewSet(viewsets.ModelViewSet):
             if school.manager_id != self.request.user.id:
                 raise serializers.ValidationError('يمكنك تعديل شعب مدرستك فقط')
         serializer.save()
+
+    @action(detail=True, methods=['post'], url_path='enroll', permission_classes=[permissions.IsAuthenticated])
+    def enroll_student(self, request, pk=None):
+        """Add a student to this section (school-manager self-service).
+        Creates the student account if missing and optionally a parent link.
+        If the student is already enrolled this year in another section, they are
+        moved here and the response reports `moved_from`."""
+        section = self.get_object()
+        if not is_admin(request.user):
+            if section.school.manager_id != request.user.id:
+                raise serializers.ValidationError('يمكنك إضافة طلاب إلى شعب مدرستك فقط')
+
+        email = (request.data.get('email') or '').strip().lower()
+        name = (request.data.get('name') or '').strip()
+        if not email or not name:
+            return Response({'error': 'name and email are required'}, status=status.HTTP_400_BAD_REQUEST)
+        national_id = (request.data.get('national_id') or '').strip() or None
+        phone = (request.data.get('phone') or '').strip() or None
+        parent_email = (request.data.get('parent_email') or '').strip().lower() or None
+
+        user, created = User.objects.get_or_create(
+            email=email,
+            defaults={
+                'username': email,
+                'role': 'student',
+                'national_id': national_id,
+                'phone': phone or '',
+                'translations': {'ar': {'name': name}},
+                'is_verified': True,
+            },
+        )
+        if created:
+            user.set_unusable_password()
+            user.save(update_fields=['password'])
+        else:
+            translations = dict(user.translations or {})
+            ar = dict(translations.get('ar') or {})
+            if not ar.get('name'):
+                ar['name'] = name
+                translations['ar'] = ar
+                user.translations = translations
+                user.save(update_fields=['translations'])
+
+        if parent_email:
+            parent, _ = User.objects.get_or_create(
+                email=parent_email,
+                defaults={'username': parent_email, 'role': 'parent', 'translations': {'ar': {'name': parent_email}}},
+            )
+            if parent.role not in ('parent', 'admin', 'teacher'):
+                parent.role = 'parent'
+                parent.save(update_fields=['role'])
+            FamilyLink.objects.get_or_create(parent=parent, student=user)
+
+        enrollment, was_created = StudentEnrollment.objects.get_or_create(
+            student=user,
+            academic_year=section.academic_year,
+            defaults={'section': section},
+        )
+        moved_from = None
+        if not was_created and enrollment.section_id != section.id:
+            moved_from = enrollment.section.name
+            enrollment.section = section
+            enrollment.save(update_fields=['section'])
+
+        return Response({
+            'status': 'enrolled',
+            'created_account': created,
+            'moved': bool(moved_from),
+            'moved_from': moved_from,
+            'student': {
+                'id': user.id,
+                'email': user.email,
+                'name': user.translations.get('ar', {}).get('name') or user.email,
+            },
+            'enrollment': StudentEnrollmentSerializer(enrollment, context={'request': request}).data,
+        })
 
 
 SECTION_LETTERS = ['أ', 'ب', 'ج', 'د', 'هـ', 'و', 'ز', 'ح', 'ط', 'ي', 'ك', 'ل', 'م', 'ن', 'س', 'ع', 'ف', 'ص', 'ق', 'ر', 'ش', 'ت', 'ث', 'خ', 'ذ', 'ض', 'ظ', 'غ']
@@ -605,7 +746,7 @@ class TeacherAssignmentViewSet(viewsets.ModelViewSet):
 class StudentEnrollmentViewSet(viewsets.ModelViewSet):
     queryset = StudentEnrollment.objects.all()
     serializer_class = StudentEnrollmentSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [CanManageEnrollments]
 
     def get_queryset(self):
         if is_admin(self.request.user):
@@ -631,9 +772,10 @@ class StudentEnrollmentViewSet(viewsets.ModelViewSet):
             qs = qs.filter(section__school_id=school_id)
         return qs
 
-    @action(detail=True, methods=['post'], permission_classes=[IsAdminRole])
+    @action(detail=True, methods=['post'], permission_classes=[CanManageEnrollments])
     def transfer(self, request, pk=None):
-        """Transfer a student to another section (same school) or another school, keeping archive."""
+        """Transfer a student to another section (same school/year/grade for school
+        managers; unrestricted for system admins), keeping archive."""
         enrollment = self.get_object()
         target_section_id = request.data.get('target_section_id')
         if not target_section_id:
@@ -643,14 +785,23 @@ class StudentEnrollmentViewSet(viewsets.ModelViewSet):
         except Section.DoesNotExist:
             return Response({'error': 'target section not found'}, status=status.HTTP_404_NOT_FOUND)
 
+        if not is_admin(request.user):
+            if (target_section.school_id != enrollment.section.school_id
+                    or target_section.academic_year_id != enrollment.section.academic_year_id
+                    or target_section.grade_id != enrollment.section.grade_id):
+                return Response(
+                    {'error': 'يمكن نقل الطالب ضمن نفس المدرسة والسنة الدراسية والصف فقط'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
         old_section = enrollment.section
         enrollment.section = target_section
         enrollment.save(update_fields=['section'])
         return Response({
             'status': 'transferred',
             'student': enrollment.student.email,
-            'from_section': str(old_section),
-            'to_section': str(target_section),
+            'from_section': old_section.name,
+            'to_section': target_section.name,
         })
 
     @action(detail=False, methods=['post'], permission_classes=[IsAdminRole])
@@ -1711,7 +1862,7 @@ class PeriodViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAdminOrReadOnly]
 
     def get_queryset(self):
-        qs = Period.objects.all()
+        qs = Period.objects.filter(is_active=True)
         school_id = self.request.query_params.get('school')
         if school_id:
             qs = qs.filter(school_id=school_id)
@@ -1727,6 +1878,12 @@ class PeriodViewSet(viewsets.ModelViewSet):
         if not school or school.manager_id != self.request.user.id:
             raise serializers.ValidationError({'school': 'يمكنك إدارة حصص مدرستك فقط'})
 
+    def _check_school_access(self, school_id):
+        if is_admin(self.request.user):
+            return
+        if int(school_id) not in user_school_ids(self.request.user):
+            raise serializers.ValidationError({'school': 'يمكنك إدارة حصص مدرستك فقط'})
+
     def perform_create(self, serializer):
         self._check_school(serializer=serializer)
         serializer.save()
@@ -1738,6 +1895,144 @@ class PeriodViewSet(viewsets.ModelViewSet):
     def perform_destroy(self, instance):
         self._check_school(obj=instance)
         instance.delete()
+
+    def _parse_minutes(self, data, field, default):
+        try:
+            value = int(data.get(field, default))
+        except (TypeError, ValueError):
+            value = -1
+        if value < 1:
+            raise serializers.ValidationError({field: 'القيمة يجب أن تكون رقماً موجباً بالدقائق'})
+        return value
+
+    def _next_generation(self, school_id):
+        from django.db.models import Max
+        last = Period.objects.filter(school_id=school_id).aggregate(max_gen=Max('generation'))['max_gen']
+        return (last or 0) + 1
+
+    @action(detail=False, methods=['post'], url_path='generate', permission_classes=[permissions.IsAuthenticated])
+    def generate_periods(self, request):
+        """Generate the full daily schedule from start time, period/break durations and period count.
+        Existing active periods are archived (not deleted); a new generation is created."""
+        school_id = request.data.get('school_id')
+        if not school_id:
+            return Response({'error': 'school_id مطلوب'}, status=status.HTTP_400_BAD_REQUEST)
+        self._check_school_access(school_id)
+
+        start_value = request.data.get('start_time')
+        if not start_value:
+            return Response({'error': 'start_time مطلوب'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            from datetime import datetime as _dt
+            start_time = _dt.strptime(str(start_value).strip(), '%H:%M').time()
+        except ValueError:
+            return Response({'error': 'صيغة start_time يجب أن تكون HH:MM'}, status=status.HTTP_400_BAD_REQUEST)
+
+        period_duration = self._parse_minutes(request.data, 'period_duration_min', 45)
+        break_duration = self._parse_minutes(request.data, 'break_duration_min', 10)
+        long_break_duration = self._parse_minutes(request.data, 'long_break_duration_min', 30)
+        total_periods = self._parse_minutes(request.data, 'total_periods', 7)
+
+        try:
+            long_break_after = int(request.data.get('long_break_after_period', 3))
+        except (TypeError, ValueError):
+            long_break_after = 3
+        if long_break_after < 1:
+            raise serializers.ValidationError({'long_break_after_period': 'يجب أن تكون رقماً موجباً'})
+
+        from datetime import datetime as _dt, timedelta as _td
+        current = _dt.combine(_dt.today().date(), start_time)
+        new_periods = []
+        generation = self._next_generation(school_id)
+        now = timezone.now()
+
+        for i in range(1, total_periods + 1):
+            start = current
+            end = current + _td(minutes=period_duration)
+            new_periods.append(Period(
+                school_id=int(school_id),
+                name=f'الحصة {i}',
+                period_number=i,
+                start_time=start.time(),
+                end_time=end.time(),
+                is_break=False,
+                is_active=True,
+                generation=generation,
+                created_by=request.user if request.user.is_authenticated else None,
+            ))
+            if i == total_periods:
+                break
+            gap = long_break_duration if i == long_break_after else break_duration
+            current = end + _td(minutes=gap)
+
+        with transaction.atomic():
+            Period.objects.filter(school_id=int(school_id), is_active=True).update(
+                is_active=False,
+                archived_at=now,
+                archived_by=request.user if request.user.is_authenticated else None,
+            )
+            Period.objects.bulk_create(new_periods)
+
+        return Response(PeriodSerializer(new_periods, many=True).data, status=status.HTTP_201_CREATED)
+
+    @action(detail=False, methods=['get'], url_path='archives', permission_classes=[permissions.IsAuthenticated])
+    def archives(self, request):
+        """List archived schedule generations with who/when they were created and archived."""
+        school_id = request.query_params.get('school_id') or request.query_params.get('school')
+        if not school_id:
+            return Response({'error': 'school_id مطلوب'}, status=status.HTTP_400_BAD_REQUEST)
+        self._check_school_access(school_id)
+
+        rows = list(Period.objects.filter(
+            school_id=int(school_id), is_active=False, generation__isnull=False
+        ).order_by('generation', 'period_number'))
+
+        groups = {}
+        for p in rows:
+            groups.setdefault(p.generation, []).append(p)
+
+        result = []
+        for generation, items in sorted(groups.items(), reverse=True):
+            ordered = sorted(items, key=lambda p: p.period_number)
+            result.append({
+                'generation': generation,
+                'count': len(ordered),
+                'created_by_name': str(ordered[0].created_by) if ordered[0].created_by else None,
+                'archived_at': ordered[0].archived_at.isoformat() if ordered[0].archived_at else None,
+                'archived_by_name': str(ordered[0].archived_by) if ordered[0].archived_by else None,
+                'periods': PeriodSerializer(ordered, many=True).data,
+            })
+
+        return Response(result)
+
+    @action(detail=False, methods=['post'], url_path='restore', permission_classes=[permissions.IsAuthenticated])
+    def restore_generation(self, request):
+        """Archive the current active schedule and reactivate a previously archived generation."""
+        school_id = request.data.get('school_id')
+        generation = request.data.get('generation')
+        if not school_id or generation is None:
+            return Response({'error': 'school_id و generation مطلوبان'}, status=status.HTTP_400_BAD_REQUEST)
+        self._check_school_access(school_id)
+
+        target_exists = Period.objects.filter(
+            school_id=int(school_id), generation=int(generation), is_active=False
+        ).exists()
+        if not target_exists:
+            return Response({'error': 'الجيل المطلوب غير موجود في الأرشيف'}, status=status.HTTP_404_NOT_FOUND)
+
+        now = timezone.now()
+        user = request.user if request.user.is_authenticated else None
+        with transaction.atomic():
+            Period.objects.filter(school_id=int(school_id), is_active=True).update(
+                is_active=False, archived_at=now, archived_by=user,
+            )
+            Period.objects.filter(school_id=int(school_id), generation=int(generation)).update(
+                is_active=True, archived_at=None, archived_by=None,
+            )
+
+        active = Period.objects.filter(school_id=int(school_id), is_active=True).order_by('period_number')
+        return Response(PeriodSerializer(active, many=True).data)
 
 
 class RoomViewSet(viewsets.ModelViewSet):
@@ -1822,7 +2117,7 @@ class TimetableSlotViewSet(viewsets.ModelViewSet):
                 return Response({'error': 'Permission denied for this school'}, status=status.HTTP_403_FORBIDDEN)
 
         sections = Section.objects.filter(school_id=school_id, academic_year_id=academic_year_id)
-        periods = Period.objects.filter(school_id=school_id, is_break=False).order_by('period_number')
+        periods = Period.objects.filter(school_id=school_id, is_active=True, is_break=False).order_by('period_number')
         rooms = Room.objects.filter(school_id=school_id)
         default_room = rooms.first()
 

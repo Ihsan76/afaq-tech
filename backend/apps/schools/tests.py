@@ -14,8 +14,11 @@ from apps.schools.models import (
     Attendance,
     FamilyLink,
     ParentTeacherTicket,
+    Period,
     School,
     SchoolAnnouncement,
+    SchoolGrade,
+    SchoolTeacher,
     Section,
     StudentEnrollment,
     SupportRequest,
@@ -700,3 +703,413 @@ class AttendanceFeatureTestCase(APITestCase):
         call_command('send_absence_alerts', date=self.target_date, dry_run=True)
         self.assertFalse(Attendance.objects.filter(student=self.student, date=self.target_date).exists())
         self.assertFalse(WhatsAppNotificationLog.objects.exists())
+
+
+class PeriodGenerationTestCase(APITestCase):
+    """Tests for period schedule generation, archiving, and restore."""
+
+    def setUp(self):
+        self.admin = make_user('periodadmin@test.com', 'admin', 'مدير النظام')
+        self.manager = make_user('periodmanager@test.com', 'school_admin', 'مدير المدرسة', phone='0772000001')
+        self.school = School.objects.create(name='مدرسة الحصص', school_code='PR1', manager=self.manager)
+
+    def auth(self, user):
+        self.client.force_authenticate(user=user)
+
+    def test_generate_creates_periods_with_correct_times(self):
+        self.auth(self.manager)
+        res = self.client.post('/api/v1/schools/periods/generate/', {
+            'school_id': self.school.id,
+            'start_time': '08:00',
+            'period_duration_min': 45,
+            'break_duration_min': 10,
+            'long_break_duration_min': 30,
+            'long_break_after_period': 3,
+            'total_periods': 4,
+        }, format='json')
+        self.assertEqual(res.status_code, 201, res.data)
+        self.assertEqual(len(res.data), 4)
+        self.assertEqual(res.data[0]['period_number'], 1)
+        self.assertEqual(res.data[0]['start_time'], '08:00:00')
+        self.assertEqual(res.data[0]['end_time'], '08:45:00')
+        # After period 1 a short break (10m) => period 2 at 08:55
+        self.assertEqual(res.data[1]['start_time'], '08:55:00')
+        self.assertEqual(res.data[1]['end_time'], '09:40:00')
+        # After period 2 a short break (10m) => period 3 at 09:50
+        self.assertEqual(res.data[2]['start_time'], '09:50:00')
+        # After period 3 the LONG break (30m) => period 4 at 11:05
+        self.assertEqual(res.data[3]['start_time'], '11:05:00')
+        self.assertEqual(res.data[3]['end_time'], '11:50:00')
+        self.assertTrue(all(p['is_active'] for p in res.data))
+        self.assertTrue(all(p['is_break'] is False for p in res.data))
+
+    def test_generate_archives_previous_schedule_and_reuses_period_number(self):
+        self.auth(self.manager)
+        first = self.client.post('/api/v1/schools/periods/generate/', {
+            'school_id': self.school.id, 'start_time': '08:00', 'total_periods': 3,
+        }, format='json')
+        self.assertEqual(first.status_code, 201)
+        gen1 = first.data[0]['generation']
+
+        second = self.client.post('/api/v1/schools/periods/generate/', {
+            'school_id': self.school.id, 'start_time': '09:00', 'total_periods': 3,
+        }, format='json')
+        self.assertEqual(second.status_code, 201)
+        gen2 = second.data[0]['generation']
+        self.assertNotEqual(gen1, gen2)
+        # Old schedule archived, new one active
+        self.assertEqual(Period.objects.filter(school=self.school, generation=gen1, is_active=False).count(), 3)
+        self.assertEqual(Period.objects.filter(school=self.school, generation=gen2, is_active=True).count(), 3)
+        self.assertEqual(second.data[0]['start_time'], '09:00:00')
+
+    def test_generate_requires_school_ownership(self):
+        self.auth(self.manager)
+        other = School.objects.create(name='مدرسة أخرى', school_code='PR2')
+        res = self.client.post('/api/v1/schools/periods/generate/', {
+            'school_id': other.id, 'start_time': '08:00', 'total_periods': 3,
+        }, format='json')
+        self.assertEqual(res.status_code, 400)
+
+    def test_generate_validates_inputs(self):
+        self.auth(self.manager)
+        res = self.client.post('/api/v1/schools/periods/generate/', {
+            'school_id': self.school.id, 'start_time': '08:00', 'period_duration_min': 0, 'total_periods': 0,
+        }, format='json')
+        self.assertEqual(res.status_code, 400)
+        bad_time = self.client.post('/api/v1/schools/periods/generate/', {
+            'school_id': self.school.id, 'start_time': 'bad', 'total_periods': 2,
+        }, format='json')
+        self.assertEqual(bad_time.status_code, 400)
+
+    def test_default_list_shows_active_periods_only(self):
+        self.auth(self.manager)
+        self.client.post('/api/v1/schools/periods/generate/', {
+            'school_id': self.school.id, 'start_time': '08:00', 'total_periods': 2,
+        }, format='json')
+        self.client.post('/api/v1/schools/periods/generate/', {
+            'school_id': self.school.id, 'start_time': '09:00', 'total_periods': 2,
+        }, format='json')
+        res = self.client.get(f'/api/v1/schools/periods/?school={self.school.id}')
+        self.assertEqual(res.status_code, 200)
+        periods = res.data.get('results', res.data)
+        self.assertEqual(len(periods), 2)
+        self.assertEqual(periods[0]['start_time'], '09:00:00')
+
+    def test_archives_lists_generations_with_metadata(self):
+        self.auth(self.manager)
+        self.client.post('/api/v1/schools/periods/generate/', {
+            'school_id': self.school.id, 'start_time': '08:00', 'total_periods': 3,
+        }, format='json')
+        self.client.post('/api/v1/schools/periods/generate/', {
+            'school_id': self.school.id, 'start_time': '09:00', 'total_periods': 3,
+        }, format='json')
+        res = self.client.get(f'/api/v1/schools/periods/archives/?school_id={self.school.id}')
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(len(res.data), 1)  # only the first generation is archived
+        self.assertEqual(res.data[0]['count'], 3)
+        self.assertEqual(res.data[0]['archived_by_name'], 'مدير المدرسة')
+
+    def test_restore_swaps_generations(self):
+        self.auth(self.manager)
+        first = self.client.post('/api/v1/schools/periods/generate/', {
+            'school_id': self.school.id, 'start_time': '08:00', 'total_periods': 3,
+        }, format='json')
+        gen1 = first.data[0]['generation']
+        second = self.client.post('/api/v1/schools/periods/generate/', {
+            'school_id': self.school.id, 'start_time': '09:00', 'total_periods': 3,
+        }, format='json')
+        gen2 = second.data[0]['generation']
+
+        res = self.client.post('/api/v1/schools/periods/restore/', {
+            'school_id': self.school.id, 'generation': gen1,
+        }, format='json')
+        self.assertEqual(res.status_code, 200, res.data)
+        self.assertEqual(len(res.data), 3)
+        self.assertEqual(res.data[0]['start_time'], '08:00:00')
+        # gen1 active, gen2 archived now
+        self.assertTrue(Period.objects.filter(school=self.school, generation=gen1, is_active=True).exists())
+        self.assertTrue(Period.objects.filter(school=self.school, generation=gen2, is_active=False).exists())
+
+    def test_restore_missing_generation_returns_404(self):
+        self.auth(self.manager)
+        res = self.client.post('/api/v1/schools/periods/restore/', {
+            'school_id': self.school.id, 'generation': 999,
+        }, format='json')
+        self.assertEqual(res.status_code, 404)
+
+
+class SectionClassTeacherAndOrderingTestCase(APITestCase):
+    def setUp(self):
+        self.manager = make_user('manager@test.com', 'school_admin', 'مدير المدرسة')
+        self.teacher = make_user('teacher@test.com', 'teacher', 'معلم المدرسة')
+        self.other_teacher = make_user('other@test.com', 'teacher', 'معلم خارج المدرسة')
+        self.year = AcademicYear.objects.create(name='2025/2026', is_current=True)
+
+        self.grade1 = Grade.objects.create(level=1, translations={'ar': {'name': 'الأول'}})
+        self.grade2 = Grade.objects.create(level=2, translations={'ar': {'name': 'الثاني'}})
+        self.grade3 = Grade.objects.create(level=3, translations={'ar': {'name': 'الثالث'}})
+
+        self.school = School.objects.create(name='مدرسة', school_code='S1', manager=self.manager)
+        SchoolTeacher.objects.create(school=self.school, teacher=self.teacher)
+        for g in (self.grade1, self.grade2, self.grade3):
+            SchoolGrade.objects.create(school=self.school, grade=g)
+
+        # Create sections out of order (by pk) to verify grade-level ordering
+        self.s3 = Section.objects.create(school=self.school, grade=self.grade3, academic_year=self.year, name='ب')
+        self.s1 = Section.objects.create(school=self.school, grade=self.grade1, academic_year=self.year, name='أ')
+        self.s2 = Section.objects.create(school=self.school, grade=self.grade2, academic_year=self.year, name='أ')
+
+    def _auth(self, user):
+        self.client.force_authenticate(user=user)
+
+    def test_sections_ordered_by_grade_level_then_name(self):
+        self._auth(self.manager)
+        res = self.client.get('/api/v1/schools/sections/', {'school': self.school.id})
+        self.assertEqual(res.status_code, 200, res.data)
+        names = [s['id'] for s in res.data['results']]
+        self.assertEqual(names, [self.s1.id, self.s2.id, self.s3.id])
+    def test_set_class_teacher_and_get_name(self):
+        self._auth(self.manager)
+        res = self.client.patch(f'/api/v1/schools/sections/{self.s1.id}/', {
+            'class_teacher': self.teacher.id,
+        }, format='json')
+        self.assertEqual(res.status_code, 200, res.data)
+        self.assertEqual(res.data['class_teacher'], self.teacher.id)
+        self.assertEqual(res.data['class_teacher_name'], 'معلم المدرسة')
+
+    def test_reject_teacher_outside_school(self):
+        self._auth(self.manager)
+        res = self.client.patch(f'/api/v1/schools/sections/{self.s1.id}/', {
+            'class_teacher': self.other_teacher.id,
+        }, format='json')
+        self.assertEqual(res.status_code, 400, res.data)
+
+    def test_clear_class_teacher(self):
+        Section.objects.filter(pk=self.s1.id).update(class_teacher=self.teacher)
+        self._auth(self.manager)
+        res = self.client.patch(f'/api/v1/schools/sections/{self.s1.id}/', {
+            'class_teacher': None,
+        }, format='json')
+        self.assertEqual(res.status_code, 200, res.data)
+        self.assertIsNone(res.data['class_teacher'])
+        self.assertEqual(res.data['class_teacher_name'], '')
+
+    def test_enrollment_includes_student_name(self):
+        student = make_user('s@test.com', 'student', 'طالب الشعبة')
+        StudentEnrollment.objects.create(student=student, section=self.s1, academic_year=self.year)
+        self._auth(self.manager)
+        res = self.client.get('/api/v1/schools/enrollments/', {'section': self.s1.id})
+        self.assertEqual(res.status_code, 200, res.data)
+        rows = res.data['results'] if isinstance(res.data, dict) and 'results' in res.data else res.data
+        self.assertEqual(rows[0]['student_name'], 'طالب الشعبة')
+
+
+class SchoolManagerStudentManagementTestCase(APITestCase):
+    def setUp(self):
+        self.admin = make_user('admin@test.com', 'admin', 'مدير النظام')
+        self.manager = make_user('manager@test.com', 'school_admin', 'مدير المدرسة')
+        self.other_manager = make_user('other-manager@test.com', 'school_admin', 'مدير مدرسة أخرى')
+        self.student = make_user('student@test.com', 'student', 'طالب أول')
+        self.other_student = make_user('other-student@test.com', 'student', 'طالب ثان')
+        self.teacher = make_user('teacher@test.com', 'teacher', 'معلم المدرسة')
+
+        self.year = AcademicYear.objects.create(name='2025/2026', is_current=True)
+        self.next_year = AcademicYear.objects.create(name='2026/2027', is_current=False)
+
+        self.grade1 = Grade.objects.create(level=1, translations={'ar': {'name': 'الأول'}})
+        self.grade2 = Grade.objects.create(level=2, translations={'ar': {'name': 'الثاني'}})
+        self.grade3 = Grade.objects.create(level=3, translations={'ar': {'name': 'الثالث'}})
+
+        self.school = School.objects.create(name='المدرسة الأولى', school_code='SCH1', manager=self.manager)
+        SchoolTeacher.objects.create(school=self.school, teacher=self.teacher)
+        SchoolGrade.objects.create(school=self.school, grade=self.grade1)
+        SchoolGrade.objects.create(school=self.school, grade=self.grade2)
+
+        self.other_school = School.objects.create(name='المدرسة الثانية', school_code='SCH2', manager=self.other_manager)
+        SchoolGrade.objects.create(school=self.other_school, grade=self.grade1)
+
+        self.sec_a = Section.objects.create(school=self.school, grade=self.grade1, academic_year=self.year, name='أ')
+        self.sec_b = Section.objects.create(school=self.school, grade=self.grade1, academic_year=self.year, name='ب')
+        self.sec_grade2 = Section.objects.create(school=self.school, grade=self.grade2, academic_year=self.year, name='أ')
+        self.other_sec = Section.objects.create(school=self.other_school, grade=self.grade1, academic_year=self.year, name='أ')
+
+        StudentEnrollment.objects.create(student=self.student, section=self.sec_a, academic_year=self.year)
+        StudentEnrollment.objects.create(student=self.other_student, section=self.other_sec, academic_year=self.year)
+
+    def _auth(self, user):
+        self.client.force_authenticate(user=user)
+
+    def test_non_manager_cannot_write_enrollments(self):
+        for user in (self.student, self.teacher):
+            self._auth(user)
+            res = self.client.post('/api/v1/schools/enrollments/', {
+                'student': self.student.id, 'section': self.sec_a.id, 'academic_year': self.year.id,
+            })
+            self.assertEqual(res.status_code, 403, f'{user.role} should be forbidden')
+            en = StudentEnrollment.objects.get(student=self.student, academic_year=self.year)
+            res = self.client.delete(f'/api/v1/schools/enrollments/{en.id}/')
+            self.assertEqual(res.status_code, 403, f'{user.role} should be forbidden to delete')
+
+    def test_school_admin_enrolls_new_student(self):
+        self._auth(self.manager)
+        res = self.client.post(f'/api/v1/schools/sections/{self.sec_b.id}/enroll/', {
+            'name': 'طالب جديد', 'email': 'new@test.com', 'phone': '0771000000',
+        })
+        self.assertEqual(res.status_code, 200, res.data)
+        self.assertTrue(res.data['created_account'])
+        self.assertFalse(res.data['moved'])
+        user = User.objects.get(email='new@test.com')
+        self.assertEqual(user.role, 'student')
+        self.assertFalse(user.has_usable_password())
+        en = StudentEnrollment.objects.get(student=user, academic_year=self.year)
+        self.assertEqual(en.section, self.sec_b)
+
+    def test_school_admin_enroll_existing_moves_with_confirmation(self):
+        self._auth(self.manager)
+        res = self.client.post(f'/api/v1/schools/sections/{self.sec_b.id}/enroll/', {
+            'name': 'طالب أول', 'email': 'student@test.com',
+        })
+        self.assertEqual(res.status_code, 200, res.data)
+        self.assertFalse(res.data['created_account'])
+        self.assertTrue(res.data['moved'])
+        self.assertEqual(res.data['moved_from'], 'أ')
+        en = StudentEnrollment.objects.get(student=self.student, academic_year=self.year)
+        self.assertEqual(en.section, self.sec_b)
+
+    def test_enroll_creates_parent_link(self):
+        self._auth(self.manager)
+        res = self.client.post(f'/api/v1/schools/sections/{self.sec_b.id}/enroll/', {
+            'name': 'طالب مع والد', 'email': 'kid@test.com', 'parent_email': 'parent@test.com',
+        })
+        self.assertEqual(res.status_code, 200, res.data)
+        parent = User.objects.get(email='parent@test.com')
+        self.assertEqual(parent.role, 'parent')
+        self.assertTrue(FamilyLink.objects.filter(parent=parent, student__email='kid@test.com').exists())
+
+    def test_manager_cannot_enroll_other_school(self):
+        self._auth(self.manager)
+        res = self.client.post(f'/api/v1/schools/sections/{self.other_sec.id}/enroll/', {
+            'name': 'طالب', 'email': 'x@test.com',
+        })
+        self.assertEqual(res.status_code, 404, res.data)
+        self.assertFalse(User.objects.filter(email='x@test.com').exists())
+
+    def test_transfer_same_school_same_grade_allowed(self):
+        self._auth(self.manager)
+        en = StudentEnrollment.objects.get(student=self.student, academic_year=self.year)
+        res = self.client.post(f'/api/v1/schools/enrollments/{en.id}/transfer/', {
+            'target_section_id': self.sec_b.id,
+        })
+        self.assertEqual(res.status_code, 200, res.data)
+        en.refresh_from_db()
+        self.assertEqual(en.section, self.sec_b)
+
+    def test_transfer_cross_grade_denied_for_manager(self):
+        self._auth(self.manager)
+        en = StudentEnrollment.objects.get(student=self.student, academic_year=self.year)
+        res = self.client.post(f'/api/v1/schools/enrollments/{en.id}/transfer/', {
+            'target_section_id': self.sec_grade2.id,
+        })
+        self.assertEqual(res.status_code, 400, res.data)
+        en.refresh_from_db()
+        self.assertEqual(en.section, self.sec_a)
+
+    def test_transfer_cross_school_denied_for_manager(self):
+        self._auth(self.manager)
+        en = StudentEnrollment.objects.get(student=self.student, academic_year=self.year)
+        res = self.client.post(f'/api/v1/schools/enrollments/{en.id}/transfer/', {
+            'target_section_id': self.other_sec.id,
+        })
+        self.assertEqual(res.status_code, 400, res.data)
+        en.refresh_from_db()
+        self.assertEqual(en.section, self.sec_a)
+
+    def test_manager_cannot_touch_other_school_enrollment(self):
+        self._auth(self.manager)
+        other_en = StudentEnrollment.objects.get(student=self.other_student, academic_year=self.year)
+        res = self.client.post(f'/api/v1/schools/enrollments/{other_en.id}/transfer/', {
+            'target_section_id': self.sec_a.id,
+        })
+        self.assertEqual(res.status_code, 404, res.data)
+        res = self.client.delete(f'/api/v1/schools/enrollments/{other_en.id}/')
+        self.assertEqual(res.status_code, 404, res.data)
+
+    def test_admin_transfer_cross_grade_allowed(self):
+        self._auth(self.admin)
+        en = StudentEnrollment.objects.get(student=self.student, academic_year=self.year)
+        res = self.client.post(f'/api/v1/schools/enrollments/{en.id}/transfer/', {
+            'target_section_id': self.sec_grade2.id,
+        })
+        self.assertEqual(res.status_code, 200, res.data)
+        en.refresh_from_db()
+        self.assertEqual(en.section, self.sec_grade2)
+
+    def test_delete_enrollment_own_school(self):
+        self._auth(self.manager)
+        en = StudentEnrollment.objects.get(student=self.student, academic_year=self.year)
+        res = self.client.delete(f'/api/v1/schools/enrollments/{en.id}/')
+        self.assertEqual(res.status_code, 204, res.data)
+        self.assertFalse(StudentEnrollment.objects.filter(student=self.student, academic_year=self.year).exists())
+
+    def test_promote_scoped_to_school(self):
+        self._auth(self.manager)
+        res = self.client.post(f'/api/v1/schools/academic-years/{self.year.id}/promote/', {
+            'school_id': self.school.id, 'target_year_id': self.next_year.id,
+        })
+        self.assertEqual(res.status_code, 200, res.data)
+        self.assertEqual(len(res.data['promoted']), 1)
+        # own school promoted to grade2
+        new_en = StudentEnrollment.objects.get(student=self.student, academic_year=self.next_year)
+        self.assertEqual(new_en.section.grade, self.grade2)
+        # other school untouched
+        self.assertFalse(StudentEnrollment.objects.filter(student=self.other_student, academic_year=self.next_year).exists())
+
+    def test_promote_copies_class_teacher_and_capacity(self):
+        self.sec_a.class_teacher = self.teacher
+        self.sec_a.capacity = 42
+        self.sec_a.save(update_fields=['class_teacher', 'capacity'])
+        self._auth(self.manager)
+        res = self.client.post(f'/api/v1/schools/academic-years/{self.year.id}/promote/', {
+            'school_id': self.school.id, 'target_year_id': self.next_year.id,
+        })
+        self.assertEqual(res.status_code, 200, res.data)
+        new_sec = Section.objects.get(school=self.school, grade=self.grade2, academic_year=self.next_year, name='أ')
+        self.assertEqual(new_sec.class_teacher, self.teacher)
+        self.assertEqual(new_sec.capacity, 42)
+
+    def test_promote_manager_requires_own_school(self):
+        self._auth(self.manager)
+        res = self.client.post(f'/api/v1/schools/academic-years/{self.year.id}/promote/', {
+            'target_year_id': self.next_year.id,
+        })
+        self.assertEqual(res.status_code, 400, res.data)
+        res = self.client.post(f'/api/v1/schools/academic-years/{self.year.id}/promote/', {
+            'school_id': self.other_school.id, 'target_year_id': self.next_year.id,
+        })
+        self.assertEqual(res.status_code, 403, res.data)
+
+    def test_school_admin_sees_all_years(self):
+        self._auth(self.manager)
+        res = self.client.get('/api/v1/schools/academic-years/')
+        self.assertEqual(res.status_code, 200, res.data)
+        years = res.data['results'] if isinstance(res.data, dict) and 'results' in res.data else res.data
+        ids = {y['id'] for y in years}
+        self.assertIn(self.year.id, ids)
+        self.assertIn(self.next_year.id, ids)
+
+    def test_school_admin_cannot_create_year(self):
+        self._auth(self.manager)
+        res = self.client.post('/api/v1/schools/academic-years/', {
+            'name': '2030/2031', 'is_current': False,
+        })
+        self.assertEqual(res.status_code, 403, res.data)
+
+    def test_sections_filter_by_year_and_grade(self):
+        self._auth(self.manager)
+        res = self.client.get('/api/v1/schools/sections/', {
+            'school': self.school.id, 'academic_year': self.year.id, 'grade': self.grade1.id,
+        })
+        self.assertEqual(res.status_code, 200, res.data)
+        ids = {s['id'] for s in res.data['results']}
+        self.assertEqual(ids, {self.sec_a.id, self.sec_b.id})
+        self.assertNotIn(self.sec_grade2.id, ids)

@@ -8,8 +8,8 @@ export default function SchoolAdminSectionsPage() {
   return (
     <RoleGuard allowed={["school_admin"]}>
       <SchoolAdminShell endpoints={{ sections: "/schools/sections/" }}>
-        {({ data, refresh }) => (
-          <AdminSectionsView sections={data.sections || []} refresh={refresh} />
+        {({ data, schoolId, refresh }) => (
+          <AdminSectionsView sections={data.sections || []} schoolId={schoolId} refresh={refresh} />
         )}
       </SchoolAdminShell>
     </RoleGuard>

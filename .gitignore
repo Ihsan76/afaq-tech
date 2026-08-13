@@ -38,3 +38,8 @@ Thumbs.db
 
 # Sentry
 .sentryclirc
+
+# Agent skills (local skill installs)
+.agents/
+.claude/
+skills-lock.json

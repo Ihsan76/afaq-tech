@@ -49,6 +49,10 @@ class Section(models.Model):
     academic_year = models.ForeignKey(AcademicYear, on_delete=models.CASCADE, related_name='sections', verbose_name='العام الدراسي')
     name = models.CharField('اسم الشعبة (مثل أ، ب، 1)', max_length=50)
     capacity = models.PositiveIntegerField('السعة الاستيعابية', default=30)
+    class_teacher = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='mentored_sections', verbose_name='مربي الصف',
+    )
 
     class Meta:
         verbose_name = 'شعبة صفية'
@@ -363,12 +367,29 @@ class Period(models.Model):
     start_time = models.TimeField('وقت البداية')
     end_time = models.TimeField('وقت النهاية')
     is_break = models.BooleanField('استراحة / فسحة', default=False)
+    is_active = models.BooleanField('مفعّلة', default=True)
+    generation = models.PositiveIntegerField('رقم الجيل (إصدار الجدول)', null=True, blank=True)
+    created_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='created_periods', verbose_name='أنشأها',
+    )
+    archived_at = models.DateTimeField('تاريخ الأرشفة', null=True, blank=True)
+    archived_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='archived_periods', verbose_name='أرشفها',
+    )
 
     class Meta:
         verbose_name = 'حصة زمنية'
         verbose_name_plural = 'الحصص الزمنية'
         ordering = ['school', 'period_number']
-        unique_together = [['school', 'period_number']]
+        constraints = [
+            models.UniqueConstraint(
+                fields=['school', 'period_number'],
+                condition=models.Q(is_active=True),
+                name='unique_active_period_per_school',
+            ),
+        ]
 
     def __str__(self):
         return f"{self.name} ({self.start_time} - {self.end_time})"

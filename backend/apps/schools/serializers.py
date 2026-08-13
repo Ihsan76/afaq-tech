@@ -71,6 +71,7 @@ class SectionSerializer(serializers.ModelSerializer):
     grade_name = serializers.SerializerMethodField()
     academic_year_name = serializers.CharField(source='academic_year.name', read_only=True)
     students_count = serializers.SerializerMethodField()
+    class_teacher_name = serializers.SerializerMethodField()
 
     class Meta:
         model = Section
@@ -86,14 +87,41 @@ class SectionSerializer(serializers.ModelSerializer):
             return annotated
         return obj.students.count()
 
+    def get_class_teacher_name(self, obj):
+        if obj.class_teacher is None:
+            return ''
+        return obj.class_teacher.translations.get('ar', {}).get('name') or obj.class_teacher.email
+
+    def validate_class_teacher(self, value):
+        if value is None:
+            return value
+        school_id = None
+        if self.instance is not None:
+            school_id = self.instance.school_id
+        else:
+            raw = self.initial_data.get('school')
+            if isinstance(raw, int):
+                school_id = raw
+            elif isinstance(raw, dict):
+                school_id = raw.get('id')
+        if not school_id:
+            return value
+        if not SchoolTeacher.objects.filter(school_id=school_id, teacher=value).exists():
+            raise serializers.ValidationError('يجب أن يكون مربي الصف من معلمي المدرسة')
+        return value
+
 
 class StudentEnrollmentSerializer(serializers.ModelSerializer):
     student_email = serializers.CharField(source='student.email', read_only=True)
+    student_name = serializers.SerializerMethodField()
     section_name = serializers.CharField(source='section.name', read_only=True)
 
     class Meta:
         model = StudentEnrollment
         fields = '__all__'
+
+    def get_student_name(self, obj):
+        return obj.student.translations.get('ar', {}).get('name') or obj.student.email
 
 
 class SchoolGradeSerializer(serializers.ModelSerializer):
