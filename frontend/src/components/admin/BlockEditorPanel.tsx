@@ -127,12 +127,12 @@ function LinkField({ label, value, onChange, placeholder, ar, pageBlocks, showSm
           style={{ background: isSection ? "var(--color-primary)" : "transparent", color: isSection ? "white" : "var(--color-text-muted)" }}>
           {ar ? "قسم داخلي" : "Page Section"}
         </button>
-        <button type="button" onClick={() => { if (isSection || isCustom) onChange("/academy"); }}
+        <button type="button" onClick={() => { if (!isPage) onChange("/academy"); }}
           className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-bold transition-all ${isPage ? 'text-white' : ''}`}
           style={{ background: isPage ? "var(--color-primary)" : "transparent", color: isPage ? "white" : "var(--color-text-muted)" }}>
           {ar ? "صفحة" : "Page"}
         </button>
-        <button type="button" onClick={() => onChange("https://")}
+        <button type="button" onClick={() => { if (!isCustom) onChange("https://"); }}
           className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-bold transition-all ${isCustom || (!isSection && !isPage && value) ? 'text-white' : ''}`}
           style={{ background: isCustom ? "var(--color-primary)" : "transparent", color: isCustom ? "white" : "var(--color-text-muted)" }}>
           {ar ? "رابط خارجي" : "External URL"}
@@ -150,15 +150,20 @@ function LinkField({ label, value, onChange, placeholder, ar, pageBlocks, showSm
       )}
       {/* Page Selector */}
       {isPage && (
-        <SelectDropdown value={value} onChange={(v) => onChange(String(v))}
-          className={inputCls} style={{ background: "var(--color-surface)", color: "var(--color-text)", borderColor: "var(--color-border)" }}>
-          {COMMON_PAGES.map((p) => (
-            <option key={p.value} value={p.value}>{ar ? p.label_ar : p.label_en}</option>
-          ))}
-        </SelectDropdown>
+        <div className="flex gap-2 items-center">
+          <div className="flex-1 min-w-0">
+            <SelectDropdown value={value} onChange={(v) => onChange(String(v))}
+              className={inputCls} style={{ background: "var(--color-surface)", color: "var(--color-text)", borderColor: "var(--color-border)" }}>
+              {COMMON_PAGES.map((p) => (
+                <option key={p.value} value={p.value}>{ar ? p.label_ar : p.label_en}</option>
+              ))}
+            </SelectDropdown>
+          </div>
+          <span className="shrink-0 text-xs font-mono px-2 py-1.5 rounded-lg border truncate max-w-[40%]" style={{ color: "var(--color-text-muted)", borderColor: "var(--color-border)", background: "var(--color-surface-alt)" }} dir="ltr" title={value}>{value}</span>
+        </div>
       )}
       {/* Custom URL Input */}
-      {(isCustom || (!isSection && !isPage && value)) && (
+      {!isSection && !isPage && (
         <input value={value} onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder || "https://..."}
           className={inputCls} style={{ background: "var(--color-surface)", color: "var(--color-text)", borderColor: "var(--color-border)" }} />

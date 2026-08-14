@@ -105,12 +105,21 @@ function LinkField({ label, value, onChange, placeholder, ar, pageBlocks }: {
       <label className={labelCls} style={{ color: "var(--color-text-muted)" }}>{label}</label>
       <div className="flex gap-1 p-1 rounded-xl" style={{ background: "var(--color-surface-alt)" }}>
         <button type="button" onClick={() => { const first = availableSections[0]; if (first) onChange(`#${first.id}`); }} className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-bold transition-all ${isSection ? 'text-white' : ''}`} style={{ background: isSection ? "var(--color-primary)" : "transparent", color: isSection ? "white" : "var(--color-text-muted)" }}>{ar ? "قسم داخلي" : "Section"}</button>
-        <button type="button" onClick={() => { if (isSection || isCustom) onChange("/academy"); }} className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-bold transition-all ${isPage ? 'text-white' : ''}`} style={{ background: isPage ? "var(--color-primary)" : "transparent", color: isPage ? "white" : "var(--color-text-muted)" }}>{ar ? "صفحة" : "Page"}</button>
-        <button type="button" onClick={() => onChange("https://")} className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-bold transition-all ${isCustom ? 'text-white' : ''}`} style={{ background: isCustom ? "var(--color-primary)" : "transparent", color: isCustom ? "white" : "var(--color-text-muted)" }}>{ar ? "رابط خارجي" : "External"}</button>
+        <button type="button" onClick={() => { if (!isPage) onChange("/academy"); }} className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-bold transition-all ${isPage ? 'text-white' : ''}`} style={{ background: isPage ? "var(--color-primary)" : "transparent", color: isPage ? "white" : "var(--color-text-muted)" }}>{ar ? "صفحة" : "Page"}</button>
+        <button type="button" onClick={() => { if (!isCustom) onChange("https://"); }} className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-bold transition-all ${isCustom ? 'text-white' : ''}`} style={{ background: isCustom ? "var(--color-primary)" : "transparent", color: isCustom ? "white" : "var(--color-text-muted)" }}>{ar ? "رابط خارجي" : "External"}</button>
       </div>
       {isSection && <SelectDropdown value={value} onChange={(v) => onChange(String(v))} className={inputCls} style={{ background: "var(--color-surface)", color: "var(--color-text)", borderColor: "var(--color-border)" }}>{availableSections.length === 0 && <option value="">{ar ? "لا توجد أقسام" : "No sections"}</option>}{availableSections.map((s) => (<option key={s.id} value={`#${s.id}`}>{ar ? s.label_ar : s.label_en}</option>))}</SelectDropdown>}
-      {isPage && <SelectDropdown value={value} onChange={(v) => onChange(String(v))} className={inputCls} style={{ background: "var(--color-surface)", color: "var(--color-text)", borderColor: "var(--color-border)" }}>{COMMON_PAGES.map((p) => (<option key={p.value} value={p.value}>{ar ? p.label_ar : p.label_en}</option>))}</SelectDropdown>}
-      {(isCustom || (!isSection && !isPage && value)) && <input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder || "https://..."} className={inputCls} style={{ background: "var(--color-surface)", color: "var(--color-text)", borderColor: "var(--color-border)" }} />}
+      {isPage && (
+        <>
+          <div className="flex gap-2 items-center">
+            <div className="flex-1 min-w-0">
+              <SelectDropdown value={value} onChange={(v) => onChange(String(v))} className={inputCls} style={{ background: "var(--color-surface)", color: "var(--color-text)", borderColor: "var(--color-border)" }}>{COMMON_PAGES.map((p) => (<option key={p.value} value={p.value}>{ar ? p.label_ar : p.label_en}</option>))}</SelectDropdown>
+            </div>
+            <span className="shrink-0 text-xs font-mono px-2 py-1.5 rounded-lg border truncate max-w-[40%]" style={{ color: "var(--color-text-muted)", borderColor: "var(--color-border)", background: "var(--color-surface-alt)" }} dir="ltr" title={value}>{value}</span>
+          </div>
+        </>
+      )}
+      {!isSection && !isPage && <input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder || "https://..."} className={inputCls} style={{ background: "var(--color-surface)", color: "var(--color-text)", borderColor: "var(--color-border)" }} />}
     </div>
   );
 }
