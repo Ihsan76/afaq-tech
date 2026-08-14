@@ -50,11 +50,27 @@ const ALL_SECTIONS = [
 
 const COMMON_PAGES = [
   { value: "", label_ar: "اختر...", label_en: "Select..." },
-  { value: "/academy", label_ar: "الأكاديمية", label_en: "Academy" },
-  { value: "/curriculum", label_ar: "المناهج الدراسية", label_en: "Curriculum" },
+  { value: "/", label_ar: "الرئيسية", label_en: "Home" },
+  { value: "/school", label_ar: "آفاق مدرستي", label_en: "Afaq School" },
+  { value: "/academy", label_ar: "أكاديمية آفاق", label_en: "Afaq Academy" },
+  { value: "/curriculum", label_ar: "المنهاج الدراسي", label_en: "Curriculum" },
+  { value: "/about", label_ar: "من نحن", label_en: "About Us" },
+  { value: "/contact", label_ar: "تواصل معنا", label_en: "Contact" },
+  { value: "/privacy", label_ar: "سياسة الخصوصية", label_en: "Privacy Policy" },
+  { value: "/terms", label_ar: "شروط الخدمة", label_en: "Terms of Service" },
+  { value: "/services/web-design", label_ar: "تصميم المواقع", label_en: "Web Design" },
+  { value: "/services/social-media", label_ar: "إدارة التواصل الاجتماعي", label_en: "Social Media" },
+  { value: "/services/landing-pages", label_ar: "صفحات الهبوط", label_en: "Landing Pages" },
+  { value: "/services/forms", label_ar: "النماذج الإلكترونية", label_en: "Online Forms" },
+  { value: "/services/ebooks", label_ar: "الكتب الإلكترونية", label_en: "E-books" },
+  { value: "/services/ad-campaigns", label_ar: "الحملات الإعلانية", label_en: "Ad Campaigns" },
+  { value: "/services/brand-identity", label_ar: "الهوية البصرية", label_en: "Brand Identity" },
+  { value: "/services/education-platform", label_ar: "المنصة التعليمية", label_en: "Education Platform" },
+  { value: "/ai-chat", label_ar: "المساعد الذكي", label_en: "AI Chat" },
   { value: "/register", label_ar: "إنشاء حساب (ذكي: يتحول تلقائياً لساحة العمل للمسجلين)", label_en: "Register (Smart: Auto-redirects to workspace if logged in)" },
   { value: "/login", label_ar: "تسجيل الدخول", label_en: "Login" },
   { value: "/dashboard", label_ar: "لوحة التحكم (ساحة العمل)", label_en: "Dashboard (Workspace)" },
+  { value: "/school/dashboard", label_ar: "ساحة عمل المدرسة", label_en: "School Workspace" },
   { value: "/profile", label_ar: "الملف الشخصي", label_en: "Profile" },
   { value: "/lesson-plans", label_ar: "خطط الدروس", label_en: "Lesson Plans" },
   { value: "/admin/pages", label_ar: "إدارة الصفحات", label_en: "Admin Pages" },
@@ -283,11 +299,26 @@ export default function BlockEditorPanel({
             <Section title={t("الشارات والخيارات", "Badges & Options")}>
               <Toggle label={t("إظهار الجسيمات", "Show Particles")} checked={c.show_particles !== false} onChange={(v) => updateContent("show_particles", v)} />
               <Toggle label={t("إظهار الشارة", "Show Badge")} checked={c.show_badge !== false} onChange={(v) => updateContent("show_badge", v)} />
-              {c.badges?.map((_: any, i: number) => (
+              {(c.badges || []).map((_: any, i: number) => (
                 <div key={i} className="flex gap-2 items-end">
-                  <Field label={`${t("شارة", "Badge")} ${i + 1}`} value={lfItem("badges", i, "text")} onChange={(v) => updateListItemLocale("badges", i, "text", contentLocale, v)} />
+                  <div className="flex-1 min-w-0">
+                    <Field label={`${t("شارة", "Badge")} ${i + 1}`} value={lfItem("badges", i, "text")} onChange={(v) => updateListItemLocale("badges", i, "text", contentLocale, v)} />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => { const arr = [...(c.badges || [])]; arr.splice(i, 1); updateContent("badges", arr); }}
+                    className="w-9 h-9 shrink-0 rounded-xl text-sm font-bold transition-all active:scale-95"
+                    style={{ background: "var(--color-error-light, rgba(220,38,38,0.1))", color: "var(--color-error)" }}
+                    title={t("حذف الشارة", "Remove Badge")}
+                  >✕</button>
                 </div>
               ))}
+              <button
+                type="button"
+                onClick={() => updateContent("badges", [...(c.badges || []), { text: { en: "", ar: "" } }])}
+                className="w-full py-2 rounded-xl border border-dashed text-sm font-bold transition-all active:scale-[0.98]"
+                style={{ borderColor: "var(--color-primary)", color: "var(--color-primary)" }}
+              >+ {t("إضافة شارة", "Add Badge")}</button>
             </Section>
           </>
         );
