@@ -59,6 +59,9 @@ class SchoolsAPITestCase(APITestCase):
         self.school_a = School.objects.create(name='مدرسة أ', school_code='A1')
         self.school_b = School.objects.create(name='مدرسة ب', school_code='B1')
 
+        SchoolGrade.objects.create(school=self.school_a, grade=self.grade)
+        SchoolGrade.objects.create(school=self.school_b, grade=self.grade)
+
         self.section_a = Section.objects.create(
             school=self.school_a, grade=self.grade, academic_year=self.year, name='أ'
         )
@@ -175,10 +178,11 @@ class SchoolsAPITestCase(APITestCase):
 
     def test_my_context_admin_sees_all(self):
         self.auth(self.admin)
-        res = self.client.get('/api/v1/schools/my-context/')
+        res = self.client.get('/api/v1/schools/my-context/', {'school': self.school_a.id})
         self.assertEqual(res.status_code, 200)
-        self.assertEqual(len(res.data['sections']), 2)
-        self.assertEqual(len(res.data['announcements']), 2)
+        self.assertEqual(len(res.data['sections']), 1)
+        self.assertEqual(res.data['sections'][0]['id'], self.section_a.id)
+        self.assertEqual(len(res.data['announcements']), 1)
 
     def test_ticket_reply_forbidden_for_outsider(self):
         ticket = ParentTeacherTicket.objects.create(

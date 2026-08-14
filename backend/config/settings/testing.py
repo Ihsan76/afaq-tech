@@ -85,12 +85,20 @@ from django.contrib.postgres.fields import ArrayField as _ArrayField  # noqa: E4
 
 _orig_db_type = _ArrayField.db_type
 _orig_get_db_prep_value = _ArrayField.get_db_prep_value
+_orig_get_placeholder = _ArrayField.get_placeholder
 
 
 def _sqlite_db_type(self, connection):
     if connection.vendor == 'sqlite':
         return 'TEXT'
     return _orig_db_type(self, connection)
+
+
+def _sqlite_get_placeholder(self, lhs, compiler, connection):
+    # Postgres emits (ARRAY[%s])::varchar(20)[] which SQLite cannot parse.
+    if connection.vendor == 'sqlite':
+        return '%s'
+    return _orig_get_placeholder(self, lhs, compiler, connection)
 
 
 def _sqlite_get_db_prep_value(self, value, connection, prepared=False):
@@ -109,5 +117,25 @@ def _sqlite_from_db_value(self, value, expression, connection):
 
 
 _ArrayField.db_type = _sqlite_db_type
+_ArrayField.get_placeholder = _sqlite_get_placeholder
 _ArrayField.get_db_prep_value = _sqlite_get_db_prep_value
 _ArrayField.from_db_value = _sqlite_from_db_value
+
+# ── Replace ArrayField lookups for SQLite ────────────────────────────────────
+# Postgres-specific lookups (ArrayExact/ArrayContains/ArrayOverlap/ArrayLen) wrap
+# the RHS in `Func(function="ARRAY")`, emitting `(ARRAY[%s])::varchar(20)[]` which
+# SQLite cannot parse. On SQLite the field is stored as JSON TEXT, so the plain
+# Field lookups (Exact/Contains/In) work fine with the JSON-encoded values.
+from django.db.models import fields as _django_fields  # noqa: E402
+from django.db.models.lookups import (  # noqa: E402
+    Contains as _PlainContains,
+    Exact as _PlainExact,
+    In as _PlainIn,
+)
+
+_ArrayField.class_lookups = _django_fields.Field.class_lookups.copy()
+_ArrayField.class_lookups.update({
+    'exact': _PlainExact,
+    'contains': _PlainContains,
+    'in': _PlainIn,
+})

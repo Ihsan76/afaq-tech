@@ -6,6 +6,7 @@ const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   output: "standalone",
+  distDir: process.env.NEXT_DIST_DIR || ".next",
   images: {
     remotePatterns: [
       {
@@ -28,7 +29,7 @@ const nextConfig: NextConfig = {
       "font-src 'self' data:",
       "media-src 'self' blob:",
       // Dev: allow the local Django API + Next HMR websocket. Prod: HTTPS only.
-      `connect-src 'self' https://api.afaq.app https://*.supabase.co https://www.google.com${isDev ? " http://localhost:8003 http://127.0.0.1:8003 ws://localhost:3000" : ""}`,
+      `connect-src 'self' https://api.afaq.app https://*.supabase.co https://www.google.com${isDev ? " http://localhost:8003 http://127.0.0.1:8003 http://localhost:8004 http://127.0.0.1:8004 ws://localhost:3000 ws://localhost:3001" : ""}`,
       "frame-src 'self' https://www.youtube.com https://youtube.com",
       "object-src 'none'",
       "base-uri 'self'",

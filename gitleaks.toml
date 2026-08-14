@@ -1,0 +1,33 @@
+# gitleaks config — Afaq Tech
+# Scans git history for leaked secrets/API keys.
+# Secret scanning for the Afaq Tech monorepo (backend + frontend).
+
+title = "Afaq Tech gitleaks config"
+
+[extend]
+useDefault = true
+
+# Documentation may contain example/sample secrets and public placeholder keys.
+[allowlist]
+description = "Intentional examples and documentation placeholders"
+paths = [
+  "docs/",
+  ".env.example",
+  ".env.production.example",
+  "README.md",
+  "gitleaks.toml",
+  "render.yaml",
+]
+stopwords = [
+  "example",
+  "sample",
+  "dummy",
+  "changeme",
+  "your_",
+  "YOUR_",
+  "todo",
+]
+regexes = [
+  '''JWT_PRIVATE_KEY_B64|JWT_PUBLIC_KEY_B64|DJANGO_SECRET_KEY|DATABASE_URL|SUPABASE_KEY|GEMINI_API_KEY|RESEND_API_KEY''',
+]
+
