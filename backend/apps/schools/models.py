@@ -537,3 +537,46 @@ class StudentFeeAssignment(models.Model):
     def __str__(self):
         return f"{self.student} - {self.fee} ({self.status})"
 
+
+class SchoolBus(models.Model):
+    school = models.ForeignKey(School, on_delete=models.CASCADE, related_name='buses', verbose_name='المدرسة')
+    bus_number = models.CharField('رقم الحافلة', max_length=50)
+    driver_name = models.CharField('اسم السائق', max_length=255)
+    driver_phone = models.CharField('هاتف السائق', max_length=50, blank=True)
+    capacity = models.IntegerField('السعة الاستيعابية', default=30)
+
+    class Meta:
+        verbose_name = 'حافلة مدرسية'
+        verbose_name_plural = 'الحافلات المدرسية'
+
+    def __str__(self):
+        return f"حافلة رقم {self.bus_number} - {self.driver_name}"
+
+
+class BusRoute(models.Model):
+    bus = models.ForeignKey(SchoolBus, on_delete=models.CASCADE, related_name='routes', verbose_name='الحافلة')
+    route_name = models.CharField('اسم الخط', max_length=255)
+    morning_time = models.TimeField('وقت التحرك الصباحي', null=True, blank=True)
+    evening_time = models.TimeField('وقت العودة المسائي', null=True, blank=True)
+
+    class Meta:
+        verbose_name = 'خط سير حافلة'
+        verbose_name_plural = 'خطوط سير الحافلات'
+
+    def __str__(self):
+        return f"{self.route_name} ({self.bus})"
+
+
+class StudentBusAssignment(models.Model):
+    student = models.ForeignKey(User, on_delete=models.CASCADE, related_name='bus_assignments', verbose_name='الطالب')
+    route = models.ForeignKey(BusRoute, on_delete=models.CASCADE, related_name='students', verbose_name='خط السير')
+    pickup_point = models.CharField('نقطة التجمع / الانتظار', max_length=255)
+
+    class Meta:
+        verbose_name = 'تخصيص حافلة لطالب'
+        verbose_name_plural = 'تخصيص الحافلات للطلاب'
+
+    def __str__(self):
+        return f"{self.student} - {self.route}"
+
+

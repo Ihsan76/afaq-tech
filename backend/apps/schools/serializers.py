@@ -8,17 +8,20 @@ from .models import (
     AnnouncementReadReceipt,
     Attachment,
     Attendance,
+    BusRoute,
     FamilyLink,
     ParentTeacherTicket,
     Period,
     Room,
     School,
     SchoolAnnouncement,
+    SchoolBus,
     SchoolFee,
     SchoolGrade,
     SchoolSubjectPeriod,
     SchoolTeacher,
     Section,
+    StudentBusAssignment,
     StudentEnrollment,
     StudentFeeAssignment,
     SupportRequest,
@@ -435,4 +438,32 @@ class StudentFeeAssignmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = StudentFeeAssignment
         fields = '__all__'
+
+
+class SchoolBusSerializer(serializers.ModelSerializer):
+    school_name = serializers.CharField(source='school.name', read_only=True)
+
+    class Meta:
+        model = SchoolBus
+        fields = '__all__'
+
+
+class BusRouteSerializer(serializers.ModelSerializer):
+    bus_number = serializers.CharField(source='bus.bus_number', read_only=True)
+    driver_name = serializers.CharField(source='bus.driver_name', read_only=True)
+
+    class Meta:
+        model = BusRoute
+        fields = '__all__'
+
+
+class StudentBusAssignmentSerializer(serializers.ModelSerializer):
+    student_name = serializers.CharField(source='student.email', read_only=True)
+    route_name = serializers.CharField(source='route.route_name', read_only=True)
+    bus_number = serializers.CharField(source='route.bus.bus_number', read_only=True)
+
+    class Meta:
+        model = StudentBusAssignment
+        fields = '__all__'
+
 

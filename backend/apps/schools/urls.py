@@ -6,6 +6,7 @@ from .views import (
     AttachmentViewSet,
     AttendanceViewSet,
     BiometricWebhookAPIView,
+    BusRouteViewSet,
     BulkExportView,
     BulkImportView,
     FamilyLinkViewSet,
@@ -16,12 +17,14 @@ from .views import (
     RoomViewSet,
     SchoolAnalyticsAPIView,
     SchoolAnnouncementViewSet,
+    SchoolBusViewSet,
     SchoolFeeViewSet,
     SchoolGradeViewSet,
     SchoolSubjectPeriodViewSet,
     SchoolTeacherViewSet,
     SchoolViewSet,
     SectionViewSet,
+    StudentBusAssignmentViewSet,
     StudentEnrollmentViewSet,
     StudentFeeAssignmentViewSet,
     StudentPredictiveAnalyticsAPIView,
@@ -55,6 +58,9 @@ router.register('rooms', RoomViewSet, basename='room')
 router.register('timetable-slots', TimetableSlotViewSet, basename='timetableslot')
 router.register('fees', SchoolFeeViewSet, basename='schoolfee')
 router.register('fee-assignments', StudentFeeAssignmentViewSet, basename='studentfeeassignment')
+router.register('buses', SchoolBusViewSet, basename='schoolbus')
+router.register('bus-routes', BusRouteViewSet, basename='busroute')
+router.register('bus-assignments', StudentBusAssignmentViewSet, basename='studentbusassignment')
 
 urlpatterns = [
     path('user/settings/', UserSettingsAPIView.as_view(), name='user-ai-settings'),

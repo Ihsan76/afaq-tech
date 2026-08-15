@@ -25,17 +25,20 @@ from .models import (
     AnnouncementReadReceipt,
     Attachment,
     Attendance,
+    BusRoute,
     FamilyLink,
     ParentTeacherTicket,
     Period,
     Room,
     School,
     SchoolAnnouncement,
+    SchoolBus,
     SchoolFee,
     SchoolGrade,
     SchoolSubjectPeriod,
     SchoolTeacher,
     Section,
+    StudentBusAssignment,
     StudentEnrollment,
     StudentFeeAssignment,
     SupportRequest,
@@ -49,12 +52,14 @@ from .serializers import (
     AcademicYearSerializer,
     AttachmentSerializer,
     AttendanceSerializer,
+    BusRouteSerializer,
     FamilyLinkSerializer,
     FAQSerializer,
     ParentTeacherTicketSerializer,
     PeriodSerializer,
     RoomSerializer,
     SchoolAnnouncementSerializer,
+    SchoolBusSerializer,
     SchoolFeeSerializer,
     SchoolGradeSerializer,
     SchoolSerializer,
@@ -62,6 +67,7 @@ from .serializers import (
     SchoolTeacherCreateSerializer,
     SchoolTeacherSerializer,
     SectionSerializer,
+    StudentBusAssignmentSerializer,
     StudentEnrollmentSerializer,
     StudentFeeAssignmentSerializer,
     SupportRequestSerializer,
@@ -2724,6 +2730,48 @@ class StudentPredictiveAnalyticsAPIView(APIView):
             'risk_level': risk_level,
             'recommendations': recommendations
         })
+
+
+class SchoolBusViewSet(viewsets.ModelViewSet):
+    queryset = SchoolBus.objects.all()
+    serializer_class = SchoolBusSerializer
+    permission_classes = [IsAdminOrReadOnly]
+
+    def get_queryset(self):
+        qs = SchoolBus.objects.all()
+        school_id = self.request.query_params.get('school')
+        if school_id:
+            qs = qs.filter(school_id=school_id)
+        return qs
+
+
+class BusRouteViewSet(viewsets.ModelViewSet):
+    queryset = BusRoute.objects.all()
+    serializer_class = BusRouteSerializer
+    permission_classes = [IsAdminOrReadOnly]
+
+    def get_queryset(self):
+        qs = BusRoute.objects.all()
+        bus_id = self.request.query_params.get('bus')
+        if bus_id:
+            qs = qs.filter(bus_id=bus_id)
+        return qs
+
+
+class StudentBusAssignmentViewSet(viewsets.ModelViewSet):
+    queryset = StudentBusAssignment.objects.all()
+    serializer_class = StudentBusAssignmentSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        qs = StudentBusAssignment.objects.all()
+        student_id = self.request.query_params.get('student')
+        if student_id:
+            qs = qs.filter(student_id=student_id)
+        if not is_admin(self.request.user):
+            qs = qs.filter(student=self.request.user)
+        return qs
+
 
 
 
