@@ -2600,3 +2600,130 @@ class StudentFeeAssignmentViewSet(viewsets.ModelViewSet):
             qs = qs.filter(student=self.request.user)
         return qs
 
+
+class StudentReportCardPDFView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, student_id):
+        student = get_object_or_404(User, pk=student_id)
+        enrollment = StudentEnrollment.objects.filter(student=student).select_related('school', 'section').first()
+        school = enrollment.school if enrollment else None
+        attendance_count = Attendance.objects.filter(student=student, status='present').count()
+        absent_count = Attendance.objects.filter(student=student, status='absent').count()
+
+        html_content = f"""
+        <!DOCTYPE html>
+        <html lang="ar" dir="rtl">
+        <head>
+        <meta charset="utf-8">
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
+            body {{ font-family: 'Cairo', Arial, sans-serif; direction: rtl; text-align: right; color: #1e293b; padding: 20px; }}
+            .header {{ text-align: center; border-bottom: 2px solid #4f46e5; padding-bottom: 15px; margin-bottom: 20px; }}
+            .school-name {{ font-size: 20pt; font-weight: bold; color: #4f46e5; }}
+            .title {{ font-size: 16pt; font-weight: bold; margin-top: 5px; }}
+            .info-box {{ background: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 8px; margin-bottom: 20px; }}
+            table {{ width: 100%; border-collapse: collapse; margin-top: 15px; }}
+            th, td {{ border: 1px solid #cbd5e1; padding: 10px; text-align: center; font-size: 11pt; }}
+            th {{ background: #f1f5f9; font-weight: bold; }}
+            .footer {{ margin-top: 40px; text-align: center; font-size: 10pt; color: #64748b; }}
+        </style>
+        </head>
+        <body>
+            <div class="header">
+                <div class="school-name">{school.name if school else 'المدرسة النموذجية'}</div>
+                <div class="title">كشف الجلاء المدرسي الرسمي</div>
+            </div>
+            <div class="info-box">
+                <p><strong>اسم الطالب:</strong> {student.get_full_name() or student.email}</p>
+                <p><strong>الشعبة:</strong> {enrollment.section.name if enrollment and enrollment.section else 'غير محدد'}</p>
+            </div>
+            <h3>ملخص الحضور والغياب</h3>
+            <table>
+                <tr>
+                    <th>الأيام الحاضرة</th>
+                    <th>الأيام الغائبة</th>
+                </tr>
+                <tr>
+                    <td style="color: #059669; font-weight: bold;">{attendance_count}</td>
+                    <td style="color: #dc2626; font-weight: bold;">{absent_count}</td>
+                </tr>
+            </table>
+            <div class="footer">
+                <p>تم استخراج هذا التقرير إلكترونياً من منصة آفاق تكنولوجي (Afaq Tech SIS)</p>
+            </div>
+        </body>
+        </html>
+        """
+        from weasyprint import HTML
+        pdf_bytes = HTML(string=html_content).write_pdf()
+        response = HttpResponse(pdf_bytes, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="report-card-{student_id}.pdf"'
+        return response
+
+
+class BiometricWebhookAPIView(APIView):
+    """Receives attendance webhooks from biometric devices / RFID turnstiles."""
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        student_id = request.data.get('student_id')
+        device_id = request.data.get('device_id')
+        status_val = request.data.get('status', 'present')
+        timestamp = request.data.get('timestamp')
+
+        if not student_id:
+            return Response({'error': 'student_id is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        student = get_object_or_404(User, pk=student_id)
+
+        attendance, created = Attendance.objects.update_or_create(
+            student=student,
+            date=timezone.localdate(),
+            defaults={'status': status_val}
+        )
+
+        try:
+            from .whatsapp import send_whatsapp_alert
+            family_links = FamilyLink.objects.filter(student=student)
+            for link in family_links:
+                if link.parent and link.parent.phone:
+                    msg = f"إشعار حضور مدرسي: تم تسجيل حضور الطالب {student.get_full_name() or student.email} في المدرسة بتاريخ {attendance.date}."
+                    send_whatsapp_alert(link.parent.phone, msg)
+        except Exception:
+            pass
+
+        return Response({'success': True, 'attendance_id': attendance.id})
+
+
+class StudentPredictiveAnalyticsAPIView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, student_id):
+        student = get_object_or_404(User, pk=student_id)
+        attendance_records = Attendance.objects.filter(student=student)
+        total_days = attendance_records.count()
+        absent_days = attendance_records.filter(status='absent').count()
+        absent_ratio = (absent_days / total_days) if total_days > 0 else 0.0
+
+        risk_level = "low"
+        recommendations = ["الاستمرار في الأداء المنتظم والمشاركة الصفية."]
+        if absent_ratio > 0.15:
+            risk_level = "high"
+            recommendations = ["متابعة الغياب المتكرر مع ولي الأمر", "تقديم خطة دعم علاجية لمواد الفهم الأساسية"]
+        elif absent_ratio > 0.08:
+            risk_level = "medium"
+            recommendations = ["تنبيه ولي الأمر بشأن الغياب المتقطع"]
+
+        return Response({
+            'student_id': student.id,
+            'student_name': student.get_full_name() or student.email,
+            'total_attendance_days': total_days,
+            'absent_days': absent_days,
+            'absence_ratio': round(absent_ratio * 100, 2),
+            'risk_level': risk_level,
+            'recommendations': recommendations
+        })
+
+
+
