@@ -61,6 +61,32 @@ export default function LessonPlanDetailPage() {
   const [refinePrompt, setRefinePrompt] = useState("");
   const [refining, setRefining] = useState(false);
   const [exportingPdf, setExportingPdf] = useState(false);
+  const [exportingAcademy, setExportingAcademy] = useState(false);
+
+  const handleExportToAcademy = async () => {
+    if (!plan) return;
+    setExportingAcademy(true);
+    try {
+      const slug = `course-${plan.title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${Date.now().toString().slice(-4)}`;
+      await api.post("/courses/admin/create/", {
+        slug,
+        translations: {
+          ar: { title: plan.title, description: `دورة مستخلصة من خطة الدرس: ${plan.title}` },
+          en: { title: plan.title, description: `Course derived from lesson plan: ${plan.title}` }
+        },
+        level: "beginner",
+        language: locale,
+        is_free: true,
+        is_published: true,
+      });
+      alert(locale === "ar" ? "تم تحويل خطة الدرس بنجاح إلى دورة في الأكاديمية!" : "Successfully exported lesson plan to Academy course!");
+      router.push(`/${locale}/academy/creator`);
+    } catch {
+      alert(locale === "ar" ? "فشل التحويل للأكاديمية (تأكد من صلاحيات المحاضر/المشرف)" : "Failed to export to Academy (check creator/admin permissions)");
+    } finally {
+      setExportingAcademy(false);
+    }
+  };
 
   useEffect(() => {
     api
@@ -339,6 +365,15 @@ export default function LessonPlanDetailPage() {
               style={{ borderColor: "var(--color-border)", color: "var(--color-error)" }}
             >
               {exportingPdf ? t("exportingPdf") : `📄 ${t("exportPdf")}`}
+            </button>
+
+            <button
+              onClick={handleExportToAcademy}
+              disabled={exportingAcademy}
+              className="px-4 py-2 rounded-xl text-xs font-bold text-white transition-all shadow disabled:opacity-50"
+              style={{ background: "var(--color-primary)" }}
+            >
+              {exportingAcademy ? "..." : (locale === "ar" ? "🚀 تحويل إلى دورة أكاديمية" : "🚀 Export to Academy")}
             </button>
 
             <button
