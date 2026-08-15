@@ -16,6 +16,9 @@ class User(AbstractUser):
         CONTENT_CREATOR = 'creator', _('Content Creator')
         ADMIN = 'admin', _('System Admin')
         SCHOOL_ADMIN = 'school_admin', _('School Admin')
+        SCHOOL_ACCOUNTANT = 'school_accountant', _('School Accountant')
+        SCHOOL_TRANSPORT_OFFICER = 'school_transport_officer', _('School Transport Officer')
+        SCHOOL_LIBRARIAN = 'school_librarian', _('School Librarian')
         DEVELOPER = 'developer', _('Developer')
         SUPPORT = 'support', _('Support')
         CONTENT_MANAGER = 'content_manager', _('Content Manager')
@@ -58,7 +61,7 @@ class User(AbstractUser):
 
     email = models.EmailField(unique=True)
     translations = models.JSONField(_('Translations'), default=dict, blank=True)
-    role = models.CharField(_('Role'), max_length=20, choices=Role.choices, default=Role.STUDENT)
+    role = models.CharField(_('Role'), max_length=32, choices=Role.choices, default=Role.STUDENT)
     subscription_plan = models.CharField(_('Subscription Plan'), max_length=20, choices=SubscriptionPlan.choices, default=SubscriptionPlan.FREE)
 
     ui_language = models.CharField(_('UI Language'), max_length=5, default='ar')

@@ -7,6 +7,7 @@ import { localized } from "@/lib/i18n";
 import { locales, localeNames } from "@/i18n/config";
 import MultiSelectDropdown from "@/components/MultiSelectDropdown";
 import SelectDropdown from "@/components/ui/SelectDropdown";
+import CompactTable from "@/components/ui/CompactTable";
 
 interface MenuItem {
   id: number; menu: string; translations: Record<string, Record<string, string>>;
@@ -256,58 +257,68 @@ export default function AdminMenusPage() {
           <p className="text-lg" style={{ color: "var(--color-text-muted)" }}>{t("admin.noMenuItems")}</p>
         </div>
       ) : (
-        <div className="space-y-2">
-          {items.map((item, index) => (
-            <div key={item.id} className="flex items-center gap-4 p-4 rounded-2xl border flex-wrap sm:flex-nowrap" style={{ ...style, boxShadow: "var(--card-shadow)", opacity: item.is_active ? 1 : 0.55 }}>
-              <span className="cursor-grab text-lg opacity-30">⠿</span>
-              <span className="text-xl">{item.icon || "🔗"}</span>
-              <div className="flex-1 min-w-0">
-                <div className="font-bold text-sm" style={{ color: "var(--color-text)" }}>{getLocaleTitle(item)}</div>
-                <div className="text-xs" style={{ color: "var(--color-text-muted)" }}>{item.url || ""}</div>
-                <div className="flex flex-wrap gap-1 mt-1.5">
-                  {item.service_context && item.service_context.length > 0 && (
-                    item.service_context.length === SERVICE_CONTEXTS.length ? (
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ background: "var(--color-secondary-light)", color: "var(--color-secondary)" }}>
-                        {t("admin.allPages")}
-                      </span>
-                    ) : (
-                      item.service_context.map((ctx) => (
-                        <span key={ctx} className="px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ background: "var(--color-secondary-light)", color: "var(--color-secondary)" }}>
-                          {SERVICE_CONTEXTS.find((c) => c.value === ctx)?.label || ctx}
-                        </span>
-                      ))
-                    )
-                  )}
-                  {item.required_role && item.required_role.length > 0 && (
-                    item.required_role.length === REQUIRED_ROLES.length ? (
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ background: "var(--color-primary-light)", color: "var(--color-primary)" }}>
-                        {t("admin.allRoles")}
-                      </span>
-                    ) : (
-                      item.required_role.map((role) => (
-                        <span key={role} className="px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ background: "var(--color-primary-light)", color: "var(--color-primary)" }}>
-                          {REQUIRED_ROLES.find((r) => r.value === role)?.label || role}
-                        </span>
-                      ))
-                    )
-                  )}
+        <CompactTable
+          data={items}
+          searchKey="url"
+          searchPlaceholder="Search URL..."
+          columns={[
+            {
+              header: "Item",
+              accessor: (item) => (
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">{item.icon || "🔗"}</span>
+                  <div>
+                    <div className="font-bold text-xs" style={{ color: "var(--color-text)" }}>{getLocaleTitle(item)}</div>
+                    <div className="text-[10px] truncate max-w-xs" style={{ color: "var(--color-text-muted)" }}>{item.url || ""}</div>
+                  </div>
                 </div>
-              </div>
-              {item.badge && <span className="px-2 py-0.5 rounded-full text-xs font-bold" style={{ background: "var(--color-primary-light)", color: "var(--color-primary)" }}>{item.badge}</span>}
-              <div className="flex gap-1">
-                <button onClick={() => moveItem(index, -1)} className="w-7 h-7 rounded-lg flex items-center justify-center border text-xs" style={style}>↑</button>
-                <button onClick={() => moveItem(index, 1)} className="w-7 h-7 rounded-lg flex items-center justify-center border text-xs" style={style}>↓</button>
-                <button onClick={() => handleEdit(item)} className="w-7 h-7 rounded-lg flex items-center justify-center border text-xs" style={style}>✎</button>
-                <button onClick={() => handleToggleActive(item)} title={item.is_active ? t("admin.deactivate") : t("admin.activate")}
-                  className="w-7 h-7 rounded-lg flex items-center justify-center border text-xs"
-                  style={{ background: item.is_active ? "var(--color-success-light)" : "var(--color-surface-alt)", color: item.is_active ? "var(--color-success)" : "var(--color-text-muted)" }}>
-                  {item.is_active ? "●" : "○"}
-                </button>
-                <button onClick={() => handleDelete(item.id)} className="w-7 h-7 rounded-lg flex items-center justify-center text-xs" style={{ background: "var(--color-error-light)", color: "var(--color-error)" }}>✕</button>
-              </div>
-            </div>
-          ))}
-        </div>
+              ),
+            },
+            {
+              header: "Contexts & Roles",
+              accessor: (item) => (
+                <div className="flex flex-wrap gap-1">
+                  {item.service_context?.map((ctx) => (
+                    <span key={ctx} className="px-1.5 py-0.5 rounded text-[9px] font-bold" style={{ background: "var(--color-secondary-light)", color: "var(--color-secondary)" }}>
+                      {ctx}
+                    </span>
+                  ))}
+                  {item.required_role?.map((role) => (
+                    <span key={role} className="px-1.5 py-0.5 rounded text-[9px] font-bold" style={{ background: "var(--color-primary-light)", color: "var(--color-primary)" }}>
+                      {role}
+                    </span>
+                  ))}
+                </div>
+              ),
+            },
+            {
+              header: "Status",
+              accessor: (item) => (
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ background: item.is_active ? "var(--color-success-light)" : "var(--color-surface-alt)", color: item.is_active ? "var(--color-success)" : "var(--color-text-muted)" }}>
+                  {item.is_active ? "Active" : "Inactive"}
+                </span>
+              ),
+            },
+            {
+              header: "Actions",
+              className: "text-right",
+              accessor: (item) => {
+                const index = items.findIndex((i) => i.id === item.id);
+                return (
+                  <div className="flex gap-1 justify-end">
+                    <button onClick={() => moveItem(index, -1)} className="w-6 h-6 rounded flex items-center justify-center border text-[10px]" style={style}>↑</button>
+                    <button onClick={() => moveItem(index, 1)} className="w-6 h-6 rounded flex items-center justify-center border text-[10px]" style={style}>↓</button>
+                    <button onClick={() => handleEdit(item)} className="w-6 h-6 rounded flex items-center justify-center border text-[10px]" style={style}>✎</button>
+                    <button onClick={() => handleToggleActive(item)} className="w-6 h-6 rounded flex items-center justify-center border text-[10px]" style={{ background: item.is_active ? "var(--color-success-light)" : "var(--color-surface-alt)", color: item.is_active ? "var(--color-success)" : "var(--color-text-muted)" }}>
+                      {item.is_active ? "●" : "○"}
+                    </button>
+                    <button onClick={() => handleDelete(item.id)} className="w-6 h-6 rounded flex items-center justify-center text-[10px]" style={{ background: "var(--color-error-light)", color: "var(--color-error)" }}>✕</button>
+                  </div>
+                );
+              },
+            },
+          ]}
+        />
       )}
     </div>
   );
