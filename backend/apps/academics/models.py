@@ -27,13 +27,16 @@ class Subject(models.Model):
 
 class Curriculum(models.Model):
     translations = models.JSONField('الترجمات', default=dict, blank=True)
-    country = models.CharField('الدولة', max_length=100)
-    year = models.IntegerField('السنة')
+    country = models.CharField('الدولة', max_length=100, db_index=True)
+    year = models.IntegerField('السنة', db_index=True)
     grade = models.ForeignKey(Grade, on_delete=models.CASCADE, related_name='curricula')
 
     class Meta:
         verbose_name = 'منهج'
         verbose_name_plural = 'المناهج'
+        indexes = [
+            models.Index(fields=['country', 'year']),
+        ]
 
     def __str__(self):
         return f"{self.translations.get('ar', {}).get('name', '')} - {self.country}"
@@ -44,12 +47,15 @@ class Unit(models.Model):
     translations = models.JSONField('الترجمات', default=dict, blank=True)
     outcomes = models.JSONField('نواتج التعلم', default=list, blank=True, help_text='قائمة نواتج التعلم الرسمية لهذه الوحدة')
     content = models.TextField('محتوى الوحدة الرسمي', blank=True, help_text='مقتطفات من محتوى المنهاج الرسمي لحقنها في توليد الخطط')
-    order = models.IntegerField('الترتيب', default=0)
+    order = models.IntegerField('الترتيب', default=0, db_index=True)
 
     class Meta:
         verbose_name = 'وحدة'
         verbose_name_plural = 'الوحدات'
         ordering = ['order']
+        indexes = [
+            models.Index(fields=['curriculum', 'subject']),
+        ]
 
     def __str__(self):
         return self.translations.get('ar', {}).get('name', str(self.order))
