@@ -224,3 +224,10 @@ MYFATOORAH_PAYMENT_METHOD_ID = env('MYFATOORAH_PAYMENT_METHOD_ID', default='0')
 VAPID_PUBLIC_KEY = env('VAPID_PUBLIC_KEY', default='')
 VAPID_PRIVATE_KEY = env('VAPID_PRIVATE_KEY', default='')
 VAPID_SUBJECT = env('VAPID_SUBJECT', default='mailto:no-reply@afaq.app')
+
+# Celery Configuration
+CELERY_BROKER_URL = env('REDIS_URL', default='redis://localhost:6379/0')
+CELERY_RESULT_BACKEND = env('REDIS_URL', default='redis://localhost:6379/0')
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
