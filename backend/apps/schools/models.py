@@ -4,6 +4,26 @@ from apps.academics.models import Grade, Subject
 from apps.users.models import User
 
 
+class DayOfWeek(models.IntegerChoices):
+    """ISO 8601 weekday numbering: Monday=1 ... Sunday=7."""
+    MONDAY = 1, 'الاثنين'
+    TUESDAY = 2, 'الثلاثاء'
+    WEDNESDAY = 3, 'الأربعاء'
+    THURSDAY = 4, 'الخميس'
+    FRIDAY = 5, 'الجمعة'
+    SATURDAY = 6, 'السبت'
+    SUNDAY = 7, 'الأحد'
+
+
+# Default Jordanian school week: Sunday-Thursday, week starts Sunday (ISO=7).
+DEFAULT_WEEK_START = DayOfWeek.SUNDAY
+DEFAULT_WORKING_DAYS = [7, 1, 2, 3, 4]
+
+
+def default_working_days():
+    return list(DEFAULT_WORKING_DAYS)
+
+
 class School(models.Model):
     name = models.CharField('اسم المدرسة', max_length=255)
     school_code = models.CharField('الرمز التعريفي للمدرسة (School Code)', max_length=50, unique=True)
@@ -15,6 +35,14 @@ class School(models.Model):
     translations = models.JSONField('الترجمات', default=dict, blank=True)
     phone = models.CharField('رقم الهاتف', max_length=50, blank=True)
     address = models.TextField('العنوان', blank=True)
+    week_start = models.IntegerField(
+        'بداية الأسبوع', choices=DayOfWeek.choices, default=DEFAULT_WEEK_START,
+        help_text='أول أيام الأسبوع الدراسي (ISO: 1=الاثنين ... 7=الأحد)',
+    )
+    working_days = models.JSONField(
+        'أيام الدوام', default=default_working_days,
+        help_text='أيام الدوام الدراسي كقائمة أرقام ISO (1=الاثنين ... 7=الأحد)',
+    )
     manager = models.ForeignKey(
         User, on_delete=models.SET_NULL, null=True, blank=True,
         related_name='managed_schools', verbose_name='مدير المدرسة',
@@ -412,17 +440,11 @@ class Room(models.Model):
 
 
 class TimetableSlot(models.Model):
-    class DayOfWeek(models.IntegerChoices):
-        SUNDAY = 0, 'الأحد'
-        MONDAY = 1, 'الإثنين'
-        TUESDAY = 2, 'الثلاثاء'
-        WEDNESDAY = 3, 'الأربعاء'
-        THURSDAY = 4, 'الخميس'
+    day_of_week = models.IntegerField('اليوم', choices=DayOfWeek.choices)
 
     school = models.ForeignKey(School, on_delete=models.CASCADE, related_name='timetable_slots', verbose_name='المدرسة')
     academic_year = models.ForeignKey(AcademicYear, on_delete=models.CASCADE, related_name='timetable_slots', verbose_name='العام الدراسي')
     section = models.ForeignKey(Section, on_delete=models.CASCADE, related_name='timetable_slots', verbose_name='الشعبة الصفية')
-    day_of_week = models.IntegerField('اليوم', choices=DayOfWeek.choices)
     period = models.ForeignKey(Period, on_delete=models.CASCADE, related_name='slots', verbose_name='الحصة الزمنية')
     subject = models.ForeignKey(Subject, on_delete=models.CASCADE, related_name='timetable_slots', verbose_name='المادة الدراسية')
     teacher = models.ForeignKey(User, on_delete=models.CASCADE, related_name='timetable_slots', verbose_name='المعلم')

@@ -219,7 +219,11 @@ class UserAdminUpdateView(generics.RetrieveUpdateAPIView):
                     if field == 'national_id' and (not val or str(val).strip() == ''):
                         val = None
                     setattr(user, field, val)
-        user.save()
+        from django.db import IntegrityError
+        try:
+            user.save()
+        except IntegrityError:
+            return Response({'national_id': ['This National ID or email is already in use.']}, status=status.HTTP_400_BAD_REQUEST)
         return Response(UserSerializer(user, context={'request': request}).data)
 
 class TokenRefreshView(APIView):

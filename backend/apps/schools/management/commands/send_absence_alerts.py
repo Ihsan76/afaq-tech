@@ -18,7 +18,7 @@ from django.core.management.base import BaseCommand
 from django.utils import timezone
 
 from apps.schools.absence import mark_absent_if_unrecorded, notify_absence
-from apps.schools.models import Attendance, StudentEnrollment
+from apps.schools.models import DEFAULT_WORKING_DAYS, Attendance, StudentEnrollment
 
 
 class Command(BaseCommand):
@@ -26,7 +26,7 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('--date', type=str, help='Target date as YYYY-MM-DD (default: today)')
-        parser.add_argument('--include-weekend', action='store_true', help='Also process Friday/Saturday')
+        parser.add_argument('--include-weekend', action='store_true', help='Also process non-working days for each school')
         parser.add_argument('--dry-run', action='store_true', help='Report without creating records or sending alerts')
 
     def handle(self, *args, **options):
@@ -41,19 +41,15 @@ class Command(BaseCommand):
         if target_date is None:
             target_date = timezone.localdate()
 
-        if not options['include_weekend'] and target_date.weekday() in (4, 5):  # Fri/Sat
-            self.stdout.write(
-                f'{target_date} is a weekend day (Fri/Sat); skipping. Use --include-weekend to override.'
-            )
-            return
-
-        dry_run = options['dry_run']
+        include_non_working = options.get('include_weekend')
+        dry_run = options.get('dry_run')
 
         enrollments = StudentEnrollment.objects.filter(
             academic_year__is_current=True,
         ).select_related('student', 'section', 'section__school').order_by('section_id')
 
         total = 0
+        skipped_non_working = 0
         already_recorded = 0
         absent = 0
         alerts_sent = 0
@@ -63,6 +59,11 @@ class Command(BaseCommand):
 
         for enrollment in enrollments:
             total += 1
+            school = enrollment.section.school
+            working_days = list(school.working_days or DEFAULT_WORKING_DAYS) if school else list(DEFAULT_WORKING_DAYS)
+            if not include_non_working and target_date.isoweekday() not in working_days:
+                skipped_non_working += 1
+                continue
             if Attendance.objects.filter(student=enrollment.student, date=target_date).exists():
                 already_recorded += 1
                 continue
@@ -91,7 +92,8 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS(
             f'Date: {target_date} | dry_run={dry_run} | '
-            f'enrollments={total} | already_recorded={already_recorded} | '
+            f'enrollments={total} | skipped_non_working={skipped_non_working} | '
+            f'already_recorded={already_recorded} | '
             f'absent={absent} | alerts_sent={alerts_sent} | '
             f'whatsapp_sent={whatsapp_sent} | parents_notified={parents_notified} | no_parents={no_parents}'
         ))

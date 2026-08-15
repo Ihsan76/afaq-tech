@@ -16,6 +16,7 @@ const ACTIONS: Record<string, { href: string; icon: string; labelKey: string }[]
     { href: "/school/admin/rooms", icon: "🚪", labelKey: "quickRooms" },
     { href: "/school/admin/timetable", icon: "⚡", labelKey: "quickSchedule" },
     { href: "/school/admin/announcements", icon: "📢", labelKey: "quickBroadcast" },
+    { href: "/school/admin/settings", icon: "🗓️", labelKey: "quickSettings" },
   ],
   teacher: [
     { href: "/teacher/my-class", icon: "👨‍🏫", labelKey: "quickMyClass" },

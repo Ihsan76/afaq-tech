@@ -72,7 +72,7 @@ class EbookDownloadView(APIView):
 
         user_level = 0
         if request.user and request.user.is_authenticated:
-            user_level = PLAN_LEVELS.get(request.user.subscription_plan, 0)
+            user_level = request.user.get_subscription_level() if hasattr(request.user, 'get_subscription_level') else PLAN_LEVELS.get(request.user.subscription_plan, 0)
             purchased = EbookPurchase.objects.filter(
                 user=request.user, ebook=ebook, status=EbookPurchase.Status.PAID
             ).exists()

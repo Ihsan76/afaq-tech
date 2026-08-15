@@ -17,7 +17,8 @@ export default function PlatformHero({ content }: { content?: Record<string, any
   useEffect(() => { setMounted(true); }, []);
 
   const heading = localizedContent(c, "heading", locale, t("platformHeroTitle"));
-  const subtitle = localizedContent(c, "subtitle", locale, t("platformHeroSubtitle"));
+  const rawSubtitle = localizedContent(c, "subtitle", locale, t("platformHeroSubtitle"));
+  const subtitle = typeof rawSubtitle === 'string' ? rawSubtitle.replace(/<\/?[^>]+(>|$)/g, "") : rawSubtitle;
   const isSmart = c.is_smart_cta !== false;
   const ctaText = (isSmart && user)
     ? localizedContent(c, "cta_logged_in_text", locale, locale === "ar" ? "لوحة التحكم" : "Dashboard")

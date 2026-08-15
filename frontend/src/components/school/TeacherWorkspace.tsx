@@ -79,8 +79,8 @@ export default function TeacherWorkspace({ task }: TeacherWorkspaceProps) {
 
   return (
     <div className="min-h-screen py-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto" style={{ color: "var(--color-text)" }}>
-      <div className="flex justify-between items-center mb-8 border-b pb-6" style={{ borderColor: "var(--color-border)" }}>
-        <div>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8 border-b pb-6" style={{ borderColor: "var(--color-border)" }}>
+        <div className="min-w-0">
           <span className="px-3 py-1 rounded-full text-xs font-bold bg-[var(--color-secondary)] text-white inline-block mb-2">
             {t("teacherBadge")}
           </span>

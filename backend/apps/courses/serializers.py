@@ -172,7 +172,7 @@ class CourseDetailSerializer(CourseListSerializer):
             user=request.user, course=obj, status=CoursePurchase.Status.PAID
         ).exists():
             return True
-        user_level = PLAN_LEVELS.get(request.user.subscription_plan, 0)
+        user_level = request.user.get_subscription_level() if hasattr(request.user, 'get_subscription_level') else PLAN_LEVELS.get(request.user.subscription_plan, 0)
         return user_level >= PLAN_LEVELS.get(obj.access_level, 0)
 
 

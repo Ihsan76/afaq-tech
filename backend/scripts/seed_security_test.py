@@ -168,6 +168,8 @@ def seed_school():
             'phone': '+962700000001',
             'address': 'شارع الاختبار 1',
             'manager': school_admin,
+            'week_start': 1,  # Gulf-style: week starts Monday
+            'working_days': [1, 2, 3, 4, 5],  # Mon-Fri
         },
     )
     print(f'  {"created" if _ else "exists "}: school {school.name}')

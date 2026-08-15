@@ -109,7 +109,7 @@ export default function RegisterPage() {
 
           <div className="mt-6 pt-6 text-center" style={{ borderTop: "1px solid var(--color-border)" }}>
             <p className="text-sm" style={{ color: "var(--color-text-muted)" }}>
-              {t("login")}{" "}
+              {locale === "ar" ? "لديك حساب بالفعل؟ " : "Already have an account? "}
               <Link href={`/${locale}/login`} className="font-semibold transition-colors" style={{ color: "var(--color-primary)" }}>
                 {t("login")}
               </Link>

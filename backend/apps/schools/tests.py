@@ -7,6 +7,9 @@ from rest_framework.test import APITestCase
 
 from apps.academics.models import Grade, Subject
 from apps.schools.models import (
+    DEFAULT_WEEK_START,
+    DEFAULT_WORKING_DAYS,
+    DayOfWeek,
     FAQ,
     AcademicYear,
     AnnouncementReadReceipt,
@@ -23,6 +26,7 @@ from apps.schools.models import (
     StudentEnrollment,
     SupportRequest,
     TeacherAssignment,
+    TimetableSlot,
     WeeklyReport,
     WhatsAppNotificationLog,
 )
@@ -1387,3 +1391,150 @@ class ExcelAndClassTeacherTestCase(SchoolManagerStudentManagementTestCase):
         self.assertEqual(res.status_code, 200, res.data)
         ids = {s['id'] for s in res.data['results']}
         self.assertEqual(ids, {self.sec_a.id})
+
+
+class SchoolCalendarTestCase(APITestCase):
+    """Tests for per-school week start / working days configuration."""
+
+    def setUp(self):
+        self.admin = make_user('caladmin@test.com', 'admin', 'مدير النظام')
+        self.manager = make_user('calmanager@test.com', 'school_admin', 'مدير المدرسة', phone='0773000001')
+        self.grade = Grade.objects.create(level=4, translations={'ar': {'name': 'الصف الرابع'}})
+        self.subject = Subject.objects.create(translations={'ar': {'name': 'العلوم'}})
+        self.year = AcademicYear.objects.create(name='2026/2027', is_current=True)
+        self.school = School.objects.create(
+            name='مدرسة التقويم', school_code='CAL-1', manager=self.manager,
+        )
+        SchoolGrade.objects.create(school=self.school, grade=self.grade)
+        self.section = Section.objects.create(
+            school=self.school, grade=self.grade, academic_year=self.year, name='أ'
+        )
+        self.period = Period.objects.create(
+            school=self.school, name='الحصة 1', period_number=1,
+            start_time='08:00', end_time='08:45',
+        )
+
+    def _auth(self, user):
+        self.client.force_authenticate(user=user)
+
+    def test_defaults_are_jordanian(self):
+        self.assertEqual(DayOfWeek.SUNDAY, 7)
+        self.assertEqual(DayOfWeek.MONDAY, 1)
+        self.assertEqual(DEFAULT_WEEK_START, 7)
+        self.assertEqual(DEFAULT_WORKING_DAYS, [7, 1, 2, 3, 4])
+        self.assertEqual(self.school.week_start, 7)
+        self.assertEqual(list(self.school.working_days), [7, 1, 2, 3, 4])
+
+    def test_manager_can_update_calendar(self):
+        self._auth(self.manager)
+        res = self.client.patch(
+            f'/api/v1/schools/schools/{self.school.id}/calendar/',
+            {'week_start': 1, 'working_days': [1, 2, 3, 4, 5]},
+            format='json',
+        )
+        self.assertEqual(res.status_code, 200, res.data)
+        self.school.refresh_from_db()
+        self.assertEqual(self.school.week_start, 1)
+        self.assertEqual(list(self.school.working_days), [1, 2, 3, 4, 5])
+        self.assertEqual(res.data['week_start'], 1)
+
+    def test_other_manager_cannot_update_calendar(self):
+        outsider = make_user('caloutsider@test.com', 'school_admin', 'مدير آخر', phone='0773000002')
+        self._auth(outsider)
+        res = self.client.patch(
+            f'/api/v1/schools/schools/{self.school.id}/calendar/',
+            {'week_start': 1, 'working_days': [1, 2, 3, 4, 5]},
+            format='json',
+        )
+        self.assertIn(res.status_code, [403, 404])
+
+    def test_invalid_days_rejected(self):
+        self._auth(self.manager)
+        res = self.client.patch(
+            f'/api/v1/schools/schools/{self.school.id}/calendar/',
+            {'week_start': 9, 'working_days': [1, 2, 3, 4, 5]},
+            format='json',
+        )
+        self.assertEqual(res.status_code, 400)
+        res = self.client.patch(
+            f'/api/v1/schools/schools/{self.school.id}/calendar/',
+            {'week_start': 1, 'working_days': []},
+            format='json',
+        )
+        self.assertEqual(res.status_code, 400)
+        res = self.client.patch(
+            f'/api/v1/schools/schools/{self.school.id}/calendar/',
+            {'week_start': 2, 'working_days': [1, 3, 4, 5]},
+            format='json',
+        )
+        self.assertEqual(res.status_code, 400)
+
+    def test_auto_schedule_respects_working_days(self):
+        teacher = make_user('caltacher@test.com', 'teacher', 'معلم', phone='0773000003')
+        subject2 = Subject.objects.create(translations={'ar': {'name': 'الرياضيات'}})
+        TeacherAssignment.objects.create(
+            teacher=teacher, section=self.section, subject=self.subject, academic_year=self.year,
+        )
+        TeacherAssignment.objects.create(
+            teacher=teacher, section=self.section, subject=subject2, academic_year=self.year,
+        )
+        room = self.school.rooms.create(name='قاعة 1', code='R1')
+        self._auth(self.admin)
+        # Gulf week: Monday-Friday, starts Monday.
+        self.school.week_start = 1
+        self.school.working_days = [1, 2, 3, 4, 5]
+        self.school.save()
+        res = self.client.post('/api/v1/schools/timetable-slots/auto_schedule/', {
+            'school_id': self.school.id, 'academic_year_id': self.year.id,
+        }, format='json')
+        self.assertEqual(res.status_code, 200, res.data)
+        days = set(TimetableSlot.objects.filter(section=self.section).values_list('day_of_week', flat=True))
+        self.assertTrue(days.issubset({1, 2, 3, 4, 5}))
+        self.assertGreater(len(days), 1)
+        self.assertNotIn(7, days)  # Sunday not a working day
+
+    def test_attendance_warning_on_non_working_day(self):
+        student = make_user('calstudent@test.com', 'student', 'طالب', national_id='1234567892', phone='0773000004')
+        StudentEnrollment.objects.create(student=student, section=self.section, academic_year=self.year)
+        self.school.week_start = 1
+        self.school.working_days = [1, 2, 3, 4, 5]
+        self.school.save()
+        self._auth(self.manager)
+        # 2026-08-16 is a Sunday (non-working for this school).
+        res = self.client.post('/api/v1/schools/attendances/', {
+            'student': student.id, 'section': self.section.id,
+            'school': self.school.id,
+            'date': '2026-08-16', 'status': 'present',
+        }, format='json')
+        self.assertEqual(res.status_code, 201, res.data)
+        self.assertIn('warning', res.data)
+        # Still recorded (warning only).
+        self.assertTrue(Attendance.objects.filter(student=student, date='2026-08-16').exists())
+
+    def test_bulk_attendance_warning_on_non_working_day(self):
+        student = make_user('calbulk@test.com', 'student', 'طالب', national_id='1234567893', phone='0773000005')
+        StudentEnrollment.objects.create(student=student, section=self.section, academic_year=self.year)
+        self.school.week_start = 1
+        self.school.working_days = [1, 2, 3, 4, 5]
+        self.school.save()
+        self._auth(self.manager)
+        res = self.client.post('/api/v1/schools/attendances/bulk_record/', {
+            'section': self.section.id,
+            'date': '2026-08-16',  # Sunday
+            'records': [{'student': student.id, 'status': 'absent'}],
+        }, format='json')
+        self.assertEqual(res.status_code, 200, res.data)
+        self.assertIsNotNone(res.data['warning'])
+
+    def test_day_display_localized(self):
+        slot = TimetableSlot.objects.create(
+            school=self.school, academic_year=self.year, section=self.section,
+            day_of_week=7, period=self.period, subject=self.subject,
+            teacher=self.admin, room=None,
+        )
+        self._auth(self.manager)
+        res = self.client.get('/api/v1/schools/timetable-slots/', {'locale': 'en'})
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.data['results'][0]['day_display'], 'Sunday')
+        res = self.client.get('/api/v1/schools/timetable-slots/', {'locale': 'ar'})
+        self.assertEqual(res.data['results'][0]['day_display'], 'الأحد')

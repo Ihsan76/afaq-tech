@@ -17,6 +17,9 @@ from apps.users.models import User
 
 from .absence import notify_absence
 from .models import (
+    DEFAULT_WEEK_START,
+    DEFAULT_WORKING_DAYS,
+    DayOfWeek,
     FAQ,
     AcademicYear,
     AnnouncementReadReceipt,
@@ -82,6 +85,36 @@ def is_teacher(user):
 def is_school_admin(user):
     """School manager: full permissions on their own school(s) only."""
     return bool(user and user.is_authenticated and user.role == 'school_admin')
+
+
+def ordered_working_days(week_start, working_days):
+    """Return working days (ISO 1=Mon..7=Sun) sorted starting from the given week_start day."""
+    ordered = sorted(working_days, key=lambda d: (d - week_start) % 7)
+    return [d for d in ordered if d in DayOfWeek.values]
+
+
+def school_week_days(school):
+    """Resolve a school's working days ordered from its week start (fallback to defaults)."""
+    days = list(school.working_days or []) if hasattr(school, 'working_days') else []
+    if not days:
+        days = list(DEFAULT_WORKING_DAYS)
+    return ordered_working_days(school.week_start or DEFAULT_WEEK_START, days)
+
+
+def week_start_date_for(school, date):
+    """Return the date of the week's first day for the given school (ISO week_start)."""
+    offset = (date.isoweekday() - (school.week_start or DEFAULT_WEEK_START)) % 7
+    return date - timedelta(days=offset)
+
+
+def working_day_warning(school, date):
+    """Return an Arabic warning string if `date` is not a working day for the school, else None."""
+    if not school:
+        return None
+    days = list(school.working_days or DEFAULT_WORKING_DAYS)
+    if date.isoweekday() not in days:
+        return 'هذا اليوم ليس من أيام الدوام الدراسي للمدرسة (تحذير فقط).'
+    return None
 
 
 def user_section_ids(user):
@@ -278,6 +311,36 @@ class SchoolViewSet(viewsets.ModelViewSet):
         if not is_admin(request.user):
             return Response({'detail': 'Only system admins can delete schools'}, status=status.HTTP_403_FORBIDDEN)
         return super().destroy(request, *args, **kwargs)
+
+    @action(detail=True, methods=['patch'], permission_classes=[permissions.IsAuthenticated])
+    def calendar(self, request, pk=None):
+        """Update a school's week start and working days (system admin or the school's manager)."""
+        school = self.get_object()
+        if not is_admin(request.user) and not (is_school_admin(request.user) and school.manager_id == request.user.id):
+            return Response({'detail': 'Permission denied for this school'}, status=status.HTTP_403_FORBIDDEN)
+
+        week_start = request.data.get('week_start', school.week_start)
+        working_days = request.data.get('working_days')
+        if working_days is not None:
+            try:
+                working_days = [int(d) for d in working_days]
+            except (TypeError, ValueError):
+                return Response({'error': 'working_days must be a list of day numbers (1=Mon..7=Sun)'}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            working_days = list(school.working_days or [])
+
+        valid_days = set(DayOfWeek.values)
+        if week_start not in valid_days:
+            return Response({'error': 'week_start must be in 1..7 (ISO)'}, status=status.HTTP_400_BAD_REQUEST)
+        if not working_days or any(d not in valid_days for d in working_days):
+            return Response({'error': 'working_days must be a non-empty list of day numbers in 1..7'}, status=status.HTTP_400_BAD_REQUEST)
+        if week_start not in working_days:
+            return Response({'error': 'week_start must be one of the working days'}, status=status.HTTP_400_BAD_REQUEST)
+
+        school.week_start = week_start
+        school.working_days = list(dict.fromkeys(working_days))
+        school.save(update_fields=['week_start', 'working_days'])
+        return Response(SchoolSerializer(school, context=self.get_serializer_context()).data)
 
     def perform_update(self, serializer):
         old_manager_id = self.get_object().manager_id
@@ -1075,6 +1138,21 @@ class AttendanceViewSet(viewsets.ModelViewSet):
         )
         notify_absence(attendance)
 
+    def create(self, request, *args, **kwargs):
+        """Record attendance, appending a non-blocking warning if the date is not a working day."""
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        section = serializer.validated_data.get('section')
+        warning = None
+        if section:
+            att_date = serializer.validated_data.get('date') or timezone.localdate()
+            warning = working_day_warning(section.school, att_date)
+        self.perform_create(serializer)
+        data = serializer.data
+        if warning:
+            data = {**data, 'warning': warning}
+        return Response(data, status=status.HTTP_201_CREATED, headers=self.get_success_headers(serializer.data))
+
     @action(detail=False, methods=['post'])
     def bulk_record(self, request):
         """تسجيل جماعي للحضور/الغياب لشعبة في يوم واحد.
@@ -1105,6 +1183,7 @@ class AttendanceViewSet(viewsets.ModelViewSet):
         created = []
         updated = []
         absent_alerts = 0
+        warning = working_day_warning(section.school, target_date)
         with transaction.atomic():
             for record in records:
                 student_id = record.get('student')
@@ -1139,6 +1218,7 @@ class AttendanceViewSet(viewsets.ModelViewSet):
             'created': len(created),
             'updated': len(updated),
             'absent_alerts_sent': absent_alerts,
+            'warning': warning,
         })
 
 
@@ -1278,6 +1358,10 @@ class AttachmentViewSet(viewsets.ModelViewSet):
         file = self.request.FILES.get('file')
         if not file:
             raise serializers.ValidationError({'file': 'file is required'})
+        dangerous_exts = ['.html', '.htm', '.py', '.js', '.php', '.sh', '.exe', '.bat', '.cmd', '.svg']
+        filename_lower = file.name.lower()
+        if any(filename_lower.endswith(ext) for ext in dangerous_exts) or getattr(file, 'content_type', '') == 'text/html':
+            raise serializers.ValidationError({'file': 'This file type is not allowed for security reasons.'})
         section_id = serializer.validated_data.get('section')
         if section_id:
             allowed = user_section_ids(self.request.user)
@@ -1289,6 +1373,16 @@ class AttachmentViewSet(viewsets.ModelViewSet):
             mime_type=getattr(file, 'content_type', ''),
             file_size=file.size,
         )
+
+    @action(detail=True, methods=['get'], permission_classes=[permissions.IsAuthenticated])
+    def download(self, request, pk=None):
+        attachment = self.get_object()
+        if not attachment.file:
+            return Response({'error': 'File not found'}, status=status.HTTP_404_NOT_FOUND)
+        from django.http import FileResponse
+        response = FileResponse(attachment.file.open('rb'), content_type=attachment.mime_type or 'application/octet-stream')
+        response['Content-Disposition'] = f'attachment; filename="{attachment.file_name or "attachment"}"'
+        return response
 
     @action(detail=True, methods=['post'], permission_classes=[IsAdminRole])
     def review(self, request, pk=None):
@@ -1327,8 +1421,7 @@ class WeeklySummaryAPIView(APIView):
 
     def get(self, request):
         user = request.user
-        week_start = date.today() - timedelta(days=date.today().weekday())
-        week_end = week_start + timedelta(days=7)
+        today = date.today()
 
         if user.role == 'parent':
             children = User.objects.filter(
@@ -1351,6 +1444,10 @@ class WeeklySummaryAPIView(APIView):
             if not student_enrollments.exists():
                 continue
             section_ids = student_enrollments.values_list('section_id', flat=True)
+            section = student_enrollments.first().section
+            school = section.school if section else None
+            week_start = week_start_date_for(school, today)
+            week_end = week_start + timedelta(days=7)
             week_announcements = SchoolAnnouncement.objects.filter(
                 section_id__in=section_ids,
                 created_at__date__gte=week_start,
@@ -2137,7 +2234,7 @@ class MySchoolContextAPIView(APIView):
 
 
 class SchoolAnalyticsAPIView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAdminRole]
 
     def get(self, request):
         return Response({
@@ -2421,6 +2518,11 @@ class TimetableSlotViewSet(viewsets.ModelViewSet):
         periods = Period.objects.filter(school_id=school_id, is_active=True, is_break=False).order_by('period_number')
         rooms = Room.objects.filter(school_id=school_id)
         default_room = rooms.first()
+        try:
+            school = School.objects.get(id=school_id)
+        except School.DoesNotExist:
+            return Response({'error': 'School not found'}, status=status.HTTP_404_NOT_FOUND)
+        week_days = school_week_days(school)
 
         created_slots = []
         errors = []
@@ -2432,7 +2534,7 @@ class TimetableSlotViewSet(viewsets.ModelViewSet):
                     continue
 
                 period_idx = 0
-                for day in range(5):
+                for day in week_days:
                     for period in periods:
                         if period_idx >= len(assignments):
                             break

@@ -36,6 +36,26 @@ def _locale(request):
     return 'en'
 
 
+# ISO weekday (1=Mon..7=Sun) -> localized names.
+DAY_NAMES = {
+    'ar': {1: 'الاثنين', 2: 'الثلاثاء', 3: 'الأربعاء', 4: 'الخميس', 5: 'الجمعة', 6: 'السبت', 7: 'الأحد'},
+    'en': {1: 'Monday', 2: 'Tuesday', 3: 'Wednesday', 4: 'Thursday', 5: 'Friday', 6: 'Saturday', 7: 'Sunday'},
+    'fr': {1: 'Lundi', 2: 'Mardi', 3: 'Mercredi', 4: 'Jeudi', 5: 'Vendredi', 6: 'Samedi', 7: 'Dimanche'},
+    'tr': {1: 'Pazartesi', 2: 'Salı', 3: 'Çarşamba', 4: 'Perşembe', 5: 'Cuma', 6: 'Cumartesi', 7: 'Pazar'},
+    'ur': {1: 'پیر', 2: 'منگل', 3: 'بدھ', 4: 'جمعرات', 5: 'جمعہ', 6: 'ہفتہ', 7: 'اتوار'},
+    'es': {1: 'Lunes', 2: 'Martes', 3: 'Miércoles', 4: 'Jueves', 5: 'Viernes', 6: 'Sábado', 7: 'Domingo'},
+    'de': {1: 'Montag', 2: 'Dienstag', 3: 'Mittwoch', 4: 'Donnerstag', 5: 'Freitag', 6: 'Samstag', 7: 'Sonntag'},
+    'id': {1: 'Senin', 2: 'Selasa', 3: 'Rabu', 4: 'Kamis', 5: 'Jumat', 6: 'Sabtu', 7: 'Minggu'},
+    'bn': {1: 'সোমবার', 2: 'মঙ্গলবার', 3: 'বুধবার', 4: 'বৃহস্পতিবার', 5: 'শুক্রবার', 6: 'শনিবার', 7: 'রবিবার'},
+    'fa': {1: 'دوشنبه', 2: 'سه‌شنبه', 3: 'چهارشنبه', 4: 'پنجشنبه', 5: 'جمعه', 6: 'شنبه', 7: 'یکشنبه'},
+}
+
+
+def day_name(day_of_week, locale):
+    names = DAY_NAMES.get(locale, DAY_NAMES['en'])
+    return names.get(day_of_week, '')
+
+
 def _subject_period_lookup(school_id):
     """Map (grade_id, subject_id) -> weekly_periods for a school."""
     rows = SchoolSubjectPeriod.objects.filter(school_id=school_id).values_list('grade_id', 'subject_id', 'weekly_periods')
@@ -375,7 +395,7 @@ class TimetableSlotSerializer(serializers.ModelSerializer):
     teacher_email = serializers.CharField(source='teacher.email', read_only=True)
     teacher_name = serializers.SerializerMethodField()
     room_name = serializers.CharField(source='room.name', read_only=True, default='')
-    day_display = serializers.CharField(source='get_day_of_week_display', read_only=True)
+    day_display = serializers.SerializerMethodField()
 
     class Meta:
         model = TimetableSlot
@@ -386,3 +406,6 @@ class TimetableSlotSerializer(serializers.ModelSerializer):
 
     def get_teacher_name(self, obj):
         return obj.teacher.translations.get('ar', {}).get('name', obj.teacher.email)
+
+    def get_day_display(self, obj):
+        return day_name(obj.day_of_week, _locale(self.context.get('request')))

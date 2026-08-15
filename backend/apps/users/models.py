@@ -36,6 +36,26 @@ class User(AbstractUser):
 
     PLAN_LEVELS = {'free': 0, 'basic': 1, 'pro': 2, 'school': 2, 'enterprise': 3}
 
+    def get_subscription_level(self):
+        """Returns the effective plan level, checking active Subscription records."""
+        base_level = self.PLAN_LEVELS.get(self.subscription_plan, 0)
+        try:
+            from django.utils import timezone
+            from apps.subscriptions.models import Subscription
+            now = timezone.now()
+            active_codes = Subscription.objects.filter(
+                user=self,
+                status=Subscription.Status.ACTIVE,
+                end_at__gte=now
+            ).select_related('plan').values_list('plan__code', flat=True)
+            for code in active_codes:
+                lvl = self.PLAN_LEVELS.get(code, 0)
+                if lvl > base_level:
+                    base_level = lvl
+        except Exception:
+            pass
+        return base_level
+
     email = models.EmailField(unique=True)
     translations = models.JSONField(_('Translations'), default=dict, blank=True)
     role = models.CharField(_('Role'), max_length=20, choices=Role.choices, default=Role.STUDENT)

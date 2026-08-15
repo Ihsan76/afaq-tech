@@ -84,7 +84,7 @@ class CourseEnrollView(APIView):
                 user=request.user, course=course, status=CoursePurchase.Status.PAID
             ).exists()
             if not purchased:
-                user_level = PLAN_LEVELS.get(request.user.subscription_plan, 0)
+                user_level = request.user.get_subscription_level() if hasattr(request.user, 'get_subscription_level') else PLAN_LEVELS.get(request.user.subscription_plan, 0)
                 required_level = PLAN_LEVELS.get(course.access_level, 0)
                 if user_level < required_level:
                     return Response(
