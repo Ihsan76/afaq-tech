@@ -498,3 +498,42 @@ class TimetableSlot(models.Model):
     def save(self, *args, **kwargs):
         self.full_clean()
         super().save(*args, **kwargs)
+
+
+class SchoolFee(models.Model):
+    school = models.ForeignKey(School, on_delete=models.CASCADE, related_name='fees', verbose_name='المدرسة')
+    title = models.CharField('عنوان الرسوم', max_length=255)
+    amount = models.DecimalField('المبلغ', max_digits=10, decimal_places=2)
+    grade = models.ForeignKey(SchoolGrade, on_delete=models.SET_NULL, null=True, blank=True, related_name='fees', verbose_name='الصف الدراسي')
+    due_date = models.DateField('تاريخ الاستحقاق', null=True, blank=True)
+    description = models.TextField('الوصف', blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'رسوم مدرسية'
+        verbose_name_plural = 'الرسوم المدرسية'
+
+    def __str__(self):
+        return f"{self.title} ({self.amount})"
+
+
+class StudentFeeAssignment(models.Model):
+    class Status(models.TextChoices):
+        PENDING = 'pending', 'غير مسدد'
+        PARTIAL = 'partial', 'مسدد جزئياً'
+        PAID = 'paid', 'مسدد بالكامل'
+
+    student = models.ForeignKey(User, on_delete=models.CASCADE, related_name='fee_assignments', verbose_name='الطالب')
+    fee = models.ForeignKey(SchoolFee, on_delete=models.CASCADE, related_name='assignments', verbose_name='الرسوم')
+    amount_due = models.DecimalField('المبلغ المستحق', max_digits=10, decimal_places=2)
+    amount_paid = models.DecimalField('المبلغ المدفوع', max_digits=10, decimal_places=2, default=0)
+    status = models.CharField('الحالة', max_length=20, choices=Status.choices, default=Status.PENDING)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'ذمة مالية للطالب'
+        verbose_name_plural = 'الذمم المالية للطلاب'
+
+    def __str__(self):
+        return f"{self.student} - {self.fee} ({self.status})"
+

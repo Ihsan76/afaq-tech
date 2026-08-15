@@ -15,12 +15,14 @@ from .views import (
     RoomViewSet,
     SchoolAnalyticsAPIView,
     SchoolAnnouncementViewSet,
+    SchoolFeeViewSet,
     SchoolGradeViewSet,
     SchoolSubjectPeriodViewSet,
     SchoolTeacherViewSet,
     SchoolViewSet,
     SectionViewSet,
     StudentEnrollmentViewSet,
+    StudentFeeAssignmentViewSet,
     SupportRequestCreateView,
     TeacherAssignmentViewSet,
     TimetableSlotViewSet,
@@ -48,6 +50,8 @@ router.register('attendances', AttendanceViewSet, basename='attendance')
 router.register('periods', PeriodViewSet, basename='period')
 router.register('rooms', RoomViewSet, basename='room')
 router.register('timetable-slots', TimetableSlotViewSet, basename='timetableslot')
+router.register('fees', SchoolFeeViewSet, basename='schoolfee')
+router.register('fee-assignments', StudentFeeAssignmentViewSet, basename='studentfeeassignment')
 
 urlpatterns = [
     path('user/settings/', UserSettingsAPIView.as_view(), name='user-ai-settings'),

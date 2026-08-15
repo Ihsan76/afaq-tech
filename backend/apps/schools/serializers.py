@@ -14,11 +14,13 @@ from .models import (
     Room,
     School,
     SchoolAnnouncement,
+    SchoolFee,
     SchoolGrade,
     SchoolSubjectPeriod,
     SchoolTeacher,
     Section,
     StudentEnrollment,
+    StudentFeeAssignment,
     SupportRequest,
     TeacherAssignment,
     TimetableSlot,
@@ -409,3 +411,28 @@ class TimetableSlotSerializer(serializers.ModelSerializer):
 
     def get_day_display(self, obj):
         return day_name(obj.day_of_week, _locale(self.context.get('request')))
+
+
+class SchoolFeeSerializer(serializers.ModelSerializer):
+    school_name = serializers.CharField(source='school.name', read_only=True)
+    grade_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = SchoolFee
+        fields = '__all__'
+
+    def get_grade_name(self, obj):
+        if obj.grade:
+            return obj.grade.translations.get('ar', {}).get('name', '')
+        return ''
+
+
+class StudentFeeAssignmentSerializer(serializers.ModelSerializer):
+    student_name = serializers.CharField(source='student.email', read_only=True)
+    fee_title = serializers.CharField(source='fee.title', read_only=True)
+    fee_amount = serializers.DecimalField(source='fee.amount', max_digits=10, decimal_places=2, read_only=True)
+
+    class Meta:
+        model = StudentFeeAssignment
+        fields = '__all__'
+

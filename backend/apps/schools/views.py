@@ -31,11 +31,13 @@ from .models import (
     Room,
     School,
     SchoolAnnouncement,
+    SchoolFee,
     SchoolGrade,
     SchoolSubjectPeriod,
     SchoolTeacher,
     Section,
     StudentEnrollment,
+    StudentFeeAssignment,
     SupportRequest,
     TeacherAssignment,
     TimetableSlot,
@@ -53,6 +55,7 @@ from .serializers import (
     PeriodSerializer,
     RoomSerializer,
     SchoolAnnouncementSerializer,
+    SchoolFeeSerializer,
     SchoolGradeSerializer,
     SchoolSerializer,
     SchoolSubjectPeriodSerializer,
@@ -60,6 +63,7 @@ from .serializers import (
     SchoolTeacherSerializer,
     SectionSerializer,
     StudentEnrollmentSerializer,
+    StudentFeeAssignmentSerializer,
     SupportRequestSerializer,
     TeacherAssignmentSerializer,
     TimetableSlotSerializer,
@@ -2567,3 +2571,32 @@ class TimetableSlotViewSet(viewsets.ModelViewSet):
             'created_count': len(created_slots),
             'errors': errors
         })
+
+
+class SchoolFeeViewSet(viewsets.ModelViewSet):
+    queryset = SchoolFee.objects.all()
+    serializer_class = SchoolFeeSerializer
+    permission_classes = [IsAdminOrReadOnly]
+
+    def get_queryset(self):
+        qs = SchoolFee.objects.all()
+        school_id = self.request.query_params.get('school')
+        if school_id:
+            qs = qs.filter(school_id=school_id)
+        return qs
+
+
+class StudentFeeAssignmentViewSet(viewsets.ModelViewSet):
+    queryset = StudentFeeAssignment.objects.all()
+    serializer_class = StudentFeeAssignmentSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        qs = StudentFeeAssignment.objects.all()
+        student_id = self.request.query_params.get('student')
+        if student_id:
+            qs = qs.filter(student_id=student_id)
+        if not is_admin(self.request.user):
+            qs = qs.filter(student=self.request.user)
+        return qs
+
