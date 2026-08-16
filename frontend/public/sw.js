@@ -1,4 +1,4 @@
-const CACHE_NAME = "afaq-tech-v2";
+const CACHE_NAME = "afaq-tech-v3";
 const NAV_TTL_MS = 5 * 60 * 1000;
 const ASSETS_TO_CACHE = [
   "/",
