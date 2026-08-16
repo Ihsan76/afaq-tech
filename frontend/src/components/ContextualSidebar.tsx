@@ -76,7 +76,7 @@ export default function ContextualSidebar() {
     const list = Array.isArray(roles) ? roles : [roles];
     if (list.includes("all")) return true;
     if (!user) return false;
-    if (user.is_staff || user.role === "admin") return true;
+    if (user.is_staff || user.role === "admin" || user.role === "developer") return true;
     return list.includes(user.role);
   };
 

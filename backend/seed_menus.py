@@ -54,11 +54,11 @@ sidebar_items = [
     {"menu": "sidebar", "service_context": ["school"], "required_role": ["school_admin"], "translations": {"en": {"title": "Timetables"}, "ar": {"title": "الجداول والبرامج"}}, "url": "/school/admin/timetable", "icon": "📅", "order": 15, "is_active": True},
     {"menu": "sidebar", "service_context": ["school"], "required_role": ["school_admin"], "translations": {"en": {"title": "Attendance"}, "ar": {"title": "الحضور والغياب"}}, "url": "/school/admin/attendance", "icon": "🚨", "order": 16, "is_active": True},
     {"menu": "sidebar", "service_context": ["school"], "required_role": ["school_admin"], "translations": {"en": {"title": "Announcements"}, "ar": {"title": "الإعلانات والطوارئ"}}, "url": "/school/admin/announcements", "icon": "📢", "order": 17, "is_active": True},
-    {"menu": "sidebar", "service_context": ["school"], "required_role": ["school_admin"], "translations": {"en": {"title": "School Fees"}, "ar": {"title": "الرسوم والذمم المالية"}}, "url": "/school/fees", "icon": "💰", "order": 18, "is_active": True},
-    {"menu": "sidebar", "service_context": ["school"], "required_role": ["school_admin"], "translations": {"en": {"title": "School Transport"}, "ar": {"title": "النقل المدرسي والحافلات"}}, "url": "/school/transport", "icon": "🚌", "order": 19, "is_active": True},
+    {"menu": "sidebar", "service_context": ["school"], "required_role": ["school_admin", "school_accountant"], "translations": {"en": {"title": "School Fees"}, "ar": {"title": "الرسوم والذمم المالية"}}, "url": "/school/fees", "icon": "💰", "order": 18, "is_active": True},
+    {"menu": "sidebar", "service_context": ["school"], "required_role": ["school_admin", "school_transport_officer"], "translations": {"en": {"title": "School Transport"}, "ar": {"title": "النقل المدرسي والحافلات"}}, "url": "/school/transport", "icon": "🚌", "order": 19, "is_active": True},
     {"menu": "sidebar", "service_context": ["school"], "required_role": ["school_admin"], "translations": {"en": {"title": "Tickets & Files"}, "ar": {"title": "التذاكر والمرفقات"}}, "url": "/school/admin/tickets", "icon": "💬", "order": 20, "is_active": True},
     {"menu": "sidebar", "service_context": ["school"], "required_role": ["school_admin"], "translations": {"en": {"title": "Settings"}, "ar": {"title": "إعدادات التقويم"}}, "url": "/school/admin/settings", "icon": "⚙️", "order": 21, "is_active": True},
-    {"menu": "sidebar", "service_context": ["school"], "required_role": ["school_librarian"], "translations": {"en": {"title": "School Library"}, "ar": {"title": "مكتبة المدرسة وإعارة الكتب"}}, "url": "/school/library", "icon": "📖", "order": 22, "is_active": True},
+    {"menu": "sidebar", "service_context": ["school"], "required_role": ["school_admin", "school_librarian"], "translations": {"en": {"title": "School Library"}, "ar": {"title": "مكتبة المدرسة وإعارة الكتب"}}, "url": "/school/library", "icon": "📖", "order": 22, "is_active": True},
     # مساحة عمل المعلم
     {"menu": "sidebar", "service_context": ["school"], "required_role": ["teacher"], "translations": {"en": {"title": "Teacher Dashboard"}, "ar": {"title": "لوحة المعلم"}}, "url": "/teacher", "icon": "👨‍🏫", "order": 20, "is_active": True},
     {"menu": "sidebar", "service_context": ["school"], "required_role": ["teacher"], "translations": {"en": {"title": "My Timetable"}, "ar": {"title": "جدول الحصص"}}, "url": "/teacher/timetable", "icon": "📅", "order": 21, "is_active": True},
@@ -93,6 +93,11 @@ for item in menu_items + sidebar_items:
         created += 1
         print(f"  Created: {obj.translations.get('ar', {}).get('title', '')} / {obj.translations.get('en', {}).get('title', '')} ({obj.menu}/{obj.service_context})")
     else:
-        print(f"  Exists: {obj.translations.get('ar', {}).get('title', '')} / {obj.translations.get('en', {}).get('title', '')} ({obj.menu}/{obj.service_context})")
+        obj.required_role = item.get("required_role", [])
+        obj.translations = item.get("translations", obj.translations)
+        obj.icon = item.get("icon", obj.icon)
+        obj.order = item.get("order", obj.order)
+        obj.save(update_fields=["required_role", "translations", "icon", "order"])
+        print(f"  Updated: {obj.translations.get('ar', {}).get('title', '')} / {obj.translations.get('en', {}).get('title', '')} ({obj.menu}/{obj.service_context})")
 
 print(f"\nTotal: {MenuItem.objects.count()} menu items ({created} new)")

@@ -159,6 +159,13 @@ class MenuItem(models.Model):
         SUPPORT = 'support', 'دعم'
         FINANCE = 'finance', 'مالية'
         DEVELOPER = 'developer', 'مطور'
+        SCHOOL_ADMIN = 'school_admin', 'مدير مدرسة'
+        TEACHER = 'teacher', 'معلم'
+        PARENT = 'parent', 'ولي أمر'
+        STUDENT = 'student', 'طالب'
+        SCHOOL_ACCOUNTANT = 'school_accountant', 'محاسب مدرسي'
+        SCHOOL_TRANSPORT_OFFICER = 'school_transport_officer', 'مسؤول نقل'
+        SCHOOL_LIBRARIAN = 'school_librarian', 'أمين مكتبة'
 
     service_context = ArrayField(
         models.CharField('السياق', max_length=30, choices=ServiceContext.choices),
@@ -168,7 +175,7 @@ class MenuItem(models.Model):
         help_text='القائمة الفارغة = يظهر في كل الصفحات',
     )
     required_role = ArrayField(
-        models.CharField('الدور', max_length=20, choices=RequiredRole.choices),
+        models.CharField('الدور', max_length=40, choices=RequiredRole.choices),
         verbose_name='الأدوار المطلوبة',
         default=list,
         blank=True,

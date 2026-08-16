@@ -76,7 +76,7 @@ export default function Navbar() {
     if (!roles || (Array.isArray(roles) && roles.length === 0)) return true;
     if (roles.includes("all")) return true;
     if (!user) return false;
-    if (user.is_staff || user.role === "admin") return true;
+    if (user.is_staff || user.role === "admin" || user.role === "developer") return true;
     return roles.includes(user.role);
   };
 
