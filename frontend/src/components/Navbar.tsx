@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -80,6 +80,17 @@ export default function Navbar() {
     return roles.includes(user.role);
   };
 
+  const isStaff = !!(user && (user.is_staff || user.role === "admin" || user.role === "developer"));
+
+  const getRoleSectionLabel = (key: string) => {
+    if (key === "school_admin") return "School Admin";
+    if (key === "teacher") return "Teacher";
+    if (key === "parent") return "Parent";
+    if (key === "student") return "Student";
+    if (key === "creator") return "Content Creator";
+    return "General";
+  };
+
   const localizedContextualItems = (contextualItems || [])
     .filter((item) => item.is_active !== false && roleAllowed(item))
     .map((item) => ({
@@ -87,7 +98,39 @@ export default function Navbar() {
       label: item.title || item.url || "#",
       icon: item.icon || "🔗",
       badge: item.badge || "",
+      roles: Array.isArray(item.required_role) ? item.required_role : (item.required_role ? [item.required_role] : []),
     }));
+
+  const mobileContextualGroups = useMemo(() => {
+    if (!isStaff) {
+      return [{ key: "flat", label: "", items: localizedContextualItems }];
+    }
+
+    const roleMap: Record<string, typeof localizedContextualItems> = {};
+    const general: typeof localizedContextualItems = [];
+
+    for (const item of localizedContextualItems) {
+      if (!item.roles || item.roles.length === 0 || item.roles.includes("all")) {
+        general.push(item);
+      } else {
+        const primaryRole = item.roles[0];
+        if (!roleMap[primaryRole]) roleMap[primaryRole] = [];
+        roleMap[primaryRole].push(item);
+      }
+    }
+
+    const groups = Object.entries(roleMap).map(([role, gItems]) => ({
+      key: role,
+      label: getRoleSectionLabel(role),
+      items: gItems,
+    }));
+
+    if (general.length > 0) {
+      groups.push({ key: "general", label: getRoleSectionLabel("general"), items: general });
+    }
+
+    return groups;
+  }, [localizedContextualItems, isStaff]);
   const prefetch = usePrefetch(
     dynamicMenus
       .map((item) => {
@@ -648,28 +691,62 @@ export default function Navbar() {
                     <span className="text-[10px]">{openContextual ? "▲" : "▼"}</span>
                   </button>
                   {openContextual && (
-                    <div className="space-y-1">
-                      {localizedContextualItems.map((link) => (
-                        <Link
-                          key={link.href}
-                          href={link.href}
-                          onClick={() => setMobileOpen(false)}
-                          className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-colors"
-                          style={{
-                            backgroundColor: isActive(link.href) ? "var(--color-primary-light)" : "transparent",
-                            color: isActive(link.href) ? "var(--color-primary)" : "var(--color-text-secondary)",
-                          }}
-                        >
-                          <span className="text-base">{link.icon}</span>
-                          <span>{link.label}</span>
-                          {!!link.badge && (
-                            <span className="ms-auto text-[9px] px-1.5 py-0.5 rounded-full font-bold shrink-0"
-                              style={{ background: "var(--color-primary-light)", color: "var(--color-primary)" }}>
-                              {link.badge}
-                            </span>
-                          )}
-                        </Link>
-                      ))}
+                    <div className="space-y-2">
+                      {mobileContextualGroups.map((group) => {
+                        const sectionLabel = group.label;
+                        if (group.key === "flat") {
+                          return group.items.map((link) => (
+                            <Link
+                              key={link.href}
+                              href={link.href}
+                              onClick={() => setMobileOpen(false)}
+                              className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-colors"
+                              style={{
+                                backgroundColor: isActive(link.href) ? "var(--color-primary-light)" : "transparent",
+                                color: isActive(link.href) ? "var(--color-primary)" : "var(--color-text-secondary)",
+                              }}
+                            >
+                              <span className="text-base">{link.icon}</span>
+                              <span>{link.label}</span>
+                              {!!link.badge && (
+                                <span className="ms-auto text-[9px] px-1.5 py-0.5 rounded-full font-bold shrink-0"
+                                  style={{ background: "var(--color-primary-light)", color: "var(--color-primary)" }}>
+                                  {link.badge}
+                                </span>
+                              )}
+                            </Link>
+                          ));
+                        }
+
+                        return (
+                          <div key={group.key} className="space-y-1 ps-2 border-s border-[var(--color-border)]">
+                            <p className="text-[11px] font-bold px-2 py-1" style={{ color: "var(--color-primary)" }}>
+                              {sectionLabel}
+                            </p>
+                            {group.items.map((link) => (
+                              <Link
+                                key={link.href}
+                                href={link.href}
+                                onClick={() => setMobileOpen(false)}
+                                className="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs font-medium transition-colors"
+                                style={{
+                                  backgroundColor: isActive(link.href) ? "var(--color-primary-light)" : "transparent",
+                                  color: isActive(link.href) ? "var(--color-primary)" : "var(--color-text-secondary)",
+                                }}
+                              >
+                                <span className="text-base">{link.icon}</span>
+                                <span>{link.label}</span>
+                                {!!link.badge && (
+                                  <span className="ms-auto text-[9px] px-1.5 py-0.5 rounded-full font-bold shrink-0"
+                                    style={{ background: "var(--color-primary-light)", color: "var(--color-primary)" }}>
+                                    {link.badge}
+                                  </span>
+                                )}
+                              </Link>
+                            ))}
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
                 </div>

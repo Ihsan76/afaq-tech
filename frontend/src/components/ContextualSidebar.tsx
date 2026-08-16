@@ -95,6 +95,72 @@ export default function ContextualSidebar() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAdminRoute, shouldShow, sidebarLoading, sidebarItems, locale, user]);
 
+  const groupLabel = (key: string) => {
+    if (key === "school_admin") return schoolT("roleSchoolAdmin");
+    if (key === "teacher") return schoolT("roleTeacher");
+    if (key === "parent") return schoolT("roleParent");
+    if (key === "student") return schoolT("roleStudent");
+    return schoolT("roleGeneral");
+  };
+
+  const isSchoolContext = roleServices.includes(service) || service === "school";
+  const isStaff = !!(user && (user.is_staff || user.role === "admin" || user.role === "developer"));
+  const SCHOOL_GROUP_KEYS = ["school_admin", "teacher", "parent", "student", "creator"] as const;
+
+  const schoolGroups = useMemo(() => {
+    if (isAdminRoute || !shouldShow || sidebarLoading) return [];
+    const rawItems = (sidebarItems || [])
+      .filter((item) => item.is_active !== false)
+      .filter(roleAllowed)
+      .map((item) => ({
+        href: localizeHref(item.resolved_url || item.url || "#", locale),
+        label: item.title || item.url || "#",
+        icon: item.icon || "🔗",
+        badge: item.badge || "",
+        roles: Array.isArray(item.required_role) ? item.required_role : (item.required_role ? [item.required_role] : []),
+      }));
+
+    if (isStaff) {
+      const roleMap: Record<string, typeof rawItems> = {};
+      const general: typeof rawItems = [];
+
+      for (const item of rawItems) {
+        if (!item.roles || item.roles.length === 0 || item.roles.includes("all")) {
+          general.push(item);
+        } else {
+          const primaryRole = item.roles[0];
+          if (!roleMap[primaryRole]) roleMap[primaryRole] = [];
+          roleMap[primaryRole].push(item);
+        }
+      }
+
+      const groups = Object.entries(roleMap).map(([role, gItems]) => ({
+        key: role,
+        label: groupLabel(role),
+        items: gItems,
+      }));
+
+      if (general.length > 0) {
+        groups.push({ key: "general", label: groupLabel("general"), items: general });
+      }
+
+      return groups;
+    }
+
+    if (!isSchoolContext) {
+      return [{ key: "flat", label: "", items: rawItems }];
+    }
+
+    const groups = SCHOOL_GROUP_KEYS.map((key) => ({ key, label: groupLabel(key), items: [] as typeof rawItems }));
+    const general = { key: "general", label: groupLabel("general"), items: [] as typeof rawItems };
+    for (const item of rawItems) {
+      const role = item.roles.find((r: string) => (SCHOOL_GROUP_KEYS as readonly string[]).includes(r));
+      const group = role ? groups.find((g) => g.key === role) : general;
+      group?.items.push(item);
+    }
+    return [...groups.filter((g) => g.items.length > 0), ...(general.items.length ? [general] : [])];
+  }, [isAdminRoute, shouldShow, sidebarLoading, sidebarItems, locale, user, isStaff, isSchoolContext]);
+
   useEffect(() => {
     const saved = localStorage.getItem("sidebar_collapsed");
     if (saved !== null) setCollapsed(saved === "true");
@@ -166,37 +232,17 @@ export default function ContextualSidebar() {
     ]},
   ];
 
-  const isSchoolContext = roleServices.includes(service) || service === "school";
 
-  const SCHOOL_GROUP_KEYS = ["school_admin", "teacher", "parent", "student"] as const;
 
-  const schoolGroups = (() => {
-    if (!isSchoolContext || sidebarLoading) return [];
-    const groups = SCHOOL_GROUP_KEYS.map((key) => ({ key, items: [] as typeof contextualItems }));
-    const general = { key: "general", items: [] as typeof contextualItems };
-    for (const item of contextualItems) {
-      const role = item.roles.find((r: string) => (SCHOOL_GROUP_KEYS as readonly string[]).includes(r));
-      const group = role ? groups.find((g) => g.key === role) : general;
-      group?.items.push(item);
-    }
-    return [...groups.filter((g) => g.items.length > 0), ...(general.items.length ? [general] : [])];
-  })();
 
-  const NAV_ITEMS = isAdminRoute ? ALL_NAV_ITEMS.filter((s) => canSee(s.key)) : [];
-
-  const isActive = (href: string) => pathname === href || (href !== `/${locale}/admin` && pathname.includes(href));
 
   const toggleSection = (section: string) => {
     setExpandedSections((prev) => ({ ...prev, [section]: !prev[section] }));
   };
 
-  const groupLabel = (key: string) => {
-    if (key === "school_admin") return schoolT("roleSchoolAdmin");
-    if (key === "teacher") return schoolT("roleTeacher");
-    if (key === "parent") return schoolT("roleParent");
-    if (key === "student") return schoolT("roleStudent");
-    return schoolT("roleGeneral");
-  };
+  const isActive = (href: string) => pathname === href || (href !== `/${locale}/admin` && pathname.includes(href));
+
+  const NAV_ITEMS = isAdminRoute ? ALL_NAV_ITEMS.filter((s) => canSee(s.key)) : [];
 
   const renderNavContent = (isMobile = false) => (
     <nav className="space-y-1.5 flex-1">
@@ -252,11 +298,35 @@ export default function ContextualSidebar() {
             </div>
           );
         })
-      ) : isSchoolContext ? (
+      ) : (
         schoolGroups.map((group) => {
-          const sectionLabel = groupLabel(group.key);
+          const sectionLabel = group.label || groupLabel(group.key);
           const isExpanded = !!expandedSections[sectionLabel];
-          const hasActive = group.items.some((i) => isActive(i.href));
+          const hasActive = group.items.some((i: any) => isActive(i.href));
+          if (group.key === "flat") {
+            return group.items.map((item: any, index: number) => {
+              const active = isActive(item.href);
+              return (
+                <Link
+                  key={`${item.href}-${index}`}
+                  href={item.href}
+                  onClick={() => isMobile && setMobileOpen(false)}
+                  title={(!isMobile && collapsed) ? item.label : undefined}
+                  className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-medium transition-all ${
+                    (!isMobile && collapsed) ? "justify-center px-1" : ""
+                  }`}
+                  style={{
+                    backgroundColor: active ? "var(--color-primary-light)" : "transparent",
+                    color: active ? "var(--color-primary)" : "var(--color-text-secondary)",
+                  }}
+                >
+                  <span className="text-base shrink-0">{item.icon}</span>
+                  {(!isMobile && collapsed) ? null : <span className="truncate">{item.label}</span>}
+                </Link>
+              );
+            });
+          }
+
           return (
             <div key={group.key} className="space-y-1">
               <button
@@ -279,7 +349,7 @@ export default function ContextualSidebar() {
 
               {(isExpanded || (isMobile ? false : collapsed) || hasActive) && (
                 <div className={`space-y-1 ${(!isMobile && collapsed) ? "" : "ms-2 ps-2 border-s border-[var(--color-border)]"}`}>
-                  {group.items.map((item, index) => {
+                  {group.items.map((item: any, index: number) => {
                     const active = isActive(item.href);
                     return (
                       <Link
@@ -303,38 +373,6 @@ export default function ContextualSidebar() {
                 </div>
               )}
             </div>
-          );
-        })
-      ) : (
-        contextualItems.map((item, index) => {
-          const active = isActive(item.href);
-          return (
-            <Link
-              key={`${item.href}-${index}`}
-              href={item.href}
-              onClick={() => isMobile && setMobileOpen(false)}
-              title={(!isMobile && collapsed) ? item.label : undefined}
-              className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-medium transition-all ${
-                (!isMobile && collapsed) ? "justify-center px-1" : ""
-              }`}
-              style={{
-                backgroundColor: active ? "var(--color-primary-light)" : "transparent",
-                color: active ? "var(--color-primary)" : "var(--color-text-secondary)",
-              }}
-            >
-              <span className="text-base shrink-0">{item.icon}</span>
-              {(!isMobile && collapsed) ? null : (
-                <>
-                  <span className="truncate">{item.label}</span>
-                  {!!item.badge && (
-                    <span className="ms-auto text-[9px] px-1.5 py-0.5 rounded-full font-bold shrink-0"
-                      style={{ background: "var(--color-primary-light)", color: "var(--color-primary)" }}>
-                      {item.badge}
-                    </span>
-                  )}
-                </>
-              )}
-            </Link>
           );
         })
       )}

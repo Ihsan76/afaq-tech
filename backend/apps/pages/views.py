@@ -175,6 +175,7 @@ class MenuAdminListView(generics.ListAPIView):
     """قائمة العناصر — للإدارة"""
     serializer_class = MenuItemListSerializer
     permission_classes = [IsContentAdmin]
+    pagination_class = None
 
     def get_queryset(self):
         menu_type = self.request.query_params.get('menu', 'header')

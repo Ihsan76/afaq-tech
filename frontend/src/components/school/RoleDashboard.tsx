@@ -8,17 +8,13 @@ import { api } from "@/lib/api";
 import { useAuthStore } from "@/store/auth";
 import { resolveActiveSchoolId } from "@/components/school/activeSchool";
 
-const ACTIONS: Record<string, { href: string; icon: string; labelKey: string }[]> = {
+const FALLBACK_ACTIONS: Record<string, { href: string; icon: string; labelKey?: string; title?: string }[]> = {
   school_admin: [
-    { href: "/school/admin/grades", icon: "📚", labelKey: "quickGrades" },
-    { href: "/school/admin/teachers", icon: "👩‍🏫", labelKey: "quickTeachers" },
     { href: "/school/admin/sections", icon: "🏫", labelKey: "quickSections" },
-    { href: "/school/admin/rooms", icon: "🚪", labelKey: "quickRooms" },
     { href: "/school/admin/timetable", icon: "⚡", labelKey: "quickSchedule" },
-    { href: "/school/admin/announcements", icon: "📢", labelKey: "quickBroadcast" },
-    { href: "/school/admin/settings", icon: "🗓️", labelKey: "quickSettings" },
     { href: "/school/fees", icon: "💳", labelKey: "quickFees" },
     { href: "/school/transport", icon: "🚌", labelKey: "quickTransport" },
+    { href: "/school/admin/announcements", icon: "📢", labelKey: "quickBroadcast" },
   ],
   teacher: [
     { href: "/teacher/my-class", icon: "👨‍🏫", labelKey: "quickMyClass" },
@@ -45,11 +41,10 @@ export default function RoleDashboard() {
   const { user } = useAuthStore();
   const [ctx, setCtx] = useState<any>(null);
   const [slots, setSlots] = useState<any[]>([]);
+  const [dynamicMenu, setDynamicMenu] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   const isStaff = !!(user && (user.is_staff || user.role === "admin" || user.role === "developer"));
-  // Staff can preview every role workspace; pick the role from the current route
-  // (e.g. /teacher => teacher view) so each workspace shows its own dashboard.
   const routeRole = pathname.split("/")[2];
   const viewRole = routeRole === "teacher" || routeRole === "parent" || routeRole === "student"
     ? routeRole
@@ -60,18 +55,20 @@ export default function RoleDashboard() {
     try {
       const schoolId = await resolveActiveSchoolId();
       const schoolParam = schoolId ? `?school=${schoolId}` : "";
-      const [ctxRes, slotRes] = await Promise.all([
+      const [ctxRes, slotRes, menuRes] = await Promise.all([
         api.get(`/schools/my-context/${schoolParam}`).catch(() => ({ data: null })),
         api.get(`/schools/timetable-slots/${schoolParam}`).catch(() => ({ data: [] })),
+        api.get(`/pages/menu/sidebar/?context=school&locale=${locale}`).catch(() => ({ data: [] })),
       ]);
       setCtx(ctxRes.data);
       setSlots(Array.isArray(slotRes.data) ? slotRes.data : slotRes.data.results || []);
+      setDynamicMenu(Array.isArray(menuRes.data) ? menuRes.data : []);
     } catch {
       // ignore
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [locale]);
 
   useEffect(() => {
     fetchData();
@@ -111,6 +108,8 @@ export default function RoleDashboard() {
       { label: t("kpiAbsentToday"), val: attendance.filter((a: any) => a.status === "absent").length, icon: "🚨", color: "from-rose-500 to-pink-600" },
     ];
   })();
+
+  const actionsToDisplay = FALLBACK_ACTIONS[viewRole] || [];
 
   const badgeKey =
     viewRole === "teacher" ? "teacherBadge" : viewRole === "parent" ? "parentBadge" : viewRole === "student" ? "studentBadge" : "adminBadge";
@@ -163,13 +162,14 @@ export default function RoleDashboard() {
               🚀 {t("quickActions")}
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {(ACTIONS[viewRole] || []).map((action, i) => (
+              {actionsToDisplay.map((action: any, i: number) => (
                 <Link
                   key={i}
                   href={`/${locale}${action.href}`}
-                  className="p-5 rounded-2xl font-bold transition-all hover:scale-105 bg-[var(--color-background)] border border-[var(--color-border)]"
+                  className="p-5 rounded-2xl font-bold transition-all hover:scale-105 bg-[var(--color-background)] border border-[var(--color-border)] flex items-center gap-3"
                 >
-                  {action.icon} {t(action.labelKey)}
+                  <span className="text-2xl">{action.icon}</span>
+                  <span>{action.title ? action.title : (action.labelKey ? t(action.labelKey) : action.href)}</span>
                 </Link>
               ))}
             </div>

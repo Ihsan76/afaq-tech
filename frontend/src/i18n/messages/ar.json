@@ -2072,6 +2072,8 @@
     "quickTeachers": "إدارة المعلمين",
     "quickSections": "الشعب الصفية",
     "quickRooms": "القاعات والحصص",
+    "quickFees": "الرسوم والذمم",
+    "quickTransport": "النقل والحافلات",
     "attendanceCount": "{count} سجل",
     "ticketsCount": "{count} تذكرة",
     "attachmentsCount": "{count} مرفق",
