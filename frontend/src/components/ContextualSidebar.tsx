@@ -57,9 +57,9 @@ export default function ContextualSidebar() {
   const service = pathParts[2] || "";
   const isAdminRoute = pathParts[2] === "admin";
 
-  // Hide sidebar on sections that have no management/contextual sidebar
-  const supportedServices = ["academy", "ebooks", "school", "curriculum", "lesson-plans", "dashboard", "profile", "gamification", "subscriptions", "teacher", "parent", "student"];
-  const shouldShow = !isAdminRoute && ((service && supportedServices.includes(service)) || pathname.includes("/dashboard"));
+  // Hide sidebar on auth / admin routes
+  const hideSidebarRoutes = ["login", "register", "forgot-password", "reset-password", "verify-email", "admin", "auth"];
+  const shouldShow = !isAdminRoute && !hideSidebarRoutes.includes(service);
 
   // Role workspaces share the school sidebar context (items defined in the admin menus)
   const roleServices = ["teacher", "parent", "student"];
@@ -170,7 +170,7 @@ export default function ContextualSidebar() {
     setMobileOpen(false);
   }, [pathname]);
 
-  if (!user || !shouldShow) {
+  if (!shouldShow) {
     return null;
   }
 
