@@ -580,3 +580,42 @@ class StudentBusAssignment(models.Model):
         return f"{self.student} - {self.route}"
 
 
+class Book(models.Model):
+    school = models.ForeignKey(School, on_delete=models.CASCADE, related_name='books', verbose_name='المدرسة')
+    title = models.CharField('عنوان الكتاب', max_length=255)
+    author = models.CharField('المؤلف', max_length=255, blank=True)
+    isbn = models.CharField('الرقم التسلسلي ISBN', max_length=50, blank=True)
+    category = models.CharField('التصنيف', max_length=100, blank=True)
+    total_copies = models.PositiveIntegerField('إجمالي النسخ', default=1)
+    available_copies = models.PositiveIntegerField('النسخ المتاحة', default=1)
+
+    class Meta:
+        verbose_name = 'كتاب مدرسي'
+        verbose_name_plural = 'كتب المكتبة المدرسية'
+
+    def __str__(self):
+        return f"{self.title} ({self.author})"
+
+
+class LibraryLending(models.Model):
+    class Status(models.TextChoices):
+        BORROWED = 'borrowed', 'مستعار'
+        RETURNED = 'returned', 'تم الإرجاع'
+        OVERDUE = 'overdue', 'متأخر'
+
+    book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name='lendings', verbose_name='الكتاب')
+    student = models.ForeignKey(User, on_delete=models.CASCADE, related_name='book_lendings', verbose_name='الطالب المستعير')
+    borrow_date = models.DateField('تاريخ الاستعارة', auto_now_add=True)
+    due_date = models.DateField('تاريخ الاستحقاق', null=True, blank=True)
+    return_date = models.DateField('تاريخ الإرجاع الفعلي', null=True, blank=True)
+    status = models.CharField('الحالة', max_length=20, choices=Status.choices, default=Status.BORROWED)
+
+    class Meta:
+        verbose_name = 'عملية إعارة كتاب'
+        verbose_name_plural = 'عمليات إعارة الكتب'
+
+    def __str__(self):
+        return f"{self.book} -> {self.student} ({self.status})"
+
+
+

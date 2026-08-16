@@ -8,8 +8,10 @@ from .models import (
     AnnouncementReadReceipt,
     Attachment,
     Attendance,
+    Book,
     BusRoute,
     FamilyLink,
+    LibraryLending,
     ParentTeacherTicket,
     Period,
     Room,
@@ -465,5 +467,24 @@ class StudentBusAssignmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = StudentBusAssignment
         fields = '__all__'
+
+
+class BookSerializer(serializers.ModelSerializer):
+    school_name = serializers.CharField(source='school.name', read_only=True)
+
+    class Meta:
+        model = Book
+        fields = '__all__'
+
+
+class LibraryLendingSerializer(serializers.ModelSerializer):
+    book_title = serializers.CharField(source='book.title', read_only=True)
+    student_name = serializers.CharField(source='student.email', read_only=True)
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+
+    class Meta:
+        model = LibraryLending
+        fields = '__all__'
+
 
 

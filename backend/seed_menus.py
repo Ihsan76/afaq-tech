@@ -58,6 +58,7 @@ sidebar_items = [
     {"menu": "sidebar", "service_context": ["school"], "required_role": ["school_admin"], "translations": {"en": {"title": "School Transport"}, "ar": {"title": "النقل المدرسي والحافلات"}}, "url": "/school/transport", "icon": "🚌", "order": 19, "is_active": True},
     {"menu": "sidebar", "service_context": ["school"], "required_role": ["school_admin"], "translations": {"en": {"title": "Tickets & Files"}, "ar": {"title": "التذاكر والمرفقات"}}, "url": "/school/admin/tickets", "icon": "💬", "order": 20, "is_active": True},
     {"menu": "sidebar", "service_context": ["school"], "required_role": ["school_admin"], "translations": {"en": {"title": "Settings"}, "ar": {"title": "إعدادات التقويم"}}, "url": "/school/admin/settings", "icon": "⚙️", "order": 21, "is_active": True},
+    {"menu": "sidebar", "service_context": ["school"], "required_role": ["school_librarian"], "translations": {"en": {"title": "School Library"}, "ar": {"title": "مكتبة المدرسة وإعارة الكتب"}}, "url": "/school/library", "icon": "📖", "order": 22, "is_active": True},
     # مساحة عمل المعلم
     {"menu": "sidebar", "service_context": ["school"], "required_role": ["teacher"], "translations": {"en": {"title": "Teacher Dashboard"}, "ar": {"title": "لوحة المعلم"}}, "url": "/teacher", "icon": "👨‍🏫", "order": 20, "is_active": True},
     {"menu": "sidebar", "service_context": ["school"], "required_role": ["teacher"], "translations": {"en": {"title": "My Timetable"}, "ar": {"title": "جدول الحصص"}}, "url": "/teacher/timetable", "icon": "📅", "order": 21, "is_active": True},

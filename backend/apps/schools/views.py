@@ -25,8 +25,10 @@ from .models import (
     AnnouncementReadReceipt,
     Attachment,
     Attendance,
+    Book,
     BusRoute,
     FamilyLink,
+    LibraryLending,
     ParentTeacherTicket,
     Period,
     Room,
@@ -44,17 +46,17 @@ from .models import (
     SupportRequest,
     TeacherAssignment,
     TimetableSlot,
-    UserAISetting,
     WeeklyReport,
-    WhatsAppNotificationLog,
 )
 from .serializers import (
     AcademicYearSerializer,
     AttachmentSerializer,
     AttendanceSerializer,
+    BookSerializer,
     BusRouteSerializer,
     FamilyLinkSerializer,
     FAQSerializer,
+    LibraryLendingSerializer,
     ParentTeacherTicketSerializer,
     PeriodSerializer,
     RoomSerializer,
@@ -2771,6 +2773,38 @@ class StudentBusAssignmentViewSet(viewsets.ModelViewSet):
         if not is_admin(self.request.user):
             qs = qs.filter(student=self.request.user)
         return qs
+
+
+class BookViewSet(viewsets.ModelViewSet):
+    queryset = Book.objects.all()
+    serializer_class = BookSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        qs = Book.objects.all()
+        school_id = self.request.query_params.get('school')
+        if school_id:
+            qs = qs.filter(school_id=school_id)
+        return qs
+
+
+class LibraryLendingViewSet(viewsets.ModelViewSet):
+    queryset = LibraryLending.objects.all()
+    serializer_class = LibraryLendingSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        qs = LibraryLending.objects.all()
+        school_id = self.request.query_params.get('school')
+        if school_id:
+            qs = qs.filter(book__school_id=school_id)
+        student_id = self.request.query_params.get('student')
+        if student_id:
+            qs = qs.filter(student_id=student_id)
+        if not is_admin(self.request.user) and self.request.user.role == 'student':
+            qs = qs.filter(student=self.request.user)
+        return qs
+
 
 
 

@@ -6,11 +6,13 @@ from .views import (
     AttachmentViewSet,
     AttendanceViewSet,
     BiometricWebhookAPIView,
+    BookViewSet,
     BusRouteViewSet,
     BulkExportView,
     BulkImportView,
     FamilyLinkViewSet,
     FAQViewSet,
+    LibraryLendingViewSet,
     MySchoolContextAPIView,
     ParentTeacherTicketViewSet,
     PeriodViewSet,
@@ -61,6 +63,8 @@ router.register('fee-assignments', StudentFeeAssignmentViewSet, basename='studen
 router.register('buses', SchoolBusViewSet, basename='schoolbus')
 router.register('bus-routes', BusRouteViewSet, basename='busroute')
 router.register('bus-assignments', StudentBusAssignmentViewSet, basename='studentbusassignment')
+router.register('books', BookViewSet, basename='book')
+router.register('library-lendings', LibraryLendingViewSet, basename='librarylending')
 
 urlpatterns = [
     path('user/settings/', UserSettingsAPIView.as_view(), name='user-ai-settings'),
