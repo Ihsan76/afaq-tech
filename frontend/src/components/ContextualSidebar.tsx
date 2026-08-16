@@ -100,6 +100,9 @@ export default function ContextualSidebar() {
     if (key === "teacher") return schoolT("roleTeacher");
     if (key === "parent") return schoolT("roleParent");
     if (key === "student") return schoolT("roleStudent");
+    if (key === "school_accountant") return schoolT("roleAccountant");
+    if (key === "school_transport_officer") return schoolT("roleTransportOfficer");
+    if (key === "school_librarian") return schoolT("roleLibrarian");
     return schoolT("roleGeneral");
   };
 
@@ -170,7 +173,7 @@ export default function ContextualSidebar() {
     setMobileOpen(false);
   }, [pathname]);
 
-  if (!shouldShow) {
+  if (!user || !shouldShow) {
     return null;
   }
 

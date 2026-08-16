@@ -46,6 +46,7 @@ from .models import (
     SupportRequest,
     TeacherAssignment,
     TimetableSlot,
+    UserAISetting,
     WeeklyReport,
 )
 from .serializers import (
