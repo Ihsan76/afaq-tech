@@ -108,7 +108,15 @@ export default function ContextualSidebar() {
 
   const isSchoolContext = roleServices.includes(service) || service === "school";
   const isStaff = !!(user && (user.is_staff || user.role === "admin" || user.role === "developer"));
-  const SCHOOL_GROUP_KEYS = ["school_admin", "teacher", "parent", "student", "creator"] as const;
+  const SCHOOL_GROUP_KEYS = ["school_admin", "teacher", "parent", "student", "school_accountant", "school_transport_officer", "school_librarian", "creator"] as const;
+
+  const pickGroupKey = (roles: string[]) => {
+    if (!roles || roles.length === 0 || roles.includes("all")) return "general";
+    const keys = SCHOOL_GROUP_KEYS as readonly string[];
+    const specific = roles.find((r) => keys.includes(r) && r !== "school_admin");
+    if (specific) return specific;
+    return roles.find((r) => keys.includes(r)) || "general";
+  };
 
   const schoolGroups = useMemo(() => {
     if (isAdminRoute || !shouldShow || sidebarLoading) return [];
@@ -128,12 +136,12 @@ export default function ContextualSidebar() {
       const general: typeof rawItems = [];
 
       for (const item of rawItems) {
-        if (!item.roles || item.roles.length === 0 || item.roles.includes("all")) {
+        const key = pickGroupKey(item.roles);
+        if (key === "general") {
           general.push(item);
         } else {
-          const primaryRole = item.roles[0];
-          if (!roleMap[primaryRole]) roleMap[primaryRole] = [];
-          roleMap[primaryRole].push(item);
+          if (!roleMap[key]) roleMap[key] = [];
+          roleMap[key].push(item);
         }
       }
 
@@ -157,9 +165,9 @@ export default function ContextualSidebar() {
     const groups = SCHOOL_GROUP_KEYS.map((key) => ({ key, label: groupLabel(key), items: [] as typeof rawItems }));
     const general = { key: "general", label: groupLabel("general"), items: [] as typeof rawItems };
     for (const item of rawItems) {
-      const role = item.roles.find((r: string) => (SCHOOL_GROUP_KEYS as readonly string[]).includes(r));
-      const group = role ? groups.find((g) => g.key === role) : general;
-      group?.items.push(item);
+      const key = pickGroupKey(item.roles);
+      const group = groups.find((g) => g.key === key) || general;
+      group.items.push(item);
     }
     return [...groups.filter((g) => g.items.length > 0), ...(general.items.length ? [general] : [])];
   }, [isAdminRoute, shouldShow, sidebarLoading, sidebarItems, locale, user, isStaff, isSchoolContext]);

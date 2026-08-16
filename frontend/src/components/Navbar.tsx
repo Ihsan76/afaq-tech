@@ -22,6 +22,7 @@ interface DynamicMenuItem {
 
 export default function Navbar() {
   const t = useTranslations();
+  const schoolT = useTranslations("school");
   const pathname = usePathname();
   const locale = pathname.split("/")[1] || "en";
   const { user, logout, loadUser } = useAuthStore();
@@ -44,9 +45,9 @@ export default function Navbar() {
   const pathParts = pathname.split("/");
   const service = pathParts[2] || "";
   const isAdminRoute = pathParts[2] === "admin";
-  const supportedServices = ["academy", "ebooks", "school", "curriculum", "lesson-plans", "dashboard", "profile", "gamification", "subscriptions"];
+  const supportedServices = ["academy", "ebooks", "school", "curriculum", "lesson-plans", "dashboard", "profile", "gamification", "subscriptions", "teacher", "parent", "student"];
   const shouldShowContextual = !isAdminRoute && ((service && supportedServices.includes(service)) || pathname.includes("/dashboard"));
-  const sidebarContext = service || "all";
+  const sidebarContext = ["teacher", "parent", "student"].includes(service) ? "school" : (service || "all");
 
   interface SidebarItem {
     id: number;
@@ -83,12 +84,15 @@ export default function Navbar() {
   const isStaff = !!(user && (user.is_staff || user.role === "admin" || user.role === "developer"));
 
   const getRoleSectionLabel = (key: string) => {
-    if (key === "school_admin") return "School Admin";
-    if (key === "teacher") return "Teacher";
-    if (key === "parent") return "Parent";
-    if (key === "student") return "Student";
-    if (key === "creator") return "Content Creator";
-    return "General";
+    if (key === "school_admin") return schoolT("roleSchoolAdmin");
+    if (key === "teacher") return schoolT("roleTeacher");
+    if (key === "parent") return schoolT("roleParent");
+    if (key === "student") return schoolT("roleStudent");
+    if (key === "school_accountant") return schoolT("roleAccountant");
+    if (key === "school_transport_officer") return schoolT("roleTransportOfficer");
+    if (key === "school_librarian") return schoolT("roleLibrarian");
+    if (key === "creator") return schoolT("roleCreator");
+    return schoolT("roleGeneral");
   };
 
   const localizedContextualItems = (contextualItems || [])
@@ -101,6 +105,16 @@ export default function Navbar() {
       roles: Array.isArray(item.required_role) ? item.required_role : (item.required_role ? [item.required_role] : []),
     }));
 
+  const SCHOOL_GROUP_KEYS = ["school_admin", "teacher", "parent", "student", "school_accountant", "school_transport_officer", "school_librarian", "creator"] as const;
+
+  const pickGroupKey = (roles: string[]) => {
+    if (!roles || roles.length === 0 || roles.includes("all")) return "general";
+    const keys = SCHOOL_GROUP_KEYS as readonly string[];
+    const specific = roles.find((r) => keys.includes(r) && r !== "school_admin");
+    if (specific) return specific;
+    return roles.find((r) => keys.includes(r)) || "general";
+  };
+
   const mobileContextualGroups = useMemo(() => {
     if (!isStaff) {
       return [{ key: "flat", label: "", items: localizedContextualItems }];
@@ -110,12 +124,12 @@ export default function Navbar() {
     const general: typeof localizedContextualItems = [];
 
     for (const item of localizedContextualItems) {
-      if (!item.roles || item.roles.length === 0 || item.roles.includes("all")) {
+      const key = pickGroupKey(item.roles);
+      if (key === "general") {
         general.push(item);
       } else {
-        const primaryRole = item.roles[0];
-        if (!roleMap[primaryRole]) roleMap[primaryRole] = [];
-        roleMap[primaryRole].push(item);
+        if (!roleMap[key]) roleMap[key] = [];
+        roleMap[key].push(item);
       }
     }
 
