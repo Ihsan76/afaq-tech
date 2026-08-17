@@ -389,10 +389,10 @@ class AcademicYearViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def promote(self, request, pk=None):
-        """Annual promotion (الترفيع السنوي): moves the enrollments of this year
+        """Annual promotion (الترفيع السنوي): moves enrollments of this year
         into the next academic year and next grade, keeping history archived.
-        System admins may promote all schools or a specific one via school_id;
-        school managers may only promote their own school (school_id required)."""
+        Also migrates teacher assignments and optionally flips is_current.
+        Supports dry_run=true to preview without executing."""
         source_year = self.get_object()
         from apps.academics.models import Grade
 
@@ -408,7 +408,7 @@ class AcademicYearViewSet(viewsets.ModelViewSet):
                 return Response({'error': 'يمكنك ترفيع مدرستك فقط'}, status=status.HTTP_403_FORBIDDEN)
 
         target_year_id = request.data.get('target_year_id')
-        target_grade_id = request.data.get('target_grade_id')
+        dry_run = request.data.get('dry_run', False)
         if not target_year_id:
             return Response({'error': 'target_year_id is required'}, status=status.HTTP_400_BAD_REQUEST)
         try:
@@ -416,50 +416,140 @@ class AcademicYearViewSet(viewsets.ModelViewSet):
         except AcademicYear.DoesNotExist:
             return Response({'error': 'target year not found'}, status=status.HTTP_404_NOT_FOUND)
 
-        target_grade = None
-        if target_grade_id:
-            try:
-                target_grade = Grade.objects.get(id=target_grade_id)
-            except Grade.DoesNotExist:
-                return Response({'error': 'target grade not found'}, status=status.HTTP_404_NOT_FOUND)
-
-        enrollments = StudentEnrollment.objects.filter(academic_year=source_year).select_related('student', 'section', 'section__school', 'section__grade')
+        enrollments = StudentEnrollment.objects.filter(
+            academic_year=source_year,
+        ).select_related('student', 'section', 'section__school', 'section__grade')
         if school_id:
             enrollments = enrollments.filter(section__school_id=school_id)
 
-        created = []
+        promoted = []
         skipped = []
-        with transaction.atomic():
+        sections_created = 0
+        teachers_migrated = 0
+
+        def _do_promote():
+            nonlocal sections_created, teachers_migrated
             for en in enrollments:
-                new_grade = target_grade or self._next_grade(en.section.grade)
+                new_grade = self._next_grade(en.section.grade)
                 if new_grade is None:
-                    skipped.append({'student': en.student.email, 'reason': 'no next grade'})
+                    skipped.append({
+                        'student': en.student.email,
+                        'student_name': en.student.translations.get('ar', {}).get('name', en.student.email),
+                        'reason': 'graduated — no next grade',
+                    })
                     continue
-                new_section, _ = Section.objects.get_or_create(
+                new_section, was_created = Section.objects.get_or_create(
                     school=en.section.school,
                     grade=new_grade,
                     academic_year=target_year,
                     name=en.section.name,
                     defaults={'class_teacher': en.section.class_teacher, 'capacity': en.section.capacity},
                 )
-                _, was_created = StudentEnrollment.objects.get_or_create(
+                if was_created:
+                    sections_created += 1
+                _, was_enrollment_created = StudentEnrollment.objects.get_or_create(
                     student=en.student,
                     academic_year=target_year,
                     defaults={'section': new_section},
                 )
-                created.append({'student': en.student.email, 'section': str(new_section)})
+                promoted.append({
+                    'student': en.student.email,
+                    'student_name': en.student.translations.get('ar', {}).get('name', en.student.email),
+                    'from_section': str(en.section),
+                    'to_section': str(new_section),
+                })
 
-        if source_year.is_current and target_year and not target_year.is_current:
-            source_year.is_current = False
-            source_year.save(update_fields=['is_current'])
-            target_year.is_current = True
-            target_year.save(update_fields=['is_current'])
+            # Migrate teacher assignments from source year to target year
+            source_assignments = TeacherAssignment.objects.filter(
+                academic_year=source_year,
+            ).select_related('teacher', 'section', 'subject', 'section__school', 'section__grade')
+            if school_id:
+                source_assignments = source_assignments.filter(section__school_id=school_id)
+
+            for ta in source_assignments:
+                new_grade = self._next_grade(ta.section.grade)
+                if new_grade is None:
+                    continue
+                new_section, _ = Section.objects.get_or_create(
+                    school=ta.section.school,
+                    grade=new_grade,
+                    academic_year=target_year,
+                    name=ta.section.name,
+                    defaults={'class_teacher': ta.section.class_teacher, 'capacity': ta.section.capacity},
+                )
+                _, was_ta_created = TeacherAssignment.objects.get_or_create(
+                    teacher=ta.teacher,
+                    section=new_section,
+                    subject=ta.subject,
+                    academic_year=target_year,
+                )
+                if was_ta_created:
+                    teachers_migrated += 1
+
+            # Flip is_current flags (inside atomic block for safety)
+            if source_year.is_current and not target_year.is_current:
+                source_year.is_current = False
+                source_year.save(update_fields=['is_current'])
+                target_year.is_current = True
+                target_year.save(update_fields=['is_current'])
+
+        if dry_run:
+            with transaction.atomic():
+                sid = transaction.savepoint()
+                _do_promote()
+                transaction.savepoint_rollback(sid)
+        else:
+            with transaction.atomic():
+                _do_promote()
 
         return Response({
-            'promoted': created,
+            'dry_run': dry_run,
+            'promoted': promoted,
             'skipped': skipped,
+            'sections_created': sections_created,
+            'teachers_migrated': teachers_migrated,
             'source_year': source_year.name,
             'target_year': target_year.name,
+        })
+
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    def archive(self, request, pk=None):
+        """Archive an academic year: marks it as not current (not current = archived)."""
+        year = self.get_object()
+        user = request.user
+        if not is_admin(user) and not is_school_admin(user):
+            return Response({'error': 'غير مصرح'}, status=status.HTTP_403_FORBIDDEN)
+
+        year.is_current = False
+        year.save(update_fields=['is_current'])
+        return Response({'archived': year.name, 'is_current': year.is_current})
+
+    @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
+    def stats(self, request):
+        """Return promotion statistics for a given year: enrollment counts, section counts, teacher counts."""
+        year_id = request.query_params.get('year')
+        school_id = request.query_params.get('school')
+        if not year_id:
+            return Response({'error': 'year param is required'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            year = AcademicYear.objects.get(id=year_id)
+        except AcademicYear.DoesNotExist:
+            return Response({'error': 'year not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        enrollments = StudentEnrollment.objects.filter(academic_year=year)
+        sections = Section.objects.filter(academic_year=year)
+        teachers = TeacherAssignment.objects.filter(academic_year=year)
+        if school_id:
+            enrollments = enrollments.filter(section__school_id=school_id)
+            sections = sections.filter(school_id=school_id)
+            teachers = teachers.filter(section__school_id=school_id)
+
+        return Response({
+            'year': year.name,
+            'enrollments_count': enrollments.count(),
+            'sections_count': sections.count(),
+            'teachers_count': teachers.values('teacher').distinct().count(),
+            'is_current': year.is_current,
         })
 
     @staticmethod
@@ -1729,7 +1819,12 @@ class BulkImportView(APIView):
                 user.save()
             return user, False
         if not email:
-            email = f'student-{national_id}@student.local'
+            base = f'student.{national_id}' if national_id else f'student-{User.objects.count() + 1}'
+            email = f'{base}@student.local'
+            suffix = 1
+            while User.objects.filter(email=email).exists():
+                email = f'{base}.{suffix}@student.local'
+                suffix += 1
         user = User.objects.create_user(
             email=email,
             username=email,
@@ -1747,24 +1842,57 @@ class BulkImportView(APIView):
         for row in rows:
             email = self._cell(row, 'email')
             name = self._cell(row, 'name')
-            if not email:
-                results['errors'].append({'row': row, 'error': 'email is required'})
+            national_id = self._cell(row, 'national_id') or self._cell(row, 'رقم الهوية') or None
+            phone = self._cell(row, 'phone') or self._cell(row, 'هاتف') or ''
+            if not email and not national_id:
+                results['errors'].append({'row': row, 'error': 'email or national_id is required for teachers'})
                 continue
-            user, created = User.objects.get_or_create(
-                email=email,
-                defaults={
-                    'username': email,
-                    'role': 'teacher',
-                    'translations': {'ar': {'name': name}},
-                    'is_verified': True,
-                },
-            )
-            if created:
+            # Resolve by national_id first, then email
+            user = None
+            if national_id:
+                user = User.objects.filter(national_id=national_id, role='teacher').first()
+            if user is None and email:
+                user = User.objects.filter(email=email, role='teacher').first()
+            if user:
+                # Update existing teacher
+                changed = False
+                if name and not user.translations.get('ar', {}).get('name'):
+                    tr = dict(user.translations or {})
+                    ar = dict(tr.get('ar') or {})
+                    ar['name'] = name
+                    tr['ar'] = ar
+                    user.translations = tr
+                    changed = True
+                if national_id and not user.national_id:
+                    user.national_id = national_id
+                    changed = True
+                if phone and not user.phone:
+                    user.phone = phone
+                    changed = True
+                if changed:
+                    user.save()
+                results['updated'] += 1
+            else:
+                # Auto-generate unique username and email when not provided
+                if not email:
+                    base = f'teacher.{national_id}'
+                    email = f'{base}@teacher.local'
+                    suffix = 1
+                    while User.objects.filter(email=email).exists():
+                        email = f'{base}.{suffix}@teacher.local'
+                        suffix += 1
+                user = User.objects.create_user(
+                    email=email,
+                    username=email,
+                    role='teacher',
+                    national_id=national_id or '',
+                    phone=phone,
+                    translations={'ar': {'name': name}} if name else {},
+                    is_verified=True,
+                )
                 user.set_unusable_password()
                 user.save(update_fields=['password'])
                 results['created'] += 1
-            else:
-                results['updated'] += 1
             self._assign_teacher(user, row, results)
 
     def _enroll_by_row(self, student, row, results, school_id=None, section=None):
@@ -2581,6 +2709,147 @@ class TimetableSlotViewSet(viewsets.ModelViewSet):
             'errors': errors
         })
 
+    @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
+    def export_pdf(self, request):
+        """Export timetable for a section or teacher as PDF."""
+        section_id = request.query_params.get('section')
+        teacher_id = request.query_params.get('teacher')
+        school_id = request.query_params.get('school')
+        academic_year_id = request.query_params.get('academic_year')
+        locale = request.query_params.get('locale', 'ar')
+
+        qs = TimetableSlot.objects.select_related(
+            'section', 'section__grade', 'subject', 'teacher', 'period', 'room',
+        )
+        if section_id:
+            qs = qs.filter(section_id=section_id)
+        elif teacher_id:
+            qs = qs.filter(teacher_id=teacher_id)
+        elif school_id:
+            qs = qs.filter(school_id=school_id)
+        if academic_year_id:
+            qs = qs.filter(academic_year_id=academic_year_id)
+
+        slots = list(qs.order_by('day_of_week', 'period__period_number'))
+
+        if not slots:
+            return Response({'error': 'No timetable slots found'}, status=status.HTTP_404_NOT_FOUND)
+
+        school_name = slots[0].school.name if slots else ''
+        section_name = str(slots[0].section) if section_id and slots else ''
+        teacher_name = slots[0].teacher.translations.get('ar', {}).get('name', slots[0].teacher.email) if teacher_id and slots else ''
+
+        day_names = {
+            1: 'الإثنين', 2: 'الثلاثاء', 3: 'الأربعاء',
+            4: 'الخميس', 5: 'الجمعة', 6: 'السبت', 7: 'الأحد',
+        }
+        if locale == 'en':
+            day_names = {1: 'Monday', 2: 'Tuesday', 3: 'Wednesday', 4: 'Thursday', 5: 'Friday', 6: 'Saturday', 7: 'Sunday'}
+
+        # Group by day
+        grid: dict[int, list] = {d: [] for d in range(1, 8)}
+        for slot in slots:
+            grid[slot.day_of_week].append(slot)
+
+        title = f'الجدول الدراسي — {school_name}'
+        if section_name:
+            title += f' | {section_name}'
+        if teacher_name:
+            title += f' | {teacher_name}'
+
+        rows_html = ''
+        for day_num in range(1, 8):
+            day_slots = sorted(grid[day_num], key=lambda s: s.period.period_number)
+            cells = ''
+            for s in day_slots:
+                cells += f'<td style="border:1px solid #ccc;padding:6px;text-align:center;font-size:12px">'
+                cells += f'<b>{s.subject.name}</b><br>{s.teacher.translations.get("ar",{}).get("name",s.teacher.email)}<br>'
+                if s.room:
+                    cells += f'<small>{s.room.name}</small>'
+                cells += '</td>'
+            rows_html += f'<tr><td style="border:1px solid #ccc;padding:6px;font-weight:bold;background:#f0f0f0">{day_names.get(day_num, day_num)}</td>{cells}</tr>'
+
+        html = f"""<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<style>@page{{size:A4 landscape;margin:1cm}}body{{font-family:sans-serif;direction:rtl}}</style>
+</head><body>
+<h2 style="text-align:center">{title}</h2>
+<table style="width:100%;border-collapse:collapse;margin-top:20px">
+<thead><tr style="background:#333;color:#fff">
+<th style="border:1px solid #ccc;padding:8px">اليوم</th>
+<th style="border:1px solid #ccc;padding:8px">الحصة</th><th style="border:1px solid #ccc;padding:8px">الحصة</th><th style="border:1px solid #ccc;padding:8px">الحصة</th><th style="border:1px solid #ccc;padding:8px">الحصة</th><th style="border:1px solid #ccc;padding:8px">الحصة</th>
+</tr></thead>
+<tbody>{rows_html}</tbody>
+</table>
+<p style="text-align:center;color:#888;margin-top:20px">آفاق تكنولوجي — نظام المتابعة المدرسية الذكية</p>
+</body></html>"""
+
+        from django.http import HttpResponse
+        try:
+            from weasyprint import HTML as WeasyHTML
+            pdf_bytes = WeasyHTML(string=html).write_pdf()
+            response = HttpResponse(pdf_bytes, content_type='application/pdf')
+            filename = f'timetable_{section_name or teacher_name or school_name}.pdf'.replace(' ', '_')
+            response['Content-Disposition'] = f'attachment; filename="{filename}"'
+            return response
+        except ImportError:
+            # Fallback: return HTML if WeasyPrint is not installed
+            return HttpResponse(html, content_type='text/html')
+
+    @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
+    def export_excel(self, request):
+        """Export timetable for a section or teacher as XLSX."""
+        section_id = request.query_params.get('section')
+        teacher_id = request.query_params.get('teacher')
+        school_id = request.query_params.get('school')
+        academic_year_id = request.query_params.get('academic_year')
+
+        qs = TimetableSlot.objects.select_related(
+            'section', 'section__grade', 'subject', 'teacher', 'period', 'room',
+        )
+        if section_id:
+            qs = qs.filter(section_id=section_id)
+        elif teacher_id:
+            qs = qs.filter(teacher_id=teacher_id)
+        elif school_id:
+            qs = qs.filter(school_id=school_id)
+        if academic_year_id:
+            qs = qs.filter(academic_year_id=academic_year_id)
+
+        slots = list(qs.order_by('day_of_week', 'period__period_number'))
+
+        if not slots:
+            return Response({'error': 'No timetable slots found'}, status=status.HTTP_404_NOT_FOUND)
+
+        import openpyxl
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = 'الجدول الدراسي'
+
+        day_names = {
+            1: 'الإثنين', 2: 'الثلاثاء', 3: 'الأربعاء',
+            4: 'الخميس', 5: 'الجمعة', 6: 'السبت', 7: 'الأحد',
+        }
+
+        ws.append(['اليوم', 'الحصة', 'الوقت', 'المادة', 'المعلم', 'الشعبة', 'القاعة'])
+        for s in slots:
+            ws.append([
+                day_names.get(s.day_of_week, str(s.day_of_week)),
+                s.period.name,
+                f'{s.period.start_time} - {s.period.end_time}',
+                s.subject.name,
+                s.teacher.translations.get('ar', {}).get('name', s.teacher.email),
+                str(s.section),
+                s.room.name if s.room else '',
+            ])
+
+        from django.http import HttpResponse
+        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        filename = f'timetable_{section_id or teacher_id or school_id}.xlsx'
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        wb.save(response)
+        return response
+
 
 class SchoolFeeViewSet(viewsets.ModelViewSet):
     queryset = SchoolFee.objects.all()
@@ -2852,6 +3121,78 @@ class LibraryLendingViewSet(viewsets.ModelViewSet):
             'students': serialize(qs('student')),
             'teachers': serialize(qs_teachers()),
             'parents': serialize(qs_parents()),
+        })
+
+
+class FAQCopilotAPIView(APIView):
+    """FAQ Copilot — AI-powered auto-reply for parent questions.
+
+    Accepts a question and optional school context, searches the FAQ database
+    for relevant entries, and uses AI to generate a helpful response. Returns
+    both the AI answer and any matching FAQ entries.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        question = (request.data.get('question') or '').strip()
+        school_id = request.data.get('school')
+        if not question:
+            return Response({'error': 'question is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Gather context
+        faqs = list(FAQ.objects.filter(is_active=True).values_list('question', 'answer')[:20])
+        faq_context = '\n'.join(f'- س: {q}\n  ج: {a}' for q, a in faqs) if faqs else 'لا توجد أسئلة شائعة مسجلة.'
+
+        school_context = ''
+        if school_id:
+            try:
+                school = School.objects.get(id=school_id)
+                school_context = f'المدرسة: {school.name} ({school.directorate})'
+            except School.DoesNotExist:
+                pass
+
+        # Check if the question matches any FAQ closely
+        matched_faq = None
+        q_lower = question.lower()
+        for fq, fa in faqs:
+            if q_lower in fq.lower() or fq.lower() in q_lower:
+                matched_faq = {'question': fq, 'answer': fa}
+                break
+
+        # If a close FAQ match is found, return it directly without AI
+        if matched_faq:
+            return Response({
+                'answer': matched_faq['answer'],
+                'source': 'faq_match',
+                'matched_faq': matched_faq,
+                'faqs': [{'question': fq, 'answer': fa} for fq, fa in faqs[:10]],
+            })
+
+        # Use AI to generate a response
+        system_prompt = f"""أنت مساعد ذكي لإدارة المدرسة. أجب على سؤال ولي الأمر بأسلوب مهني وواضح.
+إذا كان السؤال متعلقاً ب规则 أو سياسات المدرسة، استخدم معلومات الأسئلة الشائعة التالية كمرجع:
+{faq_context}
+{school_context}
+إذا لم تجد إجابة واضحة، قل ذلك بأدب وانصح بالتواصل مع الإدارة المدرسية.
+أجب بالعربية."""
+
+        try:
+            from apps.ai.router import ProviderRouter
+            router = ProviderRouter()
+            result = router.generate(
+                prompt=question,
+                feature='general',
+                system_instruction=system_prompt,
+                use_cache=False,
+            )
+            answer = result.text if result and result.text else 'عذراً، لم أتمكن من إيجاد إجابة مناسبة.'
+        except Exception:
+            answer = 'عذراً،خدمة الذكاء الاصطناعي غير متاحة حالياً. يرجى التواصل مع الإدارة المدرسية مباشرة.'
+
+        return Response({
+            'answer': answer,
+            'source': 'ai_copilot',
+            'faqs': [{'question': fq, 'answer': fa} for fq, fa in faqs[:10]],
         })
 
 

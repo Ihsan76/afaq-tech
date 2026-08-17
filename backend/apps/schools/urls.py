@@ -11,6 +11,7 @@ from .views import (
     BulkExportView,
     BulkImportView,
     FamilyLinkViewSet,
+    FAQCopilotAPIView,
     FAQViewSet,
     LibraryLendingViewSet,
     MySchoolContextAPIView,
@@ -79,5 +80,6 @@ urlpatterns = [
     path('students/<int:student_id>/report-card/pdf/', StudentReportCardPDFView.as_view(), name='student-report-card-pdf'),
     path('students/<int:student_id>/predictive-analytics/', StudentPredictiveAnalyticsAPIView.as_view(), name='student-predictive-analytics'),
     path('biometric/webhook/', BiometricWebhookAPIView.as_view(), name='biometric-webhook'),
+    path('faq-copilot/', FAQCopilotAPIView.as_view(), name='faq-copilot'),
     path('', include(router.urls)),
 ]
