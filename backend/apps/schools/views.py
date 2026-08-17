@@ -2963,7 +2963,130 @@ class TimetableSlotViewSet(viewsets.ModelViewSet):
         return response
 
 
-class SchoolFeeViewSet(viewsets.ModelViewSet):
+def check_school_subscription(user, school=None):
+    if is_admin(user):
+        return True
+    if not (user and user.is_authenticated):
+        return False
+    
+    level = user.get_subscription_level() if hasattr(user, 'get_subscription_level') else 0
+    if level >= 2 or getattr(user, 'subscription_plan', '') in ('school', 'enterprise'):
+        return True
+    
+    try:
+        from apps.subscriptions.services import get_user_plan
+        plan = get_user_plan(user)
+        if plan and (plan.level >= 2 or plan.code in ('school', 'enterprise')):
+            return True
+    except Exception:
+        pass
+
+    if school and school.manager:
+        mgr = school.manager
+        mgr_level = mgr.get_subscription_level() if hasattr(mgr, 'get_subscription_level') else 0
+        if mgr_level >= 2 or getattr(mgr, 'subscription_plan', '') in ('school', 'enterprise'):
+            return True
+        try:
+            from apps.subscriptions.services import get_user_plan
+            mgr_plan = get_user_plan(mgr)
+            if mgr_plan and (mgr_plan.level >= 2 or mgr_plan.code in ('school', 'enterprise')):
+                return True
+        except Exception:
+            pass
+    return False
+
+
+class AuxiliaryModuleGatingMixin:
+    def _check_gating(self, request, school=None):
+        if request.method in permissions.SAFE_METHODS:
+            return None
+        if not school:
+            school = self._resolve_school(request)
+        if not check_school_subscription(request.user, school):
+            return Response(
+                {
+                    'detail': 'يتطلب اشتراك باقة المدرسة (School) أو الريادة (Enterprise) لإنشاء أو إدارة الوحدات الإضافية (الرسوم، النقل، المكتبة). يرجى الترقية إلى باقة المدرسة أو الريادة.',
+                    'error': 'subscription_required',
+                    'upgrade_url': '/subscriptions',
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        return None
+
+    def _resolve_school(self, request):
+        raw_school = request.data.get('school') if hasattr(request, 'data') else None
+        if raw_school:
+            try:
+                return School.objects.get(pk=raw_school)
+            except School.DoesNotExist:
+                pass
+        
+        for key in ('bus', 'route', 'book', 'fee', 'student'):
+            val = request.data.get(key) if hasattr(request, 'data') else None
+            if val:
+                try:
+                    if key == 'bus':
+                        return SchoolBus.objects.get(pk=val).school
+                    elif key == 'route':
+                        return BusRoute.objects.get(pk=val).bus.school
+                    elif key == 'book':
+                        return Book.objects.get(pk=val).school
+                    elif key == 'fee':
+                        return SchoolFee.objects.get(pk=val).school
+                    elif key == 'student':
+                        en = StudentEnrollment.objects.filter(student_id=val).select_related('section__school').first()
+                        if en:
+                            return en.section.school
+                except Exception:
+                    pass
+
+        try:
+            obj = self.get_object()
+            if obj:
+                return self._get_school_from_obj(obj)
+        except Exception:
+            pass
+        return None
+
+    def _get_school_from_obj(self, obj):
+        if hasattr(obj, 'school') and obj.school:
+            return obj.school
+        if hasattr(obj, 'bus') and obj.bus and obj.bus.school:
+            return obj.bus.school
+        if hasattr(obj, 'route') and obj.route and obj.route.bus and obj.route.bus.school:
+            return obj.route.bus.school
+        if hasattr(obj, 'book') and obj.book and obj.book.school:
+            return obj.book.school
+        if hasattr(obj, 'fee') and obj.fee and obj.fee.school:
+            return obj.fee.school
+        return None
+
+    def create(self, request, *args, **kwargs):
+        res = self._check_gating(request)
+        if res:
+            return res
+        return super().create(request, *args, **kwargs)
+
+    def update(self, request, *args, **kwargs):
+        res = self._check_gating(request)
+        if res:
+            return res
+        return super().update(request, *args, **kwargs)
+
+    def partial_update(self, request, *args, **kwargs):
+        res = self._check_gating(request)
+        if res:
+            return res
+        return super().partial_update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        res = self._check_gating(request)
+        if res:
+            return res
+        return super().destroy(request, *args, **kwargs)
+
+
+class SchoolFeeViewSet(AuxiliaryModuleGatingMixin, viewsets.ModelViewSet):
     queryset = SchoolFee.objects.all()
     serializer_class = SchoolFeeSerializer
     permission_classes = [IsAdminOrReadOnly]
@@ -2976,7 +3099,7 @@ class SchoolFeeViewSet(viewsets.ModelViewSet):
         return qs
 
 
-class StudentFeeAssignmentViewSet(viewsets.ModelViewSet):
+class StudentFeeAssignmentViewSet(AuxiliaryModuleGatingMixin, viewsets.ModelViewSet):
     queryset = StudentFeeAssignment.objects.all()
     serializer_class = StudentFeeAssignmentSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -3116,7 +3239,7 @@ class StudentPredictiveAnalyticsAPIView(APIView):
         })
 
 
-class SchoolBusViewSet(viewsets.ModelViewSet):
+class SchoolBusViewSet(AuxiliaryModuleGatingMixin, viewsets.ModelViewSet):
     queryset = SchoolBus.objects.all()
     serializer_class = SchoolBusSerializer
     permission_classes = [IsAdminOrReadOnly]
@@ -3129,7 +3252,7 @@ class SchoolBusViewSet(viewsets.ModelViewSet):
         return qs
 
 
-class BusRouteViewSet(viewsets.ModelViewSet):
+class BusRouteViewSet(AuxiliaryModuleGatingMixin, viewsets.ModelViewSet):
     queryset = BusRoute.objects.all()
     serializer_class = BusRouteSerializer
     permission_classes = [IsAdminOrReadOnly]
@@ -3142,7 +3265,7 @@ class BusRouteViewSet(viewsets.ModelViewSet):
         return qs
 
 
-class StudentBusAssignmentViewSet(viewsets.ModelViewSet):
+class StudentBusAssignmentViewSet(AuxiliaryModuleGatingMixin, viewsets.ModelViewSet):
     queryset = StudentBusAssignment.objects.all()
     serializer_class = StudentBusAssignmentSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -3157,7 +3280,7 @@ class StudentBusAssignmentViewSet(viewsets.ModelViewSet):
         return qs
 
 
-class BookViewSet(viewsets.ModelViewSet):
+class BookViewSet(AuxiliaryModuleGatingMixin, viewsets.ModelViewSet):
     queryset = Book.objects.all()
     serializer_class = BookSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -3170,7 +3293,7 @@ class BookViewSet(viewsets.ModelViewSet):
         return qs
 
 
-class LibraryLendingViewSet(viewsets.ModelViewSet):
+class LibraryLendingViewSet(AuxiliaryModuleGatingMixin, viewsets.ModelViewSet):
     queryset = LibraryLending.objects.all()
     serializer_class = LibraryLendingSerializer
     permission_classes = [permissions.IsAuthenticated]

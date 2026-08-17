@@ -20,6 +20,7 @@ from apps.schools.models import (
     Period,
     School,
     SchoolAnnouncement,
+    SchoolBus,
     SchoolGrade,
     SchoolTeacher,
     Section,
@@ -1538,3 +1539,66 @@ class SchoolCalendarTestCase(APITestCase):
         self.assertEqual(res.data['results'][0]['day_display'], 'Sunday')
         res = self.client.get('/api/v1/schools/timetable-slots/', {'locale': 'ar'})
         self.assertEqual(res.data['results'][0]['day_display'], 'الأحد')
+
+
+class SchoolAuxiliaryFeatureGatingTestCase(APITestCase):
+    def setUp(self):
+        self.admin = make_user('admin@test.com', 'admin', 'مدير النظام')
+        self.free_manager = make_user('freemanager@test.com', 'school_admin', 'مدير مجاني', subscription_plan='free')
+        self.school_manager = make_user('schoolmanager@test.com', 'school_admin', 'مدير مدرسي', subscription_plan='school')
+        
+        self.free_school = School.objects.create(name='مدرسة مجانية', school_code='FREE1', manager=self.free_manager)
+        self.school_school = School.objects.create(name='مدرسة مدرسية', school_code='SCHOOL1', manager=self.school_manager)
+        self.grade = Grade.objects.create(level=1, translations={'ar': {'name': 'الأول'}})
+        self.year = AcademicYear.objects.create(name='2025/2026', is_current=True)
+        self.section = Section.objects.create(school=self.school_school, grade=self.grade, academic_year=self.year, name='أ')
+        self.bus = SchoolBus.objects.create(school=self.school_school, bus_number='101', driver_name='سائق')
+
+    def auth(self, user):
+        self.client.force_authenticate(user=user)
+
+    def test_free_manager_cannot_create_auxiliary_modules(self):
+        self.auth(self.free_manager)
+        
+        # 1. Fees
+        res = self.client.post('/api/v1/schools/fees/', {'school': self.free_school.id, 'title': 'رسوم', 'amount': 100})
+        self.assertEqual(res.status_code, 403)
+        self.assertIn('subscription_required', res.data.get('error', ''))
+
+        # 2. Buses
+        res = self.client.post('/api/v1/schools/buses/', {'school': self.free_school.id, 'bus_number': '102', 'driver_name': 'سائق'})
+        self.assertEqual(res.status_code, 403)
+
+        # 3. Books
+        res = self.client.post('/api/v1/schools/books/', {'school': self.free_school.id, 'title': 'كتاب'})
+        self.assertEqual(res.status_code, 403)
+
+    def test_school_manager_can_create_auxiliary_modules(self):
+        self.auth(self.school_manager)
+        
+        # 1. Fees
+        res = self.client.post('/api/v1/schools/fees/', {'school': self.school_school.id, 'title': 'رسوم دراسية', 'amount': 250})
+        self.assertEqual(res.status_code, 201)
+
+        # 2. Buses
+        res = self.client.post('/api/v1/schools/buses/', {'school': self.school_school.id, 'bus_number': '202', 'driver_name': 'سائق 2'})
+        self.assertEqual(res.status_code, 201)
+        bus_id = res.data['id']
+
+        # 3. Routes
+        res = self.client.post('/api/v1/schools/bus-routes/', {'bus': bus_id, 'route_name': 'خط 1'})
+        self.assertEqual(res.status_code, 201)
+
+        # 4. Books
+        res = self.client.post('/api/v1/schools/books/', {'school': self.school_school.id, 'title': 'رياضيات الصف الأول', 'total_copies': 10})
+        self.assertEqual(res.status_code, 201)
+        book_id = res.data['id']
+
+        # 5. Library Lendings
+        res = self.client.post('/api/v1/schools/library-lendings/', {'book': book_id, 'borrower_name': 'طالب'})
+        self.assertEqual(res.status_code, 201)
+
+    def test_admin_override_can_create_auxiliary_modules(self):
+        self.auth(self.admin)
+        res = self.client.post('/api/v1/schools/fees/', {'school': self.free_school.id, 'title': 'رسوم أدمن', 'amount': 50})
+        self.assertEqual(res.status_code, 201)
