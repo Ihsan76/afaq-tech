@@ -1,4 +1,4 @@
-import { notFound, redirect, RedirectType } from "next/navigation";
+import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import JsonLd from "@/components/JsonLd";
 import { SITE_URL, buildMetadata, getCmsPageSeo } from "@/lib/metadata";
@@ -8,12 +8,8 @@ const RESERVED_PREFIXES = [
   "login", "register", "auth", "verify-email", "admin", "lesson-plans", "profile", "chat",
   "curriculum", "academy", "ebooks", "blog", "dashboard",
   "forgot-password", "reset-password", "search", "marketplace", "gamification",
-  "privacy", "terms", "school",
+  "privacy", "terms", "school", "school-followup",
 ];
-
-const REDIRECTS: Record<string, string> = {
-  "school-followup": "school",
-};
 
 export async function generateMetadata({
   params,
@@ -47,11 +43,6 @@ export default async function CatchAllPage({
   const { locale, slug } = await params;
   const pageSlug = Array.isArray(slug) ? slug.join("/") : slug || "";
   const firstSegment = pageSlug.split("/")[0];
-
-  if (firstSegment in REDIRECTS) {
-    const rest = pageSlug.slice(firstSegment.length);
-    redirect(`/${locale}/${REDIRECTS[firstSegment]}${rest}`, RedirectType.replace);
-  }
 
   if (RESERVED_PREFIXES.includes(firstSegment)) {
     notFound();

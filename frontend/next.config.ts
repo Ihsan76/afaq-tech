@@ -61,9 +61,11 @@ const nextConfig: NextConfig = {
     ];
   },
   async redirects() {
-    const localeRedirects = ["ar", "en", "fr", "tr", "ur", "es", "de", "id", "bn"].flatMap((locale) => [
+    const locales = ["ar", "en", "fr", "tr", "ur", "es", "de", "id", "bn", "fa"];
+    const localeRedirects = locales.flatMap((locale) => [
       { source: `/${locale}/courses`, destination: `/${locale}/academy/courses`, permanent: true },
       { source: `/${locale}/courses/:path*`, destination: `/${locale}/academy/courses/:path*`, permanent: true },
+      { source: `/${locale}/school-followup`, destination: `/${locale}/school`, permanent: true },
     ]);
     return localeRedirects;
   },
