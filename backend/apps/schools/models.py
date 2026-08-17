@@ -57,10 +57,21 @@ class School(models.Model):
 
 
 class AcademicYear(models.Model):
+    ALLOC_FIXED = 'fixed'
+    ALLOC_MOBILITY = 'mobility'
+    ALLOC_CHOICES = [
+        (ALLOC_FIXED, 'قاعة ثابتة لكل شعبة'),
+        (ALLOC_MOBILITY, 'تنقل الشعب بين القاعات'),
+    ]
+
     name = models.CharField('العام الدراسي (مثل 2025/2026)', max_length=50, unique=True)
     start_date = models.DateField('تاريخ البداية', null=True, blank=True)
     end_date = models.DateField('تاريخ النهاية', null=True, blank=True)
     is_current = models.BooleanField('العام الحالي', default=False)
+    room_allocation_mode = models.CharField(
+        'وضع تخصيص القاعات', max_length=20, default=ALLOC_FIXED, choices=ALLOC_CHOICES,
+        help_text='ثابت: كل شعبة لها قاعة مخصصة. تنقل: الشعبة تتنقل حسب المادة والسعة',
+    )
 
     class Meta:
         verbose_name = 'عام دراسي'
@@ -80,6 +91,11 @@ class Section(models.Model):
     class_teacher = models.ForeignKey(
         User, on_delete=models.SET_NULL, null=True, blank=True,
         related_name='mentored_sections', verbose_name='مربي الصف',
+    )
+    home_room = models.ForeignKey(
+        'Room', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='home_sections', verbose_name='القاعة الصفية',
+        help_text='القاعة المخصصة للشعبة في وضع القاعات الثابتة',
     )
 
     class Meta:
@@ -116,6 +132,17 @@ class SchoolSubjectPeriod(models.Model):
     grade = models.ForeignKey(Grade, on_delete=models.CASCADE, related_name='school_subject_periods', verbose_name='الصف الدراسي')
     subject = models.ForeignKey(Subject, on_delete=models.CASCADE, related_name='school_subject_periods', verbose_name='المادة')
     weekly_periods = models.PositiveIntegerField('عدد الحصص الأسبوعية', default=1)
+    preferred_room_type = models.CharField(
+        'نوع القاعة المفضل', max_length=50, blank=True, default='',
+        choices=[
+            ('', 'أي قاعة'),
+            ('classroom', 'صف دراسي'),
+            ('lab', 'مختبر علمي'),
+            ('computer_lab', 'مختبر حاسوب'),
+            ('hall', 'قاعة محاضرات / نشاط'),
+        ],
+        help_text='نوع القاعة المناسب لهذه المادة في هذا الصف. فارغ = أي قاعة',
+    )
 
     class Meta:
         verbose_name = 'عدد حصص مادة في صف'

@@ -2266,6 +2266,16 @@
     "dayThu": "Thursday",
     "dayFri": "Friday",
     "daySat": "Saturday",
-    "daySun": "Sunday"
+    "daySun": "Sunday",
+    "roomAllocationHeading": "Room Allocation Mode",
+    "roomAllocationSubtitle": "Choose how classrooms are assigned to sections",
+    "roomModeFixed": "Fixed Classroom",
+    "roomModeMobility": "Room Mobility",
+    "fixedRoomsHint": "Auto-create rooms matching section names and link them",
+    "setupFixedRoomsBtn": "Auto-Create Rooms",
+    "bannerRoomModeUpdated": "Room allocation mode updated",
+    "bannerRoomModeError": "Failed to update room mode",
+    "bannerFixedRoomsSetup": "Created {rooms} rooms and linked to {sections} sections",
+    "bannerFixedRoomsError": "Failed to create fixed rooms"
   }
 }

@@ -2650,72 +2650,171 @@ class TimetableSlotViewSet(viewsets.ModelViewSet):
                 qs = TimetableSlot.objects.none()
         return qs
 
+    def _pick_room(self, section, subject, rooms_by_type, all_rooms):
+        """Pick the best room for a slot based on allocation mode and subject requirements."""
+        ssp = SchoolSubjectPeriod.objects.filter(
+            school=section.school, grade=section.grade, subject=subject,
+        ).first()
+        preferred = ssp.preferred_room_type if ssp else ''
+
+        if preferred:
+            candidates = rooms_by_type.get(preferred, [])
+            for room in candidates:
+                if room.capacity >= section.capacity:
+                    return room
+            if candidates:
+                return candidates[0]
+
+        classrooms = rooms_by_type.get('classroom', [])
+        for room in classrooms:
+            if room.capacity >= section.capacity:
+                return room
+        if classrooms:
+            return classrooms[0]
+
+        return all_rooms.first() if all_rooms else None
+
     @action(detail=False, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def auto_schedule(self, request):
-        """Smart Auto-Scheduler: Automatically generates timetable slots for sections
-        based on TeacherAssignments and Periods."""
+        """Smart Auto-Scheduler with room allocation modes.
+
+        fixed mode: each section uses its home_room.
+        mobility mode: rooms are picked by subject preferred_room_type + section capacity.
+        """
         school_id = request.data.get('school_id')
         academic_year_id = request.data.get('academic_year_id')
         if not school_id or not academic_year_id:
-            return Response({'error': 'school_id and academic_year_id are required'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {'error': 'school_id and academic_year_id are required'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         if not is_admin(self.request.user):
             school_ids = user_school_ids(self.request.user)
             if int(school_id) not in school_ids:
                 return Response({'error': 'Permission denied for this school'}, status=status.HTTP_403_FORBIDDEN)
 
-        sections = Section.objects.filter(school_id=school_id, academic_year_id=academic_year_id)
-        periods = Period.objects.filter(school_id=school_id, is_active=True, is_break=False).order_by('period_number')
-        rooms = Room.objects.filter(school_id=school_id)
-        default_room = rooms.first()
         try:
             school = School.objects.get(id=school_id)
         except School.DoesNotExist:
             return Response({'error': 'School not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        try:
+            year = AcademicYear.objects.get(id=academic_year_id)
+        except AcademicYear.DoesNotExist:
+            return Response({'error': 'Academic year not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        mode = year.room_allocation_mode
+        sections = Section.objects.filter(school_id=school_id, academic_year_id=academic_year_id)
+        periods = Period.objects.filter(school_id=school_id, is_active=True, is_break=False).order_by('period_number')
+        all_rooms = Room.objects.filter(school_id=school_id)
         week_days = school_week_days(school)
+
+        rooms_by_type = {}
+        for room in all_rooms:
+            rooms_by_type.setdefault(room.room_type, []).append(room)
 
         created_slots = []
         errors = []
 
-        with transaction.atomic():
-            for section in sections:
-                assignments = TeacherAssignment.objects.filter(section=section, academic_year_id=academic_year_id)
-                if not assignments.exists() or not periods.exists():
-                    continue
+        for section in sections:
+            assignments = list(TeacherAssignment.objects.filter(
+                section=section, academic_year_id=academic_year_id,
+            ))
+            if not assignments or not periods.exists():
+                continue
 
-                period_idx = 0
-                for day in week_days:
-                    for period in periods:
-                        if period_idx >= len(assignments):
-                            break
-                        assignment = assignments[period_idx % len(assignments)]
+            period_idx = 0
+            for day in week_days:
+                for period in periods:
+                    if period_idx >= len(assignments):
+                        break
+                    assignment = assignments[period_idx % len(assignments)]
 
-                        existing = TimetableSlot.objects.filter(
-                            section=section,
-                            day_of_week=day,
-                            period=period
-                        ).exists()
-                        if not existing:
-                            try:
-                                slot = TimetableSlot.objects.create(
-                                    school_id=school_id,
-                                    academic_year_id=academic_year_id,
-                                    section=section,
-                                    day_of_week=day,
-                                    period=period,
-                                    subject=assignment.subject,
-                                    teacher=assignment.teacher,
-                                    room=default_room
-                                )
-                                created_slots.append(slot.id)
-                            except Exception as e:
-                                errors.append(str(e))
-                        period_idx += 1
+                    exists = TimetableSlot.objects.filter(
+                        section=section, day_of_week=day, period=period,
+                    ).exists()
+                    if not exists:
+                        if mode == AcademicYear.ALLOC_FIXED:
+                            room = section.home_room
+                        else:
+                            room = self._pick_room(section, assignment.subject, rooms_by_type, all_rooms)
+
+                        try:
+                            slot = TimetableSlot.objects.create(
+                                school_id=school_id,
+                                academic_year_id=academic_year_id,
+                                section=section,
+                                day_of_week=day,
+                                period=period,
+                                subject=assignment.subject,
+                                teacher=assignment.teacher,
+                                room=room,
+                            )
+                            created_slots.append(slot.id)
+                        except Exception as e:
+                            errors.append(str(e))
+                    period_idx += 1
 
         return Response({
             'success': True,
+            'mode': mode,
             'created_count': len(created_slots),
-            'errors': errors
+            'errors': errors,
+        })
+
+    @action(detail=False, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    def setup_fixed_rooms(self, request):
+        """Auto-create classrooms for each section and assign as home_room.
+
+        Used when switching to fixed room allocation mode.
+        Creates one Room per section (name = section name, capacity = section capacity)
+        and links it as the section's home_room.
+        """
+        school_id = request.data.get('school_id')
+        academic_year_id = request.data.get('academic_year_id')
+        if not school_id or not academic_year_id:
+            return Response(
+                {'error': 'school_id and academic_year_id are required'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not is_admin(self.request.user):
+            school_ids = user_school_ids(self.request.user)
+            if int(school_id) not in school_ids:
+                return Response({'error': 'Permission denied for this school'}, status=status.HTTP_403_FORBIDDEN)
+
+        sections = Section.objects.filter(
+            school_id=school_id, academic_year_id=academic_year_id, home_room__isnull=True,
+        ).select_related('grade')
+
+        created_rooms = []
+        linked_sections = 0
+
+        for section in sections:
+            grade_name = section.grade.translations.get('ar', {}).get('name', str(section.grade.level))
+            room_name = f"{grade_name} - {section.name}"
+
+            room, _ = Room.objects.get_or_create(
+                school_id=school_id,
+                name=room_name,
+                defaults={
+                    'code': f"S{section.grade.level}-{section.name}",
+                    'capacity': section.capacity,
+                    'room_type': 'classroom',
+                },
+            )
+            created_rooms.append(room.id)
+
+            if section.home_room_id is None:
+                section.home_room = room
+                section.save(update_fields=['home_room'])
+                linked_sections += 1
+
+        return Response({
+            'success': True,
+            'rooms_created': len(created_rooms),
+            'sections_linked': linked_sections,
         })
 
     @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])

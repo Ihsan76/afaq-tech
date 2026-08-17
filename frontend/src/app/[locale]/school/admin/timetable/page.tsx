@@ -13,6 +13,7 @@ export default function SchoolAdminTimetablePage() {
           periods: "/schools/periods/",
           rooms: "/schools/rooms/",
           slots: "/schools/timetable-slots/",
+          academicYears: "/schools/academic-years/?is_current=true",
         }}
       >
         {({ data, refresh }) => (
@@ -21,6 +22,7 @@ export default function SchoolAdminTimetablePage() {
             periods={data.periods || []}
             rooms={data.rooms || []}
             slots={data.slots || []}
+            academicYears={data.academicYears || []}
             refresh={refresh}
           />
         )}

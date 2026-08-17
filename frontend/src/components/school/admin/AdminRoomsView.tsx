@@ -9,6 +9,7 @@ import SelectDropdown from "@/components/ui/SelectDropdown";
 interface Props {
   rooms: any[];
   periods: any[];
+  academicYears: any[];
   schoolId: string | null;
   refresh: () => void;
 }
@@ -45,9 +46,12 @@ function computePreview(
   return items;
 }
 
-export default function AdminRoomsView({ rooms, periods, schoolId, refresh }: Props) {
+export default function AdminRoomsView({ rooms, periods, academicYears, schoolId, refresh }: Props) {
   const t = useTranslations("school");
   const { banner, setBanner } = useBanner();
+
+  const currentYear = academicYears[0] || null;
+  const [roomMode, setRoomMode] = useState<string>(currentYear?.room_allocation_mode || "fixed");
 
   const [roomName, setRoomName] = useState("");
   const [roomCode, setRoomCode] = useState("");
@@ -64,6 +68,43 @@ export default function AdminRoomsView({ rooms, periods, schoolId, refresh }: Pr
   const [busy, setBusy] = useState(false);
 
   const preview = computePreview(genStart, genPeriodDur, genShortBreak, genLongBreak, genLongBreakAfter, genCount);
+
+  const updateRoomMode = async (mode: string) => {
+    if (!currentYear) return;
+    setBusy(true);
+    try {
+      await api.patch(`/schools/academic-years/${currentYear.id}/`, {
+        room_allocation_mode: mode,
+      });
+      setRoomMode(mode);
+      setBanner({ type: "success", text: t("bannerRoomModeUpdated") });
+      refresh();
+    } catch {
+      setBanner({ type: "error", text: t("bannerRoomModeError") });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const setupFixedRooms = async () => {
+    if (!schoolId || !currentYear) return;
+    setBusy(true);
+    try {
+      const res = await api.post("/schools/timetable-slots/setup_fixed_rooms/", {
+        school_id: Number(schoolId),
+        academic_year_id: currentYear.id,
+      });
+      setBanner({
+        type: "success",
+        text: t("bannerFixedRoomsSetup", { rooms: res.data.rooms_created, sections: res.data.sections_linked }),
+      });
+      refresh();
+    } catch {
+      setBanner({ type: "error", text: t("bannerFixedRoomsError") });
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const addRoom = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -126,6 +167,69 @@ export default function AdminRoomsView({ rooms, periods, schoolId, refresh }: Pr
   return (
     <div className="space-y-6">
       <Banner banner={banner} />
+
+      {currentYear && (
+        <div className={surfaceCls} style={surfaceStyle}>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <h3 className="text-lg font-bold" style={{ fontFamily: "var(--font-heading)" }}>
+                {t("roomAllocationHeading")}
+              </h3>
+              <p className="text-xs mt-1" style={{ color: "var(--color-text-secondary)" }}>
+                {t("roomAllocationSubtitle")}
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => updateRoomMode("fixed")}
+                disabled={busy || roomMode === "fixed"}
+                className={`px-4 py-2 rounded-2xl text-sm font-bold transition-all ${
+                  roomMode === "fixed"
+                    ? "text-white shadow-lg"
+                    : "bg-[var(--color-background)] border hover:opacity-80"
+                }`}
+                style={
+                  roomMode === "fixed"
+                    ? { background: "linear-gradient(135deg, var(--color-primary), var(--color-secondary))" }
+                    : { borderColor: "var(--color-border)" }
+                }
+              >
+                {t("roomModeFixed")}
+              </button>
+              <button
+                onClick={() => updateRoomMode("mobility")}
+                disabled={busy || roomMode === "mobility"}
+                className={`px-4 py-2 rounded-2xl text-sm font-bold transition-all ${
+                  roomMode === "mobility"
+                    ? "text-white shadow-lg"
+                    : "bg-[var(--color-background)] border hover:opacity-80"
+                }`}
+                style={
+                  roomMode === "mobility"
+                    ? { background: "linear-gradient(135deg, var(--color-primary), var(--color-secondary))" }
+                    : { borderColor: "var(--color-border)" }
+                }
+              >
+                {t("roomModeMobility")}
+              </button>
+            </div>
+          </div>
+          {roomMode === "fixed" && (
+            <div className="mt-4 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+              <p className="text-xs" style={{ color: "var(--color-text-secondary)" }}>
+                {t("fixedRoomsHint")}
+              </p>
+              <button
+                onClick={setupFixedRooms}
+                disabled={busy}
+                className="px-4 py-2 rounded-2xl text-xs font-bold bg-emerald-500/10 text-emerald-600 transition-all hover:opacity-90 disabled:opacity-50"
+              >
+                {t("setupFixedRoomsBtn")}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className={surfaceCls} style={surfaceStyle}>

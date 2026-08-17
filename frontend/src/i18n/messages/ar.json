@@ -2262,6 +2262,16 @@
     "dayThu": "الخميس",
     "dayFri": "الجمعة",
     "daySat": "السبت",
-    "daySun": "الأحد"
+    "daySun": "الأحد",
+    "roomAllocationHeading": "وضع تخصيص القاعات",
+    "roomAllocationSubtitle": "اختر كيف يتم تخصيص القاعات للشعب الدراسية",
+    "roomModeFixed": "قاعة ثابتة",
+    "roomModeMobility": "تنقل بين القاعات",
+    "fixedRoomsHint": "إنشاء قاعات تلقائياً مطابقة لأسماء الشعب وربطها بها",
+    "setupFixedRoomsBtn": "إنشاء قاعات تلقائياً",
+    "bannerRoomModeUpdated": "تم تحديث وضع القاعات",
+    "bannerRoomModeError": "تعذر تحديث وضع القاعات",
+    "bannerFixedRoomsSetup": "تم إنشاء {rooms} قاعة وربطها بـ {sections} شعبة",
+    "bannerFixedRoomsError": "تعذر إنشاء القاعات الثابتة"
   }
 }

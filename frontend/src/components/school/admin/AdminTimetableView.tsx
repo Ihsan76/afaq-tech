@@ -9,12 +9,16 @@ interface Props {
   periods: any[];
   rooms: any[];
   slots: any[];
+  academicYears?: any[];
   refresh: () => void;
 }
 
-export default function AdminTimetableView({ sections, periods, rooms, slots, refresh }: Props) {
+export default function AdminTimetableView({ sections, periods, rooms, slots, academicYears = [], refresh }: Props) {
   const t = useTranslations("school");
   const { banner, setBanner } = useBanner();
+
+  const currentYear = academicYears[0] || null;
+  const roomMode = currentYear?.room_allocation_mode || "fixed";
 
   const autoSchedule = async () => {
     if (sections.length === 0) {
@@ -43,6 +47,17 @@ export default function AdminTimetableView({ sections, periods, rooms, slots, re
           <p className="text-sm mt-1" style={{ color: "var(--color-text-secondary)" }}>
             {t("timetableSubtitle")}
           </p>
+          {currentYear && (
+            <span
+              className="inline-block mt-2 px-3 py-1 rounded-full text-xs font-bold"
+              style={{
+                background: roomMode === "fixed" ? "var(--color-primary)/10" : "var(--color-secondary)/10",
+                color: roomMode === "fixed" ? "var(--color-primary)" : "var(--color-secondary)",
+              }}
+            >
+              {roomMode === "fixed" ? t("roomModeFixed") : t("roomModeMobility")}
+            </span>
+          )}
         </div>
         <button
           onClick={autoSchedule}

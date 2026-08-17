@@ -8,10 +8,20 @@ export default function SchoolAdminRoomsPage() {
   return (
     <RoleGuard allowed={["school_admin"]}>
       <SchoolAdminShell
-        endpoints={{ rooms: "/schools/rooms/", periods: "/schools/periods/" }}
+        endpoints={{
+          rooms: "/schools/rooms/",
+          periods: "/schools/periods/",
+          academicYears: "/schools/academic-years/?is_current=true",
+        }}
       >
         {({ data, schoolId, refresh }) => (
-          <AdminRoomsView rooms={data.rooms || []} periods={data.periods || []} schoolId={schoolId} refresh={refresh} />
+          <AdminRoomsView
+            rooms={data.rooms || []}
+            periods={data.periods || []}
+            academicYears={data.academicYears || []}
+            schoolId={schoolId}
+            refresh={refresh}
+          />
         )}
       </SchoolAdminShell>
     </RoleGuard>
