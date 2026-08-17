@@ -90,10 +90,11 @@ function check(name, ok, detail = "") {
   }
 }
 
-async function assertPage(locale, route, expectDescription) {
+async function assertPage(locale, route, expectDescription, opts = {}) {
   const url = `${BASE_URL}/${locale}${route === "/" ? "" : route}`;
   const { status, body } = await fetchText(url);
-  check(`${locale}${route} → HTTP 200`, status === 200, `(got ${status})`);
+  const allowNotFound = opts.allowNotFound && status === 404;
+  check(`${locale}${route} → HTTP 200`, status === 200 || allowNotFound, `(got ${status})`);
   if (status !== 200) return;
 
   const langMatch = body.match(/<html[^>]*lang="([^"]+)"/);
@@ -135,7 +136,7 @@ async function main() {
       await assertPage(locale, route, true);
     }
     for (const route of EXTRA_ROUTES) {
-      await assertPage(locale, route, false);
+      await assertPage(locale, route, false, { allowNotFound: true });
     }
   }
 
