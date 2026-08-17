@@ -97,7 +97,7 @@ export default function AdminPagesPage() {
 
   // Filtered and sorted pages grouped by category
   const groupedPages = useMemo(() => {
-    let filtered = pages.filter((p) => {
+    const filtered = pages.filter((p) => {
       const title = localized(p.translations, viewLocale, "title") || "";
       const q = searchQuery.toLowerCase();
       return p.slug.toLowerCase().includes(q) || title.toLowerCase().includes(q);

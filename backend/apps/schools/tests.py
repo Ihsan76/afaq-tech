@@ -9,12 +9,12 @@ from apps.academics.models import Grade, Subject
 from apps.schools.models import (
     DEFAULT_WEEK_START,
     DEFAULT_WORKING_DAYS,
-    DayOfWeek,
     FAQ,
     AcademicYear,
     AnnouncementReadReceipt,
     Attachment,
     Attendance,
+    DayOfWeek,
     FamilyLink,
     ParentTeacherTicket,
     Period,
@@ -1478,7 +1478,7 @@ class SchoolCalendarTestCase(APITestCase):
         TeacherAssignment.objects.create(
             teacher=teacher, section=self.section, subject=subject2, academic_year=self.year,
         )
-        room = self.school.rooms.create(name='قاعة 1', code='R1')
+        self.school.rooms.create(name='قاعة 1', code='R1')
         self._auth(self.admin)
         # Gulf week: Monday-Friday, starts Monday.
         self.school.week_start = 1
@@ -1527,7 +1527,7 @@ class SchoolCalendarTestCase(APITestCase):
         self.assertIsNotNone(res.data['warning'])
 
     def test_day_display_localized(self):
-        slot = TimetableSlot.objects.create(
+        TimetableSlot.objects.create(
             school=self.school, academic_year=self.year, section=self.section,
             day_of_week=7, period=self.period, subject=self.subject,
             teacher=self.admin, room=None,

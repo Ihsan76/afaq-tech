@@ -1,3 +1,4 @@
+import contextlib
 import threading
 
 from django.core.cache import cache
@@ -21,10 +22,8 @@ def _public_key(kind, *parts):
 
 def invalidate_site_cache() -> None:
     """مسح ردود الصفحات العامة وإعادة بنائها في خيط خلفي (حتى لا يلمس الزائر DB عند أول طلب)."""
-    try:
+    with contextlib.suppress(Exception):
         cache.delete_pattern(f'*{SITE_CACHE_KEY_PREFIX}*')
-    except Exception:
-        pass
     threading.Thread(target=warm_site_cache, daemon=True).start()
 
 

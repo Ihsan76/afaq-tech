@@ -1,6 +1,7 @@
 from celery import shared_task
 from django.utils import timezone
-from .models import Attendance, FamilyLink
+
+from .models import FamilyLink
 from .whatsapp import send_whatsapp_alert
 
 
@@ -16,4 +17,4 @@ def send_async_absence_alert(self, student_id):
                 msg = f"إشعار غياب مدرسي: نود إعلامكم بتسجيل غياب الطالب {student.get_full_name() or student.email} ليوم {timezone.localdate()}."
                 send_whatsapp_alert(link.parent.phone, msg)
     except Exception as exc:
-        raise self.retry(exc=exc, countdown=60)
+        raise self.retry(exc=exc, countdown=60) from None  # noqa: B904

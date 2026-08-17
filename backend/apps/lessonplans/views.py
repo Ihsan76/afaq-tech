@@ -395,7 +395,7 @@ def _generate_ai_artefact(feature, prompt, sys_prompt, model_id=""):
     from apps.ai.utils import extract_json
 
     last_error = ""
-    for _ in range(2):
+    for _retry in range(2):
         router = ProviderRouter()
         resp = router.generate(
             prompt=prompt,

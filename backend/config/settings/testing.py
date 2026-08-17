@@ -129,7 +129,11 @@ _ArrayField.from_db_value = _sqlite_from_db_value
 from django.db.models import fields as _django_fields  # noqa: E402
 from django.db.models.lookups import (  # noqa: E402
     Contains as _PlainContains,
+)
+from django.db.models.lookups import (
     Exact as _PlainExact,
+)
+from django.db.models.lookups import (
     In as _PlainIn,
 )
 

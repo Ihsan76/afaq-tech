@@ -1,7 +1,8 @@
 import pytest
+from django.contrib.auth import get_user_model
+
 from apps.academics.models import Curriculum, Grade, Subject, Unit
 from apps.subscriptions.models import Plan, Subscription
-from django.contrib.auth import get_user_model
 
 User = get_user_model()
 

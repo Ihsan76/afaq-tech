@@ -6,6 +6,7 @@ from django.conf import settings
 from django.db import transaction
 from django.db.models import Count, Q
 from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import permissions, serializers, status, viewsets
 from rest_framework.decorators import action
@@ -19,7 +20,6 @@ from .absence import notify_absence
 from .models import (
     DEFAULT_WEEK_START,
     DEFAULT_WORKING_DAYS,
-    DayOfWeek,
     FAQ,
     AcademicYear,
     AnnouncementReadReceipt,
@@ -29,6 +29,7 @@ from .models import (
     Attendance,
     Book,
     BusRoute,
+    DayOfWeek,
     FamilyLink,
     GradeCategory,
     GradeEntry,
@@ -52,6 +53,7 @@ from .models import (
     TimetableSlot,
     UserAISetting,
     WeeklyReport,
+    WhatsAppNotificationLog,
 )
 from .serializers import (
     AcademicYearSerializer,
@@ -402,7 +404,6 @@ class AcademicYearViewSet(viewsets.ModelViewSet):
         Also migrates teacher assignments and optionally flips is_current.
         Supports dry_run=true to preview without executing."""
         source_year = self.get_object()
-        from apps.academics.models import Grade
 
         user = request.user
         school_id = request.data.get('school_id')
@@ -629,10 +630,10 @@ class SectionViewSet(viewsets.ModelViewSet):
         If the student is already enrolled this year in another section (same school),
         they are moved here and the response reports `moved_from`."""
         section = self.get_object()
-        if not is_admin(request.user):
-            if section.school.manager_id != request.user.id:
-                if not (is_teacher(request.user) and section.class_teacher_id == request.user.id):
-                    raise serializers.ValidationError('يمكنك إضافة طلاب إلى شعب مدرستك فقط')
+        if (not is_admin(request.user)
+                and section.school.manager_id != request.user.id
+                and not (is_teacher(request.user) and section.class_teacher_id == request.user.id)):
+            raise serializers.ValidationError('يمكنك إضافة طلاب إلى شعب مدرستك فقط')
 
         email = (request.data.get('email') or '').strip().lower() or None
         name = (request.data.get('name') or '').strip()
@@ -1056,11 +1057,11 @@ class StudentEnrollmentViewSet(viewsets.ModelViewSet):
         except Section.DoesNotExist:
             return Response({'error': 'target section not found'}, status=status.HTTP_404_NOT_FOUND)
 
-        if not is_admin(request.user):
-            if (target_section.school_id != enrollment.section.school_id
-                    or target_section.academic_year_id != enrollment.section.academic_year_id
-                    or target_section.grade_id != enrollment.section.grade_id):
-                return Response(
+        if (not is_admin(request.user)
+                and (target_section.school_id != enrollment.section.school_id
+                     or target_section.academic_year_id != enrollment.section.academic_year_id
+                     or target_section.grade_id != enrollment.section.grade_id)):
+            return Response(
                     {'error': 'يمكن نقل الطالب ضمن نفس المدرسة والسنة الدراسية والصف فقط'},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
@@ -1676,8 +1677,8 @@ class BulkImportView(APIView):
             raw = request.data.get('section_id')
             try:
                 section = Section.objects.get(id=int(raw), class_teacher=user)
-            except (Section.DoesNotExist, TypeError, ValueError):
-                raise serializers.ValidationError({'section_id': 'section_id is required and must be a section you mentor'})
+            except (Section.DoesNotExist, TypeError, ValueError) as exc:
+                raise serializers.ValidationError({'section_id': 'section_id is required and must be a section you mentor'}) from exc
             return {'school_id': section.school_id, 'section': section}
         raise serializers.ValidationError('Not allowed to import')
 
@@ -1765,7 +1766,6 @@ class BulkImportView(APIView):
         return ''
 
     def _import_students(self, rows, results, school_id=None, section=None):
-        from apps.academics.models import Grade
         for row in rows:
             email = self._row_value(row, self.STUDENT_ALIASES['email']).lower() or None
             name = self._row_value(row, self.STUDENT_ALIASES['name'])
@@ -2041,7 +2041,7 @@ class BulkExportView(APIView):
         else:
             return Response({'error': 'kind must be schools, students or teachers'}, status=status.HTTP_400_BAD_REQUEST)
 
-        filename = f'afaq_students_template.xlsx' if template else f'afaq_{kind}.{fmt}'
+        filename = 'afaq_students_template.xlsx' if template else f'afaq_{kind}.{fmt}'
         if fmt == 'csv':
             response = HttpResponse(content_type='text/csv')
             response['Content-Disposition'] = f'attachment; filename="{filename}"'
@@ -2111,8 +2111,8 @@ class BulkExportView(APIView):
             raw = request.query_params.get('section_id')
             try:
                 section = Section.objects.get(id=int(raw), class_teacher=user)
-            except (Section.DoesNotExist, TypeError, ValueError):
-                raise serializers.ValidationError({'section_id': 'section_id is required and must be a section you mentor'})
+            except (Section.DoesNotExist, TypeError, ValueError) as exc:
+                raise serializers.ValidationError({'section_id': 'section_id is required and must be a section you mentor'}) from exc
             return {'school_id': section.school_id, 'section': section}
         raise serializers.ValidationError('Not allowed to export')
 
@@ -2488,7 +2488,8 @@ class PeriodViewSet(viewsets.ModelViewSet):
         if long_break_after < 1:
             raise serializers.ValidationError({'long_break_after_period': 'يجب أن تكون رقماً موجباً'})
 
-        from datetime import datetime as _dt, timedelta as _td
+        from datetime import datetime as _dt
+        from datetime import timedelta as _td
         current = _dt.combine(_dt.today().date(), start_time)
         new_periods = []
         generation = self._next_generation(school_id)
@@ -2770,7 +2771,7 @@ class TimetableSlotViewSet(viewsets.ModelViewSet):
             day_slots = sorted(grid[day_num], key=lambda s: s.period.period_number)
             cells = ''
             for s in day_slots:
-                cells += f'<td style="border:1px solid #ccc;padding:6px;text-align:center;font-size:12px">'
+                cells += '<td style="border:1px solid #ccc;padding:6px;text-align:center;font-size:12px">'
                 cells += f'<b>{s.subject.name}</b><br>{s.teacher.translations.get("ar",{}).get("name",s.teacher.email)}<br>'
                 if s.room:
                     cells += f'<small>{s.room.name}</small>'
@@ -2954,9 +2955,9 @@ class BiometricWebhookAPIView(APIView):
 
     def post(self, request):
         student_id = request.data.get('student_id')
-        device_id = request.data.get('device_id')
+        request.data.get('device_id')
         status_val = request.data.get('status', 'present')
-        timestamp = request.data.get('timestamp')
+        request.data.get('timestamp')
 
         if not student_id:
             return Response({'error': 'student_id is required'}, status=status.HTTP_400_BAD_REQUEST)

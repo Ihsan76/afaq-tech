@@ -44,6 +44,7 @@ class User(AbstractUser):
         base_level = self.PLAN_LEVELS.get(self.subscription_plan, 0)
         try:
             from django.utils import timezone
+
             from apps.subscriptions.models import Subscription
             now = timezone.now()
             active_codes = Subscription.objects.filter(

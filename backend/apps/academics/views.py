@@ -137,8 +137,8 @@ class CurriculumDocumentDownloadView(APIView):
     def get(self, request, pk):
         try:
             doc = CurriculumDocument.objects.get(pk=pk)
-        except CurriculumDocument.DoesNotExist:
-            raise Http404('Document not found')
+        except CurriculumDocument.DoesNotExist as exc:
+            raise Http404('Document not found') from exc
         if doc.external_url:
             url = doc.external_url
             if request.query_params.get('download') == '1' and 'download=' not in url:
@@ -166,7 +166,7 @@ class CurriculumDocumentDownloadView(APIView):
                     <body>
                     <div class="box">
                     <div class="alert">
-                    <strong>⚠️ تنبيه:</strong> رابط المصدر الخارجي الرسمي (موقع عين / وزارة التعليم) غير متاح مؤقتاً من المصدر (خطأ 500 أو انقطاع في الخادم الخارجي). 
+                    <strong>⚠️ تنبيه:</strong> رابط المصدر الخارجي الرسمي (موقع عين / وزارة التعليم) غير متاح مؤقتاً من المصدر (خطأ 500 أو انقطاع في الخادم الخارجي).
                     ولكن اطمئن، <strong>محتوى المنهاج مستخرج بالكامل ومحفوظ في منصة آفاق</strong> ويمكنك استخدامه لتوليد خطط الدروس والأنشطة بكل دقة.
                     </div>
                     <h2>{doc.title}</h2>
@@ -182,8 +182,8 @@ class CurriculumDocumentDownloadView(APIView):
 
         try:
             file_handle = doc.file.open('rb')
-        except FileNotFoundError:
-            raise Http404('File missing on disk')
+        except FileNotFoundError as exc:
+            raise Http404('File missing on disk') from exc
         response = FileResponse(file_handle)
         as_attachment = request.query_params.get('download') == '1'
         response['Content-Disposition'] = f'{ "attachment" if as_attachment else "inline" }; filename="{doc.file.name.split("/")[-1]}"'
