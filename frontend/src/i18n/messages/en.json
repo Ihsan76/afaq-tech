@@ -954,7 +954,12 @@
     "contactMessage": "Message",
     "contactSending": "Sending...",
     "contactSend": "Send Message",
-    "newsletterError": "Something went wrong. Please try again."
+    "newsletterError": "Something went wrong. Please try again.",
+    "feature4Point3": "[landing.feature4Point3]",
+    "feature4Point2": "[landing.feature4Point2]",
+    "feature4Title": "[landing.feature4Title]",
+    "feature4Point1": "[landing.feature4Point1]",
+    "feature4Desc": "[landing.feature4Desc]"
   },
   "services": {
     "web-design": {

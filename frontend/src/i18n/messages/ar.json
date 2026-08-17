@@ -685,7 +685,16 @@
     "deselectAll": "إلغاء تحديد الكل",
     "allPages": "كل الصفحات",
     "noSelection": "لا يوجد تحديد",
-    "deactivate": "إيقاف"
+    "deactivate": "إيقاف",
+    "catGeneral": "عام والمجتمع",
+    "catSchool": "آفاق مدرستي (المدرسة)",
+    "catAi": "أدوات الذكاء الاصطناعي",
+    "catCurriculum": "المناهج والكتب الإلكترونية",
+    "catOther": "أخرى",
+    "catHome": "الرئيسية ولوحة التحكم",
+    "catAdmin": "الإدارة",
+    "catAcademy": "الأكاديمية والدورات التدريبية",
+    "catServices": "الخدمات الرقمية"
   },
   "dashboard": {
     "title": "لوحة التحكم",

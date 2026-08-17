@@ -60,7 +60,9 @@
     "noBlocksPreview": "প্রিভিউ করার মতো ব্লক নেই",
     "unknownBlock": "অজানা ব্লক",
     "yes": "Yes",
-    "no": "No"
+    "no": "No",
+    "name": "Name",
+    "you": "You"
   },
   "auth": {
     "login": "লগইন",
@@ -93,7 +95,8 @@
     "codeInvalid": "ভুল কোড",
     "googleNotConfigured": "Google সাইন-ইন এখনও উপলব্ধ নয়",
     "verifyYourEmail": "আপনার ইমেইল ঠিকানা যাচাই করুন",
-    "loginLocked": "অনেক বেশি ব্যর্থ প্রচেষ্টা। ১৫ মিনিট পরে আবার চেষ্টা করুন।"
+    "loginLocked": "অনেক বেশি ব্যর্থ প্রচেষ্টা। ১৫ মিনিট পরে আবার চেষ্টা করুন।",
+    "or": "OR"
   },
   "nav": {
     "home": "হোম",
@@ -611,7 +614,35 @@
     "deselectAll": "সব নির্বাচন বাতিল করুন",
     "allPages": "সব পেজ",
     "noSelection": "কোনো নির্বাচন নেই",
-    "deactivate": "Deactivate"
+    "deactivate": "Deactivate",
+    "catGeneral": "General & Community",
+    "page": "Page",
+    "sortBy": "Sort",
+    "schools": "Schools & Follow-up",
+    "searchSchool": "Search by school...",
+    "templateCatAbout": "About",
+    "catCurriculum": "Curriculum & E-Books",
+    "catOther": "Other",
+    "templateCatDefault": "Default",
+    "sortNameDesc": "Name (Z-A)",
+    "perPage": "per page",
+    "sortName": "Name",
+    "catHome": "Home & Dashboard",
+    "catAdmin": "Administration",
+    "author": "Author",
+    "sortJoined": "Date joined",
+    "catAi": "AI Tools",
+    "previousPage": "Previous",
+    "nextPage": "Next",
+    "school": "School",
+    "catAcademy": "Academy & Courses",
+    "of": "of",
+    "templateCatContact": "Contact",
+    "catSchool": "Afaq Madrasti (School)",
+    "sortEmail": "Email",
+    "schoolsDesc": "Manage schools, sections, and WhatsApp alerts",
+    "sortNewest": "Newest first",
+    "catServices": "Digital Services"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -650,7 +681,14 @@
     "manageOrgDesc": "Manage teacher seats, invitations, and shared usage",
     "myCoursesDesc": "View your enrolled courses and track your progress",
     "schoolFollowUp": "স্কুল ফলো-আপ",
-    "schoolFollowUpDesc": "আপনার বিদ্যালয়ের ঘোষণা, হোমওয়ার্ক এবং শিক্ষক যোগাযোগ"
+    "schoolFollowUpDesc": "আপনার বিদ্যালয়ের ঘোষণা, হোমওয়ার্ক এবং শিক্ষক যোগাযোগ",
+    "roleDeveloper": "Developer",
+    "roleSupport": "Support",
+    "roleParent": "Parent",
+    "planSchool": "School",
+    "roleFinance": "Finance",
+    "roleSchoolAdmin": "School Admin",
+    "roleContentManager": "Content Manager"
   },
   "profile": {
     "title": "প্রোফাইল",
@@ -864,7 +902,12 @@
     "newsletterPlaceholder": "আপনার ইমেইল লিখুন",
     "newsletterSubtitle": "সর্বশেষ সংবাদ এবং অফার সরাসরি আপনার ইনবক্সে পান",
     "newsletterSuccess": "ধন্যবাদ! শীঘ্রই আপনার সাথে যোগাযোগ করা হবে।",
-    "newsletterTitle": "আমাদের নিউজলেটার সাবস্ক্রাইব করুন"
+    "newsletterTitle": "আমাদের নিউজলেটার সাবস্ক্রাইব করুন",
+    "feature4Title": "[landing.feature4Title]",
+    "feature4Point3": "[landing.feature4Point3]",
+    "feature4Point2": "[landing.feature4Point2]",
+    "feature4Desc": "[landing.feature4Desc]",
+    "feature4Point1": "[landing.feature4Point1]"
   },
   "services": {
     "web-design": {
@@ -1357,7 +1400,8 @@
     "paymentUnavailable": "এখন পেমেন্ট করা যাচ্ছে না",
     "paymentSuccess": "পেমেন্ট সফল হয়েছে — কোর্সটি এখন পাওয়া যাচ্ছে",
     "paymentCancelled": "পেমেন্ট বাতিল হয়েছে",
-    "checkoutRedirect": "পেমেন্টে যাচ্ছি..."
+    "checkoutRedirect": "পেমেন্টে যাচ্ছি...",
+    "courses": "courses"
   },
   "contact": {
     "email": "ইমেইল",
@@ -1518,7 +1562,11 @@
     "noResultsHint": "আপনার অনুসন্ধানের সাথে মেলে এমন কিছু পাওয়া যায়নি।",
     "placeholder": "নিবন্ধ, ই-বুক অনুসন্ধান করুন...",
     "resultsFor": "ফলাফল:",
-    "title": "অনুসন্ধান"
+    "title": "অনুসন্ধান",
+    "all": "All",
+    "ebooks": "E-Books",
+    "courses": "Courses",
+    "blog": "Blog"
   },
   "servicesMarketplace": {
     "allCategories": "সব",
@@ -1797,7 +1845,19 @@
     "transferCodePlaceholder": "Enter National ID or Email...",
     "transferTo": "Target Section",
     "transferSubmit": "Execute Transfer",
-    "transferSuccess": "Student transferred successfully"
+    "transferSuccess": "Student transferred successfully",
+    "emergencyAlertBadge": "WhatsApp Emergency Alert",
+    "phone": "Phone",
+    "content": "Content",
+    "managerAssignHint": "Assigning a manager grants them full School Admin access limited to this school only.",
+    "managerSearching": "Searching...",
+    "manager": "School Manager",
+    "address": "Address",
+    "selectSchool": "Select School",
+    "by": "By:",
+    "currentYear": "Current Year",
+    "removeManager": "Remove",
+    "managerPlaceholder": "Search by email or name to assign a manager..."
   },
   "errors": {
     "required": "এই ক্ষেত্রটি আবশ্যক।",
@@ -2172,6 +2232,57 @@
     "dayThu": "বৃহস্পতিবার",
     "dayFri": "শুক্রবার",
     "daySat": "শনিবার",
-    "daySun": "রবিবার"
+    "daySun": "রবিবার",
+    "roleCreator": "Content Creator",
+    "quickTransport": "School Transport",
+    "workingDaysHelp": "Select the days students and teachers attend school",
+    "fixedRoomsHint": "Auto-create rooms matching section names and link them",
+    "roomModeFixed": "Fixed Classroom",
+    "quickFees": "School Fees",
+    "colScore": "Score",
+    "roleTransportOfficer": "Transport Officer",
+    "roomAllocationSubtitle": "Choose how classrooms are assigned to sections",
+    "roomAllocationHeading": "Room Allocation Mode",
+    "bannerFixedRoomsSetup": "Created {rooms} rooms and linked to {sections} sections",
+    "bannerRoomModeUpdated": "Room allocation mode updated",
+    "statusSubmitted": "Submitted",
+    "weekStartHelp": "The day the weekly schedule starts (must be one of the working days)",
+    "colCategory": "Category",
+    "roomModeMobility": "Room Mobility",
+    "kpiTotalTeachers": "Total Teachers",
+    "colPercentage": "Percentage",
+    "bannerRoomModeError": "Failed to update room mode",
+    "calendarSettingsSubtitle": "Configure week start day and official school working days",
+    "kpiTotalStudents": "Total Students",
+    "colDueDate": "Due Date",
+    "navAssignments": "📋 Assignments",
+    "setupFixedRoomsBtn": "Auto-Create Rooms",
+    "roleAccountant": "School Accountant",
+    "roleLibrarian": "School Librarian",
+    "bannerFixedRoomsError": "Failed to create fixed rooms",
+    "submissionsCount": "Submissions"
+  },
+  "editor": {
+    "heading1": "Heading 1",
+    "insertImage": "Insert Image",
+    "heading2": "Heading 2",
+    "bulletList": "Bullet List",
+    "alignLeft": "Align Left",
+    "redo": "Redo",
+    "undo": "Undo",
+    "underline": "Underline",
+    "numberedList": "Numbered List",
+    "alignRight": "Align Right",
+    "clearFormatting": "Clear Formatting",
+    "quote": "Quote",
+    "placeholder": "Start writing...",
+    "strikethrough": "Strikethrough",
+    "heading3": "Heading 3",
+    "promptImageUrl": "Image URL",
+    "alignCenter": "Align Center",
+    "italic": "Italic",
+    "bold": "Bold",
+    "promptUrl": "URL",
+    "insertLink": "Insert Link"
   }
 }
