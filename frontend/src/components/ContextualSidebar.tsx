@@ -255,6 +255,14 @@ export default function ContextualSidebar() {
 
   const NAV_ITEMS = isAdminRoute ? ALL_NAV_ITEMS.filter((s) => canSee(s.key)) : [];
 
+  const hasContent = isAdminRoute
+    ? NAV_ITEMS.length > 0
+    : schoolGroups.some((g) => g.items.length > 0);
+
+  if (!hasContent) {
+    return null;
+  }
+
   const renderNavContent = (isMobile = false) => (
     <nav className="space-y-1.5 flex-1">
       {isAdminRoute ? (
