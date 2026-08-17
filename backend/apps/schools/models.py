@@ -603,8 +603,26 @@ class LibraryLending(models.Model):
         RETURNED = 'returned', 'تم الإرجاع'
         OVERDUE = 'overdue', 'متأخر'
 
+    class BorrowerRole(models.TextChoices):
+        STUDENT = 'student', 'طالب'
+        TEACHER = 'teacher', 'معلم'
+        PARENT = 'parent', 'ولي أمر'
+        STAFF = 'staff', 'موظف'
+        OTHER = 'other', 'أخرى'
+
     book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name='lendings', verbose_name='الكتاب')
-    student = models.ForeignKey(User, on_delete=models.CASCADE, related_name='book_lendings', verbose_name='الطالب المستعير')
+    borrower = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='book_lendings', verbose_name='المستعير (حساب مرتبط)',
+        help_text='الحساب المرتبط بالمستعير إن وُجد (طالب/معلم/ولي أمر).',
+    )
+    borrower_role = models.CharField(
+        'نوع المستعير', max_length=20, choices=BorrowerRole.choices, default=BorrowerRole.STUDENT,
+    )
+    borrower_name = models.CharField(
+        'اسم المستعير (للمتابعة)', max_length=255, blank=True,
+        help_text='اسم المستعير الكامل لمتابعة العهدة والاستعارة.',
+    )
     borrow_date = models.DateField('تاريخ الاستعارة', auto_now_add=True)
     due_date = models.DateField('تاريخ الاستحقاق', null=True, blank=True)
     return_date = models.DateField('تاريخ الإرجاع الفعلي', null=True, blank=True)
@@ -615,7 +633,7 @@ class LibraryLending(models.Model):
         verbose_name_plural = 'عمليات إعارة الكتب'
 
     def __str__(self):
-        return f"{self.book} -> {self.student} ({self.status})"
+        return f"{self.book} -> {self.borrower_name or self.borrower} ({self.status})"
 
 
 

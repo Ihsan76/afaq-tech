@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { api } from "@/lib/api";
 import RoleGuard from "@/components/school/RoleGuard";
+import SelectDropdown, { SelectOption } from "@/components/ui/SelectDropdown";
+import { getActiveSchoolId } from "@/components/school/activeSchool";
 
 interface Book {
   id: number;
@@ -21,14 +23,30 @@ interface Lending {
   id: number;
   book: number;
   book_title: string;
-  student: number;
-  student_name: string;
+  borrower: number | null;
+  borrower_name: string;
+  borrower_role: string;
+  borrower_role_display: string;
+  borrower_display_name: string;
   borrow_date: string;
   due_date: string;
   return_date: string;
   status: string;
   status_display: string;
 }
+
+interface Person {
+  id: number;
+  email: string;
+  name: string;
+}
+
+const BORROWER_ROLES = [
+  { value: "student", label: "طالب" },
+  { value: "teacher", label: "معلم" },
+  { value: "parent", label: "ولي أمر" },
+  { value: "other", label: "أخرى" },
+];
 
 export default function SchoolLibraryClient() {
   const pathname = usePathname();
@@ -48,18 +66,32 @@ export default function SchoolLibraryClient() {
 
   // Lending form
   const [selectedBookId, setSelectedBookId] = useState("");
-  const [studentEmail, setStudentEmail] = useState("");
+  const [borrowerRole, setBorrowerRole] = useState("student");
+  const [borrowerId, setBorrowerId] = useState("");
+  const [borrowerName, setBorrowerName] = useState("");
   const [dueDate, setDueDate] = useState("");
+
+  // People lists for borrower picker
+  const [students, setStudents] = useState<Person[]>([]);
+  const [teachers, setTeachers] = useState<Person[]>([]);
+  const [parents, setParents] = useState<Person[]>([]);
+  const [peopleLoading, setPeopleLoading] = useState(false);
 
   useEffect(() => {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    if (showLendModal) fetchPeople();
+  }, [showLendModal]);
+
   const fetchData = async () => {
     try {
+      const schoolId = getActiveSchoolId();
+      const params = schoolId ? { school: schoolId } : {};
       const [bookRes, lendRes] = await Promise.all([
-        api.get("/schools/books/"),
-        api.get("/schools/library-lendings/"),
+        api.get("/schools/books/", { params }),
+        api.get("/schools/library-lendings/", { params }),
       ]);
       setBooks(Array.isArray(bookRes.data) ? bookRes.data : bookRes.data.results || []);
       setLendings(Array.isArray(lendRes.data) ? lendRes.data : lendRes.data.results || []);
@@ -71,11 +103,48 @@ export default function SchoolLibraryClient() {
     }
   };
 
+  const fetchPeople = async () => {
+    setPeopleLoading(true);
+    try {
+      const schoolId = getActiveSchoolId();
+      if (!schoolId) return;
+      const res = await api.get("/schools/library-lendings/people/", { params: { school: schoolId } });
+      setStudents(res.data.students || []);
+      setTeachers(res.data.teachers || []);
+      setParents(res.data.parents || []);
+    } catch {
+      setStudents([]);
+      setTeachers([]);
+      setParents([]);
+    } finally {
+      setPeopleLoading(false);
+    }
+  };
+
+  const activePeople: Person[] =
+    borrowerRole === "student" ? students
+    : borrowerRole === "teacher" ? teachers
+    : borrowerRole === "parent" ? parents
+    : [];
+
+  const peopleOptions: SelectOption[] = activePeople.map((p) => ({
+    value: p.id,
+    label: `${p.name} — ${p.email}`,
+  }));
+
+  const bookOptions: SelectOption[] = books
+    .filter((b) => b.available_copies > 0)
+    .map((b) => ({
+      value: b.id,
+      label: `${b.title} ${b.author ? `— ${b.author}` : ""}  (${b.available_copies} ${locale === "ar" ? "متاح" : "available"})`,
+    }));
+
   const handleAddBook = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      const schoolId = getActiveSchoolId();
       await api.post("/schools/books/", {
-        school: 1,
+        school: parseInt(schoolId || "0"),
         title,
         author,
         isbn,
@@ -97,21 +166,30 @@ export default function SchoolLibraryClient() {
 
   const handleLendBook = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!selectedBookId) return;
+    const nameToRecord = borrowerName.trim();
     try {
-      // Find or create student account demo or link
       await api.post("/schools/library-lendings/", {
         book: parseInt(selectedBookId),
-        student: 1, // Default test student or resolved user
+        borrower: borrowerRole !== "other" && borrowerId ? parseInt(borrowerId) : null,
+        borrower_role: borrowerRole,
+        borrower_name: nameToRecord || "",
         due_date: dueDate || null,
       });
-      setSelectedBookId("");
-      setStudentEmail("");
-      setDueDate("");
+      resetLendForm();
       setShowLendModal(false);
       fetchData();
     } catch {
       alert(locale === "ar" ? "فشل تسجيل الاستعارة" : "Failed to record lending");
     }
+  };
+
+  const resetLendForm = () => {
+    setSelectedBookId("");
+    setBorrowerRole("student");
+    setBorrowerId("");
+    setBorrowerName("");
+    setDueDate("");
   };
 
   const handleReturnBook = async (id: number) => {
@@ -125,6 +203,11 @@ export default function SchoolLibraryClient() {
       alert(locale === "ar" ? "فشل تحديث حالة الإرجاع" : "Failed to return book");
     }
   };
+
+  const borrowerRoleOptions: SelectOption[] = BORROWER_ROLES.map((r) => ({
+    value: r.value,
+    label: r.label,
+  }));
 
   return (
     <RoleGuard allowed={["school_admin", "school_librarian", "teacher", "student", "parent", "admin", "developer"]}>
@@ -227,7 +310,8 @@ export default function SchoolLibraryClient() {
                 <thead className="border-b text-xs uppercase" style={{ borderColor: "var(--color-border)", background: "var(--color-surface-alt)" }}>
                   <tr>
                     <th className="p-4 text-start">الكتاب</th>
-                    <th className="p-4 text-start">الطالب المستعير</th>
+                    <th className="p-4 text-start">المستعير</th>
+                    <th className="p-4 text-start">النوع</th>
                     <th className="p-4 text-start">تاريخ الاستعارة</th>
                     <th className="p-4 text-start">تاريخ الاستحقاق</th>
                     <th className="p-4 text-start">الحالة</th>
@@ -238,7 +322,14 @@ export default function SchoolLibraryClient() {
                   {lendings.map((l) => (
                     <tr key={l.id} className="hover:bg-[var(--color-surface-alt)]/50 transition-colors">
                       <td className="p-4 font-bold">{l.book_title}</td>
-                      <td className="p-4">{l.student_name}</td>
+                      <td className="p-4">{l.borrower_display_name || "—"}</td>
+                      <td className="p-4">
+                        {l.borrower_role_display && (
+                          <span className="px-2 py-0.5 text-[11px] rounded-full font-bold bg-blue-100 text-blue-800">
+                            {l.borrower_role_display}
+                          </span>
+                        )}
+                      </td>
                       <td className="p-4 text-xs">{l.borrow_date}</td>
                       <td className="p-4 text-xs">{l.due_date || "—"}</td>
                       <td className="p-4">
@@ -355,31 +446,91 @@ export default function SchoolLibraryClient() {
         {/* Lend Book Modal */}
         {showLendModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-            <div className="w-full max-w-lg p-6 rounded-3xl shadow-2xl border" style={{ background: "var(--color-surface)", borderColor: "var(--color-border)" }}>
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-bold">{locale === "ar" ? "تسجيل استعارة كتاب لطالب" : "Lend Book to Student"}</h3>
-                <button onClick={() => setShowLendModal(false)} className="text-xl font-bold">✕</button>
+            <div className="w-full max-w-lg p-6 rounded-3xl shadow-2xl border max-h-[90vh] overflow-y-auto" style={{ background: "var(--color-surface)", borderColor: "var(--color-border)" }}>
+              <div className="flex justify-between items-center mb-5">
+                <h3 className="text-xl font-bold">{locale === "ar" ? "تسجيل استعارة كتاب" : "Register Book Lending"}</h3>
+                <button onClick={() => { resetLendForm(); setShowLendModal(false); }} className="text-xl font-bold">✕</button>
               </div>
-              <form onSubmit={handleLendBook} className="space-y-4">
+              <form onSubmit={handleLendBook} className="space-y-5">
+                {/* Book selector — searchable, mobile-friendly */}
                 <div>
-                  <label className="block text-xs font-bold mb-1">{locale === "ar" ? "اختر الكتاب" : "Select Book"}</label>
-                  <select
-                    required
+                  <label className="block text-xs font-bold mb-1.5">
+                    📖 {locale === "ar" ? "اختر الكتاب (ابحث بالاسم)" : "Select Book (search by title)"}
+                  </label>
+                  <SelectDropdown
                     value={selectedBookId}
-                    onChange={(e) => setSelectedBookId(e.target.value)}
-                    className="w-full p-3 rounded-2xl border bg-transparent"
-                    style={{ borderColor: "var(--color-border)" }}
-                  >
-                    <option value="">{locale === "ar" ? "-- اختر كتاباً متاحاً --" : "-- Select available book --"}</option>
-                    {books.filter((b) => b.available_copies > 0).map((b) => (
-                      <option key={b.id} value={b.id} style={{ background: "var(--color-surface)" }}>
-                        {b.title} (متاح: {b.available_copies})
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(v) => setSelectedBookId(String(v))}
+                    options={bookOptions}
+                    placeholder={locale === "ar" ? "ابحث عن كتاب..." : "Search for a book..."}
+                    searchable
+                    searchPlaceholder={locale === "ar" ? "اكتب اسم الكتاب..." : "Type book name..."}
+                    size="md"
+                    required
+                  />
                 </div>
+
+                {/* Borrower Role selector */}
                 <div>
-                  <label className="block text-xs font-bold mb-1">{locale === "ar" ? "تاريخ استحقاق الإرجاع" : "Due Date"}</label>
+                  <label className="block text-xs font-bold mb-1.5">
+                    👤 {locale === "ar" ? "نوع المستعير" : "Borrower Type"}
+                  </label>
+                  <SelectDropdown
+                    value={borrowerRole}
+                    onChange={(v) => {
+                      setBorrowerRole(String(v));
+                      setBorrowerId("");
+                      setBorrowerName("");
+                    }}
+                    options={borrowerRoleOptions}
+                    searchable={false}
+                    size="md"
+                  />
+                </div>
+
+                {/* Borrower person selector — only if role has people */}
+                {activePeople.length > 0 && (
+                  <div>
+                    <label className="block text-xs font-bold mb-1.5">
+                      {locale === "ar" ? "اختر الشخص من القائمة" : "Select person from list"}
+                      {peopleLoading && <span className="text-[10px] font-normal mr-2">(جاري التحميل...)</span>}
+                    </label>
+                    <SelectDropdown
+                      value={borrowerId}
+                      onChange={(v) => {
+                        const id = String(v);
+                        setBorrowerId(id);
+                        const person = activePeople.find((p) => p.id === Number(id));
+                        if (person) setBorrowerName(person.name);
+                      }}
+                      options={peopleOptions}
+                      placeholder={locale === "ar" ? "اختر من القائمة..." : "Select from list..."}
+                      searchable
+                      searchPlaceholder={locale === "ar" ? "ابحث بالاسم أو البريد..." : "Search name or email..."}
+                      size="md"
+                      disabled={peopleLoading}
+                    />
+                  </div>
+                )}
+
+                {/* Borrower name — always shown, pre-filled if person selected, editable for manual/custom entries */}
+                <div>
+                  <label className="block text-xs font-bold mb-1.5">
+                    ✏️ {locale === "ar" ? "اسم المستعير (للمتابعة)" : "Borrower Name (for custody tracking)"}
+                  </label>
+                  <input
+                    type="text"
+                    value={borrowerName}
+                    onChange={(e) => setBorrowerName(e.target.value)}
+                    className="w-full p-3 rounded-2xl border bg-transparent text-sm"
+                    style={{ borderColor: "var(--color-border)" }}
+                    placeholder={locale === "ar" ? "أدخل الاسم الكامل (إلزامي)" : "Enter full name (required)"}
+                    required
+                  />
+                </div>
+
+                {/* Due date */}
+                <div>
+                  <label className="block text-xs font-bold mb-1.5">📅 {locale === "ar" ? "تاريخ استحقاق الإرجاع" : "Return Due Date"}</label>
                   <input
                     type="date"
                     required
@@ -389,10 +540,11 @@ export default function SchoolLibraryClient() {
                     style={{ borderColor: "var(--color-border)" }}
                   />
                 </div>
+
                 <div className="flex justify-end gap-3 pt-2">
                   <button
                     type="button"
-                    onClick={() => setShowLendModal(false)}
+                    onClick={() => { resetLendForm(); setShowLendModal(false); }}
                     className="px-5 py-2.5 rounded-2xl text-sm font-bold border"
                     style={{ borderColor: "var(--color-border)" }}
                   >
@@ -400,8 +552,8 @@ export default function SchoolLibraryClient() {
                   </button>
                   <button
                     type="submit"
-                    className="px-6 py-2.5 rounded-2xl text-sm font-bold text-white shadow-lg"
-                    style={{ background: "var(--color-primary)" }}
+                    className="px-6 py-2.5 rounded-2xl text-sm font-bold text-white shadow-lg transition-all hover:scale-[1.02]"
+                    style={{ background: "linear-gradient(135deg, var(--color-primary), var(--color-secondary))" }}
                   >
                     {locale === "ar" ? "تأكيد الاستعارة" : "Confirm Lending"}
                   </button>

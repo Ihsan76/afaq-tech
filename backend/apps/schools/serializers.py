@@ -479,12 +479,20 @@ class BookSerializer(serializers.ModelSerializer):
 
 class LibraryLendingSerializer(serializers.ModelSerializer):
     book_title = serializers.CharField(source='book.title', read_only=True)
-    student_name = serializers.CharField(source='student.email', read_only=True)
+    borrower_role_display = serializers.CharField(source='get_borrower_role_display', read_only=True)
+    borrower_display_name = serializers.SerializerMethodField()
     status_display = serializers.CharField(source='get_status_display', read_only=True)
 
     class Meta:
         model = LibraryLending
         fields = '__all__'
+
+    def get_borrower_display_name(self, obj):
+        if obj.borrower_name:
+            return obj.borrower_name
+        if obj.borrower:
+            return obj.borrower.translations.get('ar', {}).get('name', obj.borrower.email)
+        return ''
 
 
 

@@ -2795,16 +2795,64 @@ class LibraryLendingViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        qs = LibraryLending.objects.all()
+        qs = LibraryLending.objects.select_related('book', 'borrower').all()
         school_id = self.request.query_params.get('school')
         if school_id:
             qs = qs.filter(book__school_id=school_id)
-        student_id = self.request.query_params.get('student')
-        if student_id:
-            qs = qs.filter(student_id=student_id)
+        borrower_id = self.request.query_params.get('borrower')
+        if borrower_id:
+            qs = qs.filter(borrower_id=borrower_id)
         if not is_admin(self.request.user) and self.request.user.role == 'student':
-            qs = qs.filter(student=self.request.user)
+            qs = qs.filter(borrower=self.request.user)
         return qs
+
+    @action(detail=False, methods=['get'], url_path='people')
+    def people(self, request):
+        """List school students/teachers/parents to pick a borrower for a lending record."""
+        school_id = request.query_params.get('school')
+        role = request.query_params.get('role', '')
+        if not school_id:
+            return Response({'students': [], 'teachers': [], 'parents': []})
+
+        def qs(role_filter):
+            return User.objects.filter(
+                role=role_filter,
+                school_enrollments__section__school_id=school_id,
+            ).distinct()
+
+        def qs_teachers():
+            return User.objects.filter(
+                role='teacher',
+                assignments__section__school_id=school_id,
+            ).distinct()
+
+        def qs_parents():
+            return User.objects.filter(
+                role='parent',
+                parent_tickets__student__school_enrollments__section__school_id=school_id,
+            ).distinct()
+
+        def serialize(users):
+            return [
+                {
+                    'id': u.id,
+                    'email': u.email,
+                    'name': u.translations.get('ar', {}).get('name', u.email),
+                }
+                for u in users
+            ]
+
+        if role == 'student':
+            return Response({'students': serialize(qs('student'))})
+        if role == 'teacher':
+            return Response({'teachers': serialize(qs_teachers())})
+        if role == 'parent':
+            return Response({'parents': serialize(qs_parents())})
+        return Response({
+            'students': serialize(qs('student')),
+            'teachers': serialize(qs_teachers()),
+            'parents': serialize(qs_parents()),
+        })
 
 
 
