@@ -636,4 +636,99 @@ class LibraryLending(models.Model):
         return f"{self.book} -> {self.borrower_name or self.borrower} ({self.status})"
 
 
+class GradeCategory(models.Model):
+    """نوع التقييم: امتحان، واجب، مشروع، شفهي، إلخ."""
+    school = models.ForeignKey(School, on_delete=models.CASCADE, related_name='grade_categories', verbose_name='المدرسة')
+    subject = models.ForeignKey(Subject, on_delete=models.CASCADE, related_name='grade_categories', verbose_name='المادة')
+    name = models.CharField('اسم التقييم', max_length=255)
+    weight = models.PositiveIntegerField('النسبة المئوية للوزن (%)', default=10,
+        help_text='الوزن النسبي لهذا التقييم من إجمالي الدرجات (1-100)')
+    max_score = models.PositiveIntegerField('الدرجة النهائية', default=100)
+    created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        verbose_name = 'تصنيف درجات'
+        verbose_name_plural = 'تصنيفات الدرجات'
+        ordering = ['subject', 'name']
+
+    def __str__(self):
+        return f"{self.name} ({self.subject} - {self.weight}%)"
+
+
+class GradeEntry(models.Model):
+    """درجة الطالب في تقييم معين."""
+    category = models.ForeignKey(GradeCategory, on_delete=models.CASCADE, related_name='entries', verbose_name='التصنيف')
+    student = models.ForeignKey(User, on_delete=models.CASCADE, related_name='grade_entries', verbose_name='الطالب')
+    section = models.ForeignKey(Section, on_delete=models.CASCADE, related_name='grade_entries', verbose_name='الشعبة')
+    score = models.DecimalField('الدرجة المحصل عليها', max_digits=8, decimal_places=2)
+    notes = models.TextField('ملاحظات المعلم', blank=True)
+    graded_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='graded_entries', verbose_name='قيّمها')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'درجة طالب'
+        verbose_name_plural = 'درجات الطلاب'
+        unique_together = ['category', 'student']
+        ordering = ['section', 'student__email']
+
+    def __str__(self):
+        return f"{self.student.email} - {self.category.name}: {self.score}/{self.category.max_score}"
+
+    @property
+    def percentage(self):
+        if self.category.max_score == 0:
+            return 0
+        return round(float(self.score) / float(self.category.max_score) * 100, 1)
+
+
+class Assignment(models.Model):
+    """واجب منزلي أو مشروع يُكلّف به المعلم للطلاب."""
+    section = models.ForeignKey(Section, on_delete=models.CASCADE, related_name='assignments', verbose_name='الشعبة')
+    subject = models.ForeignKey(Subject, on_delete=models.CASCADE, related_name='assignments', verbose_name='المادة')
+    teacher = models.ForeignKey(User, on_delete=models.CASCADE, related_name='taught_assignments', verbose_name='المعلم')
+    title = models.CharField('عنوان الواجب', max_length=255)
+    description = models.TextField('وصف الواجب', blank=True)
+    due_date = models.DateTimeField('موعد التسليم', null=True, blank=True)
+    max_score = models.PositiveIntegerField('الدرجة النهائية', default=100)
+    attachment = models.FileField('مرفق الواجب', upload_to='assignments/%Y/%m/', blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'واجب منزلي'
+        verbose_name_plural = 'الواجبات المنزلية'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.title} ({self.section})"
+
+
+class AssignmentSubmission(models.Model):
+    """حل الطالب للواجب."""
+
+    class Status(models.TextChoices):
+        SUBMITTED = 'submitted', 'تم التسليم'
+        GRADED = 'graded', 'تم التقييم'
+        RETURNED = 'returned', 'مرجع للمراجعة'
+
+    assignment = models.ForeignKey(Assignment, on_delete=models.CASCADE, related_name='submissions', verbose_name='الواجب')
+    student = models.ForeignKey(User, on_delete=models.CASCADE, related_name='assignment_submissions', verbose_name='الطالب')
+    file = models.FileField('ملف الحل', upload_to='submissions/%Y/%m/', blank=True)
+    notes = models.TextField('ملاحظات الطالب', blank=True)
+    score = models.DecimalField('الدرجة', max_digits=8, decimal_places=2, null=True, blank=True)
+    feedback = models.TextField('تعليق المعلم', blank=True)
+    status = models.CharField('الحالة', max_length=20, choices=Status.choices, default=Status.SUBMITTED)
+    submitted_at = models.DateTimeField('تاريخ التسليم', auto_now_add=True)
+    graded_at = models.DateTimeField('تاريخ التقييم', null=True, blank=True)
+    graded_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='graded_submissions', verbose_name='قيّمها')
+
+    class Meta:
+        verbose_name = 'تسليم واجب'
+        verbose_name_plural = 'تسليمات الواجبات'
+        unique_together = ['assignment', 'student']
+        ordering = ['-submitted_at']
+
+    def __str__(self):
+        return f"{self.student.email} - {self.assignment.title} ({self.status})"

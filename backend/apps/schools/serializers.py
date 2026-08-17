@@ -6,11 +6,15 @@ from .models import (
     FAQ,
     AcademicYear,
     AnnouncementReadReceipt,
+    Assignment,
+    AssignmentSubmission,
     Attachment,
     Attendance,
     Book,
     BusRoute,
     FamilyLink,
+    GradeCategory,
+    GradeEntry,
     LibraryLending,
     ParentTeacherTicket,
     Period,
@@ -492,6 +496,86 @@ class LibraryLendingSerializer(serializers.ModelSerializer):
             return obj.borrower_name
         if obj.borrower:
             return obj.borrower.translations.get('ar', {}).get('name', obj.borrower.email)
+        return ''
+
+
+class GradeCategorySerializer(serializers.ModelSerializer):
+    subject_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = GradeCategory
+        fields = '__all__'
+
+    def get_subject_name(self, obj):
+        return obj.subject.translations.get('ar', {}).get('name', obj.subject.name)
+
+
+class GradeEntrySerializer(serializers.ModelSerializer):
+    student_name = serializers.SerializerMethodField()
+    student_email = serializers.CharField(source='student.email', read_only=True)
+    category_name = serializers.CharField(source='category.name', read_only=True)
+    category_max_score = serializers.IntegerField(source='category.max_score', read_only=True)
+    percentage = serializers.SerializerMethodField()
+    section_name = serializers.CharField(source='section.name', read_only=True)
+    graded_by_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = GradeEntry
+        fields = '__all__'
+        read_only_fields = ['graded_by', 'created_at', 'updated_at']
+
+    def get_student_name(self, obj):
+        return obj.student.translations.get('ar', {}).get('name', obj.student.email)
+
+    def get_percentage(self, obj):
+        return obj.percentage
+
+    def get_graded_by_name(self, obj):
+        if obj.graded_by:
+            return obj.graded_by.translations.get('ar', {}).get('name', obj.graded_by.email)
+        return ''
+
+
+class AssignmentSerializer(serializers.ModelSerializer):
+    subject_name = serializers.SerializerMethodField()
+    section_name = serializers.CharField(source='section.name', read_only=True)
+    teacher_name = serializers.SerializerMethodField()
+    submissions_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Assignment
+        fields = '__all__'
+        read_only_fields = ['teacher', 'created_at']
+
+    def get_subject_name(self, obj):
+        return obj.subject.translations.get('ar', {}).get('name', obj.subject.name)
+
+    def get_teacher_name(self, obj):
+        return obj.teacher.translations.get('ar', {}).get('name', obj.teacher.email)
+
+    def get_submissions_count(self, obj):
+        return obj.submissions.count()
+
+
+class AssignmentSubmissionSerializer(serializers.ModelSerializer):
+    student_name = serializers.SerializerMethodField()
+    student_email = serializers.CharField(source='student.email', read_only=True)
+    assignment_title = serializers.CharField(source='assignment.title', read_only=True)
+    assignment_max_score = serializers.IntegerField(source='assignment.max_score', read_only=True)
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    graded_by_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = AssignmentSubmission
+        fields = '__all__'
+        read_only_fields = ['status', 'submitted_at', 'graded_at', 'graded_by']
+
+    def get_student_name(self, obj):
+        return obj.student.translations.get('ar', {}).get('name', obj.student.email)
+
+    def get_graded_by_name(self, obj):
+        if obj.graded_by:
+            return obj.graded_by.translations.get('ar', {}).get('name', obj.graded_by.email)
         return ''
 
 

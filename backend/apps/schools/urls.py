@@ -3,6 +3,8 @@ from rest_framework.routers import DefaultRouter
 
 from .views import (
     AcademicYearViewSet,
+    AssignmentSubmissionViewSet,
+    AssignmentViewSet,
     AttachmentViewSet,
     AttendanceViewSet,
     BiometricWebhookAPIView,
@@ -13,6 +15,8 @@ from .views import (
     FamilyLinkViewSet,
     FAQCopilotAPIView,
     FAQViewSet,
+    GradeCategoryViewSet,
+    GradeEntryViewSet,
     LibraryLendingViewSet,
     MySchoolContextAPIView,
     ParentTeacherTicketViewSet,
@@ -66,6 +70,10 @@ router.register('bus-routes', BusRouteViewSet, basename='busroute')
 router.register('bus-assignments', StudentBusAssignmentViewSet, basename='studentbusassignment')
 router.register('books', BookViewSet, basename='book')
 router.register('library-lendings', LibraryLendingViewSet, basename='librarylending')
+router.register('grade-categories', GradeCategoryViewSet, basename='gradecategory')
+router.register('grade-entries', GradeEntryViewSet, basename='gradeentry')
+router.register('assignments', AssignmentViewSet, basename='assignment')
+router.register('assignment-submissions', AssignmentSubmissionViewSet, basename='assignmentsubmission')
 
 urlpatterns = [
     path('user/settings/', UserSettingsAPIView.as_view(), name='user-ai-settings'),

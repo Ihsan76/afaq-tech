@@ -23,11 +23,15 @@ from .models import (
     FAQ,
     AcademicYear,
     AnnouncementReadReceipt,
+    Assignment,
+    AssignmentSubmission,
     Attachment,
     Attendance,
     Book,
     BusRoute,
     FamilyLink,
+    GradeCategory,
+    GradeEntry,
     LibraryLending,
     ParentTeacherTicket,
     Period,
@@ -51,12 +55,16 @@ from .models import (
 )
 from .serializers import (
     AcademicYearSerializer,
+    AssignmentSerializer,
+    AssignmentSubmissionSerializer,
     AttachmentSerializer,
     AttendanceSerializer,
     BookSerializer,
     BusRouteSerializer,
     FamilyLinkSerializer,
     FAQSerializer,
+    GradeCategorySerializer,
+    GradeEntrySerializer,
     LibraryLendingSerializer,
     ParentTeacherTicketSerializer,
     PeriodSerializer,
@@ -3194,6 +3202,207 @@ class FAQCopilotAPIView(APIView):
             'source': 'ai_copilot',
             'faqs': [{'question': fq, 'answer': fa} for fq, fa in faqs[:10]],
         })
+
+
+# ---------------------------------------------------------------------------
+# Grade Book ViewSets
+# ---------------------------------------------------------------------------
+
+class GradeCategoryViewSet(viewsets.ModelViewSet):
+    serializer_class = GradeCategorySerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        qs = GradeCategory.objects.select_related('subject', 'school').all()
+        school_id = self.request.query_params.get('school')
+        if school_id:
+            qs = qs.filter(school_id=school_id)
+        subject = self.request.query_params.get('subject')
+        if subject:
+            qs = qs.filter(subject_id=subject)
+        if not is_admin(self.request.user):
+            if self.request.user.role == 'school_admin':
+                school_ids = user_school_ids(self.request.user)
+                qs = qs.filter(school_id__in=school_ids) if school_ids else qs.none()
+            else:
+                qs = qs.none()
+        return qs
+
+    def perform_create(self, serializer):
+        serializer.save()
+
+
+class GradeEntryViewSet(viewsets.ModelViewSet):
+    serializer_class = GradeEntrySerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        qs = GradeEntry.objects.select_related(
+            'category', 'student', 'section', 'graded_by'
+        ).all()
+        user = self.request.user
+        if is_admin(user):
+            pass
+        elif user.role == 'school_admin':
+            school_ids = user_school_ids(user)
+            qs = qs.filter(section__school_id__in=school_ids) if school_ids else qs.none()
+        elif user.role == 'teacher':
+            section_ids = user_section_ids(user)
+            qs = qs.filter(section_id__in=section_ids) if section_ids else qs.none()
+        elif user.role == 'parent':
+            child_ids = FamilyLink.objects.filter(parent=user).values_list('student_id', flat=True)
+            qs = qs.filter(student_id__in=child_ids)
+        elif user.role == 'student':
+            qs = qs.filter(student=user)
+        else:
+            qs = qs.none()
+
+        section = self.request.query_params.get('section')
+        if section:
+            qs = qs.filter(section_id=section)
+        student = self.request.query_params.get('student')
+        if student:
+            qs = qs.filter(student_id=student)
+        category = self.request.query_params.get('category')
+        if category:
+            qs = qs.filter(category_id=category)
+        subject = self.request.query_params.get('subject')
+        if subject:
+            qs = qs.filter(category__subject_id=subject)
+        return qs
+
+    def perform_create(self, serializer):
+        serializer.save(graded_by=self.request.user)
+
+    @action(detail=False, methods=['post'])
+    def bulk_create(self, request):
+        """Bulk create/update grade entries for a section+category."""
+        category_id = request.data.get('category')
+        section_id = request.data.get('section')
+        grades = request.data.get('grades', [])  # [{student, score, notes}, ...]
+        if not category_id or not section_id or not grades:
+            return Response({'error': 'category, section, and grades are required'},
+                            status=status.HTTP_400_BAD_REQUEST)
+        try:
+            category = GradeCategory.objects.get(id=category_id)
+        except GradeCategory.DoesNotExist:
+            return Response({'error': 'Category not found'}, status=status.HTTP_404_NOT_FOUND)
+        created, updated = 0, 0
+        with transaction.atomic():
+            for g in grades:
+                student_id = g.get('student')
+                score = g.get('score')
+                notes = g.get('notes', '')
+                if student_id is None or score is None:
+                    continue
+                obj, was_created = GradeEntry.objects.update_or_create(
+                    category=category, student_id=student_id,
+                    defaults={
+                        'section_id': section_id,
+                        'score': score,
+                        'notes': notes,
+                        'graded_by': request.user,
+                    }
+                )
+                if was_created:
+                    created += 1
+                else:
+                    updated += 1
+        return Response({'created': created, 'updated': updated})
+
+
+# ---------------------------------------------------------------------------
+# Assignment ViewSets
+# ---------------------------------------------------------------------------
+
+class AssignmentViewSet(viewsets.ModelViewSet):
+    serializer_class = AssignmentSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        qs = Assignment.objects.select_related('section', 'subject', 'teacher').all()
+        user = self.request.user
+        if is_admin(user):
+            pass
+        elif user.role == 'school_admin':
+            school_ids = user_school_ids(user)
+            qs = qs.filter(section__school_id__in=school_ids) if school_ids else qs.none()
+        elif user.role == 'teacher':
+            qs = qs.filter(teacher=user)
+        elif user.role == 'parent':
+            child_ids = FamilyLink.objects.filter(parent=user).values_list('student_id', flat=True)
+            child_section_ids = StudentEnrollment.objects.filter(student_id__in=child_ids).values_list('section_id', flat=True)
+            qs = qs.filter(section_id__in=child_section_ids)
+        elif user.role == 'student':
+            enrolled_section_ids = StudentEnrollment.objects.filter(student=user).values_list('section_id', flat=True)
+            qs = qs.filter(section_id__in=enrolled_section_ids)
+        else:
+            qs = qs.none()
+
+        section = self.request.query_params.get('section')
+        if section:
+            qs = qs.filter(section_id=section)
+        subject = self.request.query_params.get('subject')
+        if subject:
+            qs = qs.filter(subject_id=subject)
+        return qs
+
+    def perform_create(self, serializer):
+        serializer.save(teacher=self.request.user)
+
+
+class AssignmentSubmissionViewSet(viewsets.ModelViewSet):
+    serializer_class = AssignmentSubmissionSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        qs = AssignmentSubmission.objects.select_related(
+            'assignment', 'student', 'graded_by'
+        ).all()
+        user = self.request.user
+        if is_admin(user):
+            pass
+        elif user.role == 'school_admin':
+            school_ids = user_school_ids(user)
+            qs = qs.filter(assignment__section__school_id__in=school_ids) if school_ids else qs.none()
+        elif user.role == 'teacher':
+            qs = qs.filter(assignment__teacher=user)
+        elif user.role == 'parent':
+            child_ids = FamilyLink.objects.filter(parent=user).values_list('student_id', flat=True)
+            qs = qs.filter(student_id__in=child_ids)
+        elif user.role == 'student':
+            qs = qs.filter(student=user)
+        else:
+            qs = qs.none()
+
+        assignment = self.request.query_params.get('assignment')
+        if assignment:
+            qs = qs.filter(assignment_id=assignment)
+        student = self.request.query_params.get('student')
+        if student:
+            qs = qs.filter(student_id=student)
+        return qs
+
+    def perform_create(self, serializer):
+        serializer.save(student=self.request.user)
+
+    @action(detail=True, methods=['post'])
+    def grade(self, request, pk=None):
+        """Grade a submission."""
+        submission = self.get_object()
+        if not is_admin(request.user) and request.user.role != 'teacher':
+            return Response({'error': 'Unauthorized'}, status=status.HTTP_403_FORBIDDEN)
+        score = request.data.get('score')
+        feedback = request.data.get('feedback', '')
+        if score is None:
+            return Response({'error': 'score is required'}, status=status.HTTP_400_BAD_REQUEST)
+        submission.score = score
+        submission.feedback = feedback
+        submission.status = AssignmentSubmission.Status.GRADED
+        submission.graded_at = timezone.now()
+        submission.graded_by = request.user
+        submission.save()
+        return Response(AssignmentSubmissionSerializer(submission).data)
 
 
 

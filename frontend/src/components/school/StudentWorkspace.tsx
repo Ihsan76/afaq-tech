@@ -7,13 +7,15 @@ import { api } from "@/lib/api";
 import { useAuthStore } from "@/store/auth";
 
 interface StudentWorkspaceProps {
-  task: "timetable" | "attendance" | "record";
+  task: "timetable" | "attendance" | "record" | "grades" | "assignments";
 }
 
 const TASKS = [
   { id: "overview", href: "/student", labelKey: "navOverview" },
   { id: "timetable", href: "/student/timetable", labelKey: "navTimetable" },
   { id: "attendance", href: "/student/attendance", labelKey: "navAttendance" },
+  { id: "grades", href: "/student/grades", labelKey: "navGrades" },
+  { id: "assignments", href: "/student/assignments", labelKey: "navAssignments" },
   { id: "record", href: "/student/record", labelKey: "navRecord" },
 ] as const;
 
@@ -25,19 +27,28 @@ export default function StudentWorkspace({ task }: StudentWorkspaceProps) {
   const [timetable, setTimetable] = useState<any[]>([]);
   const [attendances, setAttendances] = useState<any[]>([]);
   const [announcements, setAnnouncements] = useState<any[]>([]);
+  const [gradeEntries, setGradeEntries] = useState<any[]>([]);
+  const [hwAssignments, setHwAssignments] = useState<any[]>([]);
+  const [hwSubmissions, setHwSubmissions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const [slotRes, attRes, annRes] = await Promise.all([
+      const [slotRes, attRes, annRes, entRes, hwRes, subRes] = await Promise.all([
         api.get("/schools/timetable-slots/").catch(() => ({ data: [] })),
         api.get("/schools/attendances/").catch(() => ({ data: [] })),
         api.get("/schools/announcements/").catch(() => ({ data: [] })),
+        api.get("/schools/grade-entries/").catch(() => ({ data: [] })),
+        api.get("/schools/assignments/").catch(() => ({ data: [] })),
+        api.get("/schools/assignment-submissions/?mine=true").catch(() => ({ data: [] })),
       ]);
       setTimetable(Array.isArray(slotRes.data) ? slotRes.data : slotRes.data.results || []);
       setAttendances(Array.isArray(attRes.data) ? attRes.data : attRes.data.results || []);
       setAnnouncements(Array.isArray(annRes.data) ? annRes.data : annRes.data.results || []);
+      setGradeEntries(Array.isArray(entRes.data) ? entRes.data : entRes.data.results || []);
+      setHwAssignments(Array.isArray(hwRes.data) ? hwRes.data : hwRes.data.results || []);
+      setHwSubmissions(Array.isArray(subRes.data) ? subRes.data : subRes.data.results || []);
     } catch {
       // ignore
     } finally {
@@ -202,6 +213,82 @@ export default function StudentWorkspace({ task }: StudentWorkspaceProps) {
                     <p className="text-3xl font-extrabold mt-1">{timetable.length}</p>
                   </div>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {task === "grades" && (
+            <div className="lg:col-span-3">
+              <div className={surfaceCls} style={surfaceStyle}>
+                <h3 className="text-xl font-bold mb-4" style={{ fontFamily: "var(--font-heading)" }}>
+                  {t("gradesHeading")}
+                </h3>
+                {gradeEntries.length === 0 ? (
+                  <p className="text-sm py-8 text-center text-[var(--color-text-secondary)]">{t("gradesEmpty")}</p>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-start border-collapse text-sm">
+                      <thead>
+                        <tr className="border-b" style={{ borderColor: "var(--color-border)" }}>
+                          <th className="p-3 text-start">{t("colCategory")}</th>
+                          <th className="p-3 text-start">{t("colScore")}</th>
+                          <th className="p-3 text-start">{t("colPercentage")}</th>
+                          <th className="p-3 text-start">{t("colNotes")}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {gradeEntries.map((g: any) => (
+                          <tr key={g.id} className="border-b hover:bg-[var(--color-background)]" style={{ borderColor: "var(--color-border)" }}>
+                            <td className="p-3 font-bold">{g.category_name}</td>
+                            <td className="p-3">{g.score}/{g.category_max_score}</td>
+                            <td className="p-3">
+                              <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${g.percentage >= 50 ? "bg-emerald-500/10 text-emerald-600" : "bg-rose-500/10 text-rose-600"}`}>
+                                {g.percentage}%
+                              </span>
+                            </td>
+                            <td className="p-3 text-xs" style={{ color: "var(--color-text-secondary)" }}>{g.notes || "-"}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {task === "assignments" && (
+            <div className="lg:col-span-3">
+              <div className={surfaceCls} style={surfaceStyle}>
+                <h3 className="text-xl font-bold mb-4" style={{ fontFamily: "var(--font-heading)" }}>
+                  {t("assignmentsHeading")}
+                </h3>
+                {hwAssignments.length === 0 ? (
+                  <p className="text-sm py-8 text-center text-[var(--color-text-secondary)]">{t("assignmentsEmpty")}</p>
+                ) : (
+                  <div className="space-y-3">
+                    {hwAssignments.map((a: any) => {
+                      const sub = hwSubmissions.find((s: any) => s.assignment === a.id);
+                      return (
+                        <div key={a.id} className="p-4 rounded-2xl bg-[var(--color-background)] border" style={{ borderColor: "var(--color-border)" }}>
+                          <div className="flex justify-between items-center">
+                            <h4 className="font-bold">{a.title}</h4>
+                            {sub ? (
+                              <span className={`text-xs px-2.5 py-1 rounded-full font-bold ${sub.status === "graded" ? "bg-emerald-500/10 text-emerald-600" : "bg-blue-500/10 text-blue-600"}`}>
+                                {sub.status === "graded" ? `${sub.score}/${a.max_score}` : t("statusSubmitted")}
+                              </span>
+                            ) : (
+                              <span className="text-xs px-2.5 py-1 rounded-full font-bold bg-amber-500/10 text-amber-600">{t("statusPending")}</span>
+                            )}
+                          </div>
+                          <p className="text-xs mt-1" style={{ color: "var(--color-text-secondary)" }}>
+                            {a.subject_name} | {t("colDueDate")}: {a.due_date ? new Date(a.due_date).toLocaleDateString() : "-"}
+                          </p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
           )}

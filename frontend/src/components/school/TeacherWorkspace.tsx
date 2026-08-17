@@ -9,13 +9,15 @@ import SelectDropdown from "@/components/ui/SelectDropdown";
 import MyClassWorkspace from "@/components/school/MyClassWorkspace";
 
 interface TeacherWorkspaceProps {
-  task: "timetable" | "attendance" | "tickets" | "my-class";
+  task: "timetable" | "attendance" | "tickets" | "my-class" | "grades" | "assignments";
 }
 
 const TASKS = [
   { id: "overview", href: "/teacher", labelKey: "navOverview" },
   { id: "timetable", href: "/teacher/timetable", labelKey: "navTimetable" },
   { id: "attendance", href: "/teacher/attendance", labelKey: "navAttendance" },
+  { id: "grades", href: "/teacher/grades", labelKey: "navGrades" },
+  { id: "assignments", href: "/teacher/assignments", labelKey: "navAssignments" },
   { id: "my-class", href: "/teacher/my-class", labelKey: "navMyClass" },
   { id: "tickets", href: "/teacher/tickets", labelKey: "navTickets" },
 ] as const;
@@ -28,6 +30,10 @@ export default function TeacherWorkspace({ task }: TeacherWorkspaceProps) {
   const [assignments, setAssignments] = useState<any[]>([]);
   const [timetable, setTimetable] = useState<any[]>([]);
   const [tickets, setTickets] = useState<any[]>([]);
+  const [gradeCategories, setGradeCategories] = useState<any[]>([]);
+  const [gradeEntries, setGradeEntries] = useState<any[]>([]);
+  const [hwAssignments, setHwAssignments] = useState<any[]>([]);
+  const [hwSubmissions, setHwSubmissions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [banner, setBanner] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
@@ -39,14 +45,22 @@ export default function TeacherWorkspace({ task }: TeacherWorkspaceProps) {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const [assRes, slotRes, tickRes] = await Promise.all([
+      const [assRes, slotRes, tickRes, catRes, entRes, hwRes, subRes] = await Promise.all([
         api.get("/schools/teacher-assignments/").catch(() => ({ data: [] })),
         api.get("/schools/timetable-slots/").catch(() => ({ data: [] })),
         api.get("/schools/tickets/").catch(() => ({ data: [] })),
+        api.get("/schools/grade-categories/").catch(() => ({ data: [] })),
+        api.get("/schools/grade-entries/").catch(() => ({ data: [] })),
+        api.get("/schools/assignments/").catch(() => ({ data: [] })),
+        api.get("/schools/assignment-submissions/").catch(() => ({ data: [] })),
       ]);
       setAssignments(Array.isArray(assRes.data) ? assRes.data : assRes.data.results || []);
       setTimetable(Array.isArray(slotRes.data) ? slotRes.data : slotRes.data.results || []);
       setTickets(Array.isArray(tickRes.data) ? tickRes.data : tickRes.data.results || []);
+      setGradeCategories(Array.isArray(catRes.data) ? catRes.data : catRes.data.results || []);
+      setGradeEntries(Array.isArray(entRes.data) ? entRes.data : entRes.data.results || []);
+      setHwAssignments(Array.isArray(hwRes.data) ? hwRes.data : hwRes.data.results || []);
+      setHwSubmissions(Array.isArray(subRes.data) ? subRes.data : subRes.data.results || []);
     } catch {
       // ignore
     } finally {
@@ -256,6 +270,75 @@ export default function TeacherWorkspace({ task }: TeacherWorkspaceProps) {
                           </span>
                         </div>
                         <p className="text-xs mt-1" style={{ color: "var(--color-text-secondary)" }}>{tick.message}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {task === "grades" && (
+            <div className="lg:col-span-3">
+              <div className={surfaceCls} style={surfaceStyle}>
+                <h3 className="text-xl font-bold mb-4" style={{ fontFamily: "var(--font-heading)" }}>
+                  {t("gradesHeading")}
+                </h3>
+                {gradeEntries.length === 0 ? (
+                  <p className="text-sm py-8 text-center text-[var(--color-text-secondary)]">{t("gradesEmpty")}</p>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-start border-collapse text-sm">
+                      <thead>
+                        <tr className="border-b" style={{ borderColor: "var(--color-border)" }}>
+                          <th className="p-3 text-start">{t("colStudent")}</th>
+                          <th className="p-3 text-start">{t("colCategory")}</th>
+                          <th className="p-3 text-start">{t("colScore")}</th>
+                          <th className="p-3 text-start">{t("colPercentage")}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {gradeEntries.map((g: any) => (
+                          <tr key={g.id} className="border-b hover:bg-[var(--color-background)]" style={{ borderColor: "var(--color-border)" }}>
+                            <td className="p-3 font-bold">{g.student_name || g.student_email}</td>
+                            <td className="p-3">{g.category_name}</td>
+                            <td className="p-3">{g.score}/{g.category_max_score}</td>
+                            <td className="p-3">
+                              <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${g.percentage >= 50 ? "bg-emerald-500/10 text-emerald-600" : "bg-rose-500/10 text-rose-600"}`}>
+                                {g.percentage}%
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {task === "assignments" && (
+            <div className="lg:col-span-3">
+              <div className={surfaceCls} style={surfaceStyle}>
+                <h3 className="text-xl font-bold mb-4" style={{ fontFamily: "var(--font-heading)" }}>
+                  {t("assignmentsHeading")}
+                </h3>
+                {hwAssignments.length === 0 ? (
+                  <p className="text-sm py-8 text-center text-[var(--color-text-secondary)]">{t("assignmentsEmpty")}</p>
+                ) : (
+                  <div className="space-y-3">
+                    {hwAssignments.map((a: any) => (
+                      <div key={a.id} className="p-4 rounded-2xl bg-[var(--color-background)] border" style={{ borderColor: "var(--color-border)" }}>
+                        <div className="flex justify-between items-center">
+                          <h4 className="font-bold">{a.title}</h4>
+                          <span className="text-xs px-2.5 py-1 rounded-full font-bold bg-blue-500/10 text-blue-600">
+                            {a.subject_name} | {a.section_name}
+                          </span>
+                        </div>
+                        <p className="text-xs mt-1" style={{ color: "var(--color-text-secondary)" }}>
+                          {t("colDueDate")}: {a.due_date ? new Date(a.due_date).toLocaleDateString() : "-"} | {t("submissionsCount")}: {a.submissions_count}
+                        </p>
                       </div>
                     ))}
                   </div>
