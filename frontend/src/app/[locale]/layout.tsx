@@ -11,6 +11,7 @@ import ChatWidget from "@/components/ChatWidget";
 import KeepAlive from "@/components/KeepAlive";
 import TranslationProvider from "@/components/TranslationProvider";
 import AuthInitializer from "@/components/AuthInitializer";
+import Toaster from "@/components/ui/Toaster";
 import "../globals.css";
 
 export async function generateMetadata({
@@ -75,6 +76,7 @@ export default async function LocaleLayout({
           <Footer />
           <ChatWidget />
           <KeepAlive />
+          <Toaster />
         </TranslationProvider>
       </NextIntlClientProvider>
     </>

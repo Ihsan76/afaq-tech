@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { api } from "@/lib/api";
 import { useAuthStore } from "@/store/auth";
+import { surfaceCls, surfaceStyle } from "@/components/school/admin/adminUi";
+import { useToast } from "@/store/toast";
 
 interface ParentWorkspaceProps {
   task: "children" | "attendance" | "reports" | "grades" | "assignments";
@@ -23,6 +25,7 @@ export default function ParentWorkspace({ task }: ParentWorkspaceProps) {
   const locale = useLocale();
   const t = useTranslations("school");
   const { user } = useAuthStore();
+  const { success, error } = useToast();
 
   const [familyLinks, setFamilyLinks] = useState<any[]>([]);
   const [attendances, setAttendances] = useState<any[]>([]);
@@ -33,6 +36,11 @@ export default function ParentWorkspace({ task }: ParentWorkspaceProps) {
   const [hwAssignments, setHwAssignments] = useState<any[]>([]);
   const [hwSubmissions, setHwSubmissions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Ticket creation state
+  const [ticketTitle, setTicketTitle] = useState("");
+  const [ticketMessage, setTicketMessage] = useState("");
+  const [creatingTicket, setCreatingTicket] = useState(false);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -56,18 +64,35 @@ export default function ParentWorkspace({ task }: ParentWorkspaceProps) {
       setHwAssignments(Array.isArray(hwRes.data) ? hwRes.data : hwRes.data.results || []);
       setHwSubmissions(Array.isArray(subRes.data) ? subRes.data : subRes.data.results || []);
     } catch {
-      // ignore
+      error(t("loading") + " error");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [error, t]);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
-  const surfaceCls = "rounded-3xl p-6 shadow-xl border";
-  const surfaceStyle = { background: "var(--color-surface)", borderColor: "var(--color-border)", boxShadow: "var(--card-shadow)" };
+  const createTicket = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!ticketTitle.trim() || !ticketMessage.trim()) return;
+    setCreatingTicket(true);
+    try {
+      await api.post("/schools/tickets/", {
+        title: ticketTitle.trim(),
+        message: ticketMessage.trim(),
+      });
+      success(t("messageSent"));
+      setTicketTitle("");
+      setTicketMessage("");
+      fetchData();
+    } catch {
+      error(t("errors.unknown"));
+    } finally {
+      setCreatingTicket(false);
+    }
+  };
 
   const statusLabel = (status: string) =>
     status === "present" ? t("statusPresent") : status === "absent" ? t("statusAbsent") : status === "late" ? t("statusLate") : status;
@@ -214,22 +239,68 @@ export default function ParentWorkspace({ task }: ParentWorkspaceProps) {
                 )}
               </div>
 
-              <div className={surfaceCls} style={surfaceStyle}>
-                <h3 className="text-lg font-bold mb-4" style={{ fontFamily: "var(--font-heading)" }}>
-                  {t("ticketsCommHeading")}
-                </h3>
-                {tickets.length === 0 ? (
-                  <p className="text-xs text-[var(--color-text-secondary)]">{t("ticketsEmpty")}</p>
-                ) : (
-                  <div className="space-y-2">
-                    {tickets.map((tick: any) => (
-                      <div key={tick.id} className="p-3 rounded-xl bg-[var(--color-background)] border text-xs" style={{ borderColor: "var(--color-border)" }}>
-                        <p className="font-bold">{tick.subject || tick.title}</p>
-                        <p className="text-[var(--color-text-secondary)] mt-1">{tick.message}</p>
-                      </div>
-                    ))}
-                  </div>
-                )}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className={surfaceCls} style={surfaceStyle}>
+                  <h3 className="text-lg font-bold mb-4" style={{ fontFamily: "var(--font-heading)" }}>
+                    {t("ticketsCommHeading")}
+                  </h3>
+                  {tickets.length === 0 ? (
+                    <p className="text-xs text-[var(--color-text-secondary)]">{t("ticketsEmpty")}</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {tickets.map((tick: any) => (
+                        <div key={tick.id} className="p-3 rounded-xl bg-[var(--color-background)] border text-xs" style={{ borderColor: "var(--color-border)" }}>
+                          <div className="flex justify-between items-center">
+                            <p className="font-bold">{tick.subject || tick.title}</p>
+                            <span className={`px-2 py-0.5 rounded-full font-bold ${tick.is_resolved ? "text-emerald-600 bg-emerald-500/10" : "text-amber-600 bg-amber-500/10"}`}>
+                              {tick.is_resolved ? t("ticketResolved") : t("ticketOpen")}
+                            </span>
+                          </div>
+                          <p className="text-[var(--color-text-secondary)] mt-1">{tick.message}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className={surfaceCls} style={surfaceStyle}>
+                  <h3 className="text-lg font-bold mb-4" style={{ fontFamily: "var(--font-heading)" }}>
+                    {t("newTicket")}
+                  </h3>
+                  <form onSubmit={createTicket} className="space-y-3">
+                    <div>
+                      <label className="block text-xs font-bold mb-1">{t("ticketTitle")}</label>
+                      <input
+                        type="text"
+                        value={ticketTitle}
+                        onChange={(e) => setTicketTitle(e.target.value)}
+                        placeholder={t("annTitlePlaceholder")}
+                        required
+                        className="w-full px-4 py-2.5 rounded-2xl border text-sm bg-[var(--color-background)]"
+                        style={{ borderColor: "var(--color-border)" }}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold mb-1">{t("content")}</label>
+                      <textarea
+                        value={ticketMessage}
+                        onChange={(e) => setTicketMessage(e.target.value)}
+                        placeholder={t("messagePlaceholder")}
+                        required
+                        rows={3}
+                        className="w-full px-4 py-2.5 rounded-2xl border text-sm bg-[var(--color-background)]"
+                        style={{ borderColor: "var(--color-border)" }}
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={creatingTicket}
+                      className="w-full py-2.5 rounded-xl font-bold text-sm text-white bg-[var(--color-primary)] shadow-lg hover:opacity-90 disabled:opacity-50"
+                    >
+                      {creatingTicket ? t("loading") : t("sendMessage")}
+                    </button>
+                  </form>
+                </div>
               </div>
             </div>
           )}

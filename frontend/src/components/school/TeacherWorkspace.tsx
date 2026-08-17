@@ -7,6 +7,8 @@ import { api } from "@/lib/api";
 import { useAuthStore } from "@/store/auth";
 import SelectDropdown from "@/components/ui/SelectDropdown";
 import MyClassWorkspace from "@/components/school/MyClassWorkspace";
+import { surfaceCls, surfaceStyle } from "@/components/school/admin/adminUi";
+import { useToast } from "@/store/toast";
 
 interface TeacherWorkspaceProps {
   task: "timetable" | "attendance" | "tickets" | "my-class" | "grades" | "assignments";
@@ -26,6 +28,7 @@ export default function TeacherWorkspace({ task }: TeacherWorkspaceProps) {
   const locale = useLocale();
   const t = useTranslations("school");
   const { user } = useAuthStore();
+  const { success, error } = useToast();
 
   const [assignments, setAssignments] = useState<any[]>([]);
   const [timetable, setTimetable] = useState<any[]>([]);
@@ -35,12 +38,24 @@ export default function TeacherWorkspace({ task }: TeacherWorkspaceProps) {
   const [hwAssignments, setHwAssignments] = useState<any[]>([]);
   const [hwSubmissions, setHwSubmissions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [banner, setBanner] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
-  // Quick attendance marking state
+  // Roster attendance state
   const [selectedSection, setSelectedSection] = useState<number | null>(null);
-  const [attStatus, setAttStatus] = useState<string>("present");
-  const [studentId, setStudentId] = useState<string>("");
+  const [rosterStudents, setRosterStudents] = useState<any[]>([]);
+  const [rosterStatuses, setRosterStatuses] = useState<Record<number, string>>({});
+  const [attDate, setAttDate] = useState<string>(new Date().toISOString().split("T")[0]);
+  const [recordingAtt, setRecordingAtt] = useState(false);
+
+  // Ticket creation state
+  const [ticketTitle, setTicketTitle] = useState("");
+  const [ticketMessage, setTicketMessage] = useState("");
+  const [creatingTicket, setCreatingTicket] = useState(false);
+
+  // Grading submission state
+  const [gradingSubId, setGradingSubId] = useState<number | null>(null);
+  const [gradeScore, setGradeScore] = useState<string>("");
+  const [gradeFeedback, setGradeFeedback] = useState<string>("");
+  const [grading, setGrading] = useState(false);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -62,34 +77,101 @@ export default function TeacherWorkspace({ task }: TeacherWorkspaceProps) {
       setHwAssignments(Array.isArray(hwRes.data) ? hwRes.data : hwRes.data.results || []);
       setHwSubmissions(Array.isArray(subRes.data) ? subRes.data : subRes.data.results || []);
     } catch {
-      // ignore
+      error(t("loading") + " error");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [error, t]);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
-  const recordAttendance = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedSection || !studentId) return;
-    try {
-      await api.post("/schools/attendances/bulk_record/", {
-        section_id: selectedSection,
-        date: new Date().toISOString().split("T")[0],
-        records: [{ student_id: Number(studentId), status: attStatus }]
+  // Fetch roster when selectedSection changes
+  useEffect(() => {
+    if (!selectedSection) {
+      setRosterStudents([]);
+      setRosterStatuses({});
+      return;
+    }
+    api
+      .get("/schools/enrollments/", { params: { section: selectedSection, locale } })
+      .then((res) => {
+        const list = Array.isArray(res.data) ? res.data : res.data.results || [];
+        setRosterStudents(list);
+        const initial: Record<number, string> = {};
+        list.forEach((st: any) => {
+          initial[st.student || st.id] = "present";
+        });
+        setRosterStatuses(initial);
+      })
+      .catch(() => {
+        setRosterStudents([]);
+        setRosterStatuses({});
       });
-      setBanner({ type: "success", text: t("bannerAttUpdated") });
-      setStudentId("");
+  }, [selectedSection, locale]);
+
+  const recordBulkAttendance = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedSection || rosterStudents.length === 0) return;
+    setRecordingAtt(true);
+    try {
+      const records = rosterStudents.map((st: any) => ({
+        student_id: Number(st.student || st.id),
+        status: rosterStatuses[st.student || st.id] || "present",
+      }));
+      await api.post("/schools/attendances/bulk_record/", {
+        section_id: Number(selectedSection),
+        date: attDate,
+        records,
+      });
+      success(t("attendanceSaved"));
     } catch {
-      setBanner({ type: "error", text: t("bannerAttError") });
+      error(t("attendanceSaveError"));
+    } finally {
+      setRecordingAtt(false);
     }
   };
 
-  const surfaceCls = "rounded-3xl p-6 shadow-xl border";
-  const surfaceStyle = { background: "var(--color-surface)", borderColor: "var(--color-border)", boxShadow: "var(--card-shadow)" };
+  const createTicket = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!ticketTitle.trim() || !ticketMessage.trim()) return;
+    setCreatingTicket(true);
+    try {
+      await api.post("/schools/tickets/", {
+        title: ticketTitle.trim(),
+        message: ticketMessage.trim(),
+      });
+      success(t("messageSent"));
+      setTicketTitle("");
+      setTicketMessage("");
+      fetchData();
+    } catch {
+      error(t("errors.unknown"));
+    } finally {
+      setCreatingTicket(false);
+    }
+  };
+
+  const gradeSubmission = async (subId: number) => {
+    if (gradeScore === "") return;
+    setGrading(true);
+    try {
+      await api.post(`/schools/assignment-submissions/${subId}/grade/`, {
+        score: Number(gradeScore),
+        feedback: gradeFeedback,
+      });
+      success(t("bannerAttUpdated"));
+      setGradingSubId(null);
+      setGradeScore("");
+      setGradeFeedback("");
+      fetchData();
+    } catch {
+      error(t("errors.unknown"));
+    } finally {
+      setGrading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen py-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto" style={{ color: "var(--color-text)" }}>
@@ -109,12 +191,6 @@ export default function TeacherWorkspace({ task }: TeacherWorkspaceProps) {
           {t("refresh")}
         </button>
       </div>
-
-      {banner && (
-        <div className={`p-4 rounded-2xl mb-6 text-sm font-bold ${banner.type === "success" ? "bg-emerald-500/10 text-emerald-600" : "bg-rose-500/10 text-rose-600"}`}>
-          {banner.text}
-        </div>
-      )}
 
       <div className="flex flex-wrap gap-2 mb-8 border-b pb-4" style={{ borderColor: "var(--color-border)" }}>
         {TASKS.map((tab) => {
@@ -192,12 +268,12 @@ export default function TeacherWorkspace({ task }: TeacherWorkspaceProps) {
           )}
 
           {task === "attendance" && (
-            <div className="lg:col-span-2 mx-auto w-full max-w-xl">
+            <div className="lg:col-span-3 space-y-6">
               <div className={surfaceCls} style={surfaceStyle}>
                 <h3 className="text-xl font-bold mb-4" style={{ fontFamily: "var(--font-heading)" }}>
                   {t("quickAttHeading")}
                 </h3>
-                <form onSubmit={recordAttendance} className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                   <div>
                     <label className="block text-xs font-bold mb-1">{t("selectSection")}</label>
                     <SelectDropdown
@@ -208,39 +284,79 @@ export default function TeacherWorkspace({ task }: TeacherWorkspaceProps) {
                     >
                       <option value="">{t("selectSectionPlaceholder")}</option>
                       {assignments.map((as: any) => (
-                        <option key={as.section} value={as.section}>{as.section_name || `#${as.section}`}</option>
+                        <option key={as.section} value={as.section}>
+                          {as.section_name || `#${as.section}`} ({as.subject_name || as.subject})
+                        </option>
                       ))}
                     </SelectDropdown>
                   </div>
                   <div>
-                    <label className="block text-xs font-bold mb-1">{t("studentIdLabel")}</label>
+                    <label className="block text-xs font-bold mb-1">{t("colDate")}</label>
                     <input
-                      type="number"
-                      value={studentId}
-                      onChange={(e) => setStudentId(e.target.value)}
-                      placeholder={t("studentIdPlaceholder")}
-                      required
+                      type="date"
+                      value={attDate}
+                      onChange={(e) => setAttDate(e.target.value)}
                       className="w-full px-4 py-2.5 rounded-2xl border text-sm bg-[var(--color-background)]"
                       style={{ borderColor: "var(--color-border)" }}
                     />
                   </div>
+                </div>
+
+                {selectedSection && (
                   <div>
-                    <label className="block text-xs font-bold mb-1">{t("colStatus")}</label>
-                    <SelectDropdown
-                      value={attStatus}
-                      onChange={(v) => setAttStatus(String(v))}
-                      className="w-full px-4 py-2.5 rounded-2xl border text-sm bg-[var(--color-background)]"
-                      style={{ borderColor: "var(--color-border)" }}
-                    >
-                      <option value="present">{t("statusPresent")}</option>
-                      <option value="absent">{t("statusAbsent")}</option>
-                      <option value="late">{t("statusLate")}</option>
-                    </SelectDropdown>
+                    {rosterStudents.length === 0 ? (
+                      <p className="text-sm py-6 text-center text-[var(--color-text-secondary)]">{t("studentsEmpty")}</p>
+                    ) : (
+                      <form onSubmit={recordBulkAttendance} className="space-y-4">
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-start border-collapse text-sm">
+                            <thead>
+                              <tr className="border-b" style={{ borderColor: "var(--color-border)" }}>
+                                <th className="p-3 text-start">{t("colStudent")}</th>
+                                <th className="p-3 text-start">{t("nationalIdLabel")}</th>
+                                <th className="p-3 text-start">{t("colStatus")}</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {rosterStudents.map((st: any) => {
+                                const stId = st.student || st.id;
+                                return (
+                                  <tr key={stId} className="border-b hover:bg-[var(--color-background)]" style={{ borderColor: "var(--color-border)" }}>
+                                    <td className="p-3 font-bold">{st.student_name || st.student_email || st.name}</td>
+                                    <td className="p-3 text-xs" style={{ color: "var(--color-text-secondary)" }}>
+                                      <span dir="ltr">{st.national_id || "—"}</span>
+                                    </td>
+                                    <td className="p-3">
+                                      <SelectDropdown
+                                        value={rosterStatuses[stId] || "present"}
+                                        onChange={(v) => setRosterStatuses((prev) => ({ ...prev, [stId]: String(v) }))}
+                                        className="px-3 py-1.5 rounded-xl border text-xs bg-[var(--color-background)]"
+                                        style={{ borderColor: "var(--color-border)" }}
+                                      >
+                                        <option value="present">{t("statusPresent")}</option>
+                                        <option value="absent">{t("statusAbsent")}</option>
+                                        <option value="late">{t("statusLate")}</option>
+                                      </SelectDropdown>
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                        <div className="flex justify-end pt-2">
+                          <button
+                            type="submit"
+                            disabled={recordingAtt}
+                            className="px-6 py-3 rounded-2xl font-bold text-white bg-[var(--color-secondary)] shadow-lg hover:opacity-90 disabled:opacity-50"
+                          >
+                            {recordingAtt ? t("loading") : t("saveAttendance")}
+                          </button>
+                        </div>
+                      </form>
+                    )}
                   </div>
-                  <button type="submit" className="w-full py-3 rounded-2xl font-bold text-white bg-[var(--color-secondary)] shadow-lg hover:opacity-90">
-                    {t("saveNotify")}
-                  </button>
-                </form>
+                )}
               </div>
             </div>
           )}
@@ -252,8 +368,8 @@ export default function TeacherWorkspace({ task }: TeacherWorkspaceProps) {
           )}
 
           {task === "tickets" && (
-            <div className="lg:col-span-3">
-              <div className={surfaceCls} style={surfaceStyle}>
+            <div className="lg:col-span-3 grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className={`lg:col-span-2 ${surfaceCls}`} style={surfaceStyle}>
                 <h3 className="text-xl font-bold mb-4" style={{ fontFamily: "var(--font-heading)" }}>
                   {t("ticketsHeading")}
                 </h3>
@@ -274,6 +390,45 @@ export default function TeacherWorkspace({ task }: TeacherWorkspaceProps) {
                     ))}
                   </div>
                 )}
+              </div>
+
+              <div className={surfaceCls} style={surfaceStyle}>
+                <h3 className="text-xl font-bold mb-4" style={{ fontFamily: "var(--font-heading)" }}>
+                  {t("newTicket")}
+                </h3>
+                <form onSubmit={createTicket} className="space-y-3">
+                  <div>
+                    <label className="block text-xs font-bold mb-1">{t("ticketTitle")}</label>
+                    <input
+                      type="text"
+                      value={ticketTitle}
+                      onChange={(e) => setTicketTitle(e.target.value)}
+                      placeholder={t("annTitlePlaceholder")}
+                      required
+                      className="w-full px-4 py-2.5 rounded-2xl border text-sm bg-[var(--color-background)]"
+                      style={{ borderColor: "var(--color-border)" }}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold mb-1">{t("content")}</label>
+                    <textarea
+                      value={ticketMessage}
+                      onChange={(e) => setTicketMessage(e.target.value)}
+                      placeholder={t("messagePlaceholder")}
+                      required
+                      rows={4}
+                      className="w-full px-4 py-2.5 rounded-2xl border text-sm bg-[var(--color-background)]"
+                      style={{ borderColor: "var(--color-border)" }}
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={creatingTicket}
+                    className="w-full py-3 rounded-2xl font-bold text-white bg-[var(--color-primary)] shadow-lg hover:opacity-90 disabled:opacity-50"
+                  >
+                    {creatingTicket ? t("loading") : t("sendMessage")}
+                  </button>
+                </form>
               </div>
             </div>
           )}
@@ -319,7 +474,7 @@ export default function TeacherWorkspace({ task }: TeacherWorkspaceProps) {
           )}
 
           {task === "assignments" && (
-            <div className="lg:col-span-3">
+            <div className="lg:col-span-3 space-y-6">
               <div className={surfaceCls} style={surfaceStyle}>
                 <h3 className="text-xl font-bold mb-4" style={{ fontFamily: "var(--font-heading)" }}>
                   {t("assignmentsHeading")}
@@ -327,23 +482,109 @@ export default function TeacherWorkspace({ task }: TeacherWorkspaceProps) {
                 {hwAssignments.length === 0 ? (
                   <p className="text-sm py-8 text-center text-[var(--color-text-secondary)]">{t("assignmentsEmpty")}</p>
                 ) : (
-                  <div className="space-y-3">
-                    {hwAssignments.map((a: any) => (
-                      <div key={a.id} className="p-4 rounded-2xl bg-[var(--color-background)] border" style={{ borderColor: "var(--color-border)" }}>
-                        <div className="flex justify-between items-center">
-                          <h4 className="font-bold">{a.title}</h4>
-                          <span className="text-xs px-2.5 py-1 rounded-full font-bold bg-blue-500/10 text-blue-600">
-                            {a.subject_name} | {a.section_name}
-                          </span>
+                  <div className="space-y-4">
+                    {hwAssignments.map((a: any) => {
+                      const subs = hwSubmissions.filter((s: any) => s.assignment === a.id);
+                      return (
+                        <div key={a.id} className="p-4 rounded-2xl bg-[var(--color-background)] border space-y-3" style={{ borderColor: "var(--color-border)" }}>
+                          <div className="flex justify-between items-center">
+                            <div>
+                              <h4 className="font-bold text-base">{a.title}</h4>
+                              <p className="text-xs text-[var(--color-text-secondary)] mt-0.5">
+                                {a.subject_name} | {a.section_name} | {t("colDueDate")}: {a.due_date ? new Date(a.due_date).toLocaleDateString() : "-"}
+                              </p>
+                            </div>
+                            <span className="text-xs px-2.5 py-1 rounded-full font-bold bg-blue-500/10 text-blue-600">
+                              {t("submissionsCount")}: {subs.length}
+                            </span>
+                          </div>
+
+                          {subs.length > 0 && (
+                            <div className="mt-3 border-t pt-3" style={{ borderColor: "var(--color-border)" }}>
+                              <p className="text-xs font-bold mb-2">{t("submissionsCount")}:</p>
+                              <div className="space-y-2">
+                                {subs.map((sub: any) => (
+                                  <div key={sub.id} className="p-3 rounded-xl bg-[var(--color-surface)] border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2" style={{ borderColor: "var(--color-border)" }}>
+                                    <div>
+                                      <p className="font-bold text-xs">{sub.student_name || sub.student_email}</p>
+                                      <p className="text-xs text-[var(--color-text-secondary)] mt-0.5">
+                                        {t("colNotes")}: {sub.notes || "—"} {sub.score !== null ? `| Score: ${sub.score}/${a.max_score || 100}` : ""}
+                                      </p>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${sub.status === "graded" ? "bg-emerald-500/10 text-emerald-600" : "bg-amber-500/10 text-amber-600"}`}>
+                                        {sub.status_display || sub.status}
+                                      </span>
+                                      <button
+                                        onClick={() => {
+                                          setGradingSubId(sub.id);
+                                          setGradeScore(sub.score !== null ? String(sub.score) : "");
+                                          setGradeFeedback(sub.feedback || "");
+                                        }}
+                                        className="px-3 py-1 rounded-lg text-xs font-bold text-white bg-[var(--color-primary)]"
+                                      >
+                                        {t("colScore")}
+                                      </button>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </div>
-                        <p className="text-xs mt-1" style={{ color: "var(--color-text-secondary)" }}>
-                          {t("colDueDate")}: {a.due_date ? new Date(a.due_date).toLocaleDateString() : "-"} | {t("submissionsCount")}: {a.submissions_count}
-                        </p>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>
+
+              {gradingSubId !== null && (
+                <div className={surfaceCls} style={surfaceStyle}>
+                  <h3 className="text-lg font-bold mb-3" style={{ fontFamily: "var(--font-heading)" }}>
+                    {t("colScore")} / Grade Submission
+                  </h3>
+                  <div className="space-y-3 max-w-md">
+                    <div>
+                      <label className="block text-xs font-bold mb-1">{t("colScore")}</label>
+                      <input
+                        type="number"
+                        value={gradeScore}
+                        onChange={(e) => setGradeScore(e.target.value)}
+                        placeholder="Score out of max"
+                        className="w-full px-4 py-2.5 rounded-2xl border text-sm bg-[var(--color-background)]"
+                        style={{ borderColor: "var(--color-border)" }}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold mb-1">{t("colNotes")}</label>
+                      <textarea
+                        value={gradeFeedback}
+                        onChange={(e) => setGradeFeedback(e.target.value)}
+                        placeholder="Feedback for student..."
+                        rows={3}
+                        className="w-full px-4 py-2.5 rounded-2xl border text-sm bg-[var(--color-background)]"
+                        style={{ borderColor: "var(--color-border)" }}
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => gradeSubmission(gradingSubId)}
+                        disabled={grading}
+                        className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:opacity-90 disabled:opacity-50"
+                      >
+                        {grading ? t("loading") : t("save")}
+                      </button>
+                      <button
+                        onClick={() => setGradingSubId(null)}
+                        className="px-4 py-2 rounded-xl text-xs font-bold border hover:opacity-80"
+                        style={{ borderColor: "var(--color-border)" }}
+                      >
+                        {t("cancel")}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

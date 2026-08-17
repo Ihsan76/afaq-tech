@@ -3,8 +3,9 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { api } from "@/lib/api";
-import { surfaceCls, surfaceStyle, useBanner, Banner } from "@/components/school/admin/adminUi";
+import { surfaceCls, surfaceStyle } from "@/components/school/admin/adminUi";
 import SelectDropdown from "@/components/ui/SelectDropdown";
+import { useToast } from "@/store/toast";
 
 interface Props {
   rooms: any[];
@@ -48,7 +49,7 @@ function computePreview(
 
 export default function AdminRoomsView({ rooms, periods, academicYears, schoolId, refresh }: Props) {
   const t = useTranslations("school");
-  const { banner, setBanner } = useBanner();
+  const { success, error } = useToast();
 
   const currentYear = academicYears[0] || null;
   const [roomMode, setRoomMode] = useState<string>(currentYear?.room_allocation_mode || "fixed");
@@ -77,10 +78,10 @@ export default function AdminRoomsView({ rooms, periods, academicYears, schoolId
         room_allocation_mode: mode,
       });
       setRoomMode(mode);
-      setBanner({ type: "success", text: t("bannerRoomModeUpdated") });
+      success(t("bannerRoomModeUpdated"));
       refresh();
     } catch {
-      setBanner({ type: "error", text: t("bannerRoomModeError") });
+      error(t("bannerRoomModeError"));
     } finally {
       setBusy(false);
     }
@@ -94,13 +95,12 @@ export default function AdminRoomsView({ rooms, periods, academicYears, schoolId
         school_id: Number(schoolId),
         academic_year_id: currentYear.id,
       });
-      setBanner({
-        type: "success",
-        text: t("bannerFixedRoomsSetup", { rooms: res.data.rooms_created, sections: res.data.sections_linked }),
-      });
+      success(
+        t("bannerFixedRoomsSetup", { rooms: res.data.rooms_created, sections: res.data.sections_linked })
+      );
       refresh();
     } catch {
-      setBanner({ type: "error", text: t("bannerFixedRoomsError") });
+      error(t("bannerFixedRoomsError"));
     } finally {
       setBusy(false);
     }
@@ -120,10 +120,10 @@ export default function AdminRoomsView({ rooms, periods, academicYears, schoolId
       });
       setRoomName("");
       setRoomCode("");
-      setBanner({ type: "success", text: t("bannerRoomAdded") });
+      success(t("bannerRoomAdded"));
       refresh();
     } catch {
-      setBanner({ type: "error", text: t("bannerRoomError") });
+      error(t("bannerRoomError"));
     } finally {
       setBusy(false);
     }
@@ -134,7 +134,7 @@ export default function AdminRoomsView({ rooms, periods, academicYears, schoolId
       await api.delete(`/schools/rooms/${id}/`);
       refresh();
     } catch {
-      setBanner({ type: "error", text: t("bannerRoomError") });
+      error(t("bannerRoomError"));
     }
   };
 
@@ -153,10 +153,10 @@ export default function AdminRoomsView({ rooms, periods, academicYears, schoolId
         long_break_after_period: Number(genLongBreakAfter) || 3,
         total_periods: Number(genCount) || 7,
       });
-      setBanner({ type: "success", text: t("bannerPeriodsGenerated") });
+      success(t("bannerPeriodsGenerated"));
       refresh();
     } catch {
-      setBanner({ type: "error", text: t("bannerPeriodsGenerateError") });
+      error(t("bannerPeriodsGenerateError"));
     } finally {
       setBusy(false);
     }
@@ -166,7 +166,6 @@ export default function AdminRoomsView({ rooms, periods, academicYears, schoolId
 
   return (
     <div className="space-y-6">
-      <Banner banner={banner} />
 
       {currentYear && (
         <div className={surfaceCls} style={surfaceStyle}>

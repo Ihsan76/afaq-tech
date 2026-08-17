@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { api } from "@/lib/api";
 import { useAuthStore } from "@/store/auth";
+import { surfaceCls, surfaceStyle } from "@/components/school/admin/adminUi";
+import { useToast } from "@/store/toast";
 
 interface StudentWorkspaceProps {
   task: "timetable" | "attendance" | "record" | "grades" | "assignments";
@@ -23,6 +25,7 @@ export default function StudentWorkspace({ task }: StudentWorkspaceProps) {
   const locale = useLocale();
   const t = useTranslations("school");
   const { user } = useAuthStore();
+  const { success, error } = useToast();
 
   const [timetable, setTimetable] = useState<any[]>([]);
   const [attendances, setAttendances] = useState<any[]>([]);
@@ -31,6 +34,11 @@ export default function StudentWorkspace({ task }: StudentWorkspaceProps) {
   const [hwAssignments, setHwAssignments] = useState<any[]>([]);
   const [hwSubmissions, setHwSubmissions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Assignment submission state
+  const [submittingAssignmentId, setSubmittingAssignmentId] = useState<number | null>(null);
+  const [submissionNotes, setSubmissionNotes] = useState<string>("");
+  const [submitting, setSubmitting] = useState(false);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -41,7 +49,7 @@ export default function StudentWorkspace({ task }: StudentWorkspaceProps) {
         api.get("/schools/announcements/").catch(() => ({ data: [] })),
         api.get("/schools/grade-entries/").catch(() => ({ data: [] })),
         api.get("/schools/assignments/").catch(() => ({ data: [] })),
-        api.get("/schools/assignment-submissions/?mine=true").catch(() => ({ data: [] })),
+        api.get("/schools/assignment-submissions/").catch(() => ({ data: [] })),
       ]);
       setTimetable(Array.isArray(slotRes.data) ? slotRes.data : slotRes.data.results || []);
       setAttendances(Array.isArray(attRes.data) ? attRes.data : attRes.data.results || []);
@@ -50,18 +58,33 @@ export default function StudentWorkspace({ task }: StudentWorkspaceProps) {
       setHwAssignments(Array.isArray(hwRes.data) ? hwRes.data : hwRes.data.results || []);
       setHwSubmissions(Array.isArray(subRes.data) ? subRes.data : subRes.data.results || []);
     } catch {
-      // ignore
+      error(t("loading") + " error");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [error, t]);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
-  const surfaceCls = "rounded-3xl p-6 shadow-xl border";
-  const surfaceStyle = { background: "var(--color-surface)", borderColor: "var(--color-border)", boxShadow: "var(--card-shadow)" };
+  const submitAssignment = async (assignmentId: number) => {
+    setSubmitting(true);
+    try {
+      await api.post("/schools/assignment-submissions/", {
+        assignment: assignmentId,
+        notes: submissionNotes.trim(),
+      });
+      success(t("statusSubmitted"));
+      setSubmittingAssignmentId(null);
+      setSubmissionNotes("");
+      fetchData();
+    } catch {
+      error(t("errors.unknown"));
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const statusLabel = (status: string) =>
     status === "present" ? t("statusPresent") : status === "absent" ? t("statusAbsent") : status === "late" ? t("statusLate") : status;
@@ -258,7 +281,7 @@ export default function StudentWorkspace({ task }: StudentWorkspaceProps) {
           )}
 
           {task === "assignments" && (
-            <div className="lg:col-span-3">
+            <div className="lg:col-span-3 space-y-6">
               <div className={surfaceCls} style={surfaceStyle}>
                 <h3 className="text-xl font-bold mb-4" style={{ fontFamily: "var(--font-heading)" }}>
                   {t("assignmentsHeading")}
@@ -270,20 +293,66 @@ export default function StudentWorkspace({ task }: StudentWorkspaceProps) {
                     {hwAssignments.map((a: any) => {
                       const sub = hwSubmissions.find((s: any) => s.assignment === a.id);
                       return (
-                        <div key={a.id} className="p-4 rounded-2xl bg-[var(--color-background)] border" style={{ borderColor: "var(--color-border)" }}>
+                        <div key={a.id} className="p-4 rounded-2xl bg-[var(--color-background)] border space-y-2" style={{ borderColor: "var(--color-border)" }}>
                           <div className="flex justify-between items-center">
-                            <h4 className="font-bold">{a.title}</h4>
+                            <h4 className="font-bold text-base">{a.title}</h4>
                             {sub ? (
                               <span className={`text-xs px-2.5 py-1 rounded-full font-bold ${sub.status === "graded" ? "bg-emerald-500/10 text-emerald-600" : "bg-blue-500/10 text-blue-600"}`}>
-                                {sub.status === "graded" ? `${sub.score}/${a.max_score}` : t("statusSubmitted")}
+                                {sub.status === "graded" ? `${t("colScore")}: ${sub.score}/${a.max_score || 100}` : t("statusSubmitted")}
                               </span>
                             ) : (
                               <span className="text-xs px-2.5 py-1 rounded-full font-bold bg-amber-500/10 text-amber-600">{t("statusPending")}</span>
                             )}
                           </div>
-                          <p className="text-xs mt-1" style={{ color: "var(--color-text-secondary)" }}>
+                          <p className="text-xs" style={{ color: "var(--color-text-secondary)" }}>
                             {a.subject_name} | {t("colDueDate")}: {a.due_date ? new Date(a.due_date).toLocaleDateString() : "-"}
                           </p>
+
+                          {sub && sub.feedback && (
+                            <p className="text-xs mt-1 p-2 rounded-xl bg-[var(--color-surface)] border" style={{ borderColor: "var(--color-border)" }}>
+                              <strong>Teacher Feedback:</strong> {sub.feedback}
+                            </p>
+                          )}
+
+                          {!sub && (
+                            <div className="pt-2">
+                              {submittingAssignmentId === a.id ? (
+                                <div className="space-y-2 pt-2">
+                                  <textarea
+                                    value={submissionNotes}
+                                    onChange={(e) => setSubmissionNotes(e.target.value)}
+                                    placeholder={t("messagePlaceholder")}
+                                    rows={2}
+                                    className="w-full px-3 py-2 rounded-xl border text-xs bg-[var(--color-surface)]"
+                                    style={{ borderColor: "var(--color-border)" }}
+                                  />
+                                  <div className="flex gap-2">
+                                    <button
+                                      onClick={() => submitAssignment(a.id)}
+                                      disabled={submitting}
+                                      className="px-4 py-1.5 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:opacity-90 disabled:opacity-50"
+                                    >
+                                      {submitting ? t("loading") : t("submit")}
+                                    </button>
+                                    <button
+                                      onClick={() => setSubmittingAssignmentId(null)}
+                                      className="px-4 py-1.5 rounded-xl text-xs font-bold border hover:opacity-80"
+                                      style={{ borderColor: "var(--color-border)" }}
+                                    >
+                                      {t("cancel")}
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <button
+                                  onClick={() => setSubmittingAssignmentId(a.id)}
+                                  className="px-4 py-1.5 rounded-xl text-xs font-bold text-white bg-[var(--color-primary)] hover:opacity-90"
+                                >
+                                  {t("submit")}
+                                </button>
+                              )}
+                            </div>
+                          )}
                         </div>
                       );
                     })}
