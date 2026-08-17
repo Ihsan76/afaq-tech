@@ -2786,7 +2786,10 @@ class TimetableSlotViewSet(viewsets.ModelViewSet):
                 return Response({'error': 'Permission denied for this school'}, status=status.HTTP_403_FORBIDDEN)
 
         sections = Section.objects.filter(
-            school_id=school_id, academic_year_id=academic_year_id, home_room__isnull=True,
+            school_id=school_id,
+            academic_year_id=academic_year_id,
+            home_room__isnull=True,
+            grade__school_offers__school_id=school_id,
         ).select_related('grade')
 
         created_rooms = []
