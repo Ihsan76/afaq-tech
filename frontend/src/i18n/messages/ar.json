@@ -1969,6 +1969,8 @@
     "kpiSections": "إجمالي الشعب",
     "kpiPresentToday": "حضور اليوم",
     "kpiAbsentToday": "غياب اليوم",
+    "kpiTotalStudents": "إجمالي الطلاب",
+    "kpiTotalTeachers": "إجمالي المعلمين",
     "kpiMyClasses": "شعبك المسندة",
     "kpiTodaySlots": "حصص اليوم",
     "kpiOpenTickets": "التذاكر المفتوحة",

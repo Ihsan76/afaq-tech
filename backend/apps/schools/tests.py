@@ -1229,7 +1229,7 @@ class ExcelAndClassTeacherTestCase(SchoolManagerStudentManagementTestCase):
         self.assertEqual(res.status_code, 200, res.data)
         self.assertEqual(res.data['created'], 1)
         user = User.objects.get(national_id='9900333333')
-        self.assertEqual(user.email, 'student-9900333333@student.local')
+        self.assertEqual(user.email, 'student.9900333333@student.local')
         self.assertEqual(StudentEnrollment.objects.get(student=user).section, self.sec_b)
 
     # ---- School-manager Excel export scoping ----

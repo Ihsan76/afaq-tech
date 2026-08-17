@@ -1973,6 +1973,8 @@
     "kpiSections": "Total Sections",
     "kpiPresentToday": "Present Today",
     "kpiAbsentToday": "Absent Today",
+    "kpiTotalStudents": "Total Students",
+    "kpiTotalTeachers": "Total Teachers",
     "kpiMyClasses": "My Classes",
     "kpiTodaySlots": "Today's Slots",
     "kpiOpenTickets": "Open Tickets",

@@ -75,8 +75,11 @@ export default function RoleDashboard() {
   }, [fetchData]);
 
   const attendance = Array.isArray(ctx?.attendance) ? ctx.attendance : [];
-  const present = attendance.filter((a: any) => a.status === "present").length;
-  const total = attendance.length;
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const todayAttendance = attendance.filter((a: any) => a.date && a.date.startsWith(todayStr));
+  const present = todayAttendance.filter((a: any) => a.status === "present").length;
+  const absent = todayAttendance.filter((a: any) => a.status === "absent").length;
+  const total = todayAttendance.length;
   const attendanceRate = total ? Math.round((present / total) * 100) : 0;
 
   const stats: { label: string; val: number | string; icon: string; color: string }[] = (() => {
@@ -102,10 +105,10 @@ export default function RoleDashboard() {
       ];
     }
     return [
-      { label: t("kpiSchools"), val: ctx?.schools?.length ?? 1, icon: "🏫", color: "from-blue-500 to-indigo-600" },
-      { label: t("kpiSections"), val: ctx?.sections?.length ?? 0, icon: "📚", color: "from-emerald-500 to-teal-600" },
+      { label: t("kpiTotalStudents"), val: ctx?.students?.length ?? 0, icon: "🎓", color: "from-blue-500 to-indigo-600" },
+      { label: t("kpiTotalTeachers"), val: ctx?.teachers?.length ?? 0, icon: "👨‍🏫", color: "from-emerald-500 to-teal-600" },
       { label: t("kpiPresentToday"), val: present, icon: "✅", color: "from-amber-500 to-orange-600" },
-      { label: t("kpiAbsentToday"), val: attendance.filter((a: any) => a.status === "absent").length, icon: "🚨", color: "from-rose-500 to-pink-600" },
+      { label: t("kpiAbsentToday"), val: absent, icon: "🚨", color: "from-rose-500 to-pink-600" },
     ];
   })();
 
