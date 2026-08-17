@@ -2968,11 +2968,11 @@ def check_school_subscription(user, school=None):
         return True
     if not (user and user.is_authenticated):
         return False
-    
+
     level = user.get_subscription_level() if hasattr(user, 'get_subscription_level') else 0
     if level >= 2 or getattr(user, 'subscription_plan', '') in ('school', 'enterprise'):
         return True
-    
+
     try:
         from apps.subscriptions.services import get_user_plan
         plan = get_user_plan(user)
@@ -3020,7 +3020,7 @@ class AuxiliaryModuleGatingMixin:
                 return School.objects.get(pk=raw_school)
             except School.DoesNotExist:
                 pass
-        
+
         for key in ('bus', 'route', 'book', 'fee', 'student'):
             val = request.data.get(key) if hasattr(request, 'data') else None
             if val:

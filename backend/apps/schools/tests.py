@@ -1546,7 +1546,7 @@ class SchoolAuxiliaryFeatureGatingTestCase(APITestCase):
         self.admin = make_user('admin@test.com', 'admin', 'مدير النظام')
         self.free_manager = make_user('freemanager@test.com', 'school_admin', 'مدير مجاني', subscription_plan='free')
         self.school_manager = make_user('schoolmanager@test.com', 'school_admin', 'مدير مدرسي', subscription_plan='school')
-        
+
         self.free_school = School.objects.create(name='مدرسة مجانية', school_code='FREE1', manager=self.free_manager)
         self.school_school = School.objects.create(name='مدرسة مدرسية', school_code='SCHOOL1', manager=self.school_manager)
         self.grade = Grade.objects.create(level=1, translations={'ar': {'name': 'الأول'}})
@@ -1559,7 +1559,7 @@ class SchoolAuxiliaryFeatureGatingTestCase(APITestCase):
 
     def test_free_manager_cannot_create_auxiliary_modules(self):
         self.auth(self.free_manager)
-        
+
         # 1. Fees
         res = self.client.post('/api/v1/schools/fees/', {'school': self.free_school.id, 'title': 'رسوم', 'amount': 100})
         self.assertEqual(res.status_code, 403)
@@ -1575,7 +1575,7 @@ class SchoolAuxiliaryFeatureGatingTestCase(APITestCase):
 
     def test_school_manager_can_create_auxiliary_modules(self):
         self.auth(self.school_manager)
-        
+
         # 1. Fees
         res = self.client.post('/api/v1/schools/fees/', {'school': self.school_school.id, 'title': 'رسوم دراسية', 'amount': 250})
         self.assertEqual(res.status_code, 201)
