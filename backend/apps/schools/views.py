@@ -3285,28 +3285,108 @@ class StudentPredictiveAnalyticsAPIView(APIView):
 
     def get(self, request, student_id):
         student = get_object_or_404(User, pk=student_id)
+
         attendance_records = Attendance.objects.filter(student=student)
         total_days = attendance_records.count()
         absent_days = attendance_records.filter(status='absent').count()
         absent_ratio = (absent_days / total_days) if total_days > 0 else 0.0
 
-        risk_level = "low"
-        recommendations = ["الاستمرار في الأداء المنتظم والمشاركة الصفية."]
+        grade_entries = GradeEntry.objects.filter(student=student).select_related('category')
+        grades_summary = []
+        for entry in grade_entries:
+            grades_summary.append({
+                'subject': entry.category.subject.translations.get('ar', {}).get('name', str(entry.category.subject_id)) if hasattr(entry.category.subject, 'translations') else str(entry.category.subject_id),
+                'category': entry.category.name,
+                'score': float(entry.score),
+                'max_score': float(entry.category.max_score),
+                'percentage': round(float(entry.percentage), 2) if entry.category.max_score else 0,
+            })
+
+        assignments = AssignmentSubmission.objects.filter(student=student).select_related('assignment')
+        assignment_stats = {
+            'total': assignments.count(),
+            'submitted': assignments.filter(status__in=['submitted', 'graded']).count(),
+            'graded': assignments.filter(status='graded').count(),
+            'late': 0,
+        }
+        for sub in assignments.select_related('assignment'):
+            if sub.submitted_at and sub.assignment.due_date and sub.submitted_at > sub.assignment.due_date:
+                assignment_stats['late'] += 1
+
+        from django.db.models import Avg
+        avg_score = grade_entries.aggregate(avg=Avg('score'))['avg']
+
+        context_payload = {
+            'student': {
+                'id': student.id,
+                'name': student.get_full_name() or student.email,
+                'email': student.email,
+            },
+            'attendance': {
+                'total_days': total_days,
+                'absent_days': absent_days,
+                'absence_ratio': round(absent_ratio * 100, 2),
+            },
+            'grades': {
+                'entries': grades_summary[:20],
+                'average_score': round(float(avg_score), 2) if avg_score else None,
+                'total_entries': grade_entries.count(),
+            },
+            'assignments': assignment_stats,
+        }
+
+        rule_risk = "low"
+        rule_recommendations = ["الاستمرار في الأداء المنتظم والمشاركة الصفية."]
         if absent_ratio > 0.15:
-            risk_level = "high"
-            recommendations = ["متابعة الغياب المتكرر مع ولي الأمر", "تقديم خطة دعم علاجية لمواد الفهم الأساسية"]
+            rule_risk = "high"
         elif absent_ratio > 0.08:
-            risk_level = "medium"
-            recommendations = ["تنبيه ولي الأمر بشأن الغياب المتقطع"]
+            rule_risk = "medium"
+
+        ai_analysis = None
+        try:
+            from apps.ai.router import ProviderRouter
+            router = ProviderRouter()
+
+            prompt = (
+                "أنت محلل تعليمي متخصص. حلل بيانات الطالب التالية وأعد تحليلاً تنبؤياً بالشكل JSON التالي:\n"
+                '{\n'
+                '  "risk_level": "high|medium|low",\n'
+                '  "risk_score": 0-100,\n'
+                '  "summary": "ملخص مختصر بالعربية",\n'
+                '  "strengths": ["نقطة قوة 1", "نقطة قوة 2"],\n'
+                '  "weaknesses": ["نقطة ضعف 1", "نقطة ضعف 2"],\n'
+                '  "recommendations": [\n'
+                '    {"action": "إجراء مقترح", "target": "المعلم/ولي الأمر/الطالب", "priority": "high|medium|low"}\n'
+                '  ],\n'
+                '  "predicted_trend": "improving|stable|declining"\n'
+                '}\n\n'
+                f"بيانات الطالب:\n{json.dumps(context_payload, ensure_ascii=False, default=str)}"
+            )
+
+            response = router.generate(prompt, feature='analytics')
+            if response and response.success:
+                import json
+                ai_text = response.content.strip()
+                if ai_text.startswith('```'):
+                    ai_text = ai_text.split('\n', 1)[1].rsplit('```', 1)[0]
+                ai_analysis = json.loads(ai_text)
+        except Exception:
+            ai_analysis = None
 
         return Response({
             'student_id': student.id,
             'student_name': student.get_full_name() or student.email,
-            'total_attendance_days': total_days,
-            'absent_days': absent_days,
-            'absence_ratio': round(absent_ratio * 100, 2),
-            'risk_level': risk_level,
-            'recommendations': recommendations
+            'attendance': context_payload['attendance'],
+            'grades_summary': context_payload['grades'],
+            'assignments': context_payload['assignments'],
+            'risk_level': ai_analysis.get('risk_level', rule_risk) if ai_analysis else rule_risk,
+            'risk_score': ai_analysis.get('risk_score') if ai_analysis else None,
+            'summary': ai_analysis.get('summary') if ai_analysis else None,
+            'strengths': ai_analysis.get('strengths', []) if ai_analysis else [],
+            'weaknesses': ai_analysis.get('weaknesses', []) if ai_analysis else [],
+            'recommendations': ai_analysis.get('recommendations', [{'action': r, 'target': 'المعلم', 'priority': 'medium'} for r in rule_recommendations]) if ai_analysis else [{'action': r, 'target': 'المعلم', 'priority': 'medium'} for r in rule_recommendations],
+            'predicted_trend': ai_analysis.get('predicted_trend', 'stable') if ai_analysis else 'stable',
+            'ai_powered': ai_analysis is not None,
         })
 
 
