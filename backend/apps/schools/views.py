@@ -2962,6 +2962,77 @@ class TimetableSlotViewSet(viewsets.ModelViewSet):
         wb.save(response)
         return response
 
+    @action(detail=True, methods=['patch'], permission_classes=[permissions.IsAuthenticated])
+    def move(self, request, pk=None):
+        """Move a timetable slot to a new day/period via drag-and-drop.
+
+        PATCH /timetable-slots/{id}/move/
+        Body: { "day_of_week": 1, "period_id": 5 }
+        Validates triple conflict (section, teacher, room) before applying.
+        """
+        slot = self.get_object()
+        new_day = request.data.get('day_of_week')
+        new_period_id = request.data.get('period_id')
+
+        if new_day is None or new_period_id is None:
+            return Response(
+                {'error': 'day_of_week and period_id are required'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        new_day = int(new_day)
+        new_period_id = int(new_period_id)
+
+        try:
+            new_period = Period.objects.get(id=new_period_id, school=slot.school, is_active=True)
+        except Period.DoesNotExist:
+            return Response({'error': 'Period not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        if not is_admin(self.request.user):
+            school_ids = user_school_ids(self.request.user)
+            if slot.school_id not in (school_ids or []):
+                return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
+
+        existing_same = TimetableSlot.objects.filter(
+            section=slot.section, academic_year=slot.academic_year,
+            day_of_week=new_day, period=new_period,
+        ).exclude(pk=slot.pk).exists()
+        if existing_same:
+            return Response(
+                {'error': 'الشعبة الصفية لديها حصة مسجلة بالفعل في هذا الوقت.',
+                 'conflict_type': 'section'},
+                status=status.HTTP_409_CONFLICT,
+            )
+
+        teacher_conflict = TimetableSlot.objects.filter(
+            teacher=slot.teacher, academic_year=slot.academic_year,
+            day_of_week=new_day, period=new_period,
+        ).exclude(pk=slot.pk).exists()
+        if teacher_conflict:
+            return Response(
+                {'error': 'المعلم مرتبط بحصة أخرى في نفس هذا الوقت لشعبة أخرى.',
+                 'conflict_type': 'teacher'},
+                status=status.HTTP_409_CONFLICT,
+            )
+
+        if slot.room:
+            room_conflict = TimetableSlot.objects.filter(
+                room=slot.room, academic_year=slot.academic_year,
+                day_of_week=new_day, period=new_period,
+            ).exclude(pk=slot.pk).exists()
+            if room_conflict:
+                return Response(
+                    {'error': 'القاعة / المختبر محجوزة بالفعل في نفس هذا الوقت.',
+                     'conflict_type': 'room'},
+                    status=status.HTTP_409_CONFLICT,
+                )
+
+        slot.day_of_week = new_day
+        slot.period = new_period
+        slot.save(update_fields=['day_of_week', 'period'])
+
+        return Response(TimetableSlotSerializer(slot, context={'request': request}).data)
+
 
 def check_school_subscription(user, school=None):
     if is_admin(user):
