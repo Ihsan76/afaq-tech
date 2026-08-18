@@ -2177,11 +2177,34 @@ class VoiceSynthesizeAPIView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
-        text = request.data.get('text')
+        text = request.data.get('text', '').strip()
         if not text:
             return Response({'error': 'Text is required'}, status=status.HTTP_400_BAD_REQUEST)
-        # TTS synthesis: returns a placeholder audio URL (streaming TTS can be wired here)
-        return Response({"status": "success", "audio_url": "/media/audio/synthesized_mock.mp3", "text": text})
+        if len(text) > 5000:
+            return Response({'error': 'Text exceeds 5000 character limit'}, status=status.HTTP_400_BAD_REQUEST)
+
+        provider = request.data.get('provider', 'gemini')
+        speed = float(request.data.get('speed', 1.0))
+        locale = request.data.get('locale', 'ar')
+
+        from apps.schools.tts_providers import VoiceSynthesizeAPIView as TTSProvider
+        tts = TTSProvider()
+        method_name = tts.PROVIDER_MAP.get(provider)
+        if not method_name:
+            return Response({'error': f'Unknown provider: {provider}'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            audio_bytes = getattr(tts, method_name)(text, locale, speed)
+            if audio_bytes:
+                from django.http import HttpResponse as DjangoHttpResponse
+                response = DjangoHttpResponse(audio_bytes, content_type='audio/mpeg')
+                response['Content-Disposition'] = 'inline; filename="speech.mp3"'
+                response['Cache-Control'] = 'public, max-age=86400'
+                return response
+        except Exception as e:
+            return Response({'error': f'TTS synthesis failed: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        return Response({'error': 'TTS provider unavailable'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
 
 class MySchoolContextAPIView(APIView):

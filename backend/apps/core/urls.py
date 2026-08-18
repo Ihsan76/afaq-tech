@@ -1,6 +1,10 @@
 from django.urls import path
 
 from . import views
+from .classroom_views import GoogleClassroomAuthView, GoogleClassroomCoursesView, GoogleClassroomExportGradesView, GoogleClassroomImportStudentsView
+from .directorate_views import DirectorateDashboardView, DirectorateListView
+from .gdpr_views import ConsentCreateView, ConsentListView, DataExportView, DeletionRequestStatusView, DeletionRequestView
+from .search_views import AutocompleteView, GlobalSearchView
 
 urlpatterns = [
     path('languages/', views.LanguagePublicListView.as_view(), name='language-list'),
@@ -20,5 +24,17 @@ urlpatterns = [
     path('admin/feature-flags/<int:pk>/delete/', views.feature_flag_delete, name='feature-flag-admin-delete'),
     path('admin/stats/', views.admin_stats, name='admin-stats'),
     path('health/', views.health_view, name='health'),
-    path('search/autocomplete/', views.search_autocomplete_view, name='search-autocomplete'),
+    path('search/', GlobalSearchView.as_view(), name='global-search'),
+    path('search/autocomplete/', AutocompleteView.as_view(), name='search-autocomplete'),
+    path('consent/', ConsentListView.as_view(), name='consent-list'),
+    path('consent/create/', ConsentCreateView.as_view(), name='consent-create'),
+    path('deletion-request/', DeletionRequestView.as_view(), name='deletion-request'),
+    path('deletion-request/status/', DeletionRequestStatusView.as_view(), name='deletion-request-status'),
+    path('data-export/', DataExportView.as_view(), name='data-export'),
+    path('directorates/', DirectorateListView.as_view(), name='directorate-list'),
+    path('directorates/<int:pk>/dashboard/', DirectorateDashboardView.as_view(), name='directorate-dashboard'),
+    path('google-classroom/auth/', GoogleClassroomAuthView.as_view(), name='classroom-auth'),
+    path('google-classroom/courses/', GoogleClassroomCoursesView.as_view(), name='classroom-courses'),
+    path('google-classroom/import/students/', GoogleClassroomImportStudentsView.as_view(), name='classroom-import-students'),
+    path('google-classroom/export/grades/', GoogleClassroomExportGradesView.as_view(), name='classroom-export-grades'),
 ]
