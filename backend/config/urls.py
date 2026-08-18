@@ -20,6 +20,7 @@ urlpatterns = [
     path('api/v1/subscriptions/', include('apps.subscriptions.urls')),
     path('api/v1/schools/', include('apps.schools.urls')),
     path('api/v1/notifications/', include('apps.notifications.urls')),
+    path('api/v1/chat/', include('apps.chat.urls')),
 ]
 
 if settings.DEBUG:

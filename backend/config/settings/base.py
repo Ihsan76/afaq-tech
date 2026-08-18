@@ -41,6 +41,8 @@ INSTALLED_APPS = [
     'apps.subscriptions',
     'apps.schools',
     'apps.notifications',
+    'apps.chat',
+    'channels',
 ]
 
 MIDDLEWARE = [
@@ -74,6 +76,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'config.wsgi.application'
+ASGI_APPLICATION = 'config.asgi.application'
 
 DATABASES = {
     'default': env.db('DATABASE_URL', default='postgres:///afaq_tech'),
@@ -192,6 +195,17 @@ CACHES = {
 
 DJANGO_REDIS_IGNORE_EXCEPTIONS = True
 DJANGO_REDIS_LOG_IGNORED_EXCEPTIONS = True
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            'hosts': [REDIS_URL],
+            'capacity': 1500,
+            'expiry': 10,
+        },
+    },
+}
 
 SENTRY_DSN = env('SENTRY_DSN_BACKEND', default=None)
 if SENTRY_DSN:

@@ -2284,5 +2284,15 @@
     "bannerRoomModeError": "Failed to update room mode",
     "bannerFixedRoomsSetup": "Created {rooms} rooms and linked to {sections} sections",
     "bannerFixedRoomsError": "Failed to create fixed rooms"
+  },
+  "chat": {
+    "conversations": "Conversations",
+    "noConversations": "No conversations yet",
+    "unknown": "Unknown",
+    "typing": "Typing...",
+    "loading": "Loading messages...",
+    "typeMessage": "Type a message...",
+    "send": "Send",
+    "selectConversation": "Select a conversation to start chatting"
   }
 }

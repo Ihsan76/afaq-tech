@@ -2284,5 +2284,15 @@
     "bannerRoomModeError": "تعذر تحديث وضع القاعات",
     "bannerFixedRoomsSetup": "تم إنشاء {rooms} قاعة وربطها بـ {sections} شعبة",
     "bannerFixedRoomsError": "تعذر إنشاء القاعات الثابتة"
+  },
+  "chat": {
+    "conversations": "المحادثات",
+    "noConversations": "لا توجد محادثات بعد",
+    "unknown": "غير معروف",
+    "typing": "يكتب...",
+    "loading": "جارٍ تحميل الرسائل...",
+    "typeMessage": "اكتب رسالة...",
+    "send": "إرسال",
+    "selectConversation": "اختر محادثة للبدء بالدردشة"
   }
 }
