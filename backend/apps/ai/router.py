@@ -10,9 +10,13 @@ from django.core.cache import cache
 from django.db import ProgrammingError
 from django.db.utils import OperationalError
 from google import genai
+from google.genai import errors as genai_errors
 from openai import OpenAI
 
 logger = logging.getLogger(__name__)
+
+_MAX_RETRIES = 3
+_RETRY_BASE_DELAY = 2
 
 
 @dataclass
@@ -55,33 +59,61 @@ class GeminiProvider(BaseProvider):
 
     def generate(self, prompt: str, **kwargs) -> AIResponse:
         start = time.time()
-        try:
-            client = self._get_client()
-            system_instruction = kwargs.get("system_instruction", "")
-            config = genai.types.GenerateContentConfig(
-                system_instruction=system_instruction,
-                response_mime_type="application/json",
-            ) if system_instruction else genai.types.GenerateContentConfig(response_mime_type="application/json")
-            resp = client.models.generate_content(
-                model=self.model_name,
-                contents=prompt,
-                config=config,
-            )
-            raw = resp.text.strip() if resp.text else ""
-            tokens = 0
-            if hasattr(resp, "usage_metadata") and resp.usage_metadata:
-                tokens = resp.usage_metadata.total_token_count
-            elapsed = int((time.time() - start) * 1000)
-            return AIResponse(
-                content=raw, model=self.model_name, provider=self.name,
-                total_tokens=tokens, latency_ms=elapsed,
-            )
-        except Exception as e:
-            elapsed = int((time.time() - start) * 1000)
-            return AIResponse(
-                content="", model=self.model_name, provider=self.name,
-                latency_ms=elapsed, success=False, error=str(e),
-            )
+        client = self._get_client()
+        system_instruction = kwargs.get("system_instruction", "")
+        config = genai.types.GenerateContentConfig(
+            system_instruction=system_instruction,
+            response_mime_type="application/json",
+        ) if system_instruction else genai.types.GenerateContentConfig(response_mime_type="application/json")
+
+        last_error = None
+        for attempt in range(_MAX_RETRIES):
+            try:
+                resp = client.models.generate_content(
+                    model=self.model_name,
+                    contents=prompt,
+                    config=config,
+                )
+                raw = resp.text.strip() if resp.text else ""
+                tokens = 0
+                if hasattr(resp, "usage_metadata") and resp.usage_metadata:
+                    tokens = resp.usage_metadata.total_token_count
+                elapsed = int((time.time() - start) * 1000)
+                return AIResponse(
+                    content=raw, model=self.model_name, provider=self.name,
+                    total_tokens=tokens, latency_ms=elapsed,
+                )
+            except (
+                genai_errors.ServerError,
+                genai_errors.ClientError,
+            ) as e:
+                is_transient = getattr(e, "code", None) in (429, 500, 502, 503)
+                if not is_transient:
+                    elapsed = int((time.time() - start) * 1000)
+                    return AIResponse(
+                        content="", model=self.model_name, provider=self.name,
+                        latency_ms=elapsed, success=False, error=str(e),
+                    )
+                last_error = e
+                wait = _RETRY_BASE_DELAY * (2 ** attempt)
+                logger.warning(
+                    "Gemini attempt %d/%d failed (%s), retrying in %ds...",
+                    attempt + 1, _MAX_RETRIES, type(e).__name__, wait,
+                )
+                time.sleep(wait)
+            except Exception as e:
+                elapsed = int((time.time() - start) * 1000)
+                return AIResponse(
+                    content="", model=self.model_name, provider=self.name,
+                    latency_ms=elapsed, success=False, error=str(e),
+                )
+
+        elapsed = int((time.time() - start) * 1000)
+        return AIResponse(
+            content="", model=self.model_name, provider=self.name,
+            latency_ms=elapsed, success=False,
+            error=f"Failed after {_MAX_RETRIES} retries: {last_error}",
+        )
 
     def health_check(self) -> bool:
         return bool(self.api_key or settings.GEMINI_API_KEY)
