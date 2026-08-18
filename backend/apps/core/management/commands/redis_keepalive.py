@@ -13,8 +13,8 @@ Usage:
 
 import os
 import sys
-import urllib.request
 import urllib.error
+import urllib.request
 from datetime import datetime
 
 from django.core.management.base import BaseCommand
@@ -99,7 +99,6 @@ class Command(BaseCommand):
         # Try Redis protocol first (unless --http forced)
         if not use_http:
             try:
-                import redis as redis_lib  # noqa: F811
                 result = _ping_via_redis(redis_url)
                 self.stdout.write(self.style.SUCCESS(f"✅ PING → PONG (Redis) | {now}"))
                 if options["verbose"]:
@@ -111,7 +110,7 @@ class Command(BaseCommand):
                 return
             except Exception:
                 if not http_info:
-                    self.stderr.write(f"❌ فشل الاتصال بـ Redis ولم يتم العثور على HTTP API")
+                    self.stderr.write("❌ فشل الاتصال بـ Redis ولم يتم العثور على HTTP API")
                     sys.exit(1)
                 # Fall through to HTTP
                 use_http = True
