@@ -63,8 +63,8 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         try:
             from google import genai
-        except ImportError:
-            raise CommandError("مكتبة google-genai غير مثبتة. يرجى تثبيتها عبر pip install google-genai")
+        except ImportError as exc:
+            raise CommandError("مكتبة google-genai غير مثبتة. يرجى تثبيتها عبر pip install google-genai") from exc
 
         api_key = getattr(settings, "GEMINI_API_KEY", "")
         if not api_key and not options["dry_run"]:
@@ -79,7 +79,7 @@ class Command(BaseCommand):
             with open(en_file, encoding="utf-8") as fh:
                 en_data = json.load(fh)
         except json.JSONDecodeError as e:
-            raise CommandError(f"خطأ في قراءة en.json: {e}")
+            raise CommandError(f"خطأ في قراءة en.json: {e}") from e
 
         en_flat = flatten(en_data)
         self.stdout.write(f"تم تحميل {len(en_flat)} مفتاح إنجليزي مرجعي من {en_file}")
