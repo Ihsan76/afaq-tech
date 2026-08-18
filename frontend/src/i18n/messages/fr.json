@@ -277,7 +277,7 @@
     "dragHint": "Glissez les blocs pour les réordonner",
     "editView": "Modifier",
     "previewView": "Aperçu en direct",
-    "slug": "Slug",
+    "slug": "Identifiant",
     "template": "Modèle",
     "titleEn": "Titre (anglais)",
     "titleAr": "Titre (arabe)",
@@ -366,7 +366,7 @@
     "excerptAr": "Extrait (AR)",
     "contentEn": "Contenu (EN) — HTML",
     "contentAr": "Contenu (AR) — HTML",
-    "tags": "Tags",
+    "tags": "Étiquettes",
     "readTime": "Temps de lecture (min)",
     "authorEn": "Auteur (EN)",
     "authorAr": "Auteur (AR)",
@@ -515,7 +515,7 @@
     "pleaseLogin": "Veuillez vous connecter avec un compte administrateur pour continuer.",
     "previewUrl": "URL d'aperçu",
     "searchTranslationPlaceholder": "Rechercher par clé...",
-    "tagsPlaceholder": "tag1,tag2,tag3",
+    "tagsPlaceholder": "étiquette1,étiquette2,étiquette3",
     "translationAllNamespaces": "Tous les espaces de noms",
     "translationKey": "Clé",
     "translationKeyRequired": "La clé est requise",
@@ -523,11 +523,11 @@
     "translationValuePlaceholder": "Valeur dans cette langue",
     "translations": "Traductions",
     "translationsDesc": "Gérer les clés de traduction et leurs valeurs pour toutes les langues",
-    "marketplace": "Marketplace",
+    "marketplace": "Place de marché",
     "marketplaceDesc": "Gérer les services, catégories, commandes et avis",
     "aiRuns": "Suivi IA",
     "aiRunsDesc": "Suivre les exécutions IA, tokens, coûts et performances",
-    "marketplaceSection": "Marketplace",
+    "marketplaceSection": "Place de marché",
     "subscriptionsSection": "Abonnements",
     "subscriptions": "Plans et offres",
     "subscriptionsDesc": "Gérer les plans, les prix et les abonnements",
@@ -585,12 +585,12 @@
     "createdCol": "Date",
     "noAiRuns": "Aucune exécution IA trouvée",
     "promptCol": "Voir",
-    "promptLabel": "Prompt",
+    "promptLabel": "Invite",
     "responseLabel": "Réponse",
     "featureLessonPlan": "Plan de leçon",
     "featureQuiz": "Quiz",
     "featureExploration": "Explication",
-    "featureChat": "Chat",
+    "featureChat": "Discussion",
     "unsavedChanges": "Vous avez des modifications non enregistrées dans le formulaire. Quitter quand même ?",
     "organizationsSection": "Organisations",
     "organizations": "Organisations",
@@ -1464,7 +1464,7 @@
         "rare": "Rare",
         "uncommon": "Peu commun"
       },
-      "title": "Badges"
+      "title": "Insignes"
     },
     "challenges": {
       "active": "Défis actifs",
@@ -1485,7 +1485,7 @@
     "description": "Gagnez des points, des badges et relevez des défis en apprenant",
     "leaderboard": {
       "category": {
-        "badges": "Badges",
+        "badges": "Insignes",
         "lessons": "Leçons",
         "points": "Points",
         "streak": "Série"
@@ -1526,7 +1526,7 @@
     },
     "tabs": {
       "achievements": "Réalisations",
-      "badges": "Badges",
+      "badges": "Insignes",
       "challenges": "Défis",
       "leaderboard": "Classement",
       "points": "Points",
@@ -1564,7 +1564,7 @@
     "resultsFor": "Résultats pour",
     "title": "Recherche",
     "all": "Tout",
-    "ebooks": "E-Books",
+    "ebooks": "Livres numériques",
     "courses": "Cours",
     "blog": "Blog"
   },
@@ -1684,7 +1684,7 @@
     "role": "Rôle",
     "status": "Statut"
   },
-  "marketplace": "Marketplace",
+  "marketplace": "Place de marché",
   "schools": {
     "title": "Suivi Scolaire Intelligent",
     "subtitle": "Gérer les écoles, les classes, les affectations d'enseignants et la communication",
@@ -2059,7 +2059,7 @@
     "quickSections": "Sections de classe",
     "quickRooms": "Salles et périodes",
     "attendanceCount": "{count} enregistrements",
-    "ticketsCount": "{count} tickets",
+    "ticketsCount": "{count} demandes",
     "attachmentsCount": "{count} pièces jointes",
     "announcementsCount": "{count} annonces",
     "bannerCapacityUpdated": "Capacité mise à jour",
