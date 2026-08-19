@@ -51,6 +51,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     ]},
     { key: "education", section: t("admin.educationSection") || "التعليم والأكاديمية", items: [
       { href: "/admin/grades", label: t("admin.grades"), icon: "🎓" },
+      { href: "/admin/grades/tracks", label: "التخصصات", icon: "🔬" },
       { href: "/admin/subjects", label: t("admin.subjects"), icon: "📚" },
       { href: "/admin/curricula", label: t("admin.curricula"), icon: "📋" },
       { href: "/admin/schools", label: t("admin.schools") || "المدارس والمتابعة", icon: "🏫" },
