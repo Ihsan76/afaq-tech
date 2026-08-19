@@ -13,7 +13,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings.base')
 django.setup()
 
-from apps.academics.models import Curriculum, Grade, Subject, Unit
+from apps.academics.models import AcademicTrack, Curriculum, Grade, Subject, Unit
 
 
 def g(name_ar, name_en):
@@ -37,21 +37,30 @@ def get_grade(level):
     return Grade.objects.filter(level=level).first()
 
 
-def seed_curriculum(country, year, level, name_ar, name_en, subjects_units):
+def seed_curriculum(country, year, level, name_ar, name_en, subjects_units, track_code=None):
     grade = get_grade(level)
     if grade is None:
         print(f'  ! grade level {level} not found, skipping {name_ar}')
         return None
+    track = None
+    track_suffix = ""
+    if track_code:
+        track = AcademicTrack.objects.filter(grade=grade, code=track_code).first()
+        if track:
+            track_suffix = f" [track={track_code}]"
+        else:
+            print(f'  ! track {track_code} not found for grade {level}, creating without track')
     cur, created = Curriculum.objects.get_or_create(
         country=country,
         year=year,
         grade=grade,
+        track=track,
         defaults={'translations': g(name_ar, name_en)},
     )
     if created:
-        print(f'  + Curriculum: {name_ar} ({country}) grade={level}')
+        print(f'  + Curriculum: {name_ar} ({country}) grade={level}{track_suffix}')
     else:
-        print(f'  = Curriculum exists: {name_ar} grade={level}')
+        print(f'  = Curriculum exists: {name_ar} grade={level}{track_suffix}')
     for sname_ar, sname_en, units in subjects_units:
         subject = get_subject(sname_ar, sname_en)
         for order, (uname_ar, uname_en, outcomes) in enumerate(units, start=1):
@@ -137,8 +146,9 @@ def main():
         ]),
     ])
 
-    # الصف الأول الثانوي (level 11)
-    seed_curriculum('السعودية', 2026, 11, 'منهج الصف الأول الثانوي', 'Grade 11 Secondary Curriculum', [
+    # الصف الأول الثانوي (level 11) — تخصصات أكاديمية
+    # علمي/هندسي
+    seed_curriculum('السعودية', 2026, 11, 'منهج الصف الأول الثانوي - علمي/هندسي', 'Grade 11 Secondary - Scientific/Engineering', [
         ('الرياضيات', 'Mathematics', [
             ('المعادلات والمتباينات', 'Equations and Inequalities', ['أن يحل معادلات من الدرجة الثانية', 'أن يحل متباينات ويحللها', 'أن يمثل الحلول بيانياً']),
             ('الدوال الخطية والتربيعية', 'Linear and Quadratic Functions', ['أن يحدد خصائص الدوال', 'أن يرسم الدوال التربيعية', 'أن يحلل سلوك الدوال']),
@@ -154,7 +164,53 @@ def main():
             ('الجدول الدوري', 'The Periodic Table', ['أن يحدد موقع العناصر في الجدول الدوري', 'أن يشرح ترتيب العناصر حسب خصائصها', 'أن يتوقع خصائص العناصر من موقعها']),
             ('الترابط الكيميائي', 'Chemical Bonding', ['أن يشرح أنواع الروابط الكيميائية', 'أن يرسم الصيغ لويس', 'أن يربط الترابط بخصائص المركبات']),
         ]),
-    ])
+    ], track_code='scientific_engineering')
+
+    # أدبي/إنساني
+    seed_curriculum('السعودية', 2026, 11, 'منهج الصف الأول الثانوي - أدبي/إنساني', 'Grade 11 Secondary - Humanities', [
+        ('الرياضيات', 'Mathematics', [
+            ('النسبة المئوية والتحليل', 'Percentage and Analysis', ['أن يحسب النسب المئوية', 'أن يحلل البيانات الإحصائية البسيطة', 'أن يطبق النسب في المسائل الحياتية']),
+            ('التفكير الرياضي', 'Mathematical Thinking', ['أن يحلل المواقف الرياضية', 'أن يربط الرياضية بالحياة اليومية', 'أن ي expresses التفكير المنطقي']),
+        ]),
+        ('اللغة العربية', 'Arabic Language', [
+            ('النصوص الأدبية', 'Literary Texts', ['أن يحلل نصوصاً شعرية ونثرية', 'أن يحدد الأسلوب والtone', 'أن يقارن بين النصوص']),
+            ('النحو والصرف', 'Grammar and Morphology', ['أن يعرب الجمل المختلفة', 'أن يmiيز بين أنواع الجمل', 'أن يim Literary Devices']),
+        ]),
+        ('التاريخ', 'History', [
+            ('الحضارات القديمة', 'Ancient Civilizations', ['أن يصف أبرز الحضارات القديمة', 'أن يربط بين الحضارات والجغرافيا', 'أن يحلل تأثير الحضارات على المعاصرة']),
+        ]),
+        ('الجغرافيا', 'Geography', [
+            ('الموارد الطبيعية', 'Natural Resources', ['أن يmiيز بين الموارد الطبيعية المتجددة وغير المتجددة', 'أن يشرح توزيع الموارد عالمياً', 'أن يحلل تأثير استغلال الموارد']),
+        ]),
+    ], track_code='humanities_social')
+
+    # تجاري
+    seed_curriculum('السعودية', 2026, 11, 'منهج الصف الأول الثانوي - تجاري', 'Grade 11 Secondary - Business', [
+        ('الرياضيات', 'Mathematics', [
+            ('النسبة المئوية والتحليل المالي', 'Percentage and Financial Analysis', ['أن يحسب النسب المئوية', 'أن يحلل البيانات المالية البسيطة', 'أن يطبق المفاهيم المالية في المسائل']),
+            ('التفكير الرياضي', 'Mathematical Thinking', ['أن يحلل المواقف المالية', 'أن يربط الرياضية بالتجارة', 'أن يmiيز بين الأرباح والخسائر']),
+        ]),
+        ('اللغة العربية', 'Arabic Language', [
+            ('النصوص الأدبية', 'Literary Texts', ['أن يقرأ نصوصاً تتعلق بالتجارة والأعمال', 'أن يmiيز بين الأسلوب الإخباري والتحليلي', 'أن يكتب تقريراً مختصراً']),
+        ]),
+        ('الاقتصاد', 'Economics', [
+            ('المفاهيم الاقتصادية الأساسية', 'Basic Economic Concepts', ['أن يmiيز بين العرض والطلب', 'أن يشرح مفهوم التكلفة والمنفعة', 'أن يصف أنواع الأسواق المختلفة']),
+        ]),
+    ], track_code='business')
+
+    # صحي
+    seed_curriculum('السعودية', 2026, 11, 'منهج الصف الأول الثانوي - صحي', 'Grade 11 Secondary - Health', [
+        ('الرياضيات', 'Mathematics', [
+            ('الإحصاء والقياس الصحي', 'Statistics and Health Measurement', ['أن يحسب المقاييس الإحصائية', 'أن يmiيز بين البيانات qualitative وquantitative', 'أن يحلل بيانات صحية بسيطة']),
+        ]),
+        ('الأحياء', 'Biology', [
+            ('الخلايا والأنسجة', 'Cells and Tissues', ['أن يصف بنية الخلية hedgehog ووظائفها', 'أن يmiيز بين أنواع الخلايا', 'أن يشرح how الأنسجة تتكون']),
+            ('الوراثة والتطور', 'Genetics and Evolution', ['أن يشرح قوانين مندل', 'أن يmiيز بين الوراثة الصبغية وغير الصبغية', 'أن يصف مفهوم التطور']),
+        ]),
+        ('الكيمياء', 'Chemistry', [
+            ('المادة وال=tk', 'Matter and Health', ['أن يmiيز بين أنواع المواد', 'أن يشرح تأثير المواد على الصحة', 'أن يصف التفاعلات الكيميائية في الجسم']),
+        ]),
+    ], track_code='health')
 
     # ---------------------------------------------------------------
     # الأردن — منهاج الصف السابع الأساسي
