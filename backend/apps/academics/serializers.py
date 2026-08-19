@@ -40,7 +40,7 @@ class AcademicTrackSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = AcademicTrack
-        fields = ['id', 'name', 'code', 'grade', 'is_active', 'order', 'translations']
+        fields = ['id', 'name', 'code', 'grade', 'country', 'year', 'is_active', 'order', 'translations']
 
     def get_name(self, obj):
         loc = _locale(self.context.get('request'))

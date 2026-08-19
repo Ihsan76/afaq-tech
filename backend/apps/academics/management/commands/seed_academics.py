@@ -109,6 +109,7 @@ class Command(BaseCommand):
             for t in SECONDARY_TRACKS:
                 translations = {lang: {"name": t[lang]} for lang in LANGS if t.get(lang)}
                 obj, was_created = AcademicTrack.objects.update_or_create(
+                    country="المملكة الأردنية الهاشمية", year=2026,
                     grade=grade, code=t["code"],
                     defaults={"translations": translations, "order": t["order"]}
                 )

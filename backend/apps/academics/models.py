@@ -16,8 +16,10 @@ class Grade(models.Model):
         return self.translations.get('ar', {}).get('name', str(self.level))
 
 class AcademicTrack(models.Model):
-    """الشعب/التخصصات الأكاديمية (مثل: علمي هندسي، تجاري، صحي...) — مرتبطة بصف محدد."""
+    """الشعب/التخصصات الأكاديمية (مثل: علمي هندسي، تجاري، صحي...) — مرتبطة بصف ودولة وسنة."""
     grade = models.ForeignKey(Grade, on_delete=models.CASCADE, related_name='tracks', verbose_name='الصف')
+    country = models.CharField('الدولة', max_length=100, db_index=True, default='السعودية')
+    year = models.IntegerField('السنة', db_index=True, default=2026)
     translations = models.JSONField('الترجمات', default=dict, blank=True)
     code = models.CharField('الرمز', max_length=50, help_text='رمز فريد للحقل مثل scientific_engineering')
     is_active = models.BooleanField('نشط', default=True)
@@ -26,11 +28,14 @@ class AcademicTrack(models.Model):
     class Meta:
         verbose_name = 'تخصص أكاديمي'
         verbose_name_plural = 'التخصصات الأكاديمية'
-        unique_together = [['grade', 'code']]
-        ordering = ['grade', 'order', 'id']
+        unique_together = [['country', 'year', 'grade', 'code']]
+        indexes = [
+            models.Index(fields=['country', 'year']),
+        ]
+        ordering = ['country', 'year', 'grade', 'order', 'id']
 
     def __str__(self):
-        return f"{self.translations.get('ar', {}).get('name', self.code)} — {self.grade}"
+        return f"{self.translations.get('ar', {}).get('name', self.code)} — {self.grade} ({self.country} {self.year})"
 
 
 class Subject(models.Model):

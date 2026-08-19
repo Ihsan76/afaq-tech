@@ -46,7 +46,13 @@ class AcademicTrackListView(generics.ListAPIView):
         grade_id = self.request.query_params.get('grade')
         if grade_id:
             qs = qs.filter(grade_id=grade_id)
-        return qs.order_by('grade__level', 'order')
+        country = self.request.query_params.get('country')
+        if country:
+            qs = qs.filter(country=country)
+        year = self.request.query_params.get('year')
+        if year:
+            qs = qs.filter(year=year)
+        return qs.order_by('country', 'year', 'grade__level', 'order')
 
 
 class AcademicTrackCreateView(generics.CreateAPIView):

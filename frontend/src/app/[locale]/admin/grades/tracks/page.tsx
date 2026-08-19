@@ -20,6 +20,8 @@ interface Track {
   order: number;
   is_active: boolean;
   grade: number;
+  country: string;
+  year: number;
   name: string;
   translations: Record<string, { name: string }>;
 }
@@ -46,6 +48,8 @@ export default function AdminTracksPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingTrack, setEditingTrack] = useState<Track | null>(null);
   const [formGrade, setFormGrade] = useState<number>(0);
+  const [formCountry, setFormCountry] = useState<string>("المملكة الأردنية الهاشمية");
+  const [formYear, setFormYear] = useState<number>(2026);
   const [formCode, setFormCode] = useState("scientific_engineering");
   const [formOrder, setFormOrder] = useState(0);
   const [formActive, setFormActive] = useState(true);
@@ -78,6 +82,8 @@ export default function AdminTracksPage() {
     setSelectedLang("ar");
     setNameInput("");
     setFormGrade(secondaryGrades[0]?.id || 0);
+    setFormCountry("المملكة الأردنية الهاشمية");
+    setFormYear(2026);
     setFormCode("scientific_engineering");
     setFormOrder(0);
     setFormActive(true);
@@ -93,6 +99,8 @@ export default function AdminTracksPage() {
     setSelectedLang("ar");
     setNameInput(tr["ar"] || "");
     setFormGrade(track.grade);
+    setFormCountry(track.country || "المملكة الأردنية الهاشمية");
+    setFormYear(track.year || 2026);
     setFormCode(track.code);
     setFormOrder(track.order);
     setFormActive(track.is_active);
@@ -109,7 +117,7 @@ export default function AdminTracksPage() {
       for (const lang of LANGUAGES) {
         if (formTranslations[lang.code]?.trim()) translations[lang.code] = { name: formTranslations[lang.code].trim() };
       }
-      const payload = { translations, grade: formGrade, code: formCode, order: formOrder, is_active: formActive };
+      const payload = { translations, grade: formGrade, country: formCountry, year: formYear, code: formCode, order: formOrder, is_active: formActive };
       if (editingTrack) await api.put(`/academics/tracks/${editingTrack.id}/`, payload);
       else await api.post("/academics/tracks/create/", payload);
       resetForm();
@@ -151,7 +159,15 @@ export default function AdminTracksPage() {
           <div className="rounded-3xl shadow-xl p-6 mb-8" style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", boxShadow: "var(--card-shadow)" }}>
             <h2 className="text-xl font-bold mb-4" style={{ color: "var(--color-text)", fontFamily: "var(--font-heading)" }}>{editingTrack ? "تعديل تخصص" : "إضافة تخصص جديد"}</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid sm:grid-cols-2 gap-4">
+              <div className="grid sm:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold mb-2" style={{ color: "var(--color-text-secondary)" }}>الدولة</label>
+                  <input type="text" value={formCountry} onChange={(e) => setFormCountry(e.target.value)} className={inputCls} style={{ borderColor: "var(--color-border)", color: "var(--color-text)", backgroundColor: "var(--color-background)" }} required />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold mb-2" style={{ color: "var(--color-text-secondary)" }}>السنة</label>
+                  <input type="number" value={formYear} onChange={(e) => setFormYear(Number(e.target.value))} className={inputCls} style={{ borderColor: "var(--color-border)", color: "var(--color-text)", backgroundColor: "var(--color-background)" }} required />
+                </div>
                 <div>
                   <label className="block text-sm font-semibold mb-2" style={{ color: "var(--color-text-secondary)" }}>الصف</label>
                   <SelectDropdown value={formGrade} onChange={(v) => setFormGrade(Number(v))}
@@ -162,6 +178,8 @@ export default function AdminTracksPage() {
                     ))}
                   </SelectDropdown>
                 </div>
+              </div>
+              <div className="grid sm:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-semibold mb-2" style={{ color: "var(--color-text-secondary)" }}>الكود</label>
                   <SelectDropdown value={formCode} onChange={(v) => setFormCode(String(v))}
@@ -171,8 +189,6 @@ export default function AdminTracksPage() {
                     ))}
                   </SelectDropdown>
                 </div>
-              </div>
-              <div className="grid sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-semibold mb-2" style={{ color: "var(--color-text-secondary)" }}>الترتيب</label>
                   <input type="number" value={formOrder} onChange={(e) => setFormOrder(Number(e.target.value))} className={inputCls} style={{ borderColor: "var(--color-border)", color: "var(--color-text)", backgroundColor: "var(--color-background)" }} />
