@@ -9,7 +9,7 @@ def activate_ebook_purchase(purchase_id, transaction_id='', provider_name=''):
     """Idempotently mark an ebook purchase as paid (lifetime download access)."""
     try:
         purchase = EbookPurchase.objects.select_related(
-            'user', 'ebook', 'ebook__author'
+            'user', 'ebook', 'ebook__author_role'
         ).get(id=purchase_id)
     except (EbookPurchase.DoesNotExist, ValueError, TypeError):
         return False

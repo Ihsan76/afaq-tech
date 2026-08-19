@@ -42,10 +42,13 @@ def buyer():
 
 @pytest.fixture
 def paid_course(instructor):
+    from apps.users.models import UserRole
+
+    role = UserRole.objects.create(user=instructor, role="instructor")
     return Course.objects.create(
         slug="react-basics",
         translations={"en": {"title": "React Basics"}, "ar": {"title": "أساسيات رياكت"}},
-        instructor=instructor,
+        instructor_role=role,
         is_free=False,
         price="100.00",
         access_level="pro",
@@ -148,10 +151,13 @@ def author():
 
 @pytest.fixture
 def paid_ebook(author):
+    from apps.users.models import UserRole
+
+    role = UserRole.objects.create(user=author, role="instructor")
     return Ebook.objects.create(
         slug="ebook-pro",
         translations={"ar": {"title": "كتاب احترافي"}, "en": {"title": "Pro Ebook"}},
-        author=author,
+        author_role=role,
         is_free=False,
         price="50.00",
         access_level="pro",

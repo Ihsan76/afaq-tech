@@ -9,7 +9,7 @@ def activate_course_purchase(purchase_id, transaction_id='', provider_name=''):
     """Idempotently mark a course purchase as paid and grant lifetime access."""
     try:
         purchase = CoursePurchase.objects.select_related(
-            'user', 'course', 'course__instructor'
+            'user', 'course', 'course__instructor_role'
         ).get(id=purchase_id)
     except (CoursePurchase.DoesNotExist, ValueError, TypeError):
         return False
