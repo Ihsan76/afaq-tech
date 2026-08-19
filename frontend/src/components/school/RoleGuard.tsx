@@ -54,8 +54,8 @@ export default function RoleGuard({ allowed, children }: RoleGuardProps) {
     );
   }
 
-  const isStaff = user.is_staff || user.role === "admin" || user.role === "developer";
-  const isAllowed = isStaff || allowed.includes(user.role);
+  const isStaff = user.is_staff || user.role === "admin" || user.role === "developer" || (user.roles && user.roles.includes("admin"));
+  const isAllowed = isStaff || allowed.includes(user.role) || (user.roles && allowed.some(r => user.roles.includes(r)));
 
   if (!isAllowed) {
     return (

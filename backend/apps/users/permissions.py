@@ -1,5 +1,7 @@
 from rest_framework.permissions import SAFE_METHODS, BasePermission
 
+from .services import RoleService
+
 # Admin-team roles that may enter the admin dashboard at all.
 ADMIN_ROLES = {'admin', 'developer', 'support', 'content_manager', 'finance'}
 
@@ -25,20 +27,20 @@ SECTION_ROLES = {
 
 
 def is_admin_role(user):
-    return bool(
-        user and user.is_authenticated and (
-            user.is_superuser or user.is_staff or user.role in ADMIN_ROLES
-        )
-    )
+    if not (user and user.is_authenticated):
+        return False
+    if user.is_superuser or user.is_staff:
+        return True
+    return any(RoleService.has_role(user, r) for r in ADMIN_ROLES)
 
 
 def user_sections(user):
     """Sections a user may access in the admin dashboard."""
     if not (user and user.is_authenticated):
         return set()
-    if user.is_superuser or user.is_staff or user.role == 'admin':
+    if user.is_superuser or user.is_staff or RoleService.has_role(user, 'admin'):
         return set(SECTION_ROLES.keys())
-    return {s for s, roles in SECTION_ROLES.items() if user.role in roles}
+    return {s for s, roles in SECTION_ROLES.items() if any(RoleService.has_role(user, r) for r in roles)}
 
 
 class IsAdminRole(BasePermission):
@@ -46,16 +48,20 @@ class IsAdminRole(BasePermission):
     def has_permission(self, request, view):
         if not is_admin_role(request.user):
             return False
-        return not (request.user.role in READONLY_ROLES and request.method not in SAFE_METHODS)
+        user_roles = RoleService.get_role_names(request.user)
+        is_readonly = any(r in READONLY_ROLES for r in user_roles)
+        return not (is_readonly and request.method not in SAFE_METHODS)
 
 
 class IsSystemAdmin(BasePermission):
     """System admin only (or staff/superuser)."""
     def has_permission(self, request, view):
         u = request.user
-        return bool(u and u.is_authenticated and (
-            u.is_superuser or u.is_staff or u.role == 'admin'
-        ))
+        if not (u and u.is_authenticated):
+            return False
+        if u.is_superuser or u.is_staff:
+            return True
+        return RoleService.has_role(u, 'admin')
 
 
 class IsSectionAdmin(BasePermission):
@@ -66,12 +72,14 @@ class IsSectionAdmin(BasePermission):
         u = request.user
         if not (u and u.is_authenticated):
             return False
-        if u.is_superuser or u.is_staff or u.role == 'admin':
+        if u.is_superuser or u.is_staff or RoleService.has_role(u, 'admin'):
             return True
         allowed = SECTION_ROLES.get(self.section or '', set())
-        if u.role not in allowed:
+        user_roles = RoleService.get_role_names(u)
+        if not any(r in allowed for r in user_roles):
             return False
-        return not (u.role in READONLY_ROLES and request.method not in SAFE_METHODS)
+        is_readonly = any(r in READONLY_ROLES for r in user_roles)
+        return not (is_readonly and request.method not in SAFE_METHODS)
 
 
 class IsContentAdmin(IsSectionAdmin):

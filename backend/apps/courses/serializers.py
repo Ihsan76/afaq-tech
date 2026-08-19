@@ -112,8 +112,9 @@ class CourseListSerializer(serializers.ModelSerializer):
         return _extract_field(obj.translations, 'description')
 
     def get_instructor_name(self, obj):
-        if obj.instructor:
-            name = obj.instructor.translations.get('ar', {}).get('name') or obj.instructor.translations.get('en', {}).get('name')
+        instructor = obj.instructor
+        if instructor:
+            name = instructor.translations.get('ar', {}).get('name') or instructor.translations.get('en', {}).get('name')
             if name:
                 return {'ar': name, 'en': name}
         return _extract_field(obj.instructor_translations, 'name')

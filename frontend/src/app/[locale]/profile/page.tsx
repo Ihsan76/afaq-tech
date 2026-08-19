@@ -2,11 +2,23 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
+import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useAuthStore } from "@/store/auth";
 import { api } from "@/lib/api";
 import ThemeSwitcher from "@/components/ThemeSwitcher";
 import SelectDropdown from "@/components/ui/SelectDropdown";
+
+interface UserRoleEntry {
+  id: number;
+  role: string;
+  icon: string;
+  label_ar: string;
+  label_en: string;
+  context_url: string;
+  organization: string | null;
+  assigned_at: string;
+}
 
 export default function ProfilePage() {
   const t = useTranslations();
@@ -31,6 +43,8 @@ export default function ProfilePage() {
   });
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const [roles, setRoles] = useState<UserRoleEntry[]>([]);
+  const [rolesLoading, setRolesLoading] = useState(true);
 
   useEffect(() => {
     if (user) {
@@ -44,6 +58,10 @@ export default function ProfilePage() {
         input_language: user.input_language || "ar",
         output_language: user.output_language || "ar",
       });
+      api.get("/auth/my-roles/")
+        .then((res) => setRoles(res.data.roles || []))
+        .catch(() => setRoles([]))
+        .finally(() => setRolesLoading(false));
     }
   }, [user]);
 
@@ -219,6 +237,48 @@ export default function ProfilePage() {
             </div>
             <p className="text-sm" style={{ color: "var(--color-text-muted)" }}>{t("profile.memberSince")}: {new Date(user.date_joined).toLocaleDateString(locale === "ar" ? "ar-EG" : "en-US")}</p>
           </div>
+
+          {/* Roles Dashboard */}
+          {roles.length > 0 && (
+            <div className="glass-strong p-6 rounded-3xl border" style={{ borderColor: "var(--color-border)" }}>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "var(--color-primary-light)" }}>
+                  <span className="text-xl">🎭</span>
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold" style={{ color: "var(--color-text)", fontFamily: "var(--font-heading)" }}>
+                    {locale === "ar" ? "أدوارك النشطة" : "Your Active Roles"}
+                  </h2>
+                  <p className="text-xs" style={{ color: "var(--color-text-muted)" }}>
+                    {locale === "ar" ? `${roles.length} ${roles.length === 1 ? "دور" : "أدوار"}` : `${roles.length} role${roles.length === 1 ? "" : "s"}`}
+                  </p>
+                </div>
+              </div>
+              <div className="space-y-2">
+                {roles.map((entry) => (
+                  <Link
+                    key={entry.id}
+                    href={`/${locale}${entry.context_url}`}
+                    className="flex items-center gap-3 p-3 rounded-xl border transition-all hover:scale-[1.01]"
+                    style={{ borderColor: "var(--color-border)", background: "var(--color-surface)" }}
+                  >
+                    <span className="text-2xl">{entry.icon}</span>
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold" style={{ color: "var(--color-text)" }}>
+                        {locale === "ar" ? entry.label_ar : entry.label_en}
+                      </p>
+                      {entry.organization && (
+                        <p className="text-xs" style={{ color: "var(--color-text-muted)" }}>
+                          {entry.organization}
+                        </p>
+                      )}
+                    </div>
+                    <svg className="w-4 h-4" style={{ color: "var(--color-text-muted)" }} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Save Button */}
           <button

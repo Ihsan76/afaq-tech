@@ -76,8 +76,8 @@ export default function ContextualSidebar() {
     const list = Array.isArray(roles) ? roles : [roles];
     if (list.includes("all")) return true;
     if (!user) return false;
-    if (user.is_staff || user.role === "admin" || user.role === "developer") return true;
-    return list.includes(user.role);
+    if (user.is_staff || user.role === "admin" || user.role === "developer" || (user.roles && user.roles.includes("admin"))) return true;
+    return list.includes(user.role) || (user.roles && list.some(r => user.roles.includes(r)));
   };
 
   const contextualItems = useMemo(() => {
@@ -107,7 +107,7 @@ export default function ContextualSidebar() {
   };
 
   const isSchoolContext = roleServices.includes(service) || service === "school";
-  const isStaff = !!(user && (user.is_staff || user.role === "admin" || user.role === "developer"));
+  const isStaff = !!(user && (user.is_staff || user.role === "admin" || user.role === "developer" || (user.roles && user.roles.includes("admin"))));
   const SCHOOL_GROUP_KEYS = ["school_admin", "teacher", "parent", "student", "school_accountant", "school_transport_officer", "school_librarian", "creator"] as const;
 
   const pickGroupKey = (roles: string[]) => {
@@ -192,7 +192,7 @@ export default function ContextualSidebar() {
   };
 
   const canSee = (section: string) =>
-    !!user && (user.is_staff || user.role === "admin" || (SECTION_ROLES[section] || []).includes(user.role));
+    !!user && (user.is_staff || user.role === "admin" || (user.roles && user.roles.includes("admin")) || (SECTION_ROLES[section] || []).includes(user.role) || (user.roles && (SECTION_ROLES[section] || []).some(r => user.roles.includes(r))));
 
   const ALL_NAV_ITEMS = [
     { key: "content", section: adminT("contentSection") || "المحتوى", items: [

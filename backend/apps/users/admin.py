@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
-from .models import User
+from .models import User, UserRole
 
 
 @admin.register(User)
@@ -26,3 +26,11 @@ class UserAdmin(BaseUserAdmin):
             'fields': ('email', 'password1', 'password2', 'role'),
         }),
     )
+
+
+@admin.register(UserRole)
+class UserRoleAdmin(admin.ModelAdmin):
+    list_display = ['user', 'role', 'organization', 'assigned_by', 'assigned_at', 'is_active']
+    list_filter = ['role', 'is_active']
+    search_fields = ['user__email']
+    autocomplete_fields = ['user', 'organization', 'assigned_by']

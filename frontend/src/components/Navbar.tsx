@@ -77,11 +77,11 @@ export default function Navbar() {
     if (!roles || (Array.isArray(roles) && roles.length === 0)) return true;
     if (roles.includes("all")) return true;
     if (!user) return false;
-    if (user.is_staff || user.role === "admin" || user.role === "developer") return true;
-    return roles.includes(user.role);
+    if (user.is_staff || user.role === "admin" || user.role === "developer" || (user.roles && user.roles.includes("admin"))) return true;
+    return roles.includes(user.role) || (user.roles && roles.includes(user.roles.find((r: string) => roles.includes(r)) || ""));
   };
 
-  const isStaff = !!(user && (user.is_staff || user.role === "admin" || user.role === "developer"));
+  const isStaff = !!(user && (user.is_staff || user.role === "admin" || user.role === "developer" || (user.roles && user.roles.includes("admin"))));
 
   const getRoleSectionLabel = (key: string) => {
     if (key === "school_admin") return schoolT("roleSchoolAdmin");

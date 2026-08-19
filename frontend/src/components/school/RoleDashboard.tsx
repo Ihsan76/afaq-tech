@@ -44,7 +44,7 @@ export default function RoleDashboard() {
   const [dynamicMenu, setDynamicMenu] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const isStaff = !!(user && (user.is_staff || user.role === "admin" || user.role === "developer"));
+  const isStaff = !!(user && (user.is_staff || user.role === "admin" || user.role === "developer" || (user.roles && user.roles.includes("admin"))));
   const routeRole = pathname.split("/")[2];
   const viewRole = routeRole === "teacher" || routeRole === "parent" || routeRole === "student"
     ? routeRole

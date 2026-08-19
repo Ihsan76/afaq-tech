@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils import timezone
@@ -63,6 +64,8 @@ class User(AbstractUser):
     email = models.EmailField(unique=True)
     translations = models.JSONField(_('Translations'), default=dict, blank=True)
     role = models.CharField(_('Role'), max_length=32, choices=Role.choices, default=Role.STUDENT)
+    roles = models.JSONField(_('All Roles'), default=list, blank=True,
+                             help_text=_('List of all roles this user has. e.g. ["teacher", "instructor"]'))
     subscription_plan = models.CharField(_('Subscription Plan'), max_length=20, choices=SubscriptionPlan.choices, default=SubscriptionPlan.FREE)
 
     ui_language = models.CharField(_('UI Language'), max_length=5, default='ar')
@@ -140,3 +143,45 @@ class LoginAttempt(models.Model):
         verbose_name = _('Login Attempt')
         verbose_name_plural = _('Login Attempts')
         indexes = [models.Index(fields=['email', 'attempted_at'])]
+
+
+class UserRole(models.Model):
+    """A role assignment for a user within a specific context (global or organization-scoped)."""
+
+    class Meta:
+        unique_together = ('user', 'role', 'organization')
+        verbose_name = _('User Role')
+        verbose_name_plural = _('User Roles')
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='user_roles',
+        verbose_name=_('User')
+    )
+    role = models.CharField(
+        _('Role'),
+        max_length=32,
+        choices=User.Role.choices
+    )
+    organization = models.ForeignKey(
+        'subscriptions.Organization',
+        on_delete=models.CASCADE,
+        null=True, blank=True,
+        related_name='user_roles',
+        verbose_name=_('Organization'),
+        help_text=_('Leave empty for global roles (admin, instructor, provider)')
+    )
+    assigned_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='assigned_roles',
+        verbose_name=_('Assigned By')
+    )
+    assigned_at = models.DateTimeField(auto_now_add=True, verbose_name=_('Assigned At'))
+    is_active = models.BooleanField(default=True, verbose_name=_('Is Active'))
+
+    def __str__(self):
+        org = f" @ {self.organization}" if self.organization else " (global)"
+        return f"{self.user} → {self.role}{org}"

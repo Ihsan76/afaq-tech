@@ -223,6 +223,22 @@ class CourseAdminCreateView(generics.CreateAPIView):
     serializer_class = CourseCreateUpdateSerializer
     permission_classes = [IsContentAdmin]
 
+    def perform_create(self, serializer):
+        course = serializer.save()
+        instructor_id = self.request.data.get('instructor_id')
+        if instructor_id:
+            from apps.users.models import UserRole
+            from apps.users.services import RoleService
+            instructor_role, _ = UserRole.objects.get_or_create(
+                user_id=instructor_id,
+                role='instructor',
+                organization=None,
+                defaults={'assigned_by': self.request.user}
+            )
+            RoleService._sync_roles_field(instructor_role.user)
+            course.instructor_role = instructor_role
+            course.save(update_fields=['instructor_role'])
+
 
 class CourseAdminUpdateView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Course.objects.all()

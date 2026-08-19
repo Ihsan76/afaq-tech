@@ -21,11 +21,11 @@ class CourseCategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Course)
 class CourseAdmin(admin.ModelAdmin):
-    list_display = ['__str__', 'instructor', 'category', 'level', 'access_level', 'price', 'platform_fee_percent', 'is_published', 'is_featured']
+    list_display = ['__str__', 'instructor_role', 'category', 'level', 'access_level', 'price', 'platform_fee_percent', 'is_published', 'is_featured']
     list_filter = ['category', 'level', 'language', 'access_level', 'is_free', 'is_published']
     list_editable = ['is_published', 'is_featured']
-    autocomplete_fields = ['instructor']
-    search_fields = ['slug', 'instructor__email']
+    autocomplete_fields = ['instructor_role']
+    search_fields = ['slug', 'instructor_role__user__email']
     inlines = [ChapterInline]
 
 

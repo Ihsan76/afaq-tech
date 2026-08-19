@@ -35,9 +35,10 @@ export default function SchoolPageClient() {
   const getWorkspaceLink = () => {
     if (contextData?.workspace_url) return `/${locale}${contextData.workspace_url.startsWith("/") ? "" : "/"}${contextData.workspace_url}`;
     if (!user) return `/${locale}/school/admin`;
-    if (user.role === "teacher") return `/${locale}/teacher`;
-    if (user.role === "parent") return `/${locale}/parent`;
-    if (user.role === "student") return `/${locale}/student`;
+    const hasRole = (r: string) => user.role === r || (user.roles && user.roles.includes(r));
+    if (hasRole("teacher")) return `/${locale}/teacher`;
+    if (hasRole("parent")) return `/${locale}/parent`;
+    if (hasRole("student")) return `/${locale}/student`;
     return `/${locale}/school/admin`;
   };
 

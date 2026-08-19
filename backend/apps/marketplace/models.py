@@ -31,7 +31,10 @@ class Service(models.Model):
         CONSULTATION = 'consultation', _('Consultation')
         OTHER = 'other', _('Other')
 
-    provider = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='services')
+    provider_role = models.ForeignKey(
+        'users.UserRole', null=True, blank=True, on_delete=models.SET_NULL,
+        related_name='provided_services', verbose_name=_('Provider Role')
+    )
     category = models.ForeignKey(ServiceCategory, on_delete=models.SET_NULL, null=True, blank=True, related_name='services')
     title = models.JSONField(_('Title (Multilingual)'), default=dict)
     description = models.JSONField(_('Description (Multilingual)'), default=dict)
@@ -58,6 +61,14 @@ class Service(models.Model):
 
     def __str__(self):
         return self.title.get('ar', str(self.id))
+
+    @property
+    def provider(self):
+        return self.provider_role.user if self.provider_role else None
+
+    @property
+    def provider_id(self):
+        return self.provider_role.user_id if self.provider_role else None
 
 
 class ServiceAvailability(models.Model):

@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.db import models
 from django.utils.text import slugify
+from django.utils.translation import gettext_lazy as _
 
 
 class CourseCategory(models.Model):
@@ -38,8 +39,10 @@ class Course(models.Model):
     translations = models.JSONField('Translations', default=dict, blank=True)
     category = models.ForeignKey(CourseCategory, on_delete=models.SET_NULL, null=True, blank=True, related_name='courses')
 
-    instructor = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL,
-                                   related_name='courses', verbose_name='المدرب')
+    instructor_role = models.ForeignKey(
+        'users.UserRole', null=True, blank=True, on_delete=models.SET_NULL,
+        related_name='instructed_courses', verbose_name=_('Instructor Role')
+    )
     instructor_translations = models.JSONField('Instructor Translations', default=dict, blank=True)
     instructor_avatar = models.URLField('Instructor Avatar', blank=True, default='')
     instructor_url = models.URLField('Instructor Channel/URL', blank=True, default='')
@@ -75,6 +78,14 @@ class Course(models.Model):
             title = self.translations.get('en', {}).get('title', '') or self.translations.get('ar', {}).get('title', '')
             self.slug = slugify(title) or 'untitled'
         super().save(*args, **kwargs)
+
+    @property
+    def instructor(self):
+        return self.instructor_role.user if self.instructor_role else None
+
+    @property
+    def instructor_id(self):
+        return self.instructor_role.user_id if self.instructor_role else None
 
     @property
     def lessons_count(self):

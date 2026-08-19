@@ -157,7 +157,7 @@ export default function DashboardPage() {
     });
   }
 
-  if (user.role === "student") {
+  if (user.role === "student" || (user.roles && user.roles.includes("student"))) {
     actions.push({
       href: `/${locale}/academy`,
       icon: "🎓",

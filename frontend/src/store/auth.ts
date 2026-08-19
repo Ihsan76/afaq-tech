@@ -9,6 +9,7 @@ interface User {
   name_en: string;
   name?: string;
   role: string;
+  roles: string[];
   is_staff: boolean;
   subscription_plan: string;
   ui_language: string;

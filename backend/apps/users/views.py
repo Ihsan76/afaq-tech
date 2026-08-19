@@ -24,8 +24,9 @@ from apps.lessonplans.models import LessonPlan
 from apps.schools.models import School
 from apps.users.permissions import IsSystemAdmin, IsUsersAdmin
 
-from .models import EmailVerification, LoginAttempt, PhoneVerification
-from .serializers import RegisterSerializer, UserSerializer
+from .models import EmailVerification, LoginAttempt, PhoneVerification, UserRole
+from .serializers import RegisterSerializer, UserSerializer, UserRoleSerializer
+from .services import RoleService
 
 User = get_user_model()
 
@@ -205,7 +206,7 @@ class UserAdminUpdateView(generics.RetrieveUpdateAPIView):
 
     def patch(self, request, *args, **kwargs):
         user = self.get_object()
-        allowed = ['role', 'subscription_plan', 'is_verified', 'is_active', 'phone', 'national_id', 'translations']
+        allowed = ['role', 'roles', 'subscription_plan', 'is_verified', 'is_active', 'phone', 'national_id', 'translations']
         for field in allowed:
             if field in request.data:
                 if field == 'translations':
@@ -619,3 +620,132 @@ class GoogleCallbackView(APIView):
 
         tokens = get_tokens_for_user(user)
         return self._redirect_frontend(locale, access=tokens['access'], refresh=tokens['refresh'])
+
+
+# ── Role Management ──
+
+ROLE_CONTEXT_MAP = {
+    'teacher': {'icon': '🏫', 'label_ar': 'معلم', 'label_en': 'Teacher', 'url': '/teacher'},
+    'student': {'icon': '🎓', 'label_ar': 'طالب', 'label_en': 'Student', 'url': '/student'},
+    'parent': {'icon': '👨‍👩‍👧‍👦', 'label_ar': 'ولي أمر', 'label_en': 'Parent', 'url': '/parent'},
+    'school_admin': {'icon': '📋', 'label_ar': 'مدير مدرسة', 'label_en': 'School Admin', 'url': '/school/admin'},
+    'school_accountant': {'icon': '💰', 'label_ar': 'محاسب', 'label_en': 'Accountant', 'url': '/school/admin'},
+    'school_transport_officer': {'icon': '🚌', 'label_ar': 'مسؤول النقل', 'label_en': 'Transport Officer', 'url': '/school/admin'},
+    'school_librarian': {'icon': '📚', 'label_ar': 'أمين مكتبة', 'label_en': 'Librarian', 'url': '/school/admin'},
+    'instructor': {'icon': '🎓', 'label_ar': 'مدرّب', 'label_en': 'Instructor', 'url': '/academy'},
+    'provider': {'icon': '🏪', 'label_ar': 'مزوّد خدمة', 'label_en': 'Service Provider', 'url': '/marketplace'},
+    'admin': {'icon': '⚙️', 'label_ar': 'مدير النظام', 'label_en': 'System Admin', 'url': '/admin'},
+    'developer': {'icon': '💻', 'label_ar': 'مطوّر', 'label_en': 'Developer', 'url': '/admin'},
+    'support': {'icon': '💬', 'label_ar': 'دعم فني', 'label_en': 'Support', 'url': '/admin'},
+    'content_manager': {'icon': '📝', 'label_ar': 'مدير محتوى', 'label_en': 'Content Manager', 'url': '/admin'},
+    'finance': {'icon': '💳', 'label_ar': 'مالي', 'label_en': 'Finance', 'url': '/admin'},
+    'creator': {'icon': '✨', 'label_ar': 'منشئ محتوى', 'label_en': 'Creator', 'url': '/dashboard'},
+}
+
+
+class MyRolesView(generics.RetrieveAPIView):
+    """Get the current user's roles with context info for the dashboard."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        roles = RoleService.get_user_roles(user)
+
+        role_data = []
+        for ur in roles:
+            meta = ROLE_CONTEXT_MAP.get(ur.role, {'icon': '🔹', 'label_ar': ur.role, 'label_en': ur.role, 'url': '/dashboard'})
+            role_data.append({
+                'id': ur.id,
+                'role': ur.role,
+                'icon': meta['icon'],
+                'label_ar': meta['label_ar'],
+                'label_en': meta['label_en'],
+                'context_url': meta['url'],
+                'organization': str(ur.organization) if ur.organization else None,
+                'assigned_at': ur.assigned_at,
+            })
+
+        return Response({
+            'roles': role_data,
+            'total': len(role_data),
+            'primary_role': user.role,
+        })
+
+
+class UserRolesView(generics.ListAPIView):
+    """Manage roles for a specific user."""
+    serializer_class = UserRoleSerializer
+    permission_classes = [IsSystemAdmin]
+
+    def get_queryset(self):
+        user_id = self.kwargs['user_id']
+        return UserRole.objects.filter(user_id=user_id, is_active=True)
+
+
+class RoleAssignmentView(generics.CreateAPIView):
+    """Assign a role to a user."""
+    serializer_class = UserRoleSerializer
+    permission_classes = [IsSystemAdmin]
+
+    def create(self, request, *args, **kwargs):
+        user_id = request.data.get('user_id')
+        role = request.data.get('role')
+        organization_id = request.data.get('organization_id')
+
+        if not user_id or not role:
+            return Response(
+                {'error': 'user_id and role are required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            target_user = User.objects.get(pk=user_id)
+        except User.DoesNotExist:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        if not RoleService.can_assign_role(request.user, role, organization_id):
+            return Response(
+                {'error': 'You do not have permission to assign this role'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        user_role = RoleService.assign_role(
+            user=target_user,
+            role=role,
+            assigned_by=request.user,
+            organization_id=organization_id
+        )
+        return Response(
+            UserRoleSerializer(user_role, context={'request': request}).data,
+            status=status.HTTP_201_CREATED
+        )
+
+
+class RoleRevokeView(generics.DestroyAPIView):
+    """Revoke a role from a user."""
+    permission_classes = [IsSystemAdmin]
+
+    def delete(self, request, *args, **kwargs):
+        user_id = request.data.get('user_id') or kwargs.get('user_id')
+        role = request.data.get('role') or kwargs.get('role')
+        organization_id = request.data.get('organization_id')
+
+        if not user_id or not role:
+            return Response(
+                {'error': 'user_id and role are required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            target_user = User.objects.get(pk=user_id)
+        except User.DoesNotExist:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        if not RoleService.can_assign_role(request.user, role, organization_id):
+            return Response(
+                {'error': 'You do not have permission to revoke this role'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        RoleService.revoke_role(target_user, role, organization_id)
+        return Response({'message': 'Role revoked successfully'})

@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.users.models import User
+from apps.users.services import RoleService
 
 from .directorate_models import Directorate, DirectorateStats
 
@@ -13,7 +14,7 @@ class DirectorateListView(APIView):
 
     def get(self, request):
         user = request.user
-        if user.role in ('admin', 'developer'):
+        if RoleService.has_role(user, 'admin') or RoleService.has_role(user, 'developer'):
             directorates = Directorate.objects.filter(is_active=True)
         else:
             directorates = Directorate.objects.filter(

@@ -81,7 +81,16 @@ class ServiceListView(generics.ListCreateAPIView):
         return qs
 
     def perform_create(self, serializer):
-        serializer.save(provider=self.request.user)
+        from apps.users.models import UserRole
+        from apps.users.services import RoleService
+        provider_role, _ = UserRole.objects.get_or_create(
+            user=self.request.user,
+            role='provider',
+            organization=None,
+            defaults={'assigned_by': self.request.user}
+        )
+        RoleService._sync_roles_field(self.request.user)
+        serializer.save(provider_role=provider_role)
 
 
 class ServiceDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -106,10 +115,10 @@ class ServiceAvailabilityListView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        return ServiceAvailability.objects.filter(service_id=self.kwargs['service_pk'], service__provider=self.request.user)
+        return ServiceAvailability.objects.filter(service_id=self.kwargs['service_pk'], service__provider_role__user=self.request.user)
 
     def perform_create(self, serializer):
-        service = generics.get_object_or_404(Service, pk=self.kwargs['service_pk'], provider=self.request.user)
+        service = generics.get_object_or_404(Service, pk=self.kwargs['service_pk'], provider_role__user=self.request.user)
         serializer.save(service=service)
 
 
@@ -127,7 +136,7 @@ class OrderListView(generics.ListCreateAPIView):
         user = self.request.user
         role = self.request.query_params.get('role', 'buyer')
         if role == 'provider':
-            return Order.objects.filter(service__provider=user).select_related('buyer', 'service')
+            return Order.objects.filter(service__provider_role__user=user).select_related('buyer', 'service')
         return Order.objects.filter(buyer=user).select_related('service')
 
     def create(self, request, *args, **kwargs):
@@ -170,7 +179,7 @@ class OrderDetailView(generics.RetrieveUpdateAPIView):
     def get_queryset(self):
         user = self.request.user
         return Order.objects.filter(
-            models.Q(buyer=user) | models.Q(service__provider=user)
+            models.Q(buyer=user) | models.Q(service__provider_role__user=user)
         ).select_related('buyer', 'service')
 
 
@@ -215,7 +224,7 @@ def payment_webhook(request, provider='stripe'):
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated])
 def complete_order(request, pk):
-    order = generics.get_object_or_404(Order, pk=pk, service__provider=request.user)
+    order = generics.get_object_or_404(Order, pk=pk, service__provider_role__user=request.user)
     if order.status != Order.Status.IN_PROGRESS:
         return Response({'error': 'Order must be in progress to complete'}, status=status.HTTP_400_BAD_REQUEST)
     order.status = Order.Status.COMPLETED
@@ -334,7 +343,16 @@ class AdminServiceListView(generics.ListCreateAPIView):
         return qs.order_by('-created_at')
 
     def perform_create(self, serializer):
-        serializer.save(provider=self.request.user)
+        from apps.users.models import UserRole
+        from apps.users.services import RoleService
+        provider_role, _ = UserRole.objects.get_or_create(
+            user=self.request.user,
+            role='provider',
+            organization=None,
+            defaults={'assigned_by': self.request.user}
+        )
+        RoleService._sync_roles_field(self.request.user)
+        serializer.save(provider_role=provider_role)
 
 
 class AdminServiceDetailView(generics.RetrieveUpdateDestroyAPIView):

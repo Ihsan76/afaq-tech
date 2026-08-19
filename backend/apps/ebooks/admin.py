@@ -12,11 +12,11 @@ class EbookCategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Ebook)
 class EbookAdmin(admin.ModelAdmin):
-    list_display = ['slug', 'author', 'category', 'access_level', 'price', 'platform_fee_percent', 'is_published', 'is_featured', 'download_count']
+    list_display = ['slug', 'author_role', 'category', 'access_level', 'price', 'platform_fee_percent', 'is_published', 'is_featured', 'download_count']
     list_filter = ['is_published', 'is_featured', 'category', 'access_level']
     list_editable = ['is_published', 'is_featured']
-    autocomplete_fields = ['author']
-    search_fields = ['slug', 'author__email']
+    autocomplete_fields = ['author_role']
+    search_fields = ['slug', 'author_role__user__email']
 
 
 @admin.register(EbookPurchase)

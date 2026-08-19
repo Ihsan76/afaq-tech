@@ -31,9 +31,10 @@ class ServiceCategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Service)
 class ServiceAdmin(admin.ModelAdmin):
-    list_display = ['title', 'provider', 'service_type', 'price', 'status', 'sales_count', 'rating_avg', 'is_featured']
+    list_display = ['title', 'provider_role', 'service_type', 'price', 'status', 'sales_count', 'rating_avg', 'is_featured']
     list_filter = ['service_type', 'status', 'is_online', 'is_featured']
-    search_fields = ['title']
+    autocomplete_fields = ['provider_role']
+    search_fields = ['title', 'provider_role__user__email']
     inlines = [ServiceAvailabilityInline, ReviewInline]
 
 

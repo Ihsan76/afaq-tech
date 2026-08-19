@@ -5,3 +5,6 @@ class SchoolsConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'apps.schools'
     verbose_name = 'إدارة المدارس والمتابعة الذكية'
+
+    def ready(self):
+        import apps.schools.signals  # noqa: F401

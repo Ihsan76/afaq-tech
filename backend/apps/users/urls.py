@@ -21,4 +21,9 @@ urlpatterns = [
     path('admin/list/', views.UserAdminListView.as_view(), name='user-admin-list'),
     path('admin/<int:pk>/', views.UserAdminUpdateView.as_view(), name='user-admin-update'),
     path('me/stats/', views.user_stats_view, name='user-stats'),
+    # Role Management
+    path('my-roles/', views.MyRolesView.as_view(), name='my-roles'),
+    path('users/<int:user_id>/roles/', views.UserRolesView.as_view(), name='user-roles'),
+    path('assign-role/', views.RoleAssignmentView.as_view(), name='assign-role'),
+    path('revoke-role/', views.RoleRevokeView.as_view(), name='revoke-role'),
 ]

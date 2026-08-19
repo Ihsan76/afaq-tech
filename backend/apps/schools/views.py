@@ -15,6 +15,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.users.models import User
+from apps.users.services import RoleService
 
 from .absence import notify_absence
 from .models import (
@@ -98,16 +99,18 @@ def is_admin(user):
     if user.is_staff or user.is_superuser:
         return True
     from apps.users.permissions import SECTION_ROLES
-    return user.role in SECTION_ROLES.get('schools', {'admin'})
+    allowed = SECTION_ROLES.get('schools', {'admin'})
+    user_roles = RoleService.get_role_names(user)
+    return any(r in allowed for r in user_roles)
 
 
 def is_teacher(user):
-    return bool(user and user.is_authenticated and user.role == 'teacher')
+    return bool(user and user.is_authenticated and RoleService.has_role(user, 'teacher'))
 
 
 def is_school_admin(user):
     """School manager: full permissions on their own school(s) only."""
-    return bool(user and user.is_authenticated and user.role == 'school_admin')
+    return bool(user and user.is_authenticated and RoleService.has_role(user, 'school_admin'))
 
 
 def ordered_working_days(week_start, working_days):
@@ -146,23 +149,23 @@ def user_section_ids(user):
     they mentor as class teacher (مربي الصف)."""
     if not user or not user.is_authenticated:
         return set()
-    if user.role == 'teacher':
+    if RoleService.has_role(user, 'teacher'):
         section_ids = set(TeacherAssignment.objects.filter(teacher=user).values_list('section_id', flat=True))
         section_ids |= set(Section.objects.filter(class_teacher=user).values_list('id', flat=True))
         return section_ids
-    if user.role == 'student':
+    if RoleService.has_role(user, 'student'):
         return set(StudentEnrollment.objects.filter(student=user).values_list('section_id', flat=True))
-    if user.role == 'parent':
+    if RoleService.has_role(user, 'parent'):
         child_ids = FamilyLink.objects.filter(parent=user).values_list('student_id', flat=True)
         return set(StudentEnrollment.objects.filter(student_id__in=child_ids).values_list('section_id', flat=True))
-    if user.role == 'school_admin':
+    if RoleService.has_role(user, 'school_admin'):
         return set(Section.objects.filter(school__manager=user).values_list('id', flat=True))
     return set()
 
 
 def class_teacher_section_ids(user):
     """Section ids where the user is the class mentor (مربي الصف)."""
-    if not (user and user.is_authenticated) or user.role != 'teacher':
+    if not (user and user.is_authenticated) or not RoleService.has_role(user, 'teacher'):
         return set()
     return set(Section.objects.filter(class_teacher=user).values_list('id', flat=True))
 
@@ -170,7 +173,7 @@ def class_teacher_section_ids(user):
 def user_school_ids(user):
     if not user or not user.is_authenticated:
         return set()
-    if user.role == 'school_admin':
+    if RoleService.has_role(user, 'school_admin'):
         return set(user.managed_schools.values_list('id', flat=True))
     section_ids = user_section_ids(user)
     if section_ids is None:
@@ -373,12 +376,12 @@ class SchoolViewSet(viewsets.ModelViewSet):
             return
         if new_manager_id:
             new_manager = school.manager
-            if new_manager.role not in User.ADMIN_ROLES and new_manager.role != 'school_admin':
+            if new_manager.role not in User.ADMIN_ROLES and not RoleService.has_role(new_manager, 'school_admin'):
                 new_manager.role = 'school_admin'
                 new_manager.save(update_fields=['role'])
         if old_manager_id:
             old_manager = User.objects.filter(pk=old_manager_id).first()
-            if old_manager and old_manager.role == 'school_admin' and not old_manager.managed_schools.exists():
+            if old_manager and RoleService.has_role(old_manager, 'school_admin') and not old_manager.managed_schools.exists():
                 old_manager.role = 'student'
                 old_manager.save(update_fields=['role'])
 
@@ -714,7 +717,7 @@ class SectionViewSet(viewsets.ModelViewSet):
             if phone and not user.phone:
                 user.phone = phone
                 changed = True
-            if user.role != 'student':
+            if not RoleService.has_role(user, 'student'):
                 user.role = 'student'
                 changed = True
             translations = dict(user.translations or {})
@@ -931,6 +934,10 @@ class SchoolTeacherViewSet(viewsets.ModelViewSet):
             teacher.save()
 
         link, _ = SchoolTeacher.objects.get_or_create(school=school, teacher=teacher)
+
+        from apps.users.services import RoleService
+        RoleService.assign_role(teacher, 'teacher', assigned_by=request.user)
+
         out = SchoolTeacherSerializer(link, context=self.get_serializer_context())
         return Response(out.data, status=status.HTTP_201_CREATED)
 
@@ -962,7 +969,14 @@ class SchoolTeacherViewSet(viewsets.ModelViewSet):
     def perform_destroy(self, instance):
         if not is_admin(self.request.user) and instance.school.manager_id != self.request.user.id:
             raise serializers.ValidationError({'school': 'يمكنك حذف معلمي مدرستك فقط'})
+
+        from apps.users.services import RoleService
+        teacher_user = instance.teacher
         instance.delete()
+
+        has_other_schools = SchoolTeacher.objects.filter(teacher=teacher_user).exists()
+        if not has_other_schools:
+            RoleService.revoke_role(teacher_user, 'teacher')
 
 
 class TeacherAssignmentViewSet(viewsets.ModelViewSet):
@@ -979,7 +993,7 @@ class TeacherAssignmentViewSet(viewsets.ModelViewSet):
                 section_ids = set()
             if is_teacher(self.request.user):
                 qs = TeacherAssignment.objects.filter(teacher=self.request.user)
-            elif self.request.user.role == 'student':
+            elif RoleService.has_role(self.request.user, 'student'):
                 qs = TeacherAssignment.objects.filter(section_id__in=section_ids)
             else:
                 qs = TeacherAssignment.objects.none()
@@ -1023,7 +1037,7 @@ class StudentEnrollmentViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         if is_admin(self.request.user):
             qs = StudentEnrollment.objects.all()
-        elif self.request.user.role == 'school_admin':
+        elif RoleService.has_role(self.request.user, 'school_admin'):
             school_ids = user_school_ids(self.request.user)
             qs = StudentEnrollment.objects.filter(section__school_id__in=school_ids) if school_ids else StudentEnrollment.objects.none()
         else:
@@ -1032,7 +1046,7 @@ class StudentEnrollmentViewSet(viewsets.ModelViewSet):
                 section_ids = set()
             if is_teacher(self.request.user):
                 qs = StudentEnrollment.objects.filter(section_id__in=section_ids)
-            elif self.request.user.role == 'student':
+            elif RoleService.has_role(self.request.user, 'student'):
                 qs = StudentEnrollment.objects.filter(student=self.request.user)
             else:
                 qs = StudentEnrollment.objects.none()
@@ -1137,12 +1151,12 @@ class SchoolAnnouncementViewSet(viewsets.ModelViewSet):
         return qs
 
     def perform_create(self, serializer):
-        if not is_admin(self.request.user) and self.request.user.role == 'school_admin':
+        if not is_admin(self.request.user) and RoleService.has_role(self.request.user, 'school_admin'):
             school = serializer.validated_data.get('school')
             if not school or school.manager_id != self.request.user.id:
                 raise serializers.ValidationError({'school': 'يمكنك النشر في مدرستك فقط'})
         is_emergency = serializer.validated_data.get('is_emergency', False)
-        if is_emergency and not is_admin(self.request.user) and self.request.user.role != 'school_admin':
+        if is_emergency and not is_admin(self.request.user) and not RoleService.has_role(self.request.user, 'school_admin'):
             serializer.validated_data['is_emergency'] = False
         announcement = serializer.save(author=self.request.user)
         from apps.notifications.services import notify_many
@@ -1200,16 +1214,16 @@ class AttendanceViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if is_admin(user):
             qs = self.queryset
-        elif user.role == 'school_admin':
+        elif RoleService.has_role(user, 'school_admin'):
             school_ids = user_school_ids(user)
             qs = self.queryset.filter(school_id__in=school_ids) if school_ids else self.queryset.none()
-        elif user.role == 'teacher':
+        elif RoleService.has_role(user, 'teacher'):
             section_ids = user_section_ids(user)
             qs = self.queryset.filter(section_id__in=section_ids) if section_ids else self.queryset.none()
-        elif user.role == 'parent':
+        elif RoleService.has_role(user, 'parent'):
             child_ids = FamilyLink.objects.filter(parent=user).values_list('student_id', flat=True)
             qs = self.queryset.filter(student_id__in=child_ids)
-        elif user.role == 'student':
+        elif RoleService.has_role(user, 'student'):
             qs = self.queryset.filter(student=user)
         else:
             qs = self.queryset.none()
@@ -1233,9 +1247,9 @@ class AttendanceViewSet(viewsets.ModelViewSet):
         (of that school) may record."""
         if is_admin(user):
             return True
-        if user.role == 'school_admin':
+        if RoleService.has_role(user, 'school_admin'):
             return section.school.manager_id == user.id
-        if user.role == 'teacher':
+        if RoleService.has_role(user, 'teacher'):
             return (TeacherAssignment.objects.filter(teacher=user, section=section).exists()
                     or section.class_teacher_id == user.id)
         return False
@@ -1410,7 +1424,7 @@ class FamilyLinkViewSet(viewsets.ModelViewSet):
         student = serializer.validated_data.get('student')
         if is_admin(self.request.user):
             return self._save(serializer)
-        if not student or student.role != 'student':
+        if not student or not RoleService.has_role(student, 'student'):
             raise serializers.ValidationError({'student': 'Invalid student account'})
         return self._save(serializer)
 
@@ -1441,10 +1455,10 @@ class AttachmentViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if is_admin(user):
             qs = Attachment.objects.all()
-        elif user.role == 'teacher':
+        elif RoleService.has_role(user, 'teacher'):
             section_ids = user_section_ids(user)
             qs = Attachment.objects.filter(Q(uploader=user) | Q(section_id__in=section_ids))
-        elif user.role == 'parent':
+        elif RoleService.has_role(user, 'parent'):
             child_ids = FamilyLink.objects.filter(parent=user).values_list('student_id', flat=True)
             qs = Attachment.objects.filter(
                 Q(uploader_id__in=child_ids) |
@@ -1535,12 +1549,12 @@ class WeeklySummaryAPIView(APIView):
         user = request.user
         today = date.today()
 
-        if user.role == 'parent':
+        if RoleService.has_role(user, 'parent'):
             children = User.objects.filter(
                 Q(linked_guardians__parent=user),
             ).distinct()
             students = children
-        elif user.role == 'student':
+        elif RoleService.has_role(user, 'student'):
             students = User.objects.filter(pk=user.pk)
         elif is_teacher(user) or is_admin(user):
             section_ids = user_section_ids(user)
@@ -1594,7 +1608,7 @@ class WeeklySummaryAPIView(APIView):
                 student=student,
                 week_start=week_start,
                 defaults={
-                    'parent': user if user.role == 'parent' else None,
+                    'parent': user if RoleService.has_role(user, 'parent') else None,
                     'summary': summary_text,
                     'assignments_submitted': len(week_announcements),
                     'attendance_rate': attendance_rate,
@@ -1813,7 +1827,7 @@ class BulkImportView(APIView):
             if phone and not user.phone:
                 user.phone = phone
                 changed = True
-            if user.role != 'student':
+            if not RoleService.has_role(user, 'student'):
                 user.role = 'student'
                 changed = True
             translations = dict(user.translations or {})
@@ -2273,7 +2287,7 @@ class MySchoolContextAPIView(APIView):
                 )
                 enrollments = StudentEnrollment.objects.filter(section_id__in=section_ids)
                 tickets = ParentTeacherTicket.objects.filter(teacher=user)
-            elif user.role == 'student':
+            elif RoleService.has_role(user, 'student'):
                 announcements = SchoolAnnouncement.objects.filter(
                     section_id__in=section_ids,
                 ) | SchoolAnnouncement.objects.filter(
@@ -2285,7 +2299,7 @@ class MySchoolContextAPIView(APIView):
                 ) | ParentTeacherTicket.objects.filter(
                     student=user,
                 )
-            elif user.role == 'parent':
+            elif RoleService.has_role(user, 'parent'):
                 child_ids = FamilyLink.objects.filter(parent=user).values_list('student_id', flat=True)
                 announcements = SchoolAnnouncement.objects.filter(
                     section_id__in=section_ids,
@@ -2320,7 +2334,7 @@ class MySchoolContextAPIView(APIView):
             parents = User.objects.none()
 
         # Parents can manage their own children; admins see everything.
-        if user.role == 'parent':
+        if RoleService.has_role(user, 'parent'):
             family_links = FamilyLink.objects.filter(parent=user)
             children_ids = family_links.values_list('student_id', flat=True)
             children = User.objects.filter(id__in=children_ids)
@@ -2333,13 +2347,13 @@ class MySchoolContextAPIView(APIView):
             family_links = FamilyLink.objects.none()
             children = User.objects.none()
         else:
-            family_links = FamilyLink.objects.filter(student=user) if user.role == 'student' else FamilyLink.objects.none()
+            family_links = FamilyLink.objects.filter(student=user) if RoleService.has_role(user, 'student') else FamilyLink.objects.none()
             children = User.objects.none()
 
         # Weekly reports visible to the user (parent) or for their own sections (teacher/admin/student).
-        if user.role == 'parent':
+        if RoleService.has_role(user, 'parent'):
             weekly_reports = WeeklyReport.objects.filter(parent=user)
-        elif user.role == 'student':
+        elif RoleService.has_role(user, 'student'):
             weekly_reports = WeeklyReport.objects.filter(student=user)
         elif is_admin(user) and school_filter:
             weekly_reports = WeeklyReport.objects.filter(
@@ -2349,14 +2363,14 @@ class MySchoolContextAPIView(APIView):
             weekly_reports = WeeklyReport.objects.none()
 
         # Attendance records visible to the user (own/children/section students).
-        if is_admin(user) or user.role == 'school_admin':
+        if is_admin(user) or RoleService.has_role(user, 'school_admin'):
             attendance_qs = Attendance.objects.select_related('student', 'section', 'school')
-        elif user.role == 'teacher':
+        elif RoleService.has_role(user, 'teacher'):
             attendance_qs = Attendance.objects.select_related('student', 'section', 'school').filter(section_id__in=user_section_ids(user))
-        elif user.role == 'parent':
+        elif RoleService.has_role(user, 'parent'):
             child_ids = FamilyLink.objects.filter(parent=user).values_list('student_id', flat=True)
             attendance_qs = Attendance.objects.select_related('student', 'section', 'school').filter(student_id__in=child_ids)
-        elif user.role == 'student':
+        elif RoleService.has_role(user, 'student'):
             attendance_qs = Attendance.objects.select_related('student', 'section', 'school').filter(student=user)
         else:
             attendance_qs = Attendance.objects.none()
@@ -2368,7 +2382,7 @@ class MySchoolContextAPIView(APIView):
             'parent': '/parent',
             'student': '/student',
         }
-        if is_admin(user) or user.role == 'school_admin':
+        if is_admin(user) or RoleService.has_role(user, 'school_admin'):
             workspace_url = '/school/admin'
         else:
             workspace_url = role_workspace.get(user.role, '/school/admin')
@@ -3480,7 +3494,7 @@ class LibraryLendingViewSet(AuxiliaryModuleGatingMixin, viewsets.ModelViewSet):
         borrower_id = self.request.query_params.get('borrower')
         if borrower_id:
             qs = qs.filter(borrower_id=borrower_id)
-        if not is_admin(self.request.user) and self.request.user.role == 'student':
+        if not is_admin(self.request.user) and RoleService.has_role(self.request.user, 'student'):
             qs = qs.filter(borrower=self.request.user)
         return qs
 
@@ -3622,7 +3636,7 @@ class GradeCategoryViewSet(viewsets.ModelViewSet):
         if subject:
             qs = qs.filter(subject_id=subject)
         if not is_admin(self.request.user):
-            if self.request.user.role == 'school_admin':
+            if RoleService.has_role(self.request.user, 'school_admin'):
                 school_ids = user_school_ids(self.request.user)
                 qs = qs.filter(school_id__in=school_ids) if school_ids else qs.none()
             else:
@@ -3644,16 +3658,16 @@ class GradeEntryViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if is_admin(user):
             pass
-        elif user.role == 'school_admin':
+        elif RoleService.has_role(user, 'school_admin'):
             school_ids = user_school_ids(user)
             qs = qs.filter(section__school_id__in=school_ids) if school_ids else qs.none()
-        elif user.role == 'teacher':
+        elif RoleService.has_role(user, 'teacher'):
             section_ids = user_section_ids(user)
             qs = qs.filter(section_id__in=section_ids) if section_ids else qs.none()
-        elif user.role == 'parent':
+        elif RoleService.has_role(user, 'parent'):
             child_ids = FamilyLink.objects.filter(parent=user).values_list('student_id', flat=True)
             qs = qs.filter(student_id__in=child_ids)
-        elif user.role == 'student':
+        elif RoleService.has_role(user, 'student'):
             qs = qs.filter(student=user)
         else:
             qs = qs.none()
@@ -3725,16 +3739,16 @@ class AssignmentViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if is_admin(user):
             pass
-        elif user.role == 'school_admin':
+        elif RoleService.has_role(user, 'school_admin'):
             school_ids = user_school_ids(user)
             qs = qs.filter(section__school_id__in=school_ids) if school_ids else qs.none()
-        elif user.role == 'teacher':
+        elif RoleService.has_role(user, 'teacher'):
             qs = qs.filter(teacher=user)
-        elif user.role == 'parent':
+        elif RoleService.has_role(user, 'parent'):
             child_ids = FamilyLink.objects.filter(parent=user).values_list('student_id', flat=True)
             child_section_ids = StudentEnrollment.objects.filter(student_id__in=child_ids).values_list('section_id', flat=True)
             qs = qs.filter(section_id__in=child_section_ids)
-        elif user.role == 'student':
+        elif RoleService.has_role(user, 'student'):
             enrolled_section_ids = StudentEnrollment.objects.filter(student=user).values_list('section_id', flat=True)
             qs = qs.filter(section_id__in=enrolled_section_ids)
         else:
@@ -3763,15 +3777,15 @@ class AssignmentSubmissionViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if is_admin(user):
             pass
-        elif user.role == 'school_admin':
+        elif RoleService.has_role(user, 'school_admin'):
             school_ids = user_school_ids(user)
             qs = qs.filter(assignment__section__school_id__in=school_ids) if school_ids else qs.none()
-        elif user.role == 'teacher':
+        elif RoleService.has_role(user, 'teacher'):
             qs = qs.filter(assignment__teacher=user)
-        elif user.role == 'parent':
+        elif RoleService.has_role(user, 'parent'):
             child_ids = FamilyLink.objects.filter(parent=user).values_list('student_id', flat=True)
             qs = qs.filter(student_id__in=child_ids)
-        elif user.role == 'student':
+        elif RoleService.has_role(user, 'student'):
             qs = qs.filter(student=user)
         else:
             qs = qs.none()
@@ -3791,7 +3805,7 @@ class AssignmentSubmissionViewSet(viewsets.ModelViewSet):
     def grade(self, request, pk=None):
         """Grade a submission."""
         submission = self.get_object()
-        if not is_admin(request.user) and request.user.role != 'teacher':
+        if not is_admin(request.user) and not RoleService.has_role(request.user, 'teacher'):
             return Response({'error': 'Unauthorized'}, status=status.HTTP_403_FORBIDDEN)
         score = request.data.get('score')
         feedback = request.data.get('feedback', '')
@@ -3804,8 +3818,4 @@ class AssignmentSubmissionViewSet(viewsets.ModelViewSet):
         submission.graded_by = request.user
         submission.save()
         return Response(AssignmentSubmissionSerializer(submission).data)
-
-
-
-
 

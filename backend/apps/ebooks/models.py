@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 
 
 class EbookCategory(models.Model):
@@ -46,8 +47,10 @@ class Ebook(models.Model):
 
     author_translations = models.JSONField('ترجمات المؤلف', default=dict, blank=True)
     author_avatar = models.URLField('صورة المؤلف', blank=True, default='')
-    author = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL,
-                               related_name='ebooks', verbose_name='المؤلف')
+    author_role = models.ForeignKey(
+        'users.UserRole', null=True, blank=True, on_delete=models.SET_NULL,
+        related_name='authored_ebooks', verbose_name=_('Author Role')
+    )
 
     pages_count = models.IntegerField('عدد الصفحات', default=0)
     file_size = models.CharField('حجم الملف', max_length=50, blank=True, default='')
@@ -78,6 +81,14 @@ class Ebook(models.Model):
 
     def __str__(self):
         return self.translations.get('ar', {}).get('title', self.slug)
+
+    @property
+    def author(self):
+        return self.author_role.user if self.author_role else None
+
+    @property
+    def author_id(self):
+        return self.author_role.user_id if self.author_role else None
 
 
 class EbookPurchase(models.Model):

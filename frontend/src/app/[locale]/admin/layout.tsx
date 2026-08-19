@@ -30,13 +30,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   useEffect(() => { loadUser().finally(() => setChecked(true)); }, [loadUser]);
   useEffect(() => { setMobileOpen(false); }, [pathname]);
 
-  const isAdmin = !!user && (ADMIN_ROLES.includes(user.role) || user.is_staff);
+  const isAdmin = !!user && (ADMIN_ROLES.includes(user.role) || user.is_staff || (user.roles && user.roles.some(r => ADMIN_ROLES.includes(r))));
   const denied = checked && (!user || !isAdmin);
 
   const isActive = (href: string) => pathname.includes(href);
 
   const canSee = (section: string) =>
-    !!user && (user.is_staff || user.role === "admin" || (SECTION_ROLES[section] || []).includes(user.role));
+    !!user && (user.is_staff || user.role === "admin" || (user.roles && user.roles.includes("admin")) || (SECTION_ROLES[section] || []).includes(user.role) || (user.roles && (SECTION_ROLES[section] || []).some(r => user.roles.includes(r))));
 
   const ALL_NAV_ITEMS = [
     { key: "content", section: t("admin.contentSection") || "المحتوى والإعدادات", items: [

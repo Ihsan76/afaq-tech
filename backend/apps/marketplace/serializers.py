@@ -94,8 +94,10 @@ class OrderSerializer(serializers.ModelSerializer):
 
 
 class AdminServiceSerializer(ServiceDetailSerializer):
-    provider = serializers.PrimaryKeyRelatedField(
-        queryset=Service._meta.get_field('provider').related_model.objects.all(),
+    from apps.users.models import UserRole as _UserRole
+
+    provider_role = serializers.PrimaryKeyRelatedField(
+        queryset=_UserRole.objects.all(),
         required=False,
     )
 
