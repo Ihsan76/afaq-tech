@@ -4,6 +4,8 @@ from django.db import models
 class Grade(models.Model):
     translations = models.JSONField('الترجمات', default=dict, blank=True)
     level = models.IntegerField('المستوى')
+    has_tracks = models.BooleanField('يدعم التخصصات/الشعب', default=False,
+        help_text='عند التفعيل: يجب إنشاء تخصصات (AcademicTrack) لهذا الصف قبل إنشاء الأقسام')
 
     class Meta:
         verbose_name = 'صف'
@@ -12,6 +14,24 @@ class Grade(models.Model):
 
     def __str__(self):
         return self.translations.get('ar', {}).get('name', str(self.level))
+
+class AcademicTrack(models.Model):
+    """الشعب/التخصصات الأكاديمية (مثل: علمي هندسي، تجاري، صحي...) — مرتبطة بصف محدد."""
+    grade = models.ForeignKey(Grade, on_delete=models.CASCADE, related_name='tracks', verbose_name='الصف')
+    translations = models.JSONField('الترجمات', default=dict, blank=True)
+    code = models.CharField('الرمز', max_length=50, help_text='رمز فريد للحقل مثل scientific_engineering')
+    is_active = models.BooleanField('نشط', default=True)
+    order = models.IntegerField('الترتيب', default=0)
+
+    class Meta:
+        verbose_name = 'تخصص أكاديمي'
+        verbose_name_plural = 'التخصصات الأكاديمية'
+        unique_together = [['grade', 'code']]
+        ordering = ['grade', 'order', 'id']
+
+    def __str__(self):
+        return f"{self.translations.get('ar', {}).get('name', self.code)} — {self.grade}"
+
 
 class Subject(models.Model):
     translations = models.JSONField('الترجمات', default=dict, blank=True)
@@ -30,6 +50,9 @@ class Curriculum(models.Model):
     country = models.CharField('الدولة', max_length=100, db_index=True)
     year = models.IntegerField('السنة', db_index=True)
     grade = models.ForeignKey(Grade, on_delete=models.CASCADE, related_name='curricula')
+    track = models.ForeignKey(AcademicTrack, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='curricula', verbose_name='التخصص',
+        help_text='فارغ = منهج عام لكل التخصصات، مملو = منهج خاص بالتخصص')
 
     class Meta:
         verbose_name = 'منهج'
@@ -39,7 +62,8 @@ class Curriculum(models.Model):
         ]
 
     def __str__(self):
-        return f"{self.translations.get('ar', {}).get('name', '')} - {self.country}"
+        track_label = f" ({self.track})" if self.track else ""
+        return f"{self.translations.get('ar', {}).get('name', '')} - {self.country}{track_label}"
 
 class Unit(models.Model):
     curriculum = models.ForeignKey(Curriculum, on_delete=models.CASCADE, related_name='units')

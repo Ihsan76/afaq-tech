@@ -7,8 +7,9 @@ from rest_framework.views import APIView
 from apps.users.permissions import IsContentAdmin
 
 from .extraction import extract_text
-from .models import Curriculum, CurriculumDocument, Grade, Subject, Unit
+from .models import AcademicTrack, Curriculum, CurriculumDocument, Grade, Subject, Unit
 from .serializers import (
+    AcademicTrackSerializer,
     CurriculumDetailSerializer,
     CurriculumDocumentSerializer,
     CurriculumSerializer,
@@ -33,6 +34,30 @@ class GradeCreateView(generics.CreateAPIView):
 class GradeDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Grade.objects.all()
     serializer_class = GradeSerializer
+    permission_classes = [IsContentAdmin]
+
+
+class AcademicTrackListView(generics.ListAPIView):
+    serializer_class = AcademicTrackSerializer
+    permission_classes = [permissions.AllowAny]
+
+    def get_queryset(self):
+        qs = AcademicTrack.objects.select_related('grade').filter(is_active=True)
+        grade_id = self.request.query_params.get('grade')
+        if grade_id:
+            qs = qs.filter(grade_id=grade_id)
+        return qs.order_by('grade__level', 'order')
+
+
+class AcademicTrackCreateView(generics.CreateAPIView):
+    queryset = AcademicTrack.objects.all()
+    serializer_class = AcademicTrackSerializer
+    permission_classes = [IsContentAdmin]
+
+
+class AcademicTrackDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = AcademicTrack.objects.all()
+    serializer_class = AcademicTrackSerializer
     permission_classes = [IsContentAdmin]
 
 

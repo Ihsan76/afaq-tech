@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 
-from apps.academics.models import Curriculum, Grade, Subject
+from apps.academics.models import AcademicTrack, Curriculum, Grade, Subject
 
 GRADES = [
     {"level": 0, "ar": "تمهيدي", "en": "Kindergarten", "fr": "Maternelle", "tr": "Anaokulu", "ur": "کے جی", "es": "Preescolar", "de": "Vorschule", "id": "TK", "bn": "কেজি"},
@@ -45,6 +45,23 @@ CURRICULA = [
 
 LANGS = ['ar', 'en', 'fr', 'tr', 'ur', 'es', 'de', 'id', 'bn']
 
+# Academic tracks for secondary grades (11-12) — Jordan system 2026/2027
+# These are templates; admins can add/remove tracks per school via the admin UI.
+SECONDARY_TRACKS = [
+    {"code": "scientific_engineering",
+     "ar": "العلوم والتكنولوجيا والهندسة", "en": "Science, Technology & Engineering",
+     "order": 1},
+    {"code": "humanities",
+     "ar": "العلوم الإنسانية والاجتماعية", "en": "Humanities & Social Sciences",
+     "order": 2},
+    {"code": "business",
+     "ar": "الأعمال", "en": "Business",
+     "order": 3},
+    {"code": "health",
+     "ar": "الصحي", "en": "Health",
+     "order": 4},
+]
+
 
 def _tr(item):
     translations = {}
@@ -60,13 +77,17 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         created_g = updated_g = 0
         for g in GRADES:
+            has_tracks = g["level"] in (11, 12)
             obj, was_created = Grade.objects.update_or_create(
                 level=g["level"],
-                defaults={"translations": _tr(g)}
+                defaults={"translations": _tr(g), "has_tracks": has_tracks}
             )
             if was_created:
                 created_g += 1
             else:
+                if obj.has_tracks != has_tracks:
+                    obj.has_tracks = has_tracks
+                    obj.save(update_fields=['has_tracks'])
                 updated_g += 1
         self.stdout.write(f"Grades: {created_g} created, {updated_g} updated")
 
@@ -81,24 +102,32 @@ class Command(BaseCommand):
                 updated_s += 1
         self.stdout.write(f"Subjects: {created_s} created, {updated_s} updated")
 
+        # Seed academic tracks for secondary grades (11-12)
+        created_t = updated_t = 0
+        secondary_grades = Grade.objects.filter(level__in=[11, 12])
+        for grade in secondary_grades:
+            for t in SECONDARY_TRACKS:
+                translations = {lang: {"name": t[lang]} for lang in LANGS if t.get(lang)}
+                obj, was_created = AcademicTrack.objects.update_or_create(
+                    grade=grade, code=t["code"],
+                    defaults={"translations": translations, "order": t["order"]}
+                )
+                if was_created:
+                    created_t += 1
+                else:
+                    updated_t += 1
+        self.stdout.write(f"Academic tracks: {created_t} created, {updated_t} updated")
+
         created_c = updated_c = 0
         for c in CURRICULA:
             grade = Grade.objects.filter(level=c["grade_level"]).first()
             if not grade:
                 self.stdout.write(f"  Skipping curriculum for grade level {c['grade_level']} (not found)")
                 continue
-            obj, was_created = Curriculum.objects.filter(
-                country=c["country"], year=c["year"], grade=grade
-            ).first(), False
-            if not obj:
-                obj = Curriculum.objects.create(
-                    country=c["country"], year=c["year"], grade=grade,
-                    translations=_tr(c)
-                )
-                was_created = True
-            else:
-                obj.translations = _tr(c)
-                obj.save()
+            obj, was_created = Curriculum.objects.update_or_create(
+                country=c["country"], year=c["year"], grade=grade,
+                defaults={"translations": _tr(c)}
+            )
             if was_created:
                 created_c += 1
             else:

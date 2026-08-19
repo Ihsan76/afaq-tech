@@ -3,7 +3,7 @@ from rest_framework import serializers
 
 from apps.core.translations import get_translation
 
-from .models import Curriculum, CurriculumDocument, Grade, Subject, Unit
+from .models import AcademicTrack, Curriculum, CurriculumDocument, Grade, Subject, Unit
 
 
 def _locale(request):
@@ -18,10 +18,29 @@ def _locale(request):
 
 class GradeSerializer(serializers.ModelSerializer):
     name = serializers.SerializerMethodField()
+    tracks = serializers.SerializerMethodField()
 
     class Meta:
         model = Grade
-        fields = ['id', 'name', 'level', 'translations']
+        fields = ['id', 'name', 'level', 'has_tracks', 'tracks', 'translations']
+
+    def get_name(self, obj):
+        loc = _locale(self.context.get('request'))
+        return get_translation(obj.translations, loc, 'name', '')
+
+    def get_tracks(self, obj):
+        if not obj.has_tracks:
+            return []
+        tracks = obj.tracks.filter(is_active=True).order_by('order')
+        return AcademicTrackSerializer(tracks, many=True, context=self.context).data
+
+
+class AcademicTrackSerializer(serializers.ModelSerializer):
+    name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = AcademicTrack
+        fields = ['id', 'name', 'code', 'grade', 'is_active', 'order', 'translations']
 
     def get_name(self, obj):
         loc = _locale(self.context.get('request'))
@@ -62,10 +81,11 @@ class UnitSerializer(serializers.ModelSerializer):
 class CurriculumSerializer(serializers.ModelSerializer):
     name = serializers.SerializerMethodField()
     grade_name = serializers.SerializerMethodField()
+    track_name = serializers.SerializerMethodField()
 
     class Meta:
         model = Curriculum
-        fields = ['id', 'name', 'country', 'year', 'grade', 'grade_name', 'translations']
+        fields = ['id', 'name', 'country', 'year', 'grade', 'grade_name', 'track', 'track_name', 'translations']
 
     def get_name(self, obj):
         loc = _locale(self.context.get('request'))
@@ -74,6 +94,12 @@ class CurriculumSerializer(serializers.ModelSerializer):
     def get_grade_name(self, obj):
         loc = _locale(self.context.get('request'))
         return get_translation(obj.grade.translations, loc, 'name', '')
+
+    def get_track_name(self, obj):
+        if not obj.track:
+            return ''
+        loc = _locale(self.context.get('request'))
+        return get_translation(obj.track.translations, loc, 'name', '')
 
 
 class CurriculumDetailSerializer(CurriculumSerializer):

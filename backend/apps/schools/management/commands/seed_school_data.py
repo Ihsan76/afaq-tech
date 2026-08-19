@@ -158,22 +158,35 @@ class Command(BaseCommand):
     def _process_chunk(self, schools, year, grade_by_level, students_per_section, with_parents, student_seq):
         """Bulk-create sections, students, parents, enrollments and family links for a chunk of schools.
 
-        يستخدم bulk_create ثم يعيد استرجاع المعرّفات عبر الحقول الفريدة (الربط)،
-        لأن إصدار Django المثبّت لا يدعم returning_fields في bulk_create.
+        For secondary grades (11-12) with has_tracks=True, creates one section per track.
+        For basic grades, creates one section named 'أ' (no track).
         """
+        track_letters = ['أ', 'ب', 'ج', 'د', 'ه', 'و']  # Used to name track sections
         with transaction.atomic():
             school_ids = [s.id for s in schools]
-            section_objs = [
-                Section(school=school, grade=grade_by_level[level], academic_year=year, name='أ')
-                for school in schools
-                for level in self._levels_for(school)
-            ]
+            section_objs = []
+            for school in schools:
+                for level in self._levels_for(school):
+                    grade = grade_by_level[level]
+                    if grade.has_tracks:
+                        tracks = list(grade.tracks.filter(is_active=True).order_by('order'))
+                        if tracks:
+                            for idx, track in enumerate(tracks):
+                                letter = track_letters[idx] if idx < len(track_letters) else str(idx + 1)
+                                section_objs.append(Section(
+                                    school=school, grade=grade, academic_year=year,
+                                    track=track, name=letter,
+                                ))
+                        else:
+                            section_objs.append(Section(school=school, grade=grade, academic_year=year, name='أ'))
+                    else:
+                        section_objs.append(Section(school=school, grade=grade, academic_year=year, name='أ'))
             Section.objects.bulk_create(section_objs, batch_size=5000)
             section_map = {
-                (row['school_id'], row['grade_id']): row['id']
+                (row['school_id'], row['grade_id'], row['track_id']): row['id']
                 for row in Section.objects
                 .filter(academic_year=year, school_id__in=school_ids)
-                .values('id', 'school_id', 'grade_id')
+                .values('id', 'school_id', 'grade_id', 'track_id')
             }
 
             users = []
@@ -182,39 +195,40 @@ class Command(BaseCommand):
 
             for school in schools:
                 for level in self._levels_for(school):
-                    section_id = section_map[(school.id, grade_by_level[level].id)]
-                    rng = random.Random(f'{school.school_code}-{level}-أ')
-                    for _ in range(students_per_section):
-                        student_seq += 1
-                        first = rng.choice(self._gender_pool(school.gender, rng))
-                        surname = rng.choice(SURNAMES)
-                        student_email = f'student{student_seq:07d}@demo.afaq.edu.jo'
-                        users.append(User(
-                            username=student_email,
-                            email=student_email,
-                            password='',
-                            role='student',
-                            translations={'ar': {'name': f'{first} {surname}'}},
-                            national_id=f'7{student_seq:09d}',
-                            phone=f'07{student_seq % 100000000:08d}',
-                            is_verified=True,
-                            is_active=True,
-                        ))
-                        enrollment_refs.append((student_email, section_id))
-                        if with_parents:
-                            parent_email = f'parent{student_seq:07d}@demo.afaq.edu.jo'
-                            users.append(User(
-                                username=parent_email,
-                                email=parent_email,
-                                password='',
-                                role='parent',
-                                translations={'ar': {'name': f'{rng.choice(MALE_NAMES)} {surname}'}},
-                                national_id=f'8{student_seq:09d}',
-                                phone=f'07{(student_seq + 50000000) % 100000000:08d}',
-                                is_verified=True,
-                                is_active=True,
-                            ))
-                            link_refs.append((parent_email, student_email))
+                    grade = grade_by_level[level]
+                    if grade.has_tracks:
+                        tracks = list(grade.tracks.filter(is_active=True).order_by('order'))
+                        if tracks:
+                            for track in tracks:
+                                section_id = section_map.get((school.id, grade.id, track.id))
+                                if not section_id:
+                                    continue
+                                rng = random.Random(f'{school.school_code}-{level}-{track.code}')
+                                self._create_students_for_section(
+                                    rng, school, section_id, student_seq, students_per_section,
+                                    with_parents, users, enrollment_refs, link_refs,
+                                )
+                                student_seq += students_per_section
+                        else:
+                            section_id = section_map.get((school.id, grade.id, None))
+                            if not section_id:
+                                continue
+                            rng = random.Random(f'{school.school_code}-{level}-أ')
+                            self._create_students_for_section(
+                                rng, school, section_id, student_seq, students_per_section,
+                                with_parents, users, enrollment_refs, link_refs,
+                            )
+                            student_seq += students_per_section
+                    else:
+                        section_id = section_map.get((school.id, grade.id, None))
+                        if not section_id:
+                            continue
+                        rng = random.Random(f'{school.school_code}-{level}-أ')
+                        self._create_students_for_section(
+                            rng, school, section_id, student_seq, students_per_section,
+                            with_parents, users, enrollment_refs, link_refs,
+                        )
+                        student_seq += students_per_section
 
             User.objects.bulk_create(users, batch_size=5000)
             id_by_email = dict(
@@ -234,6 +248,40 @@ class Command(BaseCommand):
                 )
 
         return student_seq
+
+    def _create_students_for_section(self, rng, school, section_id, starting_seq, count, with_parents, users, enrollment_refs, link_refs):
+        """Create students (and optionally parents) for a single section."""
+        for i in range(count):
+            seq = starting_seq + i + 1
+            first = rng.choice(self._gender_pool(school.gender, rng))
+            surname = rng.choice(SURNAMES)
+            student_email = f'student{seq:07d}@demo.afaq.edu.jo'
+            users.append(User(
+                username=student_email,
+                email=student_email,
+                password='',
+                role='student',
+                translations={'ar': {'name': f'{first} {surname}'}},
+                national_id=f'7{seq:09d}',
+                phone=f'07{seq % 100000000:08d}',
+                is_verified=True,
+                is_active=True,
+            ))
+            enrollment_refs.append((student_email, section_id))
+            if with_parents:
+                parent_email = f'parent{seq:07d}@demo.afaq.edu.jo'
+                users.append(User(
+                    username=parent_email,
+                    email=parent_email,
+                    password='',
+                    role='parent',
+                    translations={'ar': {'name': f'{rng.choice(MALE_NAMES)} {surname}'}},
+                    national_id=f'8{seq:09d}',
+                    phone=f'07{(seq + 50000000) % 100000000:08d}',
+                    is_verified=True,
+                    is_active=True,
+                ))
+                link_refs.append((parent_email, student_email))
 
     @staticmethod
     def _levels_for(school):

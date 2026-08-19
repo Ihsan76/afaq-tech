@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.db import models
 
-from apps.academics.models import Grade, Subject
+from apps.academics.models import AcademicTrack, Grade, Subject
 from apps.users.models import User
 
 
@@ -87,6 +87,9 @@ class Section(models.Model):
     school = models.ForeignKey(School, on_delete=models.CASCADE, related_name='sections', verbose_name='المدرسة')
     grade = models.ForeignKey(Grade, on_delete=models.CASCADE, related_name='sections', verbose_name='الصف الدراسي')
     academic_year = models.ForeignKey(AcademicYear, on_delete=models.CASCADE, related_name='sections', verbose_name='العام الدراسي')
+    track = models.ForeignKey(AcademicTrack, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='sections', verbose_name='التخصص',
+        help_text='فارغ = صف عام بدون تخصص، مملو = شعبة تابعة لتخصص محدد')
     name = models.CharField('اسم الشعبة (مثل أ، ب، 1)', max_length=50)
     capacity = models.PositiveIntegerField('السعة الاستيعابية', default=30)
     class_teacher = models.ForeignKey(
@@ -107,7 +110,8 @@ class Section(models.Model):
 
     def __str__(self):
         grade_name = self.grade.translations.get('ar', {}).get('name', str(self.grade.level))
-        return f"{self.school.name} - {grade_name} ({self.name}) [{self.academic_year.name}]"
+        track_label = f" [{self.track}]" if self.track else ""
+        return f"{self.school.name} - {grade_name} ({self.name}){track_label} [{self.academic_year.name}]"
 
 
 class SchoolGrade(models.Model):
@@ -132,6 +136,9 @@ class SchoolSubjectPeriod(models.Model):
     school = models.ForeignKey(School, on_delete=models.CASCADE, related_name='subject_periods', verbose_name='المدرسة')
     grade = models.ForeignKey(Grade, on_delete=models.CASCADE, related_name='school_subject_periods', verbose_name='الصف الدراسي')
     subject = models.ForeignKey(Subject, on_delete=models.CASCADE, related_name='school_subject_periods', verbose_name='المادة')
+    track = models.ForeignKey(AcademicTrack, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='subject_periods', verbose_name='التخصص',
+        help_text='فارغ = مادة عامة لكل التخصصات، مملو = مادة خاصة بالتخصص')
     weekly_periods = models.PositiveIntegerField('عدد الحصص الأسبوعية', default=1)
     preferred_room_type = models.CharField(
         'نوع القاعة المفضل', max_length=50, blank=True, default='',
@@ -152,7 +159,8 @@ class SchoolSubjectPeriod(models.Model):
         unique_together = ['school', 'grade', 'subject']
 
     def __str__(self):
-        return f"{self.grade} - {self.subject} ({self.weekly_periods} حصص)"
+        track_label = f" [{self.track}]" if self.track else ""
+        return f"{self.grade} - {self.subject}{track_label} ({self.weekly_periods} حصص)"
 
 
 class SchoolTeacher(models.Model):

@@ -105,6 +105,7 @@ class SectionSerializer(serializers.ModelSerializer):
     academic_year_name = serializers.CharField(source='academic_year.name', read_only=True)
     students_count = serializers.SerializerMethodField()
     class_teacher_name = serializers.SerializerMethodField()
+    track_name = serializers.SerializerMethodField()
 
     class Meta:
         model = Section
@@ -113,6 +114,12 @@ class SectionSerializer(serializers.ModelSerializer):
     def get_grade_name(self, obj):
         loc = _locale(self.context.get('request'))
         return get_translation(obj.grade.translations, loc, 'name', str(obj.grade.level))
+
+    def get_track_name(self, obj):
+        if not obj.track:
+            return ''
+        loc = _locale(self.context.get('request'))
+        return get_translation(obj.track.translations, loc, 'name', '')
 
     def get_students_count(self, obj):
         annotated = getattr(obj, 'students_count_annotated', None)
@@ -175,6 +182,7 @@ class SchoolSubjectPeriodSerializer(serializers.ModelSerializer):
     school_name = serializers.CharField(source='school.name', read_only=True)
     grade_name = serializers.SerializerMethodField()
     subject_name = serializers.SerializerMethodField()
+    track_name = serializers.SerializerMethodField()
 
     class Meta:
         model = SchoolSubjectPeriod
@@ -188,6 +196,12 @@ class SchoolSubjectPeriodSerializer(serializers.ModelSerializer):
     def get_subject_name(self, obj):
         loc = _locale(self.context.get('request'))
         return get_translation(obj.subject.translations, loc, 'name', '')
+
+    def get_track_name(self, obj):
+        if not obj.track:
+            return ''
+        loc = _locale(self.context.get('request'))
+        return get_translation(obj.track.translations, loc, 'name', '')
 
 
 class SchoolTeacherSerializer(serializers.ModelSerializer):
