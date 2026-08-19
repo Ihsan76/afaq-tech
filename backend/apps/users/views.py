@@ -12,8 +12,8 @@ from django.core.exceptions import ValidationError
 from django.db.models import OuterRef, Q, Subquery, Sum
 from django.http import HttpResponseRedirect
 from django.utils import timezone
-from rest_framework import generics, permissions, status
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework import generics, permissions, status, viewsets
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -24,8 +24,15 @@ from apps.lessonplans.models import LessonPlan
 from apps.schools.models import School
 from apps.users.permissions import IsSystemAdmin, IsUsersAdmin
 
-from .models import EmailVerification, LoginAttempt, PhoneVerification, UserRole
-from .serializers import RegisterSerializer, UserSerializer, UserRoleSerializer
+from .models import EmailVerification, LoginAttempt, PhoneVerification, RoleRequest, UserRole
+from .serializers import (
+    RegisterSerializer,
+    RoleRequestCreateSerializer,
+    RoleRequestReviewSerializer,
+    RoleRequestSerializer,
+    UserSerializer,
+    UserRoleSerializer,
+)
 from .services import RoleService
 
 User = get_user_model()
@@ -443,6 +450,8 @@ class VerifyEmailConfirmView(APIView):
         verification.save()
         user.is_verified = True
         user.save(update_fields=['is_verified'])
+        from apps.users.services import RoleService
+        RoleService.assign_role(user, user.role)
         return Response({'message': 'Email verified successfully', 'user': UserSerializer(user).data})
 
 
@@ -685,7 +694,7 @@ class UserRolesView(generics.ListAPIView):
 class RoleAssignmentView(generics.CreateAPIView):
     """Assign a role to a user."""
     serializer_class = UserRoleSerializer
-    permission_classes = [IsSystemAdmin]
+    permission_classes = [permissions.IsAuthenticated]
 
     def create(self, request, *args, **kwargs):
         user_id = request.data.get('user_id')
@@ -749,3 +758,68 @@ class RoleRevokeView(generics.DestroyAPIView):
 
         RoleService.revoke_role(target_user, role, organization_id)
         return Response({'message': 'Role revoked successfully'})
+
+
+class RoleRequestViewSet(viewsets.ModelViewSet):
+    """Public role requests (instructor/publisher/provider) with admin review."""
+    serializer_class = RoleRequestSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_staff or getattr(user, 'role', None) in ('admin',):
+            return RoleRequest.objects.select_related('user', 'reviewed_by').all()
+        return RoleRequest.objects.filter(user=user).select_related('user', 'reviewed_by')
+
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return RoleRequestCreateSerializer
+        if self.action == 'review':
+            return RoleRequestReviewSerializer
+        return RoleRequestSerializer
+
+    def get_permissions(self):
+        if self.action == 'list':
+            return [permissions.IsAuthenticated()]
+        if self.action in ('review',):
+            return [permissions.IsAuthenticated(), IsSystemAdmin()]
+        if self.action in ('retrieve', 'create'):
+            return [permissions.IsAuthenticated()]
+        return [permissions.IsAuthenticated()]
+
+    def perform_create(self, serializer):
+        serializer.save()
+
+    @action(detail=True, methods=['post'], url_path='review')
+    def review(self, request, pk=None):
+        ro = self.get_object()
+        ser = RoleRequestReviewSerializer(data=request.data)
+        ser.is_valid(raise_exception=True)
+
+        ro.status = ser.validated_data['status']
+        ro.admin_notes = ser.validated_data.get('admin_notes', '')
+        ro.commission_rate = ser.validated_data.get('commission_rate', 0)
+        ro.payment_terms = ser.validated_data.get('payment_terms', '')
+        ro.reviewed_by = request.user
+        ro.reviewed_at = timezone.now()
+        ro.save()
+
+        if ro.status == 'approved':
+            role_map = {
+                RoleRequest.RequestType.INSTRUCTOR: 'instructor',
+                RoleRequest.RequestType.PUBLISHER: 'publisher',
+                RoleRequest.RequestType.PROVIDER: 'service_provider',
+            }
+            target_role = role_map.get(ro.request_type)
+            if target_role:
+                RoleService.assign_role(ro.user, target_role)
+
+        return Response(RoleRequestSerializer(ro, context={'request': request}).data)
+
+
+class MyRoleRequestsView(generics.ListAPIView):
+    serializer_class = RoleRequestSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return RoleRequest.objects.filter(user=self.request.user).order_by('-created_at')

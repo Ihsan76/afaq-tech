@@ -1,7 +1,11 @@
-from django.urls import path
+from django.urls import include, path
+from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenRefreshView
 
 from . import views
+
+router = DefaultRouter()
+router.register('role-requests', views.RoleRequestViewSet, basename='rolerequest')
 
 urlpatterns = [
     path('register/', views.RegisterView.as_view(), name='register'),
@@ -26,4 +30,7 @@ urlpatterns = [
     path('users/<int:user_id>/roles/', views.UserRolesView.as_view(), name='user-roles'),
     path('assign-role/', views.RoleAssignmentView.as_view(), name='assign-role'),
     path('revoke-role/', views.RoleRevokeView.as_view(), name='revoke-role'),
+    # Role Requests
+    path('my-requests/', views.MyRoleRequestsView.as_view(), name='my-role-requests'),
+    path('', include(router.urls)),
 ]

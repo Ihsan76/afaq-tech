@@ -94,6 +94,9 @@ class RoleService:
         if RoleService.has_role(assigner, 'school_admin'):
             if role_to_assign in school_roles:
                 return RoleService.has_role_in_school(assigner, 'school_admin', organization)
+        platform_roles = {'instructor', 'publisher', 'service_provider'}
+        if role_to_assign in platform_roles:
+            return assigner.is_staff or assigner.is_superuser
         return False
 
     @staticmethod

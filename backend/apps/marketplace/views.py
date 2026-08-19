@@ -81,15 +81,10 @@ class ServiceListView(generics.ListCreateAPIView):
         return qs
 
     def perform_create(self, serializer):
-        from apps.users.models import UserRole
         from apps.users.services import RoleService
-        provider_role, _ = UserRole.objects.get_or_create(
-            user=self.request.user,
-            role='provider',
-            organization=None,
-            defaults={'assigned_by': self.request.user}
+        provider_role = RoleService.assign_role(
+            self.request.user, 'provider', assigned_by=self.request.user
         )
-        RoleService._sync_roles_field(self.request.user)
         serializer.save(provider_role=provider_role)
 
 
@@ -343,15 +338,10 @@ class AdminServiceListView(generics.ListCreateAPIView):
         return qs.order_by('-created_at')
 
     def perform_create(self, serializer):
-        from apps.users.models import UserRole
         from apps.users.services import RoleService
-        provider_role, _ = UserRole.objects.get_or_create(
-            user=self.request.user,
-            role='provider',
-            organization=None,
-            defaults={'assigned_by': self.request.user}
+        provider_role = RoleService.assign_role(
+            self.request.user, 'provider', assigned_by=self.request.user
         )
-        RoleService._sync_roles_field(self.request.user)
         serializer.save(provider_role=provider_role)
 
 

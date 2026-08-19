@@ -43,6 +43,8 @@ from .models import (
     SchoolBus,
     SchoolFee,
     SchoolGrade,
+    SchoolManagerRequest,
+    SchoolStaff,
     SchoolSubjectPeriod,
     SchoolTeacher,
     Section,
@@ -76,7 +78,11 @@ from .serializers import (
     SchoolBusSerializer,
     SchoolFeeSerializer,
     SchoolGradeSerializer,
+    SchoolManagerRequestCreateSerializer,
+    SchoolManagerRequestReviewSerializer,
+    SchoolManagerRequestSerializer,
     SchoolSerializer,
+    SchoolStaffSerializer,
     SchoolSubjectPeriodSerializer,
     SchoolTeacherCreateSerializer,
     SchoolTeacherSerializer,
@@ -665,13 +671,16 @@ class SectionViewSet(viewsets.ModelViewSet):
                 }, status=status.HTTP_409_CONFLICT)
 
         if parent_email:
-            parent, _ = User.objects.get_or_create(
+            parent, created = User.objects.get_or_create(
                 email=parent_email,
                 defaults={'username': parent_email, 'role': 'parent', 'translations': {'ar': {'name': parent_email}}},
             )
-            if parent.role not in ('parent', 'admin', 'teacher'):
+            if created:
+                RoleService.assign_role(parent, 'parent')
+            elif parent.role not in ('parent', 'admin', 'teacher'):
                 parent.role = 'parent'
                 parent.save(update_fields=['role'])
+                RoleService.assign_role(parent, 'parent')
             FamilyLink.objects.get_or_create(parent=parent, student=user)
 
         enrollment, was_created = StudentEnrollment.objects.get_or_create(
@@ -719,6 +728,7 @@ class SectionViewSet(viewsets.ModelViewSet):
                 changed = True
             if not RoleService.has_role(user, 'student'):
                 user.role = 'student'
+                RoleService.assign_role(user, 'student')
                 changed = True
             translations = dict(user.translations or {})
             ar = dict(translations.get('ar') or {})
@@ -743,6 +753,7 @@ class SectionViewSet(viewsets.ModelViewSet):
         )
         user.set_unusable_password()
         user.save(update_fields=['password'])
+        RoleService.assign_role(user, 'student')
         return user, True
 
 
@@ -935,9 +946,6 @@ class SchoolTeacherViewSet(viewsets.ModelViewSet):
 
         link, _ = SchoolTeacher.objects.get_or_create(school=school, teacher=teacher)
 
-        from apps.users.services import RoleService
-        RoleService.assign_role(teacher, 'teacher', assigned_by=request.user)
-
         out = SchoolTeacherSerializer(link, context=self.get_serializer_context())
         return Response(out.data, status=status.HTTP_201_CREATED)
 
@@ -969,14 +977,42 @@ class SchoolTeacherViewSet(viewsets.ModelViewSet):
     def perform_destroy(self, instance):
         if not is_admin(self.request.user) and instance.school.manager_id != self.request.user.id:
             raise serializers.ValidationError({'school': 'يمكنك حذف معلمي مدرستك فقط'})
-
-        from apps.users.services import RoleService
-        teacher_user = instance.teacher
         instance.delete()
 
-        has_other_schools = SchoolTeacher.objects.filter(teacher=teacher_user).exists()
-        if not has_other_schools:
-            RoleService.revoke_role(teacher_user, 'teacher')
+
+class SchoolStaffViewSet(viewsets.ModelViewSet):
+    """Non-teaching staff (accountant, transport officer, librarian) linked to a school."""
+    serializer_class = SchoolStaffSerializer
+    permission_classes = [IsAdminOrReadOnly]
+
+    def get_queryset(self):
+        qs = SchoolStaff.objects.select_related('school', 'user').all()
+        school_id = self.request.query_params.get('school')
+        if school_id:
+            qs = qs.filter(school_id=school_id)
+        if is_admin(self.request.user):
+            return qs
+        if is_school_admin(self.request.user):
+            managed_ids = self.request.user.managed_schools.values_list('id', flat=True)
+            return qs.filter(school_id__in=managed_ids)
+        return SchoolStaff.objects.none()
+
+    def perform_create(self, serializer):
+        school = serializer.validated_data['school']
+        if not is_admin(self.request.user) and school.manager_id != self.request.user.id:
+            raise serializers.ValidationError({'school': 'يمكنك إدارة طاقم مدرستك فقط'})
+        serializer.save()
+
+    def perform_update(self, serializer):
+        school = self.get_object().school
+        if not is_admin(self.request.user) and school.manager_id != self.request.user.id:
+            raise serializers.ValidationError({'school': 'يمكنك إدارة طاقم مدرستك فقط'})
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        if not is_admin(self.request.user) and instance.school.manager_id != self.request.user.id:
+            raise serializers.ValidationError({'school': 'يمكنك حذف طاقم مدرستك فقط'})
+        instance.delete()
 
 
 class TeacherAssignmentViewSet(viewsets.ModelViewSet):
@@ -3818,4 +3854,50 @@ class AssignmentSubmissionViewSet(viewsets.ModelViewSet):
         submission.graded_by = request.user
         submission.save()
         return Response(AssignmentSubmissionSerializer(submission).data)
+
+
+class SchoolManagerRequestViewSet(viewsets.ModelViewSet):
+    """Request to transfer school ownership. Current manager creates, admin reviews."""
+    serializer_class = SchoolManagerRequestSerializer
+    permission_classes = [IsAdminOrReadOnly]
+
+    def get_queryset(self):
+        qs = SchoolManagerRequest.objects.select_related('school', 'current_manager', 'reviewed_by').all()
+        if is_admin(self.request.user):
+            return qs
+        return qs.filter(current_manager=self.request.user)
+
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return SchoolManagerRequestCreateSerializer
+        if self.action == 'review':
+            return SchoolManagerRequestReviewSerializer
+        return SchoolManagerRequestSerializer
+
+    def perform_create(self, serializer):
+        serializer.save()
+
+    @action(detail=True, methods=['post'], url_path='review')
+    def review(self, request, pk=None):
+        ro = self.get_object()
+        ser = SchoolManagerRequestReviewSerializer(data=request.data)
+        ser.is_valid(raise_exception=True)
+
+        ro.status = ser.validated_data['status']
+        ro.admin_notes = ser.validated_data.get('admin_notes', '')
+        ro.reviewed_by = request.user
+        ro.reviewed_at = timezone.now()
+        ro.save()
+
+        if ro.status == 'approved' and ro.new_manager_id:
+            from apps.users.services import RoleService
+            School.objects.filter(id=ro.school_id).update(manager_id=ro.new_manager_id)
+            try:
+                from apps.users.models import User as UserModel
+                new_mgr = UserModel.objects.get(id=ro.new_manager_id)
+                RoleService.assign_role(new_mgr, 'school_admin')
+            except Exception:
+                pass
+
+        return Response(SchoolManagerRequestSerializer(ro, context={'request': request}).data)
 

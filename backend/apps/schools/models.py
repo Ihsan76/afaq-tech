@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 
 from apps.academics.models import Grade, Subject
@@ -168,6 +169,26 @@ class SchoolTeacher(models.Model):
 
     def __str__(self):
         return f"{self.teacher.email} @ {self.school.name}"
+
+
+class SchoolStaff(models.Model):
+    """Non-teaching staff linked to a school (accountant, transport officer, librarian)."""
+    school = models.ForeignKey(School, on_delete=models.CASCADE, related_name='staff_link', verbose_name='المدرسة')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='school_staff_links', verbose_name='المستخدم')
+    role = models.CharField(max_length=32, choices=[
+        ('school_accountant', 'Accountant'),
+        ('school_transport_officer', 'Transport Officer'),
+        ('school_librarian', 'Librarian'),
+    ], verbose_name='الدور')
+    created_at = models.DateTimeField('تاريخ الإضافة', auto_now_add=True)
+
+    class Meta:
+        verbose_name = '_staff member'
+        verbose_name_plural = 'School Staff'
+        unique_together = ['school', 'user', 'role']
+
+    def __str__(self):
+        return f"{self.user.email} ({self.role}) @ {self.school.name}"
 
 
 class StudentEnrollment(models.Model):
@@ -759,3 +780,34 @@ class AssignmentSubmission(models.Model):
 
     def __str__(self):
         return f"{self.student.email} - {self.assignment.title} ({self.status})"
+
+
+class SchoolManagerRequest(models.Model):
+    """Request to transfer school ownership to another user."""
+
+    class Status(models.TextChoices):
+        PENDING = 'pending', 'Pending'
+        APPROVED = 'approved', 'Approved'
+        REJECTED = 'rejected', 'Rejected'
+
+    school = models.ForeignKey('School', on_delete=models.CASCADE, related_name='manager_requests')
+    current_manager = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='school_manager_requests')
+    new_manager_email = models.EmailField('البريد الإلكتروني للمدير الجديد')
+    new_manager_id = models.IntegerField(null=True, blank=True, help_text='Set if user already exists')
+
+    reason = models.TextField('سبب النقل', blank=True, default='')
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
+    admin_notes = models.TextField(blank=True, default='')
+    reviewed_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name='reviewed_manager_requests')
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'School Manager Request'
+        verbose_name_plural = 'School Manager Requests'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.school.name} - {self.current_manager.email} → {self.new_manager_email} [{self.status}]"

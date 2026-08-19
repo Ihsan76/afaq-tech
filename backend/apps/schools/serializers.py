@@ -24,6 +24,8 @@ from .models import (
     SchoolBus,
     SchoolFee,
     SchoolGrade,
+    SchoolManagerRequest,
+    SchoolStaff,
     SchoolSubjectPeriod,
     SchoolTeacher,
     Section,
@@ -228,6 +230,20 @@ class SchoolTeacherCreateSerializer(serializers.ModelSerializer):
         model = SchoolTeacher
         fields = ['school', 'teacher_email', 'teacher_name', 'password']
         extra_kwargs = {'school': {'required': True}}
+
+
+class SchoolStaffSerializer(serializers.ModelSerializer):
+    user_email = serializers.CharField(source='user.email', read_only=True)
+    user_name = serializers.SerializerMethodField()
+    school_name = serializers.CharField(source='school.name', read_only=True)
+
+    class Meta:
+        model = SchoolStaff
+        fields = ['id', 'school', 'user', 'role', 'user_email', 'user_name', 'school_name', 'created_at']
+        read_only_fields = ['created_at']
+
+    def get_user_name(self, obj):
+        return obj.user.translations.get('ar', {}).get('name', obj.user.email)
 
 
 class TeacherAssignmentSerializer(serializers.ModelSerializer):
@@ -579,4 +595,54 @@ class AssignmentSubmissionSerializer(serializers.ModelSerializer):
         return ''
 
 
+class SchoolManagerRequestSerializer(serializers.ModelSerializer):
+    current_manager_email = serializers.CharField(source='current_manager.email', read_only=True)
+    school_name = serializers.CharField(source='school.name', read_only=True)
+    reviewed_by_name = serializers.SerializerMethodField()
 
+    class Meta:
+        model = SchoolManagerRequest
+        fields = [
+            'id', 'school', 'school_name', 'current_manager', 'current_manager_email',
+            'new_manager_email', 'reason', 'status', 'admin_notes',
+            'reviewed_by', 'reviewed_by_name', 'reviewed_at',
+            'created_at', 'updated_at',
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at', 'reviewed_by', 'reviewed_at']
+
+    def get_reviewed_by_name(self, obj):
+        if obj.reviewed_by:
+            return obj.reviewed_by.translations.get('ar', {}).get('name', obj.reviewed_by.email)
+        return None
+
+
+class SchoolManagerRequestCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SchoolManagerRequest
+        fields = ['school', 'new_manager_email', 'reason']
+
+    def validate(self, attrs):
+        school = attrs['school']
+        user = self.context['request'].user
+        if school.manager_id != user.id:
+            raise serializers.ValidationError({'school': 'فقط مدير المدرسة يمكنه طلب النقل'})
+        if school.manager_requests.filter(status='pending').exists():
+            raise serializers.ValidationError({'school': 'لديك طلب نقل معلق بالفعل'})
+        return attrs
+
+    def create(self, validated_data):
+        validated_data['current_manager'] = self.context['request'].user
+        new_email = validated_data['new_manager_email']
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        try:
+            new_user = User.objects.get(email=new_email)
+            validated_data['new_manager_id'] = new_user.id
+        except User.DoesNotExist:
+            pass
+        return super().create(validated_data)
+
+
+class SchoolManagerRequestReviewSerializer(serializers.Serializer):
+    status = serializers.ChoiceField(choices=[('approved', 'Approved'), ('rejected', 'Rejected')])
+    admin_notes = serializers.CharField(required=False, default='')

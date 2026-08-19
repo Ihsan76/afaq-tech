@@ -27,6 +27,8 @@ from .views import (
     SchoolBusViewSet,
     SchoolFeeViewSet,
     SchoolGradeViewSet,
+    SchoolManagerRequestViewSet,
+    SchoolStaffViewSet,
     SchoolSubjectPeriodViewSet,
     SchoolTeacherViewSet,
     SchoolViewSet,
@@ -52,6 +54,8 @@ router.register('sections', SectionViewSet, basename='section')
 router.register('school-grades', SchoolGradeViewSet, basename='schoolgrade')
 router.register('school-subject-periods', SchoolSubjectPeriodViewSet, basename='schoolsubjectperiod')
 router.register('school-teachers', SchoolTeacherViewSet, basename='schoolteacher')
+router.register('school-staff', SchoolStaffViewSet, basename='schoolstaff')
+router.register('manager-requests', SchoolManagerRequestViewSet, basename='managerrequest')
 router.register('enrollments', StudentEnrollmentViewSet, basename='enrollment')
 router.register('teacher-assignments', TeacherAssignmentViewSet, basename='teacherassignment')
 router.register('announcements', SchoolAnnouncementViewSet, basename='announcement')

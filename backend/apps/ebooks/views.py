@@ -166,15 +166,12 @@ class EbookAdminCreateView(generics.CreateAPIView):
         ebook = serializer.save()
         author_id = self.request.data.get('author_id')
         if author_id:
-            from apps.users.models import UserRole
+            from apps.users.models import User as UserModel
             from apps.users.services import RoleService
-            author_role, _ = UserRole.objects.get_or_create(
-                user_id=author_id,
-                role='instructor',
-                organization=None,
-                defaults={'assigned_by': self.request.user}
+            author_user = UserModel.objects.get(pk=author_id)
+            author_role = RoleService.assign_role(
+                author_user, 'instructor', assigned_by=self.request.user
             )
-            RoleService._sync_roles_field(author_role.user)
             ebook.author_role = author_role
             ebook.save(update_fields=['author_role'])
 

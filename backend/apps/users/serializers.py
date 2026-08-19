@@ -3,7 +3,7 @@ from rest_framework import serializers
 
 from apps.core.translations import get_translation
 
-from .models import UserRole
+from .models import RoleRequest, UserRole
 
 User = get_user_model()
 
@@ -78,3 +78,63 @@ class RegisterSerializer(serializers.ModelSerializer):
 class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField()
+
+
+class RoleRequestSerializer(serializers.ModelSerializer):
+    user_email = serializers.CharField(source='user.email', read_only=True)
+    user_name = serializers.SerializerMethodField()
+    reviewed_by_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = RoleRequest
+        fields = [
+            'id', 'user', 'user_email', 'user_name', 'request_type', 'status',
+            'privacy_policy_accepted', 'content_ownership_confirmed',
+            'platform_rights_granted', 'legal_review_acknowledged',
+            'commission_rate', 'payment_terms',
+            'admin_notes', 'reviewed_by', 'reviewed_by_name', 'reviewed_at',
+            'created_at', 'updated_at',
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at', 'reviewed_by', 'reviewed_at']
+
+    def get_user_name(self, obj):
+        loc = _locale(self.context.get('request'))
+        return get_translation(obj.user.translations, loc, 'name', obj.user.email)
+
+    def get_reviewed_by_name(self, obj):
+        if obj.reviewed_by:
+            loc = _locale(self.context.get('request'))
+            return get_translation(obj.reviewed_by.translations, loc, 'name', obj.reviewed_by.email)
+        return None
+
+
+class RoleRequestCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RoleRequest
+        fields = [
+            'request_type', 'privacy_policy_accepted', 'content_ownership_confirmed',
+            'platform_rights_granted', 'legal_review_acknowledged',
+        ]
+
+    def validate(self, attrs):
+        if self.context['request'].user.role_requests.filter(
+            request_type=attrs['request_type'], status='pending'
+        ).exists():
+            raise serializers.ValidationError({'request_type': 'لديك طلب معلق بالفعل لهذا الدور'})
+        return attrs
+
+    def create(self, validated_data):
+        validated_data['user'] = self.context['request'].user
+        return super().create(validated_data)
+
+
+class RoleRequestReviewSerializer(serializers.Serializer):
+    status = serializers.ChoiceField(choices=[('approved', 'Approved'), ('rejected', 'Rejected')])
+    admin_notes = serializers.CharField(required=False, default='')
+    commission_rate = serializers.DecimalField(max_digits=5, decimal_places=2, required=False, default=0)
+    payment_terms = serializers.CharField(required=False, default='')
+
+    def validate_status(self, value):
+        if value not in ('approved', 'rejected'):
+            raise serializers.ValidationError('الحالة يجب أن تكون approved أو rejected')
+        return value

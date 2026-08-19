@@ -63,7 +63,7 @@ class User(AbstractUser):
 
     email = models.EmailField(unique=True)
     translations = models.JSONField(_('Translations'), default=dict, blank=True)
-    role = models.CharField(_('Role'), max_length=32, choices=Role.choices, default=Role.STUDENT)
+    role = models.CharField(_('Role'), max_length=32, choices=Role.choices, default=Role.USER)
     roles = models.JSONField(_('All Roles'), default=list, blank=True,
                              help_text=_('List of all roles this user has. e.g. ["teacher", "instructor"]'))
     subscription_plan = models.CharField(_('Subscription Plan'), max_length=20, choices=SubscriptionPlan.choices, default=SubscriptionPlan.FREE)
@@ -185,3 +185,44 @@ class UserRole(models.Model):
     def __str__(self):
         org = f" @ {self.organization}" if self.organization else " (global)"
         return f"{self.user} → {self.role}{org}"
+
+
+class RoleRequest(models.Model):
+    """Request to obtain a platform role (instructor, publisher, provider)."""
+
+    class Status(models.TextChoices):
+        PENDING = 'pending', _('Pending')
+        APPROVED = 'approved', _('Approved')
+        REJECTED = 'rejected', _('Rejected')
+
+    class RequestType(models.TextChoices):
+        INSTRUCTOR = 'instructor', _('Instructor / Trainer')
+        PUBLISHER = 'publisher', _('Publisher')
+        PROVIDER = 'provider', _('Service Provider')
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='role_requests')
+    request_type = models.CharField(max_length=20, choices=RequestType.choices)
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
+
+    privacy_policy_accepted = models.BooleanField(default=False)
+    content_ownership_confirmed = models.BooleanField(default=False)
+    platform_rights_granted = models.BooleanField(default=False)
+    legal_review_acknowledged = models.BooleanField(default=False)
+
+    commission_rate = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+    payment_terms = models.TextField(blank=True, default='')
+
+    admin_notes = models.TextField(blank=True, default='')
+    reviewed_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name='reviewed_role_requests')
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Role Request'
+        verbose_name_plural = 'Role Requests'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.user.email} → {self.request_type} [{self.status}]"
