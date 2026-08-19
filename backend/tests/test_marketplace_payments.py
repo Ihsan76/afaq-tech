@@ -50,8 +50,14 @@ def buyer_client(buyer_user):
 
 @pytest.fixture
 def published_service(provider_user):
+    from apps.users.models import UserRole
+
+    role = UserRole.objects.create(
+        user=provider_user,
+        role="teacher",
+    )
     return Service.objects.create(
-        provider=provider_user,
+        provider_role=role,
         title={"ar": "حصّة رياضيات", "en": "Math Tutoring"},
         description={"ar": "شرح", "en": "Explanation"},
         service_type=Service.ServiceType.TUTORING,
@@ -268,6 +274,9 @@ def test_admin_payout_approve_and_mark_paid(provider_user, buyer_user, published
         role="admin",
         is_verified=True,
     )
+    from apps.users.models import UserRole as _UserRole
+    _UserRole.objects.create(user=admin, role="admin")
+
     admin_client = APIClient()
     tokens = get_tokens_for_user(admin)
     admin_client.credentials(HTTP_AUTHORIZATION=f"Bearer {tokens['access']}")
@@ -311,12 +320,14 @@ def test_mark_paid_requires_sufficient_balance(provider_user, buyer_user, publis
         bank_details="SA-IBAN-001",
     )
 
+    from apps.users.models import UserRole as _UserRole2
     admin = User.objects.create_user(
         email="mkt_admin2@example.com",
         password="TestPass@123",
         role="admin",
         is_verified=True,
     )
+    _UserRole2.objects.create(user=admin, role="admin")
     admin_client = APIClient()
     tokens = get_tokens_for_user(admin)
     admin_client.credentials(HTTP_AUTHORIZATION=f"Bearer {tokens['access']}")

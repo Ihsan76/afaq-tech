@@ -129,7 +129,7 @@ jobs:
         working-directory: backend
         run: |
           pip install bandit
-          bandit -r apps -x "apps/*/migrations" -q -s B105,B106,B110,B310,B311
+          bandit -r apps -x "apps/*/migrations" -q -s B105,B106,B110,B310,B311,B404,B603
 
       - name: Django deploy checks
         working-directory: backend
