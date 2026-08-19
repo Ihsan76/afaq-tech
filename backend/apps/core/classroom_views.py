@@ -1,10 +1,5 @@
-import json
-from datetime import datetime
-
 from django.conf import settings
-from django.http import HttpResponseRedirect
-from django.utils import timezone
-from rest_framework import permissions, status
+from rest_framework import permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -159,7 +154,7 @@ class GoogleClassroomExportGradesView(APIView):
             return Response({'error': 'Not connected'}, status=400)
 
         exported = 0
-        for entry in grade_entries:
+        for _entry in grade_entries:
             exported += 1
 
         GoogleClassroomSyncLog.objects.create(

@@ -47,7 +47,7 @@ let dbPromise: Promise<IDBPDatabase> | null = null;
 function getDB(): Promise<IDBPDatabase> {
   if (!dbPromise) {
     dbPromise = openDB(DB_NAME, DB_VERSION, {
-      upgrade(db) {
+      upgrade(db: IDBPDatabase) {
         if (!db.objectStoreNames.contains('pendingAttendance')) {
           db.createObjectStore('pendingAttendance', { keyPath: 'id' });
         }
@@ -63,7 +63,7 @@ function getDB(): Promise<IDBPDatabase> {
       },
     });
   }
-  return dbPromise;
+  return dbPromise!;
 }
 
 export async function addPendingAttendance(record: Omit<PendingAttendance, 'id' | 'synced' | 'createdAt'>) {
@@ -152,7 +152,7 @@ export async function getPendingCount(): Promise<number> {
   const db = await getDB();
   const attendance = await db.getAll('pendingAttendance');
   const submissions = await db.getAll('pendingSubmissions');
-  return attendance.filter(a => !a.synced).length + submissions.filter(s => !s.synced).length;
+  return attendance.filter((a: PendingAttendance) => !a.synced).length + submissions.filter((s: PendingSubmission) => !s.synced).length;
 }
 
 export async function clearSyncedRecords() {

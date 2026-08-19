@@ -1,6 +1,4 @@
-from django.db.models import Q
-
-from .models import User, UserRole
+from .models import UserRole
 
 
 class RoleService:
@@ -91,9 +89,8 @@ class RoleService:
             'teacher', 'school_accountant',
             'school_transport_officer', 'school_librarian'
         }
-        if RoleService.has_role(assigner, 'school_admin'):
-            if role_to_assign in school_roles:
-                return RoleService.has_role_in_school(assigner, 'school_admin', organization)
+        if RoleService.has_role(assigner, 'school_admin') and role_to_assign in school_roles:
+            return RoleService.has_role_in_school(assigner, 'school_admin', organization)
         platform_roles = {'instructor', 'publisher', 'service_provider'}
         if role_to_assign in platform_roles:
             return assigner.is_staff or assigner.is_superuser

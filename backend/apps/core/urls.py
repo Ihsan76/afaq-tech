@@ -1,9 +1,20 @@
 from django.urls import path
 
 from . import views
-from .classroom_views import GoogleClassroomAuthView, GoogleClassroomCoursesView, GoogleClassroomExportGradesView, GoogleClassroomImportStudentsView
+from .classroom_views import (
+    GoogleClassroomAuthView,
+    GoogleClassroomCoursesView,
+    GoogleClassroomExportGradesView,
+    GoogleClassroomImportStudentsView,
+)
 from .directorate_views import DirectorateDashboardView, DirectorateListView
-from .gdpr_views import ConsentCreateView, ConsentListView, DataExportView, DeletionRequestStatusView, DeletionRequestView
+from .gdpr_views import (
+    ConsentCreateView,
+    ConsentListView,
+    DataExportView,
+    DeletionRequestStatusView,
+    DeletionRequestView,
+)
 from .search_views import AutocompleteView, GlobalSearchView
 
 urlpatterns = [

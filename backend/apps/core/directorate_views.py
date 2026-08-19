@@ -1,4 +1,5 @@
-from django.db.models import Avg, Count, Q
+from django.db.models import Avg
+from django.utils import timezone
 from rest_framework import permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -6,7 +7,7 @@ from rest_framework.views import APIView
 from apps.users.models import User
 from apps.users.services import RoleService
 
-from .directorate_models import Directorate, DirectorateStats
+from .directorate_models import Directorate
 
 
 class DirectorateListView(APIView):
@@ -45,7 +46,7 @@ class DirectorateDashboardView(APIView):
         schools = directorate.schools.all()
         school_ids = list(schools.values_list('id', flat=True))
 
-        from apps.schools.models import Attendance, GradeEntry, AssignmentSubmission, TimetableSlot
+        from apps.schools.models import AssignmentSubmission, Attendance, GradeEntry
 
         today = timezone.now().date()
 

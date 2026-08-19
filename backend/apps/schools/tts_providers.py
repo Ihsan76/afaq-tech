@@ -1,3 +1,9 @@
+from django.conf import settings
+from rest_framework import permissions, status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+
 class VoiceSynthesizeAPIView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -65,10 +71,11 @@ class VoiceSynthesizeAPIView(APIView):
 
     def _synthesize_edge(self, text, locale, speed):
         try:
-            import edge_tts
             import asyncio
-            import tempfile
             import os
+            import tempfile
+
+            import edge_tts
 
             rate = f"+{int((speed - 1) * 100)}%" if speed >= 1 else f"-{int((1 - speed) * 100)}%"
             voice_map = {
@@ -86,13 +93,16 @@ class VoiceSynthesizeAPIView(APIView):
             voice = voice_map.get(locale, 'ar-SA-ZariyahNeural')
 
             async def _gen():
-                tmp = tempfile.NamedTemporaryFile(suffix='.mp3', delete=False)
-                communicate = edge_tts.Communicate(text, voice, rate=rate)
-                await communicate.save(tmp.name)
-                with open(tmp.name, 'rb') as f:
-                    data = f.read()
-                os.unlink(tmp.name)
-                return data
+                fd, tmp_name = tempfile.mkstemp(suffix='.mp3')
+                os.close(fd)
+                try:
+                    communicate = edge_tts.Communicate(text, voice, rate=rate)
+                    await communicate.save(tmp_name)
+                    with open(tmp_name, 'rb') as f:
+                        data = f.read()
+                    return data
+                finally:
+                    os.unlink(tmp_name)
 
             return asyncio.run(_gen())
         except ImportError:

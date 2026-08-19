@@ -30,8 +30,8 @@ from .serializers import (
     RoleRequestCreateSerializer,
     RoleRequestReviewSerializer,
     RoleRequestSerializer,
-    UserSerializer,
     UserRoleSerializer,
+    UserSerializer,
 )
 from .services import RoleService
 

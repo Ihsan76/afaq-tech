@@ -1,7 +1,7 @@
+import os
 import subprocess
 from datetime import datetime, timedelta
 
-from django.conf import settings
 from django.core.management.base import BaseCommand
 
 
@@ -23,7 +23,7 @@ class Command(BaseCommand):
             self.stderr.write(f'Failed to list S3 backups: {result.stderr}')
             return
 
-        lines = [l for l in result.stdout.strip().split('\n') if l.strip()]
+        lines = [line for line in result.stdout.strip().split('\n') if line.strip()]
         if not lines:
             self.stderr.write('No backups found in S3!')
             return

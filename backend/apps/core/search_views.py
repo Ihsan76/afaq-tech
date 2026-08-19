@@ -1,5 +1,4 @@
 from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector, TrigramSimilarity
-from django.db.models import Q
 from rest_framework import permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -99,7 +98,7 @@ class AutocompleteView(APIView):
 
     def get(self, request):
         query = request.query_params.get('q', '').strip()
-        locale = request.query_params.get('locale', 'ar')
+        _locale = request.query_params.get('locale', 'ar')
 
         if not query or len(query) < 2:
             return Response({'suggestions': []})

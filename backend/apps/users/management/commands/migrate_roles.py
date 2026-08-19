@@ -31,8 +31,9 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         from django.contrib.auth import get_user_model
-        from apps.users.models import UserRole
+
         from apps.schools.models import SchoolTeacher
+        from apps.users.models import UserRole
 
         User = get_user_model()
         dry_run = options["dry_run"]

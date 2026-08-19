@@ -1,5 +1,6 @@
 import csv
 import io
+import json
 from datetime import date, timedelta
 
 from django.conf import settings
@@ -3438,7 +3439,6 @@ class StudentPredictiveAnalyticsAPIView(APIView):
 
             response = router.generate(prompt, feature='analytics')
             if response and response.success:
-                import json
                 ai_text = response.content.strip()
                 if ai_text.startswith('```'):
                     ai_text = ai_text.split('\n', 1)[1].rsplit('```', 1)[0]
