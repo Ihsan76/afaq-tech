@@ -45,8 +45,14 @@ def buyer_user():
 
 @pytest.fixture
 def published_service(provider_user):
+    from apps.users.models import UserRole
+
+    role = UserRole.objects.create(
+        user=provider_user,
+        role="teacher",
+    )
     return Service.objects.create(
-        provider=provider_user,
+        provider_role=role,
         title={"ar": "حصّة رياضيات", "en": "Math Tutoring"},
         description={"ar": "شرح", "en": "Explanation"},
         service_type=Service.ServiceType.TUTORING,
