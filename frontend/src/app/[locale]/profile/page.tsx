@@ -46,6 +46,37 @@ export default function ProfilePage() {
   const [roles, setRoles] = useState<UserRoleEntry[]>([]);
   const [rolesLoading, setRolesLoading] = useState(true);
 
+  const handleExportData = async () => {
+    try {
+      const res = await api.post("/core/data-export/");
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(res.data, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `afaq_user_data_${user?.id || 'export'}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+      setMessage(t("profile.exportSuccess"));
+    } catch {
+      setMessage(t("profile.saveError"));
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!confirm(t("profile.deleteConfirm"))) return;
+    try {
+      await api.post("/core/deletion-request/");
+      setMessage(t("profile.deleteRequested"));
+      setTimeout(() => {
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
+        router.push(`/${locale}/login`);
+      }, 3000);
+    } catch {
+      setMessage(t("profile.saveError"));
+    }
+  };
+
   useEffect(() => {
     if (user) {
       setForm({
@@ -279,6 +310,37 @@ export default function ProfilePage() {
               </div>
             </div>
           )}
+
+          {/* Privacy & Data Management */}
+          <div className="glass-strong p-6 rounded-3xl border" style={{ borderColor: "var(--color-border)" }}>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "rgba(239, 68, 68, 0.1)" }}>
+                <span className="text-xl">🔒</span>
+              </div>
+              <div>
+                <h2 className="text-lg font-bold" style={{ color: "var(--color-text)", fontFamily: "var(--font-heading)" }}>{t("profile.privacyData")}</h2>
+                <p className="text-xs" style={{ color: "var(--color-text-muted)" }}>{t("profile.deleteAccountDesc")}</p>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={handleExportData}
+                className="px-4 py-2 rounded-xl text-sm font-semibold border transition-all"
+                style={{ borderColor: "var(--color-border)", color: "var(--color-text)", background: "var(--color-background)" }}
+              >
+                📥 {t("profile.exportData")}
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteAccount}
+                className="px-4 py-2 rounded-xl text-sm font-semibold transition-all"
+                style={{ background: "rgba(239, 68, 68, 0.15)", color: "var(--color-error)" }}
+              >
+                ⚠️ {t("profile.deleteAccount")}
+              </button>
+            </div>
+          </div>
 
           {/* Save Button */}
           <button

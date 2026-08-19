@@ -763,7 +763,14 @@
     "appearance": "Appearance",
     "appearanceDesc": "Choose a theme that suits your style",
     "theme": "Theme",
-    "themeReset": "Reset to default"
+    "themeReset": "Reset to default",
+    "privacyData": "Privacy & Data Management",
+    "exportData": "Export My Personal Data",
+    "exportSuccess": "Data exported successfully",
+    "deleteAccount": "Delete Account & Data",
+    "deleteAccountDesc": "Permanent request to delete your account and all personal data (Right to be Forgotten)",
+    "deleteConfirm": "Are you sure you want to delete your account? This action cannot be undone.",
+    "deleteRequested": "Account deletion request sent successfully. It will be processed soon."
   },
   "landing": {
     "heroTitle": "Afaq Tech",
