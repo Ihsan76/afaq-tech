@@ -8,34 +8,6 @@ import { api } from "@/lib/api";
 import { useAuthStore } from "@/store/auth";
 import { resolveActiveSchoolId } from "@/components/school/activeSchool";
 
-const FALLBACK_ACTIONS: Record<string, { href: string; icon: string; labelKey?: string; title?: string }[]> = {
-  school_admin: [
-    { href: "/school/admin/sections", icon: "🏫", labelKey: "quickSections" },
-    { href: "/school/admin/timetable", icon: "⚡", labelKey: "quickSchedule" },
-    { href: "/school/fees", icon: "💳", labelKey: "quickFees" },
-    { href: "/school/transport", icon: "🚌", labelKey: "quickTransport" },
-    { href: "/school/admin/devices", icon: "🖥️", labelKey: "quickDevices" },
-    { href: "/school/transport/map", icon: "🗺️", labelKey: "quickBusTracking" },
-    { href: "/school/admin/announcements", icon: "📢", labelKey: "quickBroadcast" },
-  ],
-  teacher: [
-    { href: "/teacher/my-class", icon: "👨‍🏫", labelKey: "quickMyClass" },
-    { href: "/teacher/timetable", icon: "📅", labelKey: "quickMyTimetable" },
-    { href: "/teacher/attendance", icon: "🚨", labelKey: "quickRecordAttendance" },
-    { href: "/teacher/tickets", icon: "💬", labelKey: "quickMyTickets" },
-  ],
-  parent: [
-    { href: "/parent/children", icon: "👨‍👩‍👧‍👦", labelKey: "quickViewChildren" },
-    { href: "/parent/attendance", icon: "📊", labelKey: "quickMyAttendance" },
-    { href: "/parent/reports", icon: "📄", labelKey: "quickMyReports" },
-  ],
-  student: [
-    { href: "/student/timetable", icon: "📅", labelKey: "quickMyTimetable" },
-    { href: "/student/attendance", icon: "📊", labelKey: "quickMyAttendance" },
-    { href: "/student/record", icon: "🎓", labelKey: "quickMyRecord" },
-  ],
-};
-
 export default function RoleDashboard() {
   const locale = useLocale();
   const t = useTranslations("school");
@@ -109,12 +81,16 @@ export default function RoleDashboard() {
     return [
       { label: t("kpiTotalStudents"), val: ctx?.students?.length ?? 0, icon: "🎓", color: "from-blue-500 to-indigo-600" },
       { label: t("kpiTotalTeachers"), val: ctx?.teachers?.length ?? 0, icon: "👨‍🏫", color: "from-emerald-500 to-teal-600" },
-      { label: t("kpiPresentToday"), val: present, icon: "✅", color: "from-amber-500 to-orange-600" },
+      { label: t("kpiPresentToday"), val: present, icon: "✅", color: "from-emerald-500 to-teal-600" },
       { label: t("kpiAbsentToday"), val: absent, icon: "🚨", color: "from-rose-500 to-pink-600" },
     ];
   })();
 
-  const actionsToDisplay = FALLBACK_ACTIONS[viewRole] || [];
+  const actionsToDisplay = dynamicMenu.map((item: any) => ({
+    href: item.url || item.resolved_url || "#",
+    icon: item.icon || "🔗",
+    title: item.title || item.url || "",
+  }));
 
   const badgeKey =
     viewRole === "teacher" ? "teacherBadge" : viewRole === "parent" ? "parentBadge" : viewRole === "student" ? "studentBadge" : "adminBadge";
@@ -162,23 +138,25 @@ export default function RoleDashboard() {
             ))}
           </div>
 
-          <div className={surfaceCls} style={surfaceStyle}>
-            <h3 className="text-xl font-bold mb-6" style={{ fontFamily: "var(--font-heading)" }}>
-              🚀 {t("quickActions")}
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {actionsToDisplay.map((action: any, i: number) => (
-                <Link
-                  key={i}
-                  href={`/${locale}${action.href}`}
-                  className="p-5 rounded-2xl font-bold transition-all hover:scale-105 bg-[var(--color-background)] border border-[var(--color-border)] flex items-center gap-3"
-                >
-                  <span className="text-2xl">{action.icon}</span>
-                  <span>{action.title ? action.title : (action.labelKey ? t(action.labelKey) : action.href)}</span>
-                </Link>
-              ))}
+          {actionsToDisplay.length > 0 && (
+            <div className={surfaceCls} style={surfaceStyle}>
+              <h3 className="text-xl font-bold mb-6" style={{ fontFamily: "var(--font-heading)" }}>
+                🚀 {t("quickActions")}
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {actionsToDisplay.map((action: any, i: number) => (
+                  <Link
+                    key={i}
+                    href={`/${locale}${action.href}`}
+                    className="p-5 rounded-2xl font-bold transition-all hover:scale-105 bg-[var(--color-background)] border border-[var(--color-border)] flex items-center gap-3"
+                  >
+                    <span className="text-2xl">{action.icon}</span>
+                    <span>{action.title}</span>
+                  </Link>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       )}
     </div>
