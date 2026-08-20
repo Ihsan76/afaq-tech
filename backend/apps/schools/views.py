@@ -30,8 +30,10 @@ from .models import (
     Attachment,
     Attendance,
     Book,
+    BusLocationLog,
     BusRoute,
     DayOfWeek,
+    DeviceEvent,
     FamilyLink,
     GradeCategory,
     GradeEntry,
@@ -42,6 +44,7 @@ from .models import (
     School,
     SchoolAnnouncement,
     SchoolBus,
+    SchoolDevice,
     SchoolFee,
     SchoolGrade,
     SchoolManagerRequest,
@@ -77,6 +80,7 @@ from .serializers import (
     RoomSerializer,
     SchoolAnnouncementSerializer,
     SchoolBusSerializer,
+    SchoolDeviceSerializer,
     SchoolFeeSerializer,
     SchoolGradeSerializer,
     SchoolManagerRequestCreateSerializer,
@@ -3900,4 +3904,212 @@ class SchoolManagerRequestViewSet(viewsets.ModelViewSet):
                 pass
 
         return Response(SchoolManagerRequestSerializer(ro, context={'request': request}).data)
+
+
+class SchoolDeviceViewSet(AuxiliaryModuleGatingMixin, viewsets.ModelViewSet):
+    """CRUD for school devices (GPS trackers, RFID readers, cameras, mobile apps)."""
+    serializer_class = SchoolDeviceSerializer
+    permission_classes = [IsAdminOrReadOnly]
+
+    def get_queryset(self):
+        qs = SchoolDevice.objects.select_related('school', 'assigned_bus').all()
+        school_id = self.request.query_params.get('school')
+        if school_id:
+            qs = qs.filter(school_id=school_id)
+        device_type = self.request.query_params.get('device_type')
+        if device_type:
+            qs = qs.filter(device_type=device_type)
+        if not is_admin(self.request.user):
+            school_ids = user_school_ids(self.request.user)
+            if school_ids is not None:
+                qs = qs.filter(school_id__in=school_ids)
+        return qs
+
+    @action(detail=True, methods=['post'], url_path='regenerate-token')
+    def regenerate_token(self, request, pk=None):
+        """Generate a fresh API token for a device."""
+        device = self.get_object()
+        import secrets
+        device.api_token = secrets.token_hex(32)
+        device.save(update_fields=['api_token'])
+        return Response({'api_token': device.api_token})
+
+    @action(detail=True, methods=['post'], url_path='heartbeat')
+    def heartbeat(self, request, pk=None):
+        """Device calls this to report it is online."""
+        device = self.get_object()
+        device.status = SchoolDevice.Status.ONLINE
+        device.last_seen_at = timezone.now()
+        device.save(update_fields=['status', 'last_seen_at'])
+        return Response({'status': 'ok'})
+
+
+class DeviceTelemetryAPIView(APIView):
+    """Receives GPS telemetry from bus tracking devices or mobile driver apps.
+
+    Expected payload:
+    {
+        "device_identifier": "IMEI or MAC",
+        "bus_number": "optional",
+        "latitude": 31.95,
+        "longitude": 35.93,
+        "speed": 45.0,
+        "heading": 180.0,
+        "timestamp": "2026-08-20T07:30:00Z"
+    }
+    """
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        device_identifier = request.data.get('device_identifier')
+        if not device_identifier:
+            return Response({'error': 'device_identifier is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        device = SchoolDevice.objects.filter(device_identifier=device_identifier).first()
+        if not device:
+            return Response({'error': 'Unknown device'}, status=status.HTTP_404_NOT_FOUND)
+
+        device.status = SchoolDevice.Status.ONLINE
+        device.last_seen_at = timezone.now()
+        device.save(update_fields=['status', 'last_seen_at'])
+
+        bus = device.assigned_bus
+        if not bus:
+            bus_number = request.data.get('bus_number')
+            if bus_number:
+                bus = SchoolBus.objects.filter(bus_number=bus_number, school=device.school).first()
+
+        if not bus:
+            return Response({'error': 'No bus assigned to this device'}, status=status.HTTP_400_BAD_REQUEST)
+
+        latitude = request.data.get('latitude', 0.0)
+        longitude = request.data.get('longitude', 0.0)
+        speed = request.data.get('speed', 0.0)
+        heading = request.data.get('heading', 0.0)
+        timestamp = request.data.get('timestamp', timezone.now())
+
+        log = BusLocationLog.objects.create(
+            bus=bus,
+            device=device,
+            latitude=latitude,
+            longitude=longitude,
+            speed=speed,
+            heading=heading,
+            timestamp=timestamp,
+        )
+
+        return Response({'success': True, 'log_id': log.id})
+
+
+class DeviceScanAPIView(APIView):
+    """Receives RFID tap / facial recognition events from devices.
+
+    Expected payload:
+    {
+        "device_identifier": "IMEI or MAC",
+        "student_id": 123,
+        "event_type": "rfid_tap" | "facial_recognition",
+        "direction": "board" | "exit",
+        "timestamp": "2026-08-20T07:30:00Z",
+        "raw_payload": {}
+    }
+    """
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        device_identifier = request.data.get('device_identifier')
+        if not device_identifier:
+            return Response({'error': 'device_identifier is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        device = SchoolDevice.objects.filter(device_identifier=device_identifier).first()
+        if not device:
+            return Response({'error': 'Unknown device'}, status=status.HTTP_404_NOT_FOUND)
+
+        device.status = SchoolDevice.Status.ONLINE
+        device.last_seen_at = timezone.now()
+        device.save(update_fields=['status', 'last_seen_at'])
+
+        student_id = request.data.get('student_id')
+        student = None
+        if student_id:
+            student = get_object_or_404(User, pk=student_id)
+
+        event_type = request.data.get('event_type', 'rfid_tap')
+        direction = request.data.get('direction', '')
+        timestamp = request.data.get('timestamp', timezone.now())
+        raw_payload = request.data.get('raw_payload', {})
+
+        event = DeviceEvent.objects.create(
+            device=device,
+            event_type=event_type,
+            student=student,
+            direction=direction,
+            raw_payload=raw_payload,
+            timestamp=timestamp,
+        )
+
+        if student and event_type in ('rfid_tap', 'facial_recognition') and direction:
+            from apps.schools.models import Attendance, FamilyLink
+            status_val = 'present' if direction == 'board' else 'absent'
+            attendance, _ = Attendance.objects.update_or_create(
+                student=student,
+                date=timezone.localdate(),
+                defaults={'status': status_val, 'school': device.school}
+            )
+            try:
+                from .whatsapp import send_whatsapp_alert
+                family_links = FamilyLink.objects.filter(student=student)
+                for link in family_links:
+                    if link.parent and link.parent.phone:
+                        msg = f"إشعار حضور مدرسي: تم تسجيل {'صعود' if direction == 'board' else 'نزول'} الطالب {student.get_full_name() or student.email} من الحافلة بتاريخ {attendance.date}."
+                        send_whatsapp_alert(link.parent.phone, msg)
+            except Exception:
+                pass
+
+        return Response({'success': True, 'event_id': event.id})
+
+
+class BusLiveLocationAPIView(APIView):
+    """Return the latest known location for all buses in a school (or a single bus)."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        bus_id = request.query_params.get('bus')
+        school_id = request.query_params.get('school')
+
+        qs = BusLocationLog.objects.select_related('bus', 'bus__school').all()
+        if bus_id:
+            qs = qs.filter(bus_id=bus_id)
+        elif school_id:
+            qs = qs.filter(bus__school_id=school_id)
+        else:
+            school_ids = user_school_ids(request.user)
+            if school_ids is not None:
+                qs = qs.filter(bus__school_id__in=school_ids)
+
+        from django.db.models import Max
+        latest_locations = (
+            qs.values('bus')
+            .annotate(latest=Max('timestamp'))
+            .order_by('bus')
+        )
+
+        result = []
+        for entry in latest_locations:
+            log = BusLocationLog.objects.select_related('bus').filter(
+                bus_id=entry['bus'], timestamp=entry['latest']
+            ).first()
+            if log:
+                result.append({
+                    'bus_id': log.bus.id,
+                    'bus_number': log.bus.bus_number,
+                    'driver_name': log.bus.driver_name,
+                    'latitude': log.latitude,
+                    'longitude': log.longitude,
+                    'speed': log.speed,
+                    'heading': log.heading,
+                    'timestamp': log.timestamp.isoformat(),
+                })
+
+        return Response(result)
 

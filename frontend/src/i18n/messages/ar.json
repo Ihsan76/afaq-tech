@@ -2103,6 +2103,8 @@
     "quickRooms": "القاعات والحصص",
     "quickFees": "الرسوم والذمم",
     "quickTransport": "النقل والحافلات",
+    "quickDevices": "إدارة الأجهزة",
+    "quickBusTracking": "تتبع الحافلات",
     "attendanceCount": "{count} سجل",
     "ticketsCount": "{count} تذكرة",
     "attachmentsCount": "{count} مرفق",

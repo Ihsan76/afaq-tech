@@ -14,6 +14,8 @@ const FALLBACK_ACTIONS: Record<string, { href: string; icon: string; labelKey?: 
     { href: "/school/admin/timetable", icon: "⚡", labelKey: "quickSchedule" },
     { href: "/school/fees", icon: "💳", labelKey: "quickFees" },
     { href: "/school/transport", icon: "🚌", labelKey: "quickTransport" },
+    { href: "/school/admin/devices", icon: "🖥️", labelKey: "quickDevices" },
+    { href: "/school/transport/map", icon: "🗺️", labelKey: "quickBusTracking" },
     { href: "/school/admin/announcements", icon: "📢", labelKey: "quickBroadcast" },
   ],
   teacher: [

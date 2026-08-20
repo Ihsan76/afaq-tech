@@ -819,3 +819,100 @@ class SchoolManagerRequest(models.Model):
 
     def __str__(self):
         return f"{self.school.name} - {self.current_manager.email} → {self.new_manager_email} [{self.status}]"
+
+
+class SchoolDevice(models.Model):
+    """A physical or virtual device registered to a school (GPS tracker, RFID reader, facial camera, mobile app)."""
+
+    class DeviceType(models.TextChoices):
+        GPS_TRACKER = 'gps_tracker', 'جهاز تتبع GPS'
+        RFID_READER = 'rfid_reader', 'قارئ بطاقات RFID'
+        FACIAL_CAMERA = 'facial_camera', 'كاميرا التعرف على الوجه'
+        MOBILE_APP = 'mobile_app', 'تطبيق هاتف السائق'
+        BLUETOOTH_RFID = 'bluetooth_rfid', 'قارئ RFID بلوتوث'
+
+    class Status(models.TextChoices):
+        ONLINE = 'online', 'متصل'
+        OFFLINE = 'offline', 'غير متصل'
+        MAINTENANCE = 'maintenance', 'صيانة'
+
+    school = models.ForeignKey(School, on_delete=models.CASCADE, related_name='devices', verbose_name='المدرسة')
+    name = models.CharField('اسم الجهاز', max_length=255)
+    device_type = models.CharField('نوع الجهاز', max_length=30, choices=DeviceType.choices)
+    device_identifier = models.CharField('معرف الجهاز (IMEI / MAC / Serial)', max_length=255, unique=True)
+    api_token = models.CharField('مفتاح الأمان (API Token)', max_length=512, blank=True, default='')
+    assigned_bus = models.ForeignKey(SchoolBus, on_delete=models.SET_NULL, null=True, blank=True, related_name='devices', verbose_name='الحافلة المخصصة')
+    assigned_gate = models.CharField('البوابة / المدخل المخصص', max_length=100, blank=True, default='')
+    status = models.CharField('حالة الاتصال', max_length=20, choices=Status.choices, default=Status.OFFLINE)
+    is_active = models.BooleanField('نشط', default=True)
+    last_seen_at = models.DateTimeField('آخر اتصال', null=True, blank=True)
+    notes = models.TextField('ملاحظات', blank=True, default='')
+    created_at = models.DateTimeField('تاريخ الإنشاء', auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'جهاز مدرسي'
+        verbose_name_plural = 'الأجهزة المدرسية'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.name} ({self.get_device_type_display()}) - {self.school.name}"
+
+
+class BusLocationLog(models.Model):
+    """Stores GPS telemetry received from bus tracking devices or mobile driver apps."""
+    bus = models.ForeignKey(SchoolBus, on_delete=models.CASCADE, related_name='location_logs', verbose_name='الحافلة')
+    device = models.ForeignKey(SchoolDevice, on_delete=models.SET_NULL, null=True, blank=True, related_name='location_logs', verbose_name='الجهاز المرسل')
+    latitude = models.FloatField('خط العرض', default=0.0)
+    longitude = models.FloatField('خط الطول', default=0.0)
+    speed = models.FloatField('السرعة (كم/ساعة)', default=0.0)
+    heading = models.FloatField('الاتجاه (درجات)', default=0.0)
+    timestamp = models.DateTimeField('وقت الإرسال')
+    recorded_at = models.DateTimeField('وقت الاستلام', auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'سجل موقع حافلة'
+        verbose_name_plural = 'سجلات مواقع الحافلات'
+        ordering = ['-timestamp']
+        indexes = [
+            models.Index(fields=['bus', '-timestamp']),
+        ]
+
+    def __str__(self):
+        return f"H{self.bus.bus_number} @ ({self.latitude}, {self.longitude})"
+
+
+class DeviceEvent(models.Model):
+    """Log of events received from devices: RFID taps, facial recognition, attendance events."""
+
+    class EventType(models.TextChoices):
+        RFID_TAP = 'rfid_tap', 'مسح بطاقة RFID'
+        FACIAL_RECOGNITION = 'facial_recognition', 'التعرف على الوجه'
+        DOOR_OPEN = 'door_open', 'فتح الباب'
+        DOOR_CLOSE = 'door_close', 'إغلاق الباب'
+        GEOFENCE_ENTER = 'geofence_enter', 'دخول المنطقة الجغرافية'
+        GEOFENCE_EXIT = 'geofence_exit', 'خروج المنطقة الجغرافية'
+
+    class Direction(models.TextChoices):
+        BOARD = 'board', 'صعود'
+        EXIT = 'exit', 'نزول'
+
+    device = models.ForeignKey(SchoolDevice, on_delete=models.CASCADE, related_name='events', verbose_name='الجهاز')
+    event_type = models.CharField('نوع الحدث', max_length=30, choices=EventType.choices)
+    student = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='device_events', verbose_name='الطالب')
+    direction = models.CharField('اتجاه الحركة', max_length=10, choices=Direction.choices, blank=True, default='')
+    raw_payload = models.JSONField('البيانات الخام', default=dict, blank=True)
+    timestamp = models.DateTimeField('وقت الحدث')
+    processed = models.BooleanField('تمت المعالجة', default=False)
+    recorded_at = models.DateTimeField('وقت الاستلام', auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'حدث جهاز'
+        verbose_name_plural = 'أحداث الأجهزة'
+        ordering = ['-timestamp']
+        indexes = [
+            models.Index(fields=['device', '-timestamp']),
+            models.Index(fields=['student', '-timestamp']),
+        ]
+
+    def __str__(self):
+        return f"{self.get_event_type_display()} - {self.device.name}"

@@ -11,7 +11,10 @@ from .views import (
     BookViewSet,
     BulkExportView,
     BulkImportView,
+    BusLiveLocationAPIView,
     BusRouteViewSet,
+    DeviceScanAPIView,
+    DeviceTelemetryAPIView,
     FamilyLinkViewSet,
     FAQCopilotAPIView,
     FAQViewSet,
@@ -25,6 +28,7 @@ from .views import (
     SchoolAnalyticsAPIView,
     SchoolAnnouncementViewSet,
     SchoolBusViewSet,
+    SchoolDeviceViewSet,
     SchoolFeeViewSet,
     SchoolGradeViewSet,
     SchoolManagerRequestViewSet,
@@ -72,6 +76,7 @@ router.register('fee-assignments', StudentFeeAssignmentViewSet, basename='studen
 router.register('buses', SchoolBusViewSet, basename='schoolbus')
 router.register('bus-routes', BusRouteViewSet, basename='busroute')
 router.register('bus-assignments', StudentBusAssignmentViewSet, basename='studentbusassignment')
+router.register('devices', SchoolDeviceViewSet, basename='schooldevice')
 router.register('books', BookViewSet, basename='book')
 router.register('library-lendings', LibraryLendingViewSet, basename='librarylending')
 router.register('grade-categories', GradeCategoryViewSet, basename='gradecategory')
@@ -92,6 +97,9 @@ urlpatterns = [
     path('students/<int:student_id>/report-card/pdf/', StudentReportCardPDFView.as_view(), name='student-report-card-pdf'),
     path('students/<int:student_id>/predictive-analytics/', StudentPredictiveAnalyticsAPIView.as_view(), name='student-predictive-analytics'),
     path('biometric/webhook/', BiometricWebhookAPIView.as_view(), name='biometric-webhook'),
+    path('telemetry/', DeviceTelemetryAPIView.as_view(), name='device-telemetry'),
+    path('scan/', DeviceScanAPIView.as_view(), name='device-scan'),
+    path('buses/live/', BusLiveLocationAPIView.as_view(), name='bus-live-location'),
     path('faq-copilot/', FAQCopilotAPIView.as_view(), name='faq-copilot'),
     path('', include(router.urls)),
 ]

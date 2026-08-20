@@ -11,7 +11,9 @@ from .models import (
     Attachment,
     Attendance,
     Book,
+    BusLocationLog,
     BusRoute,
+    DeviceEvent,
     FamilyLink,
     GradeCategory,
     GradeEntry,
@@ -22,6 +24,7 @@ from .models import (
     School,
     SchoolAnnouncement,
     SchoolBus,
+    SchoolDevice,
     SchoolFee,
     SchoolGrade,
     SchoolManagerRequest,
@@ -660,3 +663,61 @@ class SchoolManagerRequestCreateSerializer(serializers.ModelSerializer):
 class SchoolManagerRequestReviewSerializer(serializers.Serializer):
     status = serializers.ChoiceField(choices=[('approved', 'Approved'), ('rejected', 'Rejected')])
     admin_notes = serializers.CharField(required=False, default='')
+
+
+class SchoolDeviceSerializer(serializers.ModelSerializer):
+    assigned_bus_number = serializers.CharField(source='bus.bus_number', read_only=True, default='')
+    assigned_bus_display = serializers.SerializerMethodField()
+    device_type_display = serializers.CharField(source='get_device_type_display', read_only=True)
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    school_name = serializers.CharField(source='school.name', read_only=True)
+
+    class Meta:
+        model = SchoolDevice
+        fields = [
+            'id', 'school', 'school_name', 'name', 'device_type', 'device_type_display',
+            'device_identifier', 'api_token', 'assigned_bus', 'assigned_bus_number',
+            'assigned_bus_display', 'assigned_gate', 'status', 'status_display',
+            'is_active', 'last_seen_at', 'notes', 'created_at',
+        ]
+        read_only_fields = ['api_token', 'last_seen_at', 'created_at']
+
+    def get_assigned_bus_display(self, obj):
+        if obj.assigned_bus:
+            return f"حافلة رقم {obj.assigned_bus.bus_number} - {obj.assigned_bus.driver_name}"
+        return ''
+
+
+class BusLocationLogSerializer(serializers.ModelSerializer):
+    bus_number = serializers.CharField(source='bus.bus_number', read_only=True)
+    driver_name = serializers.CharField(source='bus.driver_name', read_only=True)
+
+    class Meta:
+        model = BusLocationLog
+        fields = [
+            'id', 'bus', 'bus_number', 'driver_name', 'device',
+            'latitude', 'longitude', 'speed', 'heading',
+            'timestamp', 'recorded_at',
+        ]
+        read_only_fields = ['recorded_at']
+
+
+class DeviceEventSerializer(serializers.ModelSerializer):
+    device_name = serializers.CharField(source='device.name', read_only=True)
+    student_name = serializers.SerializerMethodField()
+    event_type_display = serializers.CharField(source='get_event_type_display', read_only=True)
+    direction_display = serializers.CharField(source='get_direction_display', read_only=True)
+
+    class Meta:
+        model = DeviceEvent
+        fields = [
+            'id', 'device', 'device_name', 'event_type', 'event_type_display',
+            'student', 'student_name', 'direction', 'direction_display',
+            'raw_payload', 'timestamp', 'processed', 'recorded_at',
+        ]
+        read_only_fields = ['processed', 'recorded_at']
+
+    def get_student_name(self, obj):
+        if obj.student:
+            return obj.student.get_full_name() or obj.student.email
+        return ''
