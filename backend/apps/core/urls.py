@@ -7,7 +7,14 @@ from .classroom_views import (
     GoogleClassroomExportGradesView,
     GoogleClassroomImportStudentsView,
 )
-from .directorate_views import DirectorateDashboardView, DirectorateListView
+from .directorate_views import (
+    DirectorateAlertsView,
+    DirectorateComparisonView,
+    DirectorateDashboardView,
+    DirectorateListView,
+    DirectorateSchoolsView,
+    DirectorateStatsView,
+)
 from .gdpr_views import (
     ConsentCreateView,
     ConsentListView,
@@ -44,6 +51,10 @@ urlpatterns = [
     path('data-export/', DataExportView.as_view(), name='data-export'),
     path('directorates/', DirectorateListView.as_view(), name='directorate-list'),
     path('directorates/<int:pk>/dashboard/', DirectorateDashboardView.as_view(), name='directorate-dashboard'),
+    path('directorates/<int:pk>/stats/', DirectorateStatsView.as_view(), name='directorate-stats'),
+    path('directorates/<int:pk>/schools/', DirectorateSchoolsView.as_view(), name='directorate-schools'),
+    path('directorates/<int:pk>/comparison/', DirectorateComparisonView.as_view(), name='directorate-comparison'),
+    path('directorates/<int:pk>/alerts/', DirectorateAlertsView.as_view(), name='directorate-alerts'),
     path('google-classroom/auth/', GoogleClassroomAuthView.as_view(), name='classroom-auth'),
     path('google-classroom/courses/', GoogleClassroomCoursesView.as_view(), name='classroom-courses'),
     path('google-classroom/import/students/', GoogleClassroomImportStudentsView.as_view(), name='classroom-import-students'),

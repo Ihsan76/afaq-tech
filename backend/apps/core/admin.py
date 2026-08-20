@@ -1,5 +1,6 @@
 from django.contrib import admin
 
+from .directorate_models import Directorate, DirectorateStats
 from .models import FeatureFlag, Language, TranslationKey
 
 
@@ -22,3 +23,18 @@ class TranslationKeyAdmin(admin.ModelAdmin):
     list_filter = ('namespace', 'is_active')
     search_fields = ('key',)
     list_editable = ('is_active', 'order')
+
+
+@admin.register(Directorate)
+class DirectorateAdmin(admin.ModelAdmin):
+    list_display = ('name', 'region', 'director', 'is_active', 'created_at')
+    list_filter = ('is_active', 'region')
+    search_fields = ('name', 'name_ar', 'name_en')
+    filter_horizontal = ('schools',)
+
+
+@admin.register(DirectorateStats)
+class DirectorateStatsAdmin(admin.ModelAdmin):
+    list_display = ('directorate', 'date', 'total_schools', 'total_students', 'total_teachers', 'attendance_rate', 'average_grades')
+    list_filter = ('directorate', 'date')
+    date_hierarchy = 'date'

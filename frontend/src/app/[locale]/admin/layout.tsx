@@ -55,6 +55,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       { href: "/admin/subjects", label: t("admin.subjects"), icon: "📚" },
       { href: "/admin/curricula", label: t("admin.curricula"), icon: "📋" },
       { href: "/admin/schools", label: t("admin.schools") || "المدارس والمتابعة", icon: "🏫" },
+      { href: "/admin/directorates", label: t("admin.directorates") || "المديريات", icon: "🏛️" },
       { href: "/admin/courses", label: t("admin.courses"), icon: "🎬" },
       { href: "/admin/ebooks", label: t("admin.ebooks") || "E-Books", icon: "📚" },
     ]},
