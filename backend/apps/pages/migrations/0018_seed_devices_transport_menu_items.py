@@ -4,11 +4,15 @@ from django.db import migrations
 # /school/fees and /school/transport already exist with broader roles.
 NEW_SCHOOL_ADMIN_ITEMS = [
     (21, "/school/admin/devices", "🖥️", {"ar": {"title": "إدارة الأجهزة"}, "en": {"title": "Devices"}}),
-    (22, "/school/transport/map", "🗺️", {"ar": {"title": "تتبع الحافلات"}, "en": {"title": "Live Tracking"}}),
     (23, "/school/admin/staff", "👥", {"ar": {"title": "الموظفون"}, "en": {"title": "Staff"}}),
     (24, "/school/admin/settings", "⚙️", {"ar": {"title": "الإعدادات"}, "en": {"title": "Settings"}}),
     (25, "/school/admin/transfer", "🔄", {"ar": {"title": "النقل والتحويل"}, "en": {"title": "Transfer"}}),
     (26, "/school/admin/year-cycle", "📅", {"ar": {"title": "السنة الدراسية"}, "en": {"title": "Year Cycle"}}),
+]
+
+# Transport officer items (separate from school_admin)
+TRANSPORT_OFFICER_ITEMS = [
+    (22, "/school/transport/map", "🗺️", {"ar": {"title": "تتبع الحافلات"}, "en": {"title": "Live Tracking"}}),
 ]
 
 NEW_DRIVER_ITEMS = [
@@ -44,6 +48,30 @@ def seed_items(apps, schema_editor):
                 service_context=["school"],
             )
 
+    for order, url, icon, translations in TRANSPORT_OFFICER_ITEMS:
+        existing = MenuItem.objects.filter(menu="sidebar", url=url).first()
+        if existing:
+            existing.order = order
+            existing.icon = icon
+            existing.translations = translations
+            existing.is_active = True
+            existing.required_role = ["school_transport_officer"]
+            if "school" not in (existing.service_context or []):
+                existing.service_context = list(existing.service_context or []) + ["school"]
+            existing.save()
+        else:
+            MenuItem.objects.create(
+                menu="sidebar",
+                url=url,
+                icon=icon,
+                order=order,
+                translations=translations,
+                is_active=True,
+                open_in_new=False,
+                required_role=["school_transport_officer"],
+                service_context=["school"],
+            )
+
     for order, url, icon, translations in NEW_DRIVER_ITEMS:
         existing = MenuItem.objects.filter(menu="sidebar", url=url).first()
         if existing:
@@ -73,9 +101,10 @@ def seed_items(apps, schema_editor):
 def unseed_items(apps, schema_editor):
     MenuItem = apps.get_model("pages", "MenuItem")
     admin_urls = [url for (_, url, _, _) in NEW_SCHOOL_ADMIN_ITEMS]
+    transport_urls = [url for (_, url, _, _) in TRANSPORT_OFFICER_ITEMS]
     driver_urls = [url for (_, url, _, _) in NEW_DRIVER_ITEMS]
-    # Only remove items we created (with these specific roles)
     MenuItem.objects.filter(menu="sidebar", url__in=admin_urls, required_role=["school_admin"]).delete()
+    MenuItem.objects.filter(menu="sidebar", url__in=transport_urls, required_role=["school_transport_officer"]).delete()
     MenuItem.objects.filter(menu="sidebar", url__in=driver_urls, required_role=["school_transport_officer"]).delete()
 
 
