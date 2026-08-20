@@ -2547,6 +2547,21 @@
       "success": "Başarılı",
       "partial": "Kısmi",
       "failed": "Başarısız"
+    },
+    "voice": {
+      "listen": "Dinle",
+      "stop": "Durdur",
+      "listenToLesson": "Bu dersi dinle",
+      "settings": "Ses ayarları",
+      "provider": "Sağlayıcı",
+      "speed": "Hız",
+      "record": "Sesli giriş",
+      "stopRecording": "Kayıt",
+      "transcribing": "Dönüştürme...",
+      "transcriptionFailed": "Dönüştürme başarısız",
+      "microphoneDenied": "Mikrofon izni reddedildi",
+      "playbackError": "Oynatma hatası",
+      "synthesisFailed": "Sentez başarısız"
     }
   },
   "editor": {

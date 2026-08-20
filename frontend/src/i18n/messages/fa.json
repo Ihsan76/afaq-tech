@@ -2547,6 +2547,21 @@
       "success": "موفق",
       "partial": "جزئی",
       "failed": "ناموفق"
+    },
+    "voice": {
+      "listen": "گوش دهید",
+      "stop": "توقف",
+      "listenToLesson": "این درس را گوش دهید",
+      "settings": "تنظیمات صدا",
+      "provider": "ارائه‌دهنده",
+      "speed": "سرعت",
+      "record": "ورودی صوتی",
+      "stopRecording": "ضبط",
+      "transcribing": "در حال رونویسی...",
+      "transcriptionFailed": "رونویسی ناموفق",
+      "microphoneDenied": "دسترسی میکروفون رد شد",
+      "playbackError": "خطای پخش",
+      "synthesisFailed": "تولید صدا ناموفق"
     }
   },
   "editor": {

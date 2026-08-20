@@ -2573,6 +2573,21 @@
       "success": "نجاح",
       "partial": "جزئي",
       "failed": "فشل"
+    },
+    "voice": {
+      "listen": "استماع",
+      "stop": "إيقاف",
+      "listenToLesson": "استمع لهذا الدرس",
+      "settings": "إعدادات الصوت",
+      "provider": "المزوّد",
+      "speed": "السرعة",
+      "record": "إدخال صوتي",
+      "stopRecording": "تسجيل",
+      "transcribing": "جاري النسخ...",
+      "transcriptionFailed": "فشل النسخ. حاول مرة أخرى.",
+      "microphoneDenied": "تم رفض إذن الميكروفون. اسمح به من إعدادات المتصفح.",
+      "playbackError": "خطأ في التشغيل",
+      "synthesisFailed": "فشل توليد الصوت. جرّب مزوّداً آخر."
     }
   }
 }

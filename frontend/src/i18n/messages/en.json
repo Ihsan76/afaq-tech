@@ -2573,6 +2573,21 @@
       "success": "Success",
       "partial": "Partial",
       "failed": "Failed"
+    },
+    "voice": {
+      "listen": "Listen",
+      "stop": "Stop",
+      "listenToLesson": "Listen to this lesson",
+      "settings": "Audio settings",
+      "provider": "Provider",
+      "speed": "Speed",
+      "record": "Voice Input",
+      "stopRecording": "Recording",
+      "transcribing": "Transcribing...",
+      "transcriptionFailed": "Transcription failed. Try again.",
+      "microphoneDenied": "Microphone access denied. Allow it in browser settings.",
+      "playbackError": "Playback error",
+      "synthesisFailed": "TTS synthesis failed. Try another provider."
     }
   }
 }

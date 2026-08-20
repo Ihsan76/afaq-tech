@@ -2547,6 +2547,21 @@
       "success": "کامیاب",
       "partial": "جزوی",
       "failed": "ناکام"
+    },
+    "voice": {
+      "listen": "سنیں",
+      "stop": "روکیں",
+      "listenToLesson": "اس اسباق کو سنیں",
+      "settings": "صوتی ترتیبات",
+      "provider": "فراہم کنندہ",
+      "speed": "رفتار",
+      "record": "آواز ان پٹ",
+      "stopRecording": "ریکارڈنگ",
+      "transcribing": "تبدیل ہو رہا ہے...",
+      "transcriptionFailed": "تبدیلی ناکام",
+      "microphoneDenied": "مائیکروفون کی اجازت نہیں",
+      "playbackError": "چلانے میں خرابی",
+      "synthesisFailed": "آواز تخلیق ناکام"
     }
   },
   "editor": {

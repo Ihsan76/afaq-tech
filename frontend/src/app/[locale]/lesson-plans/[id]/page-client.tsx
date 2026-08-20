@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import FadeIn from "@/components/FadeIn";
+import AudioPlayer from "@/components/school/AudioPlayer";
 
 interface MainActivityStep {
   step: number;
@@ -304,6 +305,30 @@ export default function LessonPlanDetailPage() {
 
   const isStructured = data.objectives || data.main_activity || data.introduction || data.procedures || data.lesson_phases || data.metadata;
 
+  const buildTtsText = (): string => {
+    const parts: string[] = [];
+    if (data.title || plan.title) parts.push(data.title || plan.title);
+    if (plan.subject_name) parts.push(plan.subject_name);
+    if (plan.grade_name) parts.push(plan.grade_name);
+    if (data.objectives?.length) {
+      parts.push("أهداف التعلم:");
+      data.objectives.forEach((o: any) => {
+        const txt = typeof o === "string" ? o : o.description || o.text || o.name || "";
+        if (txt) parts.push("• " + txt);
+      });
+    }
+    if (data.introduction) parts.push("المقدمة: " + safeText(data.introduction));
+    if (data.main_activity?.length) {
+      parts.push("الأنشطة الرئيسية:");
+      data.main_activity.forEach((s: any) => {
+        parts.push(`${s.title}: ${s.description}`);
+      });
+    }
+    if (data.assessment) parts.push("التقييم: " + safeText(data.assessment));
+    if (data.homework) parts.push("الواجب: " + safeText(data.homework));
+    return parts.join("\n");
+  };
+
   const safeText = (value: unknown): string => {
     if (typeof value === "string") return value;
     if (value === null || value === undefined) return "";
@@ -392,6 +417,8 @@ export default function LessonPlanDetailPage() {
             >
               🤖 مناقشة مع AI
             </button>
+
+            <AudioPlayer text={buildTtsText()} />
 
             <button
               onClick={handleTogglePublic}

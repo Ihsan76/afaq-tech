@@ -2547,6 +2547,21 @@
       "success": "Berhasil",
       "partial": "Sebagian",
       "failed": "Gagal"
+    },
+    "voice": {
+      "listen": "Dengarkan",
+      "stop": "Berhenti",
+      "listenToLesson": "Dengarkan pelajaran ini",
+      "settings": "Pengaturan audio",
+      "provider": "Penyedia",
+      "speed": "Kecepatan",
+      "record": "Input Suara",
+      "stopRecording": "Merekam",
+      "transcribing": "Mentranskripsi...",
+      "transcriptionFailed": "Transkripsi gagal",
+      "microphoneDenied": "Mikrofon ditolak",
+      "playbackError": "Error pemutaran",
+      "synthesisFailed": "Sintesis gagal"
     }
   },
   "editor": {

@@ -2547,6 +2547,21 @@
       "success": "Erfolg",
       "partial": "Teilweise",
       "failed": "Fehlgeschlagen"
+    },
+    "voice": {
+      "listen": "Anhören",
+      "stop": "Stopp",
+      "listenToLesson": "Diese Lektion anhören",
+      "settings": "Audio-Einstellungen",
+      "provider": "Anbieter",
+      "speed": "Geschwindigkeit",
+      "record": "Spracheingabe",
+      "stopRecording": "Aufnahme",
+      "transcribing": "Transkribierung...",
+      "transcriptionFailed": "Transkription fehlgeschlagen",
+      "microphoneDenied": "Mikrofon verweigert",
+      "playbackError": "Wiedergabefehler",
+      "synthesisFailed": "Synthese fehlgeschlagen"
     }
   },
   "editor": {

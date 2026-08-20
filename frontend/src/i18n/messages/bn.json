@@ -2547,6 +2547,21 @@
       "success": "সফল",
       "partial": "আংশিক",
       "failed": "ব্যর্থ"
+    },
+    "voice": {
+      "listen": "শুনুন",
+      "stop": "থামুন",
+      "listenToLesson": "এই পাঠ শুনুন",
+      "settings": "অডিও সেটিংস",
+      "provider": "প্রদানকারী",
+      "speed": "গতি",
+      "record": "কণ্ঠ ইনপুট",
+      "stopRecording": "রেকর্ডিং",
+      "transcribing": "প্রতিলিপি হচ্ছে...",
+      "transcriptionFailed": "প্রতিলিপি ব্যর্থ",
+      "microphoneDenied": "মাইক্রোফোন অনুমতি নাকচ",
+      "playbackError": "প্লেব্যাক ত্রুটি",
+      "synthesisFailed": "সিন্থেসিস ব্যর্থ"
     }
   },
   "editor": {

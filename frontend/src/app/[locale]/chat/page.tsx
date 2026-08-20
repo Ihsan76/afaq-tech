@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { useLiveChatStore } from "@/store/liveChat";
 import { useAuthStore } from "@/store/auth";
+import VoiceRecordButton from "@/components/school/VoiceRecordButton";
 
 export default function ChatPage() {
   const t = useTranslations("chat");
@@ -150,7 +151,12 @@ export default function ChatPage() {
 
             {/* Input */}
             <div className="p-4 border-t" style={{ borderColor: "var(--color-border)" }}>
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-center">
+                <VoiceRecordButton
+                  onTranscribed={(text) => {
+                    setInput((prev) => (prev ? prev + " " + text : text));
+                  }}
+                />
                 <input
                   type="text"
                   value={input}
