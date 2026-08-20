@@ -1,6 +1,6 @@
 from datetime import timedelta
 
-from django.db.models import Avg, Count, Q
+from django.db.models import Avg
 from django.utils import timezone
 from rest_framework import permissions
 from rest_framework.response import Response
@@ -305,7 +305,7 @@ class DirectorateAlertsView(APIView):
         if not _check_directorate_access(request.user, directorate):
             return Response({'detail': 'Permission denied'}, status=403)
 
-        from apps.schools.models import Attendance, AssignmentSubmission
+        from apps.schools.models import AssignmentSubmission
 
         alerts = []
         today = timezone.now().date()

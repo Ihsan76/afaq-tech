@@ -1,6 +1,4 @@
 """Remove duplicate sidebar menu items and clean up ordering."""
-from collections import Counter
-
 from django.core.management.base import BaseCommand
 
 from apps.pages.models import MenuItem

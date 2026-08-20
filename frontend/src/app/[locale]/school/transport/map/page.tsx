@@ -52,8 +52,15 @@ export default function BusTrackingMapPage() {
   const centerLat = buses.length > 0 ? buses.reduce((s, b) => s + b.latitude, 0) / buses.length : 31.95;
   const centerLng = buses.length > 0 ? buses.reduce((s, b) => s + b.longitude, 0) / buses.length : 35.93;
 
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 60000);
+    return () => clearInterval(id);
+  }, []);
+
   const timeSince = (ts: string) => {
-    const diff = Date.now() - new Date(ts).getTime();
+    const diff = now - new Date(ts).getTime();
     const mins = Math.floor(diff / 60000);
     if (mins < 1) return "الآن";
     if (mins < 60) return `منذ ${mins} دقيقة`;
