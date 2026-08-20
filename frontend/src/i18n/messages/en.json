@@ -2103,8 +2103,6 @@
     "quickRooms": "Rooms & Periods",
     "quickFees": "School Fees",
     "quickTransport": "School Transport",
-    "quickDevices": "Device Management",
-    "quickBusTracking": "Live Bus Tracking",
     "attendanceCount": "{count} records",
     "ticketsCount": "{count} tickets",
     "attachmentsCount": "{count} attachments",
