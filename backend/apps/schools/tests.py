@@ -38,6 +38,8 @@ TEST_PASSWORD = 'Afaq#Secure2026!'
 
 def make_user(email, role, name_ar, national_id=None, phone='', **extra):
     """Creates a test user with a policy-compliant password and full user info."""
+    from apps.users.services import RoleService
+
     fields = {
         'role': role,
         'translations': {'ar': {'name': name_ar}},
@@ -47,7 +49,9 @@ def make_user(email, role, name_ar, national_id=None, phone='', **extra):
     if national_id is not None:
         fields['national_id'] = national_id
     fields.update(extra)
-    return User.objects.create_user(email=email, password=TEST_PASSWORD, **fields)
+    user = User.objects.create_user(email=email, password=TEST_PASSWORD, **fields)
+    RoleService.assign_role(user, role)
+    return user
 
 
 class SchoolsAPITestCase(APITestCase):
