@@ -32,6 +32,7 @@ from .models import (
     Book,
     BusLocationLog,
     BusRoute,
+    BusStop,
     DayOfWeek,
     DeviceEvent,
     FamilyLink,
@@ -70,6 +71,7 @@ from .serializers import (
     AttendanceSerializer,
     BookSerializer,
     BusRouteSerializer,
+    BusStopSerializer,
     FamilyLinkSerializer,
     FAQSerializer,
     GradeCategorySerializer,
@@ -3505,6 +3507,19 @@ class StudentBusAssignmentViewSet(AuxiliaryModuleGatingMixin, viewsets.ModelView
             qs = qs.filter(student_id=student_id)
         if not is_admin(self.request.user):
             qs = qs.filter(student=self.request.user)
+        return qs
+
+
+class BusStopViewSet(AuxiliaryModuleGatingMixin, viewsets.ModelViewSet):
+    queryset = BusStop.objects.all()
+    serializer_class = BusStopSerializer
+    permission_classes = [IsAdminOrReadOnly]
+
+    def get_queryset(self):
+        qs = BusStop.objects.all()
+        route_id = self.request.query_params.get('route')
+        if route_id:
+            qs = qs.filter(route_id=route_id)
         return qs
 
 

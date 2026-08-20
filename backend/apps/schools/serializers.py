@@ -13,6 +13,7 @@ from .models import (
     Book,
     BusLocationLog,
     BusRoute,
+    BusStop,
     DeviceEvent,
     FamilyLink,
     GradeCategory,
@@ -503,6 +504,14 @@ class StudentBusAssignmentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = StudentBusAssignment
+        fields = '__all__'
+
+
+class BusStopSerializer(serializers.ModelSerializer):
+    route_name = serializers.CharField(source='route.route_name', read_only=True)
+
+    class Meta:
+        model = BusStop
         fields = '__all__'
 
 

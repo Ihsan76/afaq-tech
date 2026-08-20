@@ -13,6 +13,7 @@ from .views import (
     BulkImportView,
     BusLiveLocationAPIView,
     BusRouteViewSet,
+    BusStopViewSet,
     DeviceScanAPIView,
     DeviceTelemetryAPIView,
     FamilyLinkViewSet,
@@ -75,6 +76,7 @@ router.register('fees', SchoolFeeViewSet, basename='schoolfee')
 router.register('fee-assignments', StudentFeeAssignmentViewSet, basename='studentfeeassignment')
 router.register('buses', SchoolBusViewSet, basename='schoolbus')
 router.register('bus-routes', BusRouteViewSet, basename='busroute')
+router.register('bus-stops', BusStopViewSet, basename='busstop')
 router.register('bus-assignments', StudentBusAssignmentViewSet, basename='studentbusassignment')
 router.register('devices', SchoolDeviceViewSet, basename='schooldevice')
 router.register('books', BookViewSet, basename='book')

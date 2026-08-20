@@ -636,6 +636,23 @@ class StudentBusAssignment(models.Model):
         return f"{self.student} - {self.route}"
 
 
+class BusStop(models.Model):
+    route = models.ForeignKey(BusRoute, on_delete=models.CASCADE, related_name='stops', verbose_name='خط السير')
+    name = models.CharField('اسم المحطة / النقطة', max_length=255)
+    latitude = models.DecimalField('خط العرض', max_digits=9, decimal_places=6, null=True, blank=True)
+    longitude = models.DecimalField('خط الطول', max_digits=9, decimal_places=6, null=True, blank=True)
+    order = models.PositiveIntegerField('الترتيب', default=0)
+    is_active = models.BooleanField('نشط', default=True)
+
+    class Meta:
+        verbose_name = 'محطة حافلة'
+        verbose_name_plural = 'محطات الحافلات'
+        ordering = ['order']
+
+    def __str__(self):
+        return f"{self.name} ({self.route})"
+
+
 class Book(models.Model):
     school = models.ForeignKey(School, on_delete=models.CASCADE, related_name='books', verbose_name='المدرسة')
     title = models.CharField('عنوان الكتاب', max_length=255)
