@@ -169,3 +169,28 @@ class GoogleClassroomExportGradesView(APIView):
             'status': 'success',
             'exported': exported
         })
+
+
+class GoogleClassroomSyncLogsView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        logs = GoogleClassroomSyncLog.objects.filter(user=request.user)[:50]
+        return Response({
+            'logs': [{
+                'id': log.id,
+                'sync_type': log.sync_type,
+                'course_id': log.course_id,
+                'status': log.status,
+                'details': log.details,
+                'created_at': log.created_at.isoformat(),
+            } for log in logs]
+        })
+
+
+class GoogleClassroomDisconnectView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        GoogleClassroomToken.objects.filter(user=request.user).delete()
+        return Response({'status': 'disconnected'})

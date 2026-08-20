@@ -4,8 +4,10 @@ from . import views
 from .classroom_views import (
     GoogleClassroomAuthView,
     GoogleClassroomCoursesView,
+    GoogleClassroomDisconnectView,
     GoogleClassroomExportGradesView,
     GoogleClassroomImportStudentsView,
+    GoogleClassroomSyncLogsView,
 )
 from .directorate_views import (
     DirectorateAlertsView,
@@ -59,4 +61,6 @@ urlpatterns = [
     path('google-classroom/courses/', GoogleClassroomCoursesView.as_view(), name='classroom-courses'),
     path('google-classroom/import/students/', GoogleClassroomImportStudentsView.as_view(), name='classroom-import-students'),
     path('google-classroom/export/grades/', GoogleClassroomExportGradesView.as_view(), name='classroom-export-grades'),
+    path('google-classroom/sync/logs/', GoogleClassroomSyncLogsView.as_view(), name='classroom-sync-logs'),
+    path('google-classroom/disconnect/', GoogleClassroomDisconnectView.as_view(), name='classroom-disconnect'),
 ]
