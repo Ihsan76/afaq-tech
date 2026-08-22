@@ -225,6 +225,10 @@ GOOGLE_AUTH_URI = 'https://accounts.google.com/o/oauth2/v2/auth'
 GOOGLE_TOKEN_URI = 'https://oauth2.googleapis.com/token'
 GOOGLE_USERINFO_URI = 'https://www.googleapis.com/oauth2/v2/userinfo'
 
+GOOGLE_CLASSROOM_CLIENT_ID = env('GOOGLE_CLASSROOM_CLIENT_ID', default=env('GOOGLE_OAUTH_CLIENT_ID', default=''))
+GOOGLE_CLASSROOM_CLIENT_SECRET = env('GOOGLE_CLASSROOM_CLIENT_SECRET', default=env('GOOGLE_OAUTH_CLIENT_SECRET', default=''))
+GOOGLE_CLASSROOM_REDIRECT_URI = env('GOOGLE_CLASSROOM_REDIRECT_URI', default='http://localhost:8003/api/v1/core/google-classroom/callback/')
+
 STRIPE_SECRET_KEY = env('STRIPE_SECRET_KEY', default='')
 STRIPE_PUBLISHABLE_KEY = env('STRIPE_PUBLISHABLE_KEY', default='')
 STRIPE_WEBHOOK_SECRET = env('STRIPE_WEBHOOK_SECRET', default='')

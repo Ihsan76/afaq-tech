@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useTranslations } from "next-intl";
+import { useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
 
 interface ClassroomCourse {
@@ -51,11 +52,20 @@ export default function GoogleClassroomPage() {
 
   const checkConnection = useCallback(async () => {
     try {
+      const res = await api.get("/core/google-classroom/status/");
+      setConnected(res.data.connected);
+    } catch {
+      setConnected(false);
+    }
+  }, []);
+
+  const fetchCourses = useCallback(async () => {
+    try {
       const res = await api.get("/core/google-classroom/courses/");
       setConnected(res.data.connected);
       setCourses(res.data.courses || []);
     } catch {
-      setConnected(false);
+      setCourses([]);
     }
   }, []);
 
@@ -73,6 +83,26 @@ export default function GoogleClassroomPage() {
     fetchLogs();
   }, [checkConnection, fetchLogs]);
 
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const connectedParam = searchParams.get("connected");
+    const errorParam = searchParams.get("error");
+    if (connectedParam === "true") {
+      setConnected(true);
+      setActionResult({ type: "success", message: t("connected") });
+      fetchCourses();
+      window.history.replaceState({}, "", window.location.pathname);
+    } else if (errorParam) {
+      setActionResult({ type: "error", message: t("connectError") });
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }, [searchParams, fetchCourses, t]);
+
+  useEffect(() => {
+    if (connected) fetchCourses();
+  }, [connected, fetchCourses]);
+
   useEffect(() => {
     api
       .get("/schools/sections/")
@@ -84,6 +114,7 @@ export default function GoogleClassroomPage() {
   }, []);
 
   const handleConnect = async () => {
+    if (connected) return;
     try {
       const res = await api.get("/core/google-classroom/auth/");
       if (res.data.auth_url) {

@@ -30,6 +30,8 @@ class GoogleClassroomSyncLog(models.Model):
         ('import_teachers', 'Import Teachers'),
         ('export_grades', 'Export Grades'),
         ('sync_assignments', 'Sync Assignments'),
+        ('teacher_send_grades', 'Teacher Send Grades'),
+        ('teacher_sync_assignments', 'Teacher Sync Assignments'),
     ]
 
     STATUS_CHOICES = [
@@ -50,3 +52,23 @@ class GoogleClassroomSyncLog(models.Model):
 
     def __str__(self):
         return f"{self.user.email} - {self.sync_type} ({self.status})"
+
+
+class GoogleClassroomCourseSync(models.Model):
+    teacher = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='classroom_course_syncs')
+    classroom_course_id = models.CharField(max_length=100)
+    classroom_course_name = models.CharField(max_length=255)
+    platform_section = models.ForeignKey(
+        'schools.Section', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='classroom_syncs'
+    )
+    last_synced = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ['teacher', 'classroom_course_id']
+        verbose_name_plural = 'Google Classroom Course Syncs'
+
+    def __str__(self):
+        return f"{self.teacher.email} - {self.classroom_course_name}"

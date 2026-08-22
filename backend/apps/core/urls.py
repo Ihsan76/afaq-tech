@@ -3,11 +3,24 @@ from django.urls import path
 from . import views
 from .classroom_views import (
     GoogleClassroomAuthView,
+    GoogleClassroomCallbackView,
     GoogleClassroomCoursesView,
     GoogleClassroomDisconnectView,
     GoogleClassroomExportGradesView,
     GoogleClassroomImportStudentsView,
+    GoogleClassroomStatusView,
     GoogleClassroomSyncLogsView,
+    StudentClassroomAssignmentsView,
+    StudentClassroomCoursesView,
+    StudentClassroomGradesView,
+    TeacherClassroomAuthView,
+    TeacherClassroomCallbackView,
+    TeacherClassroomCoursesView,
+    TeacherClassroomDisconnectView,
+    TeacherClassroomLinkSectionView,
+    TeacherClassroomSendGradesView,
+    TeacherClassroomStatusView,
+    TeacherClassroomSyncAssignmentsView,
 )
 from .directorate_views import (
     DirectorateAlertsView,
@@ -57,10 +70,26 @@ urlpatterns = [
     path('directorates/<int:pk>/schools/', DirectorateSchoolsView.as_view(), name='directorate-schools'),
     path('directorates/<int:pk>/comparison/', DirectorateComparisonView.as_view(), name='directorate-comparison'),
     path('directorates/<int:pk>/alerts/', DirectorateAlertsView.as_view(), name='directorate-alerts'),
+    # Admin Google Classroom
+    path('google-classroom/status/', GoogleClassroomStatusView.as_view(), name='classroom-status'),
     path('google-classroom/auth/', GoogleClassroomAuthView.as_view(), name='classroom-auth'),
+    path('google-classroom/callback/', GoogleClassroomCallbackView.as_view(), name='classroom-callback'),
     path('google-classroom/courses/', GoogleClassroomCoursesView.as_view(), name='classroom-courses'),
     path('google-classroom/import/students/', GoogleClassroomImportStudentsView.as_view(), name='classroom-import-students'),
     path('google-classroom/export/grades/', GoogleClassroomExportGradesView.as_view(), name='classroom-export-grades'),
     path('google-classroom/sync/logs/', GoogleClassroomSyncLogsView.as_view(), name='classroom-sync-logs'),
     path('google-classroom/disconnect/', GoogleClassroomDisconnectView.as_view(), name='classroom-disconnect'),
+    # Teacher Google Classroom
+    path('teacher-classroom/status/', TeacherClassroomStatusView.as_view(), name='teacher-classroom-status'),
+    path('teacher-classroom/auth/', TeacherClassroomAuthView.as_view(), name='teacher-classroom-auth'),
+    path('teacher-classroom/callback/', TeacherClassroomCallbackView.as_view(), name='teacher-classroom-callback'),
+    path('teacher-classroom/courses/', TeacherClassroomCoursesView.as_view(), name='teacher-classroom-courses'),
+    path('teacher-classroom/link-section/', TeacherClassroomLinkSectionView.as_view(), name='teacher-classroom-link-section'),
+    path('teacher-classroom/sync-assignments/', TeacherClassroomSyncAssignmentsView.as_view(), name='teacher-classroom-sync-assignments'),
+    path('teacher-classroom/send-grades/', TeacherClassroomSendGradesView.as_view(), name='teacher-classroom-send-grades'),
+    path('teacher-classroom/disconnect/', TeacherClassroomDisconnectView.as_view(), name='teacher-classroom-disconnect'),
+    # Student Google Classroom
+    path('student-classroom/courses/', StudentClassroomCoursesView.as_view(), name='student-classroom-courses'),
+    path('student-classroom/grades/', StudentClassroomGradesView.as_view(), name='student-classroom-grades'),
+    path('student-classroom/assignments/', StudentClassroomAssignmentsView.as_view(), name='student-classroom-assignments'),
 ]
